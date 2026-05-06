@@ -93,6 +93,5 @@ app.get('/api/score', async (req, res) => {
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 const PORT = process.env.PORT || 3001;
-// まず起動してHTMLを配信、DBはバックグラウンドで接続
 app.listen(PORT, () => console.log(`サーバー起動：port ${PORT}`));
 initDB().catch(e => console.error('DB接続エラー:', e));
