@@ -1,11 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
+const path    = require('path');
 const { Database } = require('duckdb-async');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// ── 本番環境ではReactのビルドファイルを配信 ──
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'build')));
+}
 
 let db;
 
@@ -13,7 +19,7 @@ async function initDB() {
   db = await Database.create(':memory:');
   await db.run('INSTALL httpfs; LOAD httpfs;');
   await db.run('DROP SECRET IF EXISTS iceberg_secret;');
-  await db.run(`CREATE PERSISTENT SECRET iceberg_secret (TYPE ICEBERG, TOKEN '${process.env.FSQ_TOKEN}');`);
+  await db.run(`CREATE PERSISTENT SECRET iceberg_secret (TYPE ICEBERG, TOKEN '${process.env.FSQ_API_KEY}');`);
   await db.run(`ATTACH 'places' AS places (TYPE iceberg, SECRET iceberg_secret, ENDPOINT 'https://catalog.h3-hub.foursquare.com/iceberg');`);
   console.log('DB接続成功！');
 }
@@ -66,7 +72,6 @@ async function calcScore(lat, lng, radiusM = 800){
   const div   = divR[0] ? Number(divR[0].d) : 0;
   const total = food + life + biz + med;
 
-  // 半径に応じて基準値をスケーリング（800m基準）
   const sc = (radiusM / 800) ** 2;
   const L  = (v, mx) => v <= 0 ? 0 : Math.min(1, Math.log10(v+1) / Math.log10(mx * sc + 1));
 
@@ -95,6 +100,14 @@ app.get('/api/score', async (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+// ── 本番環境ではすべてのルートをReactに渡す ──
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  });
+}
+
+const PORT = process.env.PORT || 3001;
 initDB().then(() => {
-  app.listen(3001, () => console.log('サーバー起動：http://localhost:3001'));
+  app.listen(PORT, () => console.log(`サーバー起動：port ${PORT}`));
 }).catch(console.error);
