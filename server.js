@@ -102,7 +102,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // ── 本番環境ではすべてのルートをReactに渡す ──
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
+  app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
   });
 }
