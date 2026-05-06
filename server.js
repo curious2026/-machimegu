@@ -1,17 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
-const path    = require('path');
 const { Database } = require('duckdb-async');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// ── 本番環境ではReactのビルドファイルを配信 ──
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'build')));
-}
 
 let db;
 
@@ -29,7 +23,6 @@ function metersToDeg(m){ return m / 111320; }
 async function calcScore(lat, lng, radiusM = 800){
   const conn = await db.connect();
   const r    = metersToDeg(radiusM);
-
   const rows = await conn.all(`
     SELECT
       CASE
@@ -51,7 +44,6 @@ async function calcScore(lat, lng, radiusM = 800){
       AND longitude BETWEEN ${lng - r} AND ${lng + r}
     GROUP BY cat
   `);
-
   const divR = await conn.all(`
     SELECT COUNT(DISTINCT fsq_category_labels[1]) AS d
     FROM places.datasets.places_os
@@ -71,10 +63,8 @@ async function calcScore(lat, lng, radiusM = 800){
   });
   const div   = divR[0] ? Number(divR[0].d) : 0;
   const total = food + life + biz + med;
-
   const sc = (radiusM / 800) ** 2;
   const L  = (v, mx) => v <= 0 ? 0 : Math.min(1, Math.log10(v+1) / Math.log10(mx * sc + 1));
-
   const score = Math.min(1000, Math.round(
     L(food,  13000) * 300 +
     L(life,   6000) * 200 +
@@ -83,7 +73,6 @@ async function calcScore(lat, lng, radiusM = 800){
     L(med,     700) * 100 +
     L(total, 26000) * 150
   ));
-
   return { score, food, life, biz, div, med, total, radius: radiusM };
 }
 
@@ -99,13 +88,6 @@ app.get('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-
-// ── 本番環境ではすべてのルートをReactに渡す ──
-if (process.env.NODE_ENV === 'production') {
-  app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
-  });
-}
 
 const PORT = process.env.PORT || 3001;
 initDB().then(() => {
