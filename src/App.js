@@ -19,7 +19,7 @@ const C={bg:"#faf8f5",card:"#fff",border:"#ebe8e0",sub:"#888",text:"#1a1a1a",acc
 const CACHE_VER = "machimegu_v2_";
 
 // スマホ・別デバイスからのアクセスにも対応するAPIベースURL
-const API_BASE = `http://${window.location.hostname}:3001`;
+const API_BASE = process.env.NODE_ENV === 'production' ? '' : `http://${window.location.hostname}:3001`;
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  座標定義（単一ソース・半径非依存）
