@@ -23,11 +23,10 @@ console.log('キャッシュ読込:', Object.keys(cache).length + '件');
 
 // ── DuckDB ──
 const db = new duckdb.Database(':memory:');
-
 function initDB(){
   return new Promise((resolve, reject)=>{
     const con = db.connect();
-    con.exec('INSTALL httpfs; LOAD httpfs; SET s3_region=\'us-west-2\';', err=>{
+    con.exec("INSTALL httpfs; LOAD httpfs; SET s3_region='us-west-2';", err=>{
       con.close();
       if(err) reject(err); else resolve();
     });
@@ -36,18 +35,61 @@ function initDB(){
 
 const S3 = "s3://overturemaps-us-west-2/release/2026-04-15.0/theme=places/type=place/*";
 
-// カテゴリ→4軸マッピング
-const FOOD_CATS = new Set(['eat_and_drink','restaurant','cafe','bar','fast_food','coffee','bakery','food_and_drink','izakaya','ramen','sushi','food']);
-const COMM_CATS = new Set(['retail','shopping','clothing','department_store','electronics','bookstore','hotel','lodging','entertainment','cinema','museum','amusement','art','theater']);
-const LIFE_CATS = new Set(['convenience_store','supermarket','grocery','beauty_salon','laundry','hair_salon','nail_salon','bank','atm','post_office','drugstore','pharmacy']);
-const MEDI_CATS = new Set(['health_and_medicine','hospital','clinic','dentist','doctors','nursing_home']);
+// ── カテゴリ→4軸マッピング ──
+const AXIS_MAP = {
+  eat_and_drink:'飲食', restaurant:'飲食', cafe:'飲食', bar:'飲食',
+  fast_food:'飲食', coffee:'飲食', bakery:'飲食', food_and_drink:'飲食',
+  izakaya:'飲食', ramen:'飲食', sushi:'飲食', food:'飲食',
+  retail:'商業', shopping:'商業', clothing:'商業', department_store:'商業',
+  electronics:'商業', bookstore:'商業', sports_store:'商業', toy_store:'商業',
+  hotel:'商業', entertainment:'商業', cinema:'商業', museum:'商業',
+  amusement:'商業', art:'商業', theater:'商業', night_club:'商業',
+  convenience_store:'生活', supermarket:'生活', grocery:'生活',
+  beauty_salon:'生活', laundry:'生活', hair_salon:'生活', nail_salon:'生活',
+  bank:'生活', atm:'生活', post_office:'生活', drugstore:'生活',
+  pharmacy:'生活', gas_station:'生活',
+  health_and_medicine:'医療', hospital:'医療', clinic:'医療',
+  dentist:'医療', doctors:'医療', nursing_home:'医療'
+};
 
-function logScore(count, maxCount, maxPt){
-  if(count<=0) return 0;
-  return Math.min(maxPt, Math.round(Math.log10(count+1)/Math.log10(maxCount+1)*maxPt));
+const AXES   = ['飲食','商業','生活','医療'];
+const MAX_PTS = {'飲食':350, '商業':350, '生活':200, '医療':100};
+
+// ── 全体最大値（相対評価用・新宿レベルの実測値を初期値に）──
+let globalMax = {'飲食':2459, '商業':500, '生活':600, '医療':200};
+
+// ── 対数スケールスコア計算 ──
+function logScore(count, maxCount, maxPts){
+  if(count <= 0) return 0;
+  const ratio = Math.log(1 + count) / Math.log(1 + maxCount);
+  return Math.min(maxPts, Math.round(ratio * maxPts));
 }
 
-function queryOverture(lat, lng, radius){
+function calcScore(counts){
+  const details = {};
+  let total = 0;
+  AXES.forEach(axis=>{
+    const pts = logScore(counts[axis], globalMax[axis], MAX_PTS[axis]);
+    details[axis] = { count: counts[axis], pts, max: MAX_PTS[axis] };
+    total += pts;
+  });
+  return { score: Math.min(1000, total), details };
+}
+
+// globalMax更新時に全キャッシュのスコアを再計算
+function rebuildAllScores(){
+  Object.keys(cache).forEach(k=>{
+    if(k.startsWith('raw_')){
+      const scoreKey = k.replace('raw_','score_');
+      cache[scoreKey] = calcScore(cache[k]);
+    }
+  });
+  saveCache(cache);
+  console.log('全スコア再計算完了 globalMax:', globalMax);
+}
+
+// ── 生カウント取得 ──
+function getRawCounts(lat, lng, radius){
   return new Promise((resolve, reject)=>{
     const con = db.connect();
     const deg    = radius / 111000;
@@ -65,78 +107,86 @@ function queryOverture(lat, lng, radius){
     con.all(sql, (err, rows)=>{
       con.close();
       if(err) return reject(err);
-
-      let food=0, commercial=0, life=0, medical=0;
+      const counts = {'飲食':0, '商業':0, '生活':0, '医療':0};
       (rows||[]).forEach(row=>{
-        const c = row.cat||'';
-        const n = parseInt(row.cnt)||0;
-        if(FOOD_CATS.has(c))       food       += n;
-        else if(COMM_CATS.has(c))  commercial += n;
-        else if(LIFE_CATS.has(c))  life       += n;
-        else if(MEDI_CATS.has(c))  medical    += n;
+        const axis = AXIS_MAP[row.cat||''];
+        if(axis) counts[axis] += (parseInt(row.cnt)||0);
       });
-
-      const foodPt       = logScore(food,       5000, 350);
-      const commercialPt = logScore(commercial,  3000, 350);
-      const lifePt       = logScore(life,        2000, 200);
-      const medicalPt    = logScore(medical,      500, 100);
-      const score        = Math.min(1000, foodPt + commercialPt + lifePt + medicalPt);
-
-      resolve({ score, food: foodPt, commercial: commercialPt, life: lifePt, medical: medicalPt });
+      resolve(counts);
     });
   });
 }
 
-// ── APIエンドポイント ──
-app.get('/api/score', async (req, res)=>{
+// ── API: スコア取得 ──
+app.get('/api/score', async(req, res)=>{
   try{
-    // lat/lng 形式と ll=lat,lng 形式の両方に対応
-    let lat, lng, radius;
+    // ll=lat,lng 形式と lat&lng 形式の両方に対応
+    let lat, lng, llStr;
     if(req.query.ll){
-      [lat, lng] = req.query.ll.split(',').map(Number);
+      llStr = req.query.ll;
+      [lat, lng] = llStr.split(',').map(Number);
     } else {
       lat = parseFloat(req.query.lat);
       lng = parseFloat(req.query.lng);
+      llStr = `${lat},${lng}`;
     }
-    radius = parseInt(req.query.radius)||800;
+    const r = parseInt(req.query.radius)||800;
 
-    const key = `${lat},${lng}_${radius}`;
+    const rawKey   = `raw_${llStr}_${r}`;
+    const scoreKey = `score_${llStr}_${r}`;
 
-    // サーバーキャッシュヒット
-    if(cache[key]){
-      console.log('キャッシュHIT:', key);
-      return res.json({...cache[key], cached:true});
+    // キャッシュヒット
+    if(cache[scoreKey]){
+      console.log('キャッシュHIT:', llStr);
+      return res.json({...cache[scoreKey], cached:true});
     }
 
-    console.log('Overture取得中:', key);
-    const result = await queryOverture(lat, lng, radius);
-    cache[key] = result;
-    saveCache(cache);
-    console.log('取得完了:', key, 'score:', result.score);
-    res.json({...result, cached:false});
+    console.log('取得中:', llStr);
+    const counts = await getRawCounts(lat, lng, r);
+
+    // globalMax更新チェック
+    let maxUpdated = false;
+    AXES.forEach(axis=>{
+      if(counts[axis] > globalMax[axis]){
+        globalMax[axis] = counts[axis];
+        maxUpdated = true;
+      }
+    });
+
+    cache[rawKey] = counts;
+
+    if(maxUpdated){
+      console.log('globalMax更新:', globalMax);
+      rebuildAllScores();
+    } else {
+      cache[scoreKey] = calcScore(counts);
+      saveCache(cache);
+    }
+
+    res.json({...cache[scoreKey], cached:false});
   }catch(e){
-    console.error(e);
-    res.status(500).json({ error: e.message });
+    console.error(e.message);
+    res.status(500).json({error: e.message, score:0, details:{}});
   }
 });
 
-app.get('/api/test', async (req, res)=>{
+app.get('/api/test', async(req, res)=>{
   try{
-    const result = await queryOverture(35.6896, 139.7006, 800);
-    res.json({ ok:true, source:'Overture Maps 2026-04-15', ...result });
+    const counts = await getRawCounts(35.6896, 139.7006, 800);
+    const result  = calcScore(counts);
+    res.json({ ok:true, source:'Overture Maps 2026-04-15', globalMax, ...result, counts });
   }catch(e){
     res.json({ ok:false, error:e.message });
   }
 });
 
-app.get('/api/health', (req, res)=>res.json({ status:'ok', cache: Object.keys(cache).length }));
+app.get('/api/health', (req, res)=>res.json({ status:'ok', cache: Object.keys(cache).length, globalMax }));
 
 // ── 起動 ──
 const PORT = process.env.PORT || 3001;
+app.listen(PORT, ()=>console.log('サーバー起動：port ' + PORT));
 initDB().then(()=>{
   console.log('DuckDB初期化完了');
-  app.listen(PORT, ()=>console.log('サーバー起動：port ' + PORT));
 }).catch(e=>{
   console.error('DuckDB初期化失敗:', e);
-  process.exit(1);
 });
