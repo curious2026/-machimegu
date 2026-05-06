@@ -3,1005 +3,1140 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>街巡-まちめぐ-</title>
+<title>街の戦闘力</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;700;900&family=Zen+Antique+Soft&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;background:#080810;color:#e8eaf0;font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',Arial,sans-serif;overflow:hidden}
-#app{display:flex;flex-direction:column;height:100dvh}
+html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto Sans JP',sans-serif}
+#app{display:flex;flex-direction:column;height:100vh}
 
-/* ── ヘッダー ── */
-#header{display:flex;justify-content:space-between;align-items:center;
-  padding:8px 16px;background:#0d0d1a;border-bottom:1px solid #1e1e3a;
-  flex-shrink:0;z-index:2000;min-height:48px}
-.logo{cursor:pointer;display:flex;align-items:baseline;gap:8px}
-.logo-main{font-size:18px;font-weight:900;letter-spacing:2px;color:#e8eaf0;
-  text-shadow:0 0 20px rgba(200,210,255,0.3)}
-.logo-sub{font-size:9px;color:#4a5080;letter-spacing:1.5px}
-.hcontrols{display:flex;align-items:center;gap:10px}
-.hsel{background:#12122a;color:#c0c8f0;border:1px solid #2a2a50;
-  padding:5px 8px;border-radius:6px;font-size:12px;cursor:pointer}
-.hsel:focus{outline:none;border-color:#4060c0}
-.view-tabs{display:flex;border:1px solid #2a2a50;border-radius:6px;overflow:hidden}
-.vtab{background:transparent;color:#6070a0;border:none;padding:5px 14px;
-  font-size:12px;cursor:pointer;transition:all 0.15s}
-.vtab.active{background:#1e2050;color:#c0d0ff}
-.vtab:hover:not(.active){background:#14143a;color:#a0b0e0}
+#header{
+  display:flex;align-items:center;padding:0 12px;
+  height:60px;flex-shrink:0;gap:8px;z-index:2000;position:relative;overflow:visible;
+  background:linear-gradient(180deg,#3a3e52 0%,#21253a 8%,#141726 25%,#0d1020 55%,#090c18 100%);
+  border-bottom:1px solid rgba(180,200,230,0.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.14),inset 0 -1px 0 rgba(0,0,0,0.4),0 3px 18px rgba(0,0,0,0.6)
+}
+#header::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3) 30%,rgba(255,255,255,0.5) 50%,rgba(255,255,255,0.3) 70%,transparent)}
 
-/* ── フィルターバー ── */
-#filters{display:flex;align-items:center;gap:8px;padding:6px 14px;
-  background:#0a0a18;border-bottom:1px solid #151530;flex-shrink:0;
-  flex-wrap:wrap;min-height:36px}
-.flabel{font-size:11px;color:#404060;white-space:nowrap}
-#statusbar{font-size:11px;color:#404070;margin-left:auto;white-space:nowrap}
+/* タイトル：中間線・下方配置・大きめフォント */
+.logo-wrap{
+  position:relative;flex-shrink:0;cursor:pointer;
+  padding:4px 16px 18px;
+  background:#07091a;border-radius:8px;border:1px solid #1a2448
+}
+.logo-wrap::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1.5px;border-radius:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,136,68,0.9) 28%,rgba(102,136,255,0.9) 72%,transparent)
+}
+.logo-main{
+  font-family:'Zen Antique Soft',serif;
+  font-size:26px;font-weight:400;letter-spacing:5px;white-space:nowrap;display:block;
+  background:linear-gradient(110deg,#ff4422 0%,#ff7733 18%,#ffcc33 40%,#ffffff 55%,#e8f0ff 65%,#99bbff 82%,#5588ff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 14px rgba(255,120,50,0.45)) drop-shadow(0 2px 3px rgba(0,0,0,0.9))
+}
+.logo-lines{position:absolute;bottom:4px;left:8%;right:8%}
+.logo-line-main{height:3.5px;border-radius:1.75px;background:linear-gradient(90deg,transparent,rgba(255,136,68,0.95) 28%,rgba(102,136,255,0.95) 72%,transparent)}
+.logo-line-f1{height:1.2px;border-radius:0.6px;margin-top:2px;width:80%;margin-left:10%;background:linear-gradient(90deg,transparent,rgba(255,136,68,0.38) 28%,rgba(102,136,255,0.38) 72%,transparent)}
+.logo-line-f2{height:0.8px;border-radius:0.4px;margin-top:2px;width:55%;margin-left:22.5%;background:linear-gradient(90deg,transparent,rgba(255,136,68,0.15) 28%,rgba(102,136,255,0.15) 72%,transparent)}
 
-/* ── コンテンツ ── */
-#content{flex:1;display:flex;overflow:hidden;position:relative}
-#map-area{flex:1;position:relative;min-width:0}
+/* ── ヘッダーレイアウト ── */
+/* スマホ：MAP/RANKタブをタイトル直後、スコアの見方・半径を右側 */
+.view-tabs{display:none;border:1px solid rgba(120,150,210,0.22);border-radius:8px;overflow:hidden;flex-shrink:0;margin-left:8px}
+.vtab{background:transparent;color:#4858a0;border:none;padding:4px 10px;cursor:pointer;
+  transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:1px;font-family:inherit}
+.vtab-icon{font-size:22px;line-height:1}
+.vtab-label{font-size:10px;font-weight:700;letter-spacing:0.5px;line-height:1;color:#4858a0}
+.vtab.active{background:rgba(70,100,220,0.28)}
+.vtab.active .vtab-icon,.vtab.active .vtab-label{color:#e0eaff}
+.vtab:hover:not(.active) .vtab-icon,.vtab:hover:not(.active) .vtab-label{color:#a0b8e0}
+@media(max-width:767px){
+  .view-tabs{display:flex}
+  #header{height:64px}
+}
+
+#header-controls{display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:auto}
+@media(min-width:768px){
+  #header-controls{flex-direction:row;align-items:center;gap:8px}
+}
+.info-btn{font-size:10px;color:#b0c4ff;font-weight:700;border:1px solid rgba(120,160,255,0.3);
+  padding:4px 9px;border-radius:16px;cursor:pointer;white-space:nowrap;
+  background:rgba(80,110,255,0.08);font-family:inherit}
+.info-btn:hover{border-color:rgba(160,200,255,0.55);color:#d8eaff}
+.hsel{background:rgba(8,12,26,0.8);color:#c8d6f0;border:1px solid rgba(120,150,210,0.28);
+  padding:4px 7px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600}
+
+#filters{display:flex;align-items:center;gap:4px;padding:4px 10px;
+  background:#050810;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;overflow-x:auto}
+.fsel{background:rgba(255,255,255,0.05);color:#c8d6f0;border:1px solid rgba(120,150,210,0.2);
+  padding:4px 5px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600}
+.fsel option{background:#0e1220;color:#d8e8ff;font-weight:600}
+#favFilter{background:rgba(255,70,110,0.1);border:1px solid rgba(255,80,120,0.32);
+  color:#cc4466;font-size:22px;cursor:pointer;padding:1px 7px;border-radius:7px;
+  line-height:1;transition:all 0.2s;flex-shrink:0}
+#favFilter.on{background:rgba(255,70,110,0.26);border-color:rgba(255,100,140,0.6);color:#ff5588}
+#favFilter:hover{transform:scale(1.1)}
+#searchInput{background:rgba(255,255,255,0.05);color:#d0daf0;border:1px solid rgba(120,150,210,0.2);
+  padding:4px 8px;border-radius:7px;font-size:11px;outline:none;font-family:inherit;
+  width:110px;min-width:80px;flex-shrink:1}
+#searchInput::placeholder{color:#3a4878}
+#statusbar{font-size:10px;color:#5878b8;white-space:nowrap;flex-shrink:0;font-weight:600;margin-left:auto}
+#statusbar.anim{color:#5a90ff;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:0.35}50%{opacity:1}}
+
+#content{flex:1;position:relative;overflow:hidden;display:flex}
+#map-area{position:relative;flex:1;min-width:0;overflow:hidden}
 #leaflet-map{width:100%;height:100%}
-.leaflet-container{background:#080810!important}
-.leaflet-tile-pane{filter:brightness(0.55) saturate(0.5) hue-rotate(200deg)}
+.leaflet-container{background:#e8e8e8!important}
+.leaflet-tile-pane{filter:brightness(0.72) saturate(0.6)}
+.leaflet-control-zoom{margin:12px!important}
+.leaflet-control-zoom a{background:#fff!important;color:#555!important;
+  border-color:rgba(0,0,0,0.15)!important;width:28px!important;height:28px!important;line-height:28px!important;font-size:15px!important}
+.leaflet-control-zoom a:hover{background:#f4f4f4!important}
 
-/* ── テーブルエリア（PC右パネル）── */
-#table-area{
-  width:300px;min-width:300px;background:#0a0a18;border-left:1px solid #151530;
-  display:none;flex-direction:column;overflow:hidden;flex-shrink:0
+#table-area{width:400px;flex-shrink:0;background:#050810;
+  border-left:1px solid rgba(255,255,255,0.07);flex-direction:column;display:none}
+@media(min-width:768px){#table-area{display:flex!important;position:static!important;width:400px!important}}
+@media(max-width:767px){
+  .leaflet-control-zoom{display:none!important}
+  #map-area.hidden-mobile{display:none}
+  #table-area.visible-mobile{display:flex!important;position:absolute!important;inset:0!important;width:100%!important;border:none!important;z-index:10}
 }
-.tbl-tabs{display:flex;border-bottom:1px solid #151530;flex-shrink:0}
-.ttab{flex:1;padding:8px 2px;text-align:center;font-size:11px;color:#404070;
-  cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
-.ttab.active{color:#8090e0;border-bottom-color:#6070c0}
-#tbl-body{flex:1;overflow-y:auto}
-.trow{display:flex;align-items:center;padding:7px 10px;border-bottom:1px solid #111128;
-  cursor:pointer;gap:7px;transition:background 0.1s}
-.trow:hover{background:#0e0e28}
-.trow.sel{background:#141440}
-.trow-no{width:24px;text-align:right;font-size:13px;font-weight:700;color:#303060;flex-shrink:0}
-.trow-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;border:1.5px solid}
-.trow-info{flex:1;min-width:0}
-.trow-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.trow-line{font-size:10px;color:#404070;margin-top:1px}
-.trow-cats{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
-.tcat{font-size:9px;padding:1px 4px;border-radius:3px;font-weight:700}
-.trow-score{font-size:18px;font-weight:900;text-align:right;flex-shrink:0;line-height:1}
-.trow-pts{font-size:9px;color:#303060;text-align:right}
 
-/* ── 凡例 ── */
-#legend{position:absolute;bottom:16px;left:14px;z-index:1000;
-  background:rgba(8,8,20,0.92);border:1px solid #1e1e3a;border-radius:8px;padding:10px 13px}
-.leg-title{font-size:9px;color:#404070;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
-.leg-item{display:flex;align-items:center;gap:7px;margin-bottom:3px;font-size:11px;color:#808090}
-.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+#gpsBtn{position:absolute;top:10px;right:10px;z-index:1000;width:34px;height:34px;
+  border-radius:50%;background:rgba(255,255,255,0.96);border:1px solid rgba(0,0,0,0.15);
+  color:#444;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15)}
+#legend-toggle{position:absolute;bottom:10px;left:10px;z-index:1001;
+  background:rgba(4,7,18,0.9);border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;color:#9098c8;padding:5px 9px;cursor:pointer;
+  font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap}
+#legend{position:absolute;bottom:46px;left:10px;z-index:1000;
+  background:rgba(4,7,18,0.94);border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:10px 13px;backdrop-filter:blur(10px);
+  transform:translateX(-160%);transition:transform 0.25s ease}
+#legend.show{transform:translateX(0)}
+@media(min-width:768px){
+  #legend{transform:none!important;bottom:20px;left:14px;padding:11px 14px}
+  #legend-toggle{display:none}
+}
+.leg-title{font-size:9px;color:#6070a0;letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;font-weight:700}
+.leg-item{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px;color:#a0b0d0;font-weight:600}
+.leg-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
 
-/* ── 情報パネル（クリック時）── */
-#info-panel{position:absolute;bottom:16px;right:16px;z-index:1000;
-  background:rgba(10,10,24,0.97);border:1px solid #252550;border-radius:12px;
-  padding:14px 16px;min-width:200px;max-width:260px;display:none;
-  box-shadow:0 4px 20px rgba(0,0,0,0.6)}
-.ip-name{font-size:17px;font-weight:900;color:#e8eaf0;margin-bottom:3px}
-.ip-line{font-size:10px;color:#505080;margin-bottom:8px}
-.ip-score{font-size:36px;font-weight:900;line-height:1;margin-bottom:4px}
-.ip-rank{font-size:12px;margin-bottom:10px;font-weight:700}
-.ip-axes{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.ip-ax{background:#12122a;border-radius:6px;padding:6px 8px}
-.ip-ax-name{font-size:9px;color:#404060;margin-bottom:2px}
-.ip-ax-val{font-size:14px;font-weight:900}
-.ip-ax-count{font-size:9px;color:#303050}
+#info-panel{position:absolute;bottom:8px;right:8px;z-index:1001;
+  background:rgba(4,7,20,0.97);border:1px solid rgba(255,255,255,0.12);
+  border-radius:13px;padding:14px;min-width:215px;max-width:255px;
+  display:none;backdrop-filter:blur(16px);box-shadow:0 10px 40px rgba(0,0,0,0.8)}
+.ip-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+.ip-name{font-size:18px;font-weight:900;color:#fff;letter-spacing:0.5px}
+/* ★ 路線名・県名を明るく */
+.ip-line{font-size:10px;color:#a0b4d8;margin-top:3px;line-height:1.5}
+.ip-actions{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.ip-close{background:none;border:none;color:#5060a0;font-size:16px;cursor:pointer;padding:0}
+.ip-close:hover{color:#fff}
+.ip-fav{background:none;border:none;font-size:18px;cursor:pointer;padding:0;transition:transform 0.15s;line-height:1;color:#ffffff}
+.ip-fav:hover{transform:scale(1.3)}
+.ip-share{background:rgba(0,0,0,0.3);border:1px solid rgba(100,140,255,0.28);
+  color:#8898f0;font-size:9px;padding:3px 7px;border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700}
+.ip-share:hover{color:#c0d8ff}
+.ip-score{font-size:50px;font-weight:900;line-height:1;letter-spacing:-2px}
+.ip-rank-lbl{font-size:10px;font-weight:700;margin-top:2px;margin-bottom:11px;letter-spacing:1.5px}
+.ip-nearby{display:none;margin-bottom:11px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:9px;border:1px solid rgba(255,255,255,0.07)}
+@media(min-width:768px){.ip-nearby{display:block}}
+.ip-nearby-title{font-size:9px;color:#5060b0;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:700}
+.ip-nearby-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;font-size:11px}
+.ip-nearby-name{color:#c0d0e8;font-weight:600}
+.ip-nearby-score{font-weight:800}
+.ip-axes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ip-axis{display:flex;flex-direction:column;gap:3px}
+.ip-axis-lbl{font-size:11px;color:#a0b4d8;font-weight:700}
+.ip-axis-row{display:flex;align-items:center;gap:5px}
+.ip-track{flex:1;height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden}
+.ip-fill{height:4px;border-radius:2px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1)}
+.ip-pts{font-size:12px;font-weight:700;min-width:32px;text-align:right}
 
-/* ── ローディング ── */
-#loading{position:absolute;inset:0;z-index:500;background:rgba(8,8,16,0.85);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
-.ld-ring{width:36px;height:36px;border:3px solid #1a1a40;
-  border-top-color:#6080ff;border-radius:50%;animation:spin 0.8s linear infinite}
+#loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  background:rgba(4,7,18,0.75);z-index:3000;backdrop-filter:blur(4px)}
+#loading.show{display:flex}
+.ld-ring{width:36px;height:36px;border:2px solid rgba(255,255,255,0.07);border-top-color:#5a88ff;
+  border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+.ld-txt{font-size:12px;color:#7080b8;font-weight:600;text-align:center}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ld-txt{font-size:12px;color:#6070a0;letter-spacing:1px}
+@keyframes selPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
 
-/* ── スコアモーダル ── */
-#modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:5000;
-  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+/* DEV MODE */
+#dev-badge{display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  background:#ff3355;color:#fff;padding:3px 14px;border-radius:12px;
+  font-size:11px;font-weight:700;z-index:1000;letter-spacing:1.5px;box-shadow:0 2px 10px rgba(255,50,80,0.5)}
+#dev-overlay{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:#08101e;border:2px solid #4466ff;border-radius:14px;padding:20px;
+  z-index:9999;min-width:320px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.95)}
+.dev-head{font-size:10px;color:#4458a0;margin-bottom:8px;letter-spacing:2px;font-weight:700}
+.dev-station{font-size:16px;font-weight:700;margin-bottom:6px;color:#fff}
+.dev-count{font-size:11px;color:#5878b8;margin-bottom:8px;font-weight:600}
+.dev-code{background:#040810;padding:10px;border-radius:8px;margin-bottom:12px;
+  color:#88ccff;font-size:11px;font-family:monospace;word-break:break-all;line-height:1.7;max-height:200px;overflow-y:auto}
+.dev-btns{display:flex;gap:8px;flex-wrap:wrap}
+.dev-copy{flex:1;background:#4466ff;border:none;color:#fff;padding:9px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit}
+.dev-clear{flex:1;background:#882244;border:none;color:#fff;padding:9px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;font-family:inherit}
+.dev-close{flex:1;background:#101828;border:1px solid #2a3860;color:#7080b0;padding:9px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit}
+
+/* ★ ランクタブ・ランク文字のサイズアップ */
+#rank-tabs{display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;background:#050810}
+.rank-tab{background:transparent;border:none;color:#5060a0;padding:9px 11px;
+  font-size:14px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;font-weight:700;
+  letter-spacing:1px;border-bottom:2px solid transparent;flex-shrink:0}
+.rank-tab.active{color:#e0eaff;border-bottom-color:#5a80ff}
+.rank-tab:hover:not(.active){color:#8090d0}
+#sort-dir-btn{margin-left:auto;background:transparent;border:none;color:#6070a0;
+  font-size:16px;font-weight:900;cursor:pointer;padding:0 12px;font-family:inherit;transition:color 0.15s}
+#sort-dir-btn:hover{color:#c0d0ff}
+.rank-header{padding:8px 14px 6px;border-bottom:1px solid rgba(255,255,255,0.06);
+  font-size:10px;color:#8898c0;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;
+  display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.rank-avg{font-size:10px;color:#6080c0;font-weight:600;letter-spacing:0}
+#rank-list{flex:1;overflow-y:auto}
+.rank-row{display:flex;align-items:flex-start;gap:8px;padding:8px 14px 7px;
+  border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background 0.12s}
+.rank-row:hover{background:rgba(255,255,255,0.04)}
+.rank-left{display:flex;flex-direction:column;align-items:center;width:24px;flex-shrink:0;padding-top:1px}
+.rn{font-size:18px;font-weight:900;color:#e8eeff;font-variant-numeric:tabular-nums;line-height:1.2}
+.rn.top3{color:#ffffff;font-size:20px;text-shadow:0 0 8px rgba(180,200,255,0.5)}
+/* ★ ランク文字サイズアップ */
+.rletter{font-size:17px;font-weight:900;line-height:1.1}
+.top3+.rletter{font-size:19px}
+.rinfo{flex:1;min-width:0}
+.rname-row{display:flex;align-items:center;gap:5px}
+.rname{font-size:15px;font-weight:700;color:#e0ecff;letter-spacing:0.3px}
+.rfav{font-size:13px;cursor:pointer;line-height:1;flex-shrink:0;transition:transform 0.15s;color:#4a5070}
+.rfav.on{color:#ff5588}
+.rfav:hover{transform:scale(1.3)}
+/* ★ 路線名・県名を明るく */
+.rline{font-size:11px;color:#b0c4e0;margin-top:2px;font-weight:500}
+.rcats{display:flex;gap:3px;margin-top:5px;flex-wrap:nowrap;overflow:hidden}
+.rcat{font-size:9px;padding:2px 5px;border-radius:3px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.rscore{font-size:23px;font-weight:900;flex-shrink:0;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;min-width:46px;text-align:right;padding-top:1px}
+
+#modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.87);z-index:5000;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(7px)}
 #modal-bg.open{display:flex}
-#modal{background:#0d0d20;border:1px solid #1e1e3a;border-radius:16px;
-  padding:22px;width:340px;max-height:86vh;overflow-y:auto;
-  box-shadow:0 20px 60px rgba(0,0,0,0.8)}
-.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.modal-title{font-size:15px;font-weight:900;color:#e8eaf0}
-.modal-x{background:none;border:none;color:#404060;font-size:20px;cursor:pointer;line-height:1}
-.modal-x:hover{color:#e8eaf0}
-.modal-desc{font-size:11px;color:#505080;margin-bottom:18px;line-height:1.7}
-.modal-ax{display:flex;align-items:center;gap:12px;margin-bottom:10px;
-  padding:10px 12px;background:#0c0c20;border-radius:10px;border:1px solid #14142a}
-.modal-pt{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;
-  justify-content:center;font-weight:900;font-size:14px;color:#fff;flex-shrink:0}
-.modal-ax-name{font-size:12px;font-weight:700;color:#c0c8f0;margin-bottom:2px}
-.modal-ax-desc{font-size:10px;color:#404060;line-height:1.5}
-.modal-note{font-size:10px;color:#303050;margin-top:14px;line-height:1.8;
-  border-top:1px solid #14142a;padding-top:12px}
-
-/* ── DEVモード ── */
-.dev-overlay{position:fixed;bottom:60px;right:10px;z-index:6000;
-  background:rgba(0,100,0,0.9);color:#fff;padding:8px 12px;border-radius:8px;
-  font-size:11px;font-family:monospace;max-width:280px;pointer-events:none}
-.dev-badge{position:fixed;top:50px;left:50%;transform:translateX(-50%);
-  background:#008000;color:#fff;font-size:11px;font-weight:700;
-  padding:3px 12px;border-radius:0 0 8px 8px;z-index:6000;letter-spacing:2px}
-
-/* ── スマホ ── */
-@media(max-width:640px){
-  #table-area{display:none!important}
-  #info-panel{right:8px;bottom:70px;left:8px;max-width:none}
-  #legend{bottom:70px}
-}
+#modal{background:linear-gradient(160deg,#0c1025 0%,#09101e 60%,#07091a 100%);
+  border:1px solid rgba(130,170,255,0.2);border-radius:18px;
+  padding:24px;width:360px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 24px 80px rgba(0,0,0,0.9),inset 0 1px 0 rgba(255,255,255,0.08)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.modal-title{font-size:20px;font-weight:900;color:#fff}
+.modal-x{background:none;border:none;color:#7080b8;font-size:24px;cursor:pointer;font-family:inherit}
+.modal-x:hover{color:#fff}
+.modal-desc{font-size:13px;color:#b0c4e0;margin-bottom:20px;line-height:1.78}
+.modal-ax{display:flex;align-items:center;gap:13px;margin-bottom:11px;padding:13px 14px;
+  background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(130,170,255,0.14)}
+.modal-pt{width:50px;height:50px;border-radius:11px;display:flex;align-items:center;
+  justify-content:center;font-weight:900;font-size:18px;color:#fff;flex-shrink:0}
+.modal-ax-name{font-weight:700;font-size:15px;color:#e8f0ff;margin-bottom:4px}
+.modal-ax-desc{font-size:12px;color:#9aa8cc;line-height:1.6}
+.modal-note{font-size:11px;color:#6878b8;margin-top:16px;line-height:2.0;
+  border-top:1px solid rgba(255,255,255,0.08);padding-top:14px}
 </style>
 </head>
 <body>
 <div id="app">
   <div id="header">
-    <div class="logo" onclick="openModal()">
+    <div class="logo-wrap" onclick="openModal()">
       <span class="logo-main">街の戦闘力</span>
-      <span class="logo-sub">Commercial Power Index ⓘ</span>
-    </div>
-    <div class="hcontrols">
-      <select class="hsel" id="radiusSelect" onchange="onRadiusChange()">
-        <option value="500">半径 500m</option>
-        <option value="800" selected>半径 800m</option>
-        <option value="1000">半径 1,000m</option>
-      </select>
-      <div class="view-tabs">
-        <button class="vtab active" id="btnMap" onclick="setView('map')">🗺 MAP</button>
-        <button class="vtab" id="btnTable" onclick="setView('table')">📊 ランキング</button>
+      <div class="logo-lines">
+        <div class="logo-line-main"></div>
+        <div class="logo-line-f1"></div>
+        <div class="logo-line-f2"></div>
       </div>
+    </div>
+    <!-- スマホのみ：タイトル直後にMAP/RANKタブ -->
+    <div class="view-tabs">
+      <button class="vtab active" id="btnMap" onclick="setView('map')">
+        <span class="vtab-icon">🗺</span>
+        <span class="vtab-label">MAP</span>
+      </button>
+      <button class="vtab" id="btnTable" onclick="setView('table')">
+        <span class="vtab-icon">📊</span>
+        <span class="vtab-label">RANK</span>
+      </button>
+    </div>
+    <div id="header-controls">
+      <button class="info-btn" onclick="openModal()">スコアの見方 ⓘ</button>
+      <select class="hsel" id="radiusSelect" onchange="onRadiusChange()">
+        <option value="500" selected>半径 500m</option>
+        <option value="800">半径 800m</option>
+        <option value="1200">半径 1,200m</option>
+      </select>
     </div>
   </div>
 
   <div id="filters">
-    <span class="flabel">絞り込み：</span>
-    <select class="hsel" id="prefSelect" onchange="onPrefChange()">
+    <select class="fsel" id="prefSelect" onchange="onPrefChange()">
       <option value="">全エリア</option>
       <option value="東京都">東京都</option>
       <option value="神奈川県">神奈川県</option>
       <option value="埼玉県">埼玉県</option>
       <option value="千葉県">千葉県</option>
     </select>
-    <select class="hsel" id="lineSelect" onchange="render()">
-      <option value="">全路線</option>
+    <select class="fsel" id="lineSelect" onchange="render()"><option value="">全路線</option></select>
+    <select class="fsel" id="rankFilter" onchange="render()">
+      <option value="">全ランク</option>
+      <option value="S">S</option><option value="A">A</option>
+      <option value="B">B</option><option value="C">C</option><option value="D">D</option>
     </select>
-    <span id="statusbar">読み込み中...</span>
+    <button id="favFilter" onclick="toggleFavFilter()">♥</button>
+    <input type="text" id="searchInput" placeholder="駅名・路線名..." oninput="render()">
+    <span id="statusbar"></span>
   </div>
 
   <div id="content">
     <div id="map-area">
       <div id="leaflet-map"></div>
-
+      <button id="gpsBtn" onclick="gotoCurrentLocation()">📍</button>
+      <div id="dev-badge">⚡ DEV MODE</div>
+      <button id="legend-toggle" onclick="toggleLegend()">ランク表示</button>
       <div id="legend">
         <div class="leg-title">戦闘力ランク</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#ffd700;box-shadow:0 0 6px #ffd70088"></div>S　800〜1000</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#ff4444"></div>A　600〜799</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#ff8c00"></div>B　400〜599</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#44aaff"></div>C　200〜399</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#44cc88"></div>D　100〜199</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#556677"></div>E　0〜99</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#ff2244"></div>S　800〜1000</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#ff8800"></div>A　600〜799</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#ffd700"></div>B　400〜599</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#44cc88"></div>C　200〜399</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#44aaff"></div>D　0〜199</div>
       </div>
-
       <div id="info-panel">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-          <div>
-            <div class="ip-name" id="ip-name"></div>
-            <div class="ip-line" id="ip-line"></div>
+        <div class="ip-head">
+          <div style="flex:1;min-width:0"><div class="ip-name" id="ip-name"></div><div class="ip-line" id="ip-line"></div></div>
+          <div class="ip-actions">
+            <button class="ip-fav" id="ip-fav-btn" onclick="toggleFav(currentStation)">♡</button>
+            <button class="ip-share" onclick="shareStation()">X 共有</button>
+            <button class="ip-close" onclick="closeInfo()">✕</button>
           </div>
-          <button onclick="closeInfo()" style="background:none;border:none;color:#404060;font-size:18px;cursor:pointer;padding:2px;line-height:1">✕</button>
         </div>
         <div class="ip-score" id="ip-score"></div>
-        <div class="ip-rank" id="ip-rank"></div>
-        <div class="ip-axes" id="ip-axes"></div>
+        <div class="ip-rank-lbl" id="ip-rank"></div>
+        <div class="ip-nearby" id="ip-nearby"></div>
+        <div class="ip-axes-grid" id="ip-axes"></div>
       </div>
-
-      <div id="loading">
-        <div class="ld-ring"></div>
-        <div class="ld-txt" id="ld-msg">データ取得中...</div>
-      </div>
+      <div id="loading"><div><div class="ld-ring"></div><div class="ld-txt">データ取得中...</div></div></div>
     </div>
-
     <div id="table-area">
-      <div class="tbl-tabs">
-        <div class="ttab active" data-ax="score" onclick="setTableTab(this)">総合</div>
-        <div class="ttab" data-ax="飲食" onclick="setTableTab(this)">飲食</div>
-        <div class="ttab" data-ax="商業" onclick="setTableTab(this)">商業</div>
-        <div class="ttab" data-ax="生活" onclick="setTableTab(this)">生活</div>
-        <div class="ttab" data-ax="医療" onclick="setTableTab(this)">医療</div>
+      <div id="rank-tabs">
+        <button class="rank-tab active" data-axis="総合" onclick="setRankAxis('総合')">総合</button>
+        <button class="rank-tab" data-axis="飲食" onclick="setRankAxis('飲食')">飲食</button>
+        <button class="rank-tab" data-axis="商業" onclick="setRankAxis('商業')">商業</button>
+        <button class="rank-tab" data-axis="生活" onclick="setRankAxis('生活')">生活</button>
+        <button class="rank-tab" data-axis="医療" onclick="setRankAxis('医療')">医療</button>
+        <button id="sort-dir-btn" onclick="toggleSortDir()">↓</button>
       </div>
-      <div id="tbl-body"></div>
+      <div class="rank-header">
+        <span id="rank-header-txt">ランキング</span>
+        <span class="rank-avg" id="rank-avg"></span>
+      </div>
+      <div id="rank-list"></div>
     </div>
   </div>
 </div>
 
-<!-- スコアモーダル -->
-<div id="modal-bg" onclick="if(event.target===this)closeModal()">
-  <div id="modal">
-    <div class="modal-hdr">
-      <div class="modal-title">戦闘力スコアの算出方法</div>
-      <button class="modal-x" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-desc">
-      各駅から指定半径圏内の商業施設数をもとに<strong style="color:#c0d0ff">1000点満点</strong>で数値化。<br>
-      <strong style="color:#8090e0">対数スケール</strong>＋相対評価（エリア内最多駅が基準）により自然なランク分布を実現。<br><br>
-      データ：<strong style="color:#8090e0">Overture Maps</strong>（Meta・Microsoft・Amazon等提供のオープンデータ）
-    </div>
-    <div class="modal-ax">
-      <div class="modal-pt" style="background:linear-gradient(135deg,#ff3355,#ff6080)">350</div>
-      <div>
-        <div class="modal-ax-name">飲食充実</div>
-        <div class="modal-ax-desc">飲食店・カフェ・バー・ファストフード等の施設数をもとに対数評価</div>
-      </div>
-    </div>
-    <div class="modal-ax">
-      <div class="modal-pt" style="background:linear-gradient(135deg,#7755cc,#9977ee)">350</div>
-      <div>
-        <div class="modal-ax-name">商業・小売</div>
-        <div class="modal-ax-desc">百貨店・ショッピング・アパレル・娯楽施設等の施設数をもとに対数評価</div>
-      </div>
-    </div>
-    <div class="modal-ax">
-      <div class="modal-pt" style="background:linear-gradient(135deg,#2266bb,#44aadd)">200</div>
-      <div>
-        <div class="modal-ax-name">生活利便</div>
-        <div class="modal-ax-desc">コンビニ・スーパー・薬局・銀行・美容院等の施設数をもとに対数評価</div>
-      </div>
-    </div>
-    <div class="modal-ax">
-      <div class="modal-pt" style="background:linear-gradient(135deg,#cc7700,#ffaa22)">100</div>
-      <div>
-        <div class="modal-ax-name">医療・福祉</div>
-        <div class="modal-ax-desc">病院・クリニック・歯科・調剤薬局等の施設数をもとに対数評価</div>
-      </div>
-    </div>
-    <div class="modal-note">
-      ※ スコアはエリア内相対評価のため、対象エリア変更でランクが変わる場合があります。<br>
-      ※ 本スコアは商業施設密度のみを反映。居住環境・治安・家賃等は含みません。<br>
-      ※ Overture Mapsデータは定期更新。スコアは自動反映されます。
-    </div>
+<div id="dev-overlay">
+  <div class="dev-head">⚡ DEV MODE — 座標修正</div>
+  <div class="dev-station" id="dev-name"></div>
+  <div class="dev-count" id="dev-count"></div>
+  <div class="dev-code" id="dev-code"></div>
+  <div class="dev-btns">
+    <button class="dev-copy" onclick="copyDevCoords()">📋 全件コピー</button>
+    <button class="dev-clear" onclick="clearDevFixes()">🗑 リセット</button>
+    <button class="dev-close" onclick="document.getElementById('dev-overlay').style.display='none'">✕ 閉じる</button>
+  </div>
+</div>
+
+<div id="modal-bg" onclick="closeModal()">
+  <div id="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr"><div class="modal-title">戦闘力スコアの算出方法</div><button class="modal-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-desc">各駅から指定半径圏内の商業施設数をもとに<strong style="color:#e8f4ff">1000点満点</strong>で数値化。<br><strong style="color:#90b8ff">対数スケール</strong>採用により自然なランク分布になります。<br><br>データ：<strong style="color:#90b8ff">Overture Maps</strong>（Meta・Microsoft・Amazon等提供）</div>
+    <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#ff3355,#ff6080)">350</div><div><div class="modal-ax-name">飲食充実</div><div class="modal-ax-desc">飲食店・カフェ・バー・ファストフード等</div></div></div>
+    <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#7b5fe8,#a080ff)">350</div><div><div class="modal-ax-name">商業・小売</div><div class="modal-ax-desc">百貨店・ショッピング・アパレル・娯楽施設等</div></div></div>
+    <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#2a8fd4,#50b8ff)">200</div><div><div class="modal-ax-name">生活利便</div><div class="modal-ax-desc">コンビニ・スーパー・薬局・銀行・美容院等</div></div></div>
+    <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#c06800,#f09030)">100</div><div><div class="modal-ax-name">医療・福祉</div><div class="modal-ax-desc">病院・クリニック・歯科・調剤薬局等</div></div></div>
+    <div class="modal-note">※ 各軸は施設数最多の駅を基準とした対数相対評価です。<br>※ 本スコアは商業施設密度のみを反映。居住環境・治安等は含みません。<br>※ Overture Mapsデータは月次更新。</div>
   </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  DEVモード
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const DEV_MODE = location.search.includes('dev=1');
+// ═══ Favicon ═══
+(function(){
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#030810"/><rect x="3" y="16" width="5" height="14" fill="#1a40cc" stroke="#5588ff" stroke-width="0.8"/><rect x="9" y="10" width="8" height="20" fill="#1533bb" stroke="#77bbff" stroke-width="1"/><rect x="10" y="12" width="2" height="2" fill="#99eeff"/><rect x="13" y="12" width="2" height="2" fill="#55bbff"/><rect x="10" y="17" width="2" height="2" fill="#55bbff"/><rect x="13" y="17" width="2" height="2" fill="#99eeff"/><rect x="18" y="12" width="7" height="18" fill="#1a3ecc" stroke="#6699ff" stroke-width="0.8"/><rect x="19" y="14" width="2" height="2" fill="#88ccff"/><rect x="22" y="14" width="2" height="2" fill="#55aaff"/><rect x="3" y="29" width="26" height="1.5" fill="#3366ff"/><text x="30" y="9" font-family="Arial" font-size="8" font-weight="900" fill="#ffd700" text-anchor="end">1000</text></svg>`;
+  const link=document.createElement('link');
+  link.rel='icon';link.type='image/svg+xml';
+  link.href='data:image/svg+xml,'+encodeURIComponent(svg);
+  document.head.appendChild(link);
+})();
+
+// ═══ DEV MODE ═══
+const DEV_MODE=new URLSearchParams(window.location.search).get('dev')==='1';
+const DEV_LS_KEY='spc_dev_fixes';
+function applyDevFixes(){
+  if(!DEV_MODE)return;
+  const fixes=JSON.parse(localStorage.getItem(DEV_LS_KEY)||'{}');
+  Object.entries(fixes).forEach(([name,[lat,lng]])=>{if(COORDS[name])COORDS[name]=[lat,lng];});
+}
+function showDevOverlay(name,lat,lng){
+  const fixes=JSON.parse(localStorage.getItem(DEV_LS_KEY)||'{}');
+  const count=Object.keys(fixes).length;
+  document.getElementById('dev-name').textContent=name+'駅 → 新座標';
+  document.getElementById('dev-count').textContent='保存済み修正：'+count+'件（F5しても消えません）';
+  const allLines=Object.entries(fixes).map(([n,[la,ln]])=>`'${n}':[${la},${ln}]`).join(',\n');
+  document.getElementById('dev-code').textContent=allLines||'(まだ修正なし)';
+  document.getElementById('dev-overlay').style.display='block';
+}
+function copyDevCoords(){
+  const txt=document.getElementById('dev-code').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.querySelector('.dev-copy');
+    btn.textContent='✅ コピー完了！';
+    setTimeout(()=>btn.textContent='📋 全件コピー',2000);
+  });
+}
+function clearDevFixes(){
+  if(!confirm('修正をすべてリセットしますか？'))return;
+  localStorage.removeItem(DEV_LS_KEY);
+  document.getElementById('dev-overlay').style.display='none';
+  location.reload();
+}
 if(DEV_MODE){
-  const badge=document.createElement('div');
-  badge.className='dev-badge';badge.textContent='⚙ DEV MODE';
-  document.body.appendChild(badge);
+  document.getElementById('dev-badge').style.display='block';
+  document.body.style.outline='3px solid #ff3355';
 }
 
-// DEVモードで保存済み修正をロード
-const devFixes = DEV_MODE ? JSON.parse(localStorage.getItem('spc_dev_fixes')||'{}') : {};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  ランク定義
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const RANKS = [
-  {rank:'S',color:'#ffd700',glow:'#ffd70066',border:'#ffd700',bg:'rgba(255,215,0,0.15)',min:800},
-  {rank:'A',color:'#ff4444',glow:'#ff444422',border:'#ff4444',bg:'rgba(255,68,68,0.12)',min:600},
-  {rank:'B',color:'#ff8c00',glow:'#ff8c0022',border:'#ff8c00',bg:'rgba(255,140,0,0.12)',min:400},
-  {rank:'C',color:'#44aaff',glow:'#44aaff22',border:'#44aaff',bg:'rgba(68,170,255,0.12)',min:200},
-  {rank:'D',color:'#44cc88',glow:'#44cc8822',border:'#44cc88',bg:'rgba(68,204,136,0.12)',min:100},
-  {rank:'E',color:'#556677',glow:'#55667722',border:'#556677',bg:'rgba(85,102,119,0.10)',min:0},
+// ═══ 定数 ═══
+const RANKS=[
+  {rank:'S',color:'#ff2244',glow:'rgba(255,34,68,0.7)',min:800},
+  {rank:'A',color:'#ff8800',glow:'rgba(255,136,0,0.65)',min:600},
+  {rank:'B',color:'#ffd700',glow:'rgba(255,215,0,0.65)',min:400},
+  {rank:'C',color:'#44cc88',glow:'rgba(68,204,136,0.65)',min:200},
+  {rank:'D',color:'#44aaff',glow:'rgba(68,170,255,0.65)',min:0}
 ];
-function getRankInfo(score){ return RANKS.find(r=>score>=r.min)||RANKS[5]; }
+function getRank(s){return RANKS.find(r=>s>=r.min)||RANKS[4];}
+const AC={'飲食':'#ff4466','商業':'#9070ff','生活':'#3aa0ff','医療':'#f09030'};
+const isPc=()=>window.innerWidth>=768;
 
-const AXIS_COLORS={'飲食':'#ff3355','商業':'#9966ee','生活':'#44aadd','医療':'#ffaa22'};
+function shortLine(l){return l.replace('東京メトロ','').replace(/^JR/,'').trim();}
+// ★ 路線を最大3本まで表示
+function formatLinesDisplay(lines){
+  const c=lines.map(shortLine);
+  if(c.length<=3)return c.join(' / ');
+  return c.slice(0,3).join(' / ')+' ほか';
+}
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  路線データ（都県別）
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const LINE_ORDER=[
+  '山手線','京浜東北線','中央線','総武線','東海道線','常磐線','常磐線各駅停車','埼京線','京葉線',
+  '東京メトロ銀座線','東京メトロ丸ノ内線','東京メトロ日比谷線','東京メトロ東西線',
+  '東京メトロ千代田線','東京メトロ有楽町線','東京メトロ半蔵門線','東京メトロ南北線','東京メトロ副都心線',
+  '都営浅草線','都営三田線','都営新宿線','都営大江戸線',
+  '東急東横線','東急田園都市線','東急目黒線','東急大井町線',
+  '小田急小田原線','小田急江ノ島線','京王線','京王井の頭線',
+  '西武池袋線','西武新宿線','東武東上線','東武伊勢崎線',
+  '京成本線','京急本線','つくばエクスプレス','横浜市営ブルーライン','相鉄本線'
+];
+function sortedLineKeys(obj){
+  return Object.keys(obj).sort((a,b)=>{
+    const ai=LINE_ORDER.indexOf(a),bi=LINE_ORDER.indexOf(b);
+    if(ai===-1&&bi===-1)return a.localeCompare(b,'ja');
+    if(ai===-1)return 1;if(bi===-1)return -1;
+    return ai-bi;
+  });
+}
+
+// ═══ お気に入り ═══
+let favs=new Set(JSON.parse(localStorage.getItem('spc_favs')||'[]'));
+let showFavOnly=false;
+function isFav(st){return favs.has(st.name+'_'+st.pref);}
+function toggleFav(st){
+  if(!st)return;
+  const k=st.name+'_'+st.pref;
+  if(favs.has(k))favs.delete(k);else favs.add(k);
+  localStorage.setItem('spc_favs',JSON.stringify([...favs]));
+  updateFavBtn(st);render();
+}
+function updateFavBtn(st){
+  const btn=document.getElementById('ip-fav-btn');
+  if(btn)btn.textContent=isFav(st)?'♥':'♡';
+}
+function toggleFavFilter(){
+  showFavOnly=!showFavOnly;
+  document.getElementById('favFilter').classList.toggle('on',showFavOnly);render();
+}
+
+let currentStation=null;
+function shareStation(){
+  if(!currentStation)return;
+  const txt=`${currentStation.name}駅の戦闘力は ${currentStation.score}点（${getRank(currentStation.score).rank}ランク）！ #街の戦闘力`;
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent('https://street-power-production.up.railway.app'),'_blank');
+}
+
+let rankAxis='総合',sortDesc=true;
+function setRankAxis(axis){
+  rankAxis=axis;
+  document.querySelectorAll('.rank-tab').forEach(t=>t.classList.toggle('active',t.dataset.axis===axis));
+  render();
+}
+function toggleSortDir(){
+  sortDesc=!sortDesc;
+  document.getElementById('sort-dir-btn').textContent=sortDesc?'↓':'↑';render();
+}
+function getAxisScore(st){
+  if(rankAxis==='総合')return st.score||0;
+  return(st.details&&st.details[rankAxis])?st.details[rankAxis].pts:0;
+}
+
+let legendVisible=false;
+function toggleLegend(){
+  legendVisible=!legendVisible;
+  document.getElementById('legend').classList.toggle('show',legendVisible);
+}
+
+let userMarker=null;
+function gotoCurrentLocation(){
+  if(!navigator.geolocation){alert('位置情報が使えません');return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const{latitude:lat,longitude:lng}=pos.coords;
+    lmap.setView([lat,lng],15);
+    if(userMarker)lmap.removeLayer(userMarker);
+    const icon=L.divIcon({className:'',
+      html:'<div style="width:16px;height:16px;border-radius:50%;background:#3388ff;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>',
+      iconSize:[16,16],iconAnchor:[8,8]});
+    userMarker=L.marker([lat,lng],{icon}).addTo(lmap);
+    let nearest=null,minDist=Infinity;
+    stationData.forEach(st=>{
+      if(!st.score)return;
+      const d=Math.hypot(st.lat-lat,st.lng-lng);
+      if(d<minDist){minDist=d;nearest=st;}
+    });
+    if(nearest)showInfo(nearest);
+  },()=>alert('位置情報を取得できませんでした'));
+}
+
+function getRadius(){return document.getElementById('radiusSelect').value;}
+function onRadiusChange(){loadAll();}
+
+// ═══ 路線・駅データ（重複なし・都県ごとに正しく分割）═══
 const LINE_DATA={
   '東京都':{
-    'JR山手線':['東京','有楽町','新橋','浜松町','田町','高輪ゲートウェイ','品川','大崎','五反田','目黒','恵比寿','渋谷','原宿','代々木','新宿','新大久保','高田馬場','目白','池袋','大塚','巣鴨','駒込','田端','西日暮里','日暮里','鶯谷','上野','御徒町','秋葉原','神田'],
-    'JR中央線':['東京','神田','御茶ノ水','四ツ谷','新宿','中野','高円寺','阿佐ケ谷','荻窪','西荻窪','吉祥寺','三鷹'],
-    'JR総武線':['秋葉原','浅草橋','両国','錦糸町','亀戸','平井','新小岩','小岩'],
-    'JR総武線快速':['東京','新日本橋','馬喰町','錦糸町','新小岩','市川','本八幡','下総中山','西船橋'],
-    'JR京浜東北線':['田端','上中里','王子','東十条','赤羽','田町','大井町','大森','蒲田'],
-    'JR埼京線':['大崎','恵比寿','渋谷','新宿','池袋','板橋','十条','赤羽','北赤羽'],
-    'JR常磐線':['上野','日暮里','三河島','南千住','北千住','綾瀬','亀有','金町'],
-    'JR京葉線':['東京','八丁堀','越中島','潮見','新木場','東雲','国際展示場','東京テレポート','葛西臨海公園','舞浜','新浦安','南船橋','海浜幕張','稲毛海岸','千葉みなと'],
-    'りんかい線':['大崎','品川シーサイド','天王洲アイル','東京テレポート','東雲','国際展示場','新木場'],
-    '東京メトロ銀座線':['渋谷','表参道','外苑前','青山一丁目','赤坂見附','溜池山王','虎ノ門','新橋','銀座','京橋','日本橋','三越前','神田','末広町','上野広小路','上野','稲荷町','田原町','浅草'],
-    '東京メトロ丸ノ内線':['池袋','新大塚','茗荷谷','後楽園','本郷三丁目','御茶ノ水','淡路町','大手町','東京','銀座','霞ケ関','国会議事堂前','赤坂見附','四谷三丁目','新宿御苑前','新宿三丁目','西新宿','中野坂上','新中野','東高円寺','新高円寺','方南町','中野富士見町','中野新橋'],
-    '東京メトロ日比谷線':['中目黒','広尾','六本木','神谷町','霞ケ関','日比谷','銀座','東銀座','築地','八丁堀','茅場町','人形町','小伝馬町','秋葉原','仲御徒町','上野','入谷','三ノ輪','南千住','北千住'],
+    '山手線':['東京','有楽町','新橋','浜松町','田町','高輪ゲートウェイ','品川','大崎','五反田','目黒','恵比寿','渋谷','原宿','代々木','新宿','新大久保','高田馬場','目白','池袋','大塚','巣鴨','駒込','田端','西日暮里','日暮里','鶯谷','上野','御徒町','秋葉原','神田'],
+    // ★ 京浜東北線：山手線と共有する中間駅を全部追加
+    '京浜東北線':['赤羽','東十条','王子','上中里','田端','西日暮里','日暮里','鶯谷','上野','御徒町','秋葉原','神田','東京','有楽町','新橋','浜松町','田町','品川','大井町','大森','蒲田'],
+    '中央線':['東京','神田','御茶ノ水','四ツ谷','新宿','中野','高円寺','阿佐ケ谷','荻窪','西荻窪','吉祥寺','三鷹','武蔵境','東小金井','武蔵小金井','国分寺','西国分寺','国立','立川','日野','豊田','八王子'],
+    // ★ 総武線：御茶ノ水〜新宿の各停区間も追加
+    '総武線':['新宿','代々木','千駄ヶ谷','信濃町','四ツ谷','市ケ谷','飯田橋','水道橋','御茶ノ水','秋葉原','浅草橋','両国','錦糸町','亀戸','平井','新小岩','小岩'],
+    '常磐線':['上野','日暮里','三河島','南千住','北千住'],
+    '常磐線各駅停車':['綾瀬','亀有','金町'],
+    '埼京線':['大崎','恵比寿','渋谷','新宿','池袋','板橋','十条','赤羽'],
+    '京葉線':['東京','八丁堀','越中島','潮見','新木場','葛西臨海公園'],
+    '東京メトロ銀座線':['渋谷','表参道','青山一丁目','赤坂見附','溜池山王','虎ノ門','新橋','銀座','京橋','日本橋','三越前','神田','末広町','上野広小路','上野','稲荷町','田原町','浅草'],
+    '東京メトロ丸ノ内線':['池袋','新大塚','茗荷谷','後楽園','本郷三丁目','御茶ノ水','淡路町','大手町','東京','銀座','霞ケ関','国会議事堂前','赤坂見附','四ツ谷','四谷三丁目','新宿御苑前','新宿三丁目','新宿','西新宿','中野坂上','中野富士見町','中野新橋','方南町'],
+    '東京メトロ日比谷線':['中目黒','恵比寿','広尾','六本木','神谷町','霞ケ関','日比谷','銀座','東銀座','築地','八丁堀','茅場町','人形町','小伝馬町','秋葉原','仲御徒町','上野','入谷','三ノ輪','南千住','北千住'],
     '東京メトロ東西線':['中野','落合','高田馬場','早稲田','神楽坂','飯田橋','九段下','竹橋','大手町','日本橋','茅場町','門前仲町','木場','東陽町','南砂町','西葛西','葛西'],
-    '東京メトロ千代田線':['代々木上原','代々木公園','明治神宮前','表参道','乃木坂','赤坂','国会議事堂前','霞ケ関','日比谷','二重橋前','大手町','新御茶ノ水','湯島','根津','千駄木','西日暮里','町屋','北千住','綾瀬'],
-    '東京メトロ有楽町線':['和光市','地下鉄成増','地下鉄赤塚','平和台','氷川台','小竹向原','千川','要町','池袋','東池袋','護国寺','江戸川橋','飯田橋','市ケ谷','麹町','永田町','桜田門','有楽町','銀座一丁目','新富町','月島','豊洲','辰巳','新木場'],
+    '東京メトロ千代田線':['代々木上原','代々木公園','明治神宮前','表参道','乃木坂','赤坂','国会議事堂前','霞ケ関','日比谷','二重橋前','大手町','新御茶ノ水','湯島','根津','千駄木','西日暮里','町屋','北千住'],
+    // ★ 和光市はSaitamaなので除外
+    '東京メトロ有楽町線':['地下鉄成増','地下鉄赤塚','平和台','氷川台','小竹向原','千川','要町','池袋','東池袋','護国寺','江戸川橋','飯田橋','市ケ谷','麹町','永田町','桜田門','有楽町','銀座一丁目','新富町','月島','豊洲','辰巳','新木場'],
     '東京メトロ半蔵門線':['渋谷','表参道','青山一丁目','永田町','半蔵門','九段下','神保町','大手町','三越前','水天宮前','清澄白河','住吉','錦糸町','押上'],
-    '東京メトロ南北線':['目黒','白金台','白金高輪','麻布十番','六本木一丁目','溜池山王','永田町','四ツ谷','市ケ谷','飯田橋','後楽園','東大前','本駒込','駒込','西ヶ原','王子','王子神谷','志茂','赤羽岩淵'],
-    '東京メトロ副都心線':['和光市','地下鉄成増','地下鉄赤塚','平和台','氷川台','小竹向原','千川','要町','池袋','雑司が谷','西早稲田','東新宿','新宿三丁目','北参道','明治神宮前','渋谷'],
-    '都営浅草線':['西馬込','馬込','中延','荏原中延','戸越','五反田','高輪台','泉岳寺','三田','大門','新橋','宝町','東日本橋','浅草橋','蔵前','浅草','本所吾妻橋','押上'],
+    '東京メトロ南北線':['目黒','白金台','白金高輪','麻布十番','六本木一丁目','溜池山王','永田町','四ツ谷','市ケ谷','飯田橋','後楽園','東大前','本駒込','駒込','西ケ原','王子','王子神谷','志茂','赤羽岩淵'],
+    '東京メトロ副都心線':['渋谷','明治神宮前','北参道','西新宿五丁目','新宿三丁目','東新宿','西早稲田','雑司が谷','池袋','要町','千川','小竹向原','新桜台','練馬','練馬春日町','光が丘'],
+    '都営浅草線':['西馬込','馬込','中延','戸越','五反田','高輪台','泉岳寺','三田','大門','新橋','東銀座','宝町','日本橋','人形町','東日本橋','浅草橋','蔵前','浅草','本所吾妻橋','押上'],
     '都営三田線':['目黒','白金台','白金高輪','三田','芝公園','御成門','内幸町','日比谷','大手町','神保町','水道橋','春日','白山','千石','巣鴨','西巣鴨','新板橋','板橋区役所前','板橋本町','本蓮沼','志村坂上','志村三丁目','蓮根','西台','高島平','新高島平','西高島平'],
     '都営新宿線':['新宿','新宿三丁目','曙橋','市ケ谷','九段下','神保町','小川町','岩本町','馬喰横山','浜町','森下','菊川','住吉','西大島','大島','東大島','船堀','一之江','瑞江','篠崎','本八幡'],
-    '都営大江戸線':['都庁前','新宿','西新宿五丁目','中野坂上','東中野','落合南長崎','新江古田','練馬','豊島園','練馬春日町','光が丘','都庁前','国立競技場','青山一丁目','六本木','麻布十番','赤羽橋','大門','汐留','築地市場','月島','門前仲町','清澄白河','森下','両国','蔵前','新御徒町','上野御徒町','本郷三丁目','春日','牛込神楽坂','牛込柳町','若松河田','東新宿'],
-    '東急東横線':['渋谷','代官山','中目黒','祐天寺','学芸大学','都立大学','自由が丘','田園調布','多摩川','新丸子','武蔵小杉','元住吉','日吉','綱島','大倉山','菊名','妙蓮寺','白楽','東白楽','反町','横浜'],
-    '東急田園都市線':['渋谷','池尻大橋','三軒茶屋','駒沢大学','桜新町','用賀','二子玉川','二子新地','高津','溝の口','梶が谷','宮崎台','宮前平','鷺沼','たまプラーザ','あざみ野','江田','市が尾','藤が丘','青葉台','田奈','長津田','つきみ野','南町田グランベリーパーク','中央林間'],
-    '東急目黒線':['目黒','不動前','武蔵小山','西小山','洗足','大岡山','奥沢','田園調布','多摩川','新丸子','武蔵小杉','元住吉','日吉'],
-    '東急池上線':['五反田','大崎広小路','戸越銀座','荏原中延','旗の台','長原','洗足池','石川台','雪が谷大塚','御嶽山','久が原','千鳥町','池上','蓮沼','蒲田'],
-    '小田急線':['新宿','南新宿','参宮橋','代々木八幡','代々木上原','東北沢','下北沢','世田谷代田','梅ヶ丘','豪徳寺','経堂','千歳船橋','祖師ヶ谷大蔵','成城学園前','喜多見','狛江','和泉多摩川','登戸','向ヶ丘遊園','生田','読売ランド前','百合ヶ丘','新百合ヶ丘','柿生','鶴川','玉川学園前','町田','相模大野'],
-    '京王線':['新宿','初台','幡ヶ谷','笹塚','代田橋','明大前','下高井戸','桜上水','上北沢','八幡山','芦花公園','千歳烏山','仙川','つつじヶ丘','柴崎','国領','布田','調布','飛田給','武蔵野台','多磨霊園','東府中','府中','分倍河原','中河原','聖蹟桜ヶ丘','百草園','高幡不動','南平','平山城址公園','長沼','北野','京王八王子'],
+    '都営大江戸線':['新宿','都庁前','西新宿五丁目','中野坂上','東中野','中井','落合南長崎','新江古田','練馬','豊島園','練馬春日町','光が丘','汐留','大門','赤羽橋','麻布十番','六本木','青山一丁目','国立競技場','代々木','新宿西口','東新宿','若松河田','牛込柳町','牛込神楽坂','飯田橋','春日','本郷三丁目','上野御徒町','新御徒町','蔵前','両国','森下','清澄白河','門前仲町','月島','勝どき','築地市場','汐留'],
+    // ★ 東急東横線：東京都内のみ
+    '東急東横線':['渋谷','代官山','中目黒','祐天寺','学芸大学','都立大学','自由が丘','田園調布','多摩川'],
+    // ★ 東急田園都市線：東京都内のみ
+    '東急田園都市線':['渋谷','池尻大橋','三軒茶屋','駒沢大学','桜新町','用賀','二子玉川'],
+    // ★ 東急目黒線：東京都内のみ
+    '東急目黒線':['目黒','不動前','武蔵小山','西小山','洗足','大岡山','奥沢','田園調布','多摩川'],
+    '東急大井町線':['大井町','下神明','戸越公園','中延','荏原町','旗の台','北千束','大岡山','緑が丘','自由が丘','九品仏','尾山台','等々力','上野毛','二子玉川'],
+    '小田急小田原線':['新宿','南新宿','参宮橋','代々木八幡','代々木上原','東北沢','下北沢','世田谷代田','梅ヶ丘','豪徳寺','経堂','千歳船橋','祖師ヶ谷大蔵','成城学園前','喜多見','狛江','和泉多摩川'],
+    '京王線':['新宿','笹塚','代田橋','明大前','下高井戸','桜上水','上北沢','八幡山','芦花公園','千歳烏山','仙川','つつじヶ丘','柴崎','国領','布田','調布','西調布','飛田給','武蔵野台','多磨霊園','東府中','府中','分倍河原','中河原','聖蹟桜ヶ丘','高幡不動','南平','平山城址公園','長沼','北野','京王八王子'],
     '京王井の頭線':['渋谷','神泉','駒場東大前','池ノ上','下北沢','新代田','東松原','明大前','永福町','西永福','浜田山','高井戸','富士見ヶ丘','久我山','三鷹台','井の頭公園','吉祥寺'],
-    '西武池袋線':['池袋','椎名町','東長崎','江古田','桜台','練馬','中村橋','富士見台','練馬高野台','石神井公園','大泉学園','保谷','ひばりヶ丘','東久留米','清瀬','秋津','所沢'],
-    '西武新宿線':['西武新宿','高田馬場','下落合','中井','新井薬師前','沼袋','野方','都立家政','鷺ノ宮','下井草','井荻','上井草','上石神井','武蔵関','東伏見','西武柳沢','田無','花小金井','小平','久米川','東村山','所沢'],
-    '東武伊勢崎線':['浅草','とうきょうスカイツリー','押上','曳舟','東向島','鐘ヶ淵','堀切','牛田','北千住','小菅','五反野','梅島','西新井','竹ノ塚'],
-    '東武東上線':['池袋','北池袋','下板橋','大山','中板橋','ときわ台','上板橋','東武練馬','下赤塚','成増','和光市'],
-    '京成押上線':['押上','京成曳舟','八広','四ツ木','京成立石','青砥'],
-    '京成本線':['日暮里','新三河島','三河島','京成関屋','千住大橋','堀切菖蒲園','青砥','京成高砂'],
-    'つくばエクスプレス':['秋葉原','新御徒町','浅草','南千住','北千住','青井','六町'],
-    'ゆりかもめ':['新橋','汐留','竹芝','日の出','芝浦ふ頭','お台場海浜公園','台場','東京国際クルーズターミナル','テレコムセンター','青海','有明テニスの森','有明','市場前','新豊洲','豊洲'],
-    '日暮里舎人ライナー':['日暮里','西日暮里','赤土小学校前','熊野前','足立小台','扇大橋','高野','江北','西新井大師西','谷在家','舎人公園','舎人','見沼代親水公園'],
+    '西武池袋線':['池袋','椎名町','東長崎','江古田','桜台','練馬','中村橋','富士見台','練馬高野台','石神井公園','大泉学園','保谷','ひばりが丘','東久留米','清瀬','秋津'],
+    '西武新宿線':['西武新宿','高田馬場','下落合','中井','新井薬師前','沼袋','野方','都立家政','鷺ノ宮','下井草','井荻','上井草','上石神井','武蔵関','東伏見','西武柳沢','田無','花小金井','小平','久米川','東村山'],
+    // ★ 東武東上線：東京都内のみ（成増まで）
+    '東武東上線':['池袋','北池袋','下板橋','大山','中板橋','ときわ台','上板橋','東武練馬','下赤塚','成増'],
+    'つくばエクスプレス':['秋葉原','新御徒町','浅草','南千住','北千住','青井','六町']
   },
   '神奈川県':{
-    'JR東海道線':['横浜','戸塚','大船','藤沢','辻堂','茅ケ崎','平塚','小田原'],
-    'JR横須賀線':['品川','西大井','武蔵小杉','新川崎','横浜','保土ケ谷','東戸塚','戸塚','大船'],
-    '東急東横線':['横浜','東白楽','白楽','妙蓮寺','菊名','大倉山','綱島','日吉','元住吉','武蔵小杉','新丸子','多摩川','田園調布'],
-    '東急田園都市線':['中央林間','つきみ野','南町田グランベリーパーク','長津田','青葉台','藤が丘','市が尾','江田','あざみ野','たまプラーザ','鷺沼','宮前平','宮崎台','梶が谷','溝の口','高津','二子新地','二子玉川'],
-    '小田急線':['相模大野','町田','玉川学園前','鶴川','柿生','新百合ヶ丘','百合ヶ丘','読売ランド前','生田','向ヶ丘遊園','登戸','和泉多摩川'],
-    '京急本線':['品川','北品川','新馬場','青物横丁','鮫洲','立会川','大森海岸','平和島','大森町','梅屋敷','京急蒲田','六郷土手','川崎'],
+    '東海道線':['横浜','戸塚','大船','藤沢','辻堂','茅ケ崎','平塚','小田原'],
+    // ★ 東急東横線：神奈川県内
+    '東急東横線':['新丸子','武蔵小杉','元住吉','日吉','綱島','大倉山','菊名','妙蓮寺','白楽','東白楽','反町','横浜'],
+    // ★ 東急田園都市線：神奈川県内
+    '東急田園都市線':['二子新地','高津','溝の口','梶が谷','宮崎台','宮前平','鷺沼','たまプラーザ','あざみ野','江田','市が尾','藤が丘','青葉台','田奈','長津田','つくし野','すずかけ台','南町田グランベリーパーク','つきみ野','中央林間'],
+    // ★ 東急目黒線：神奈川県内
+    '東急目黒線':['新丸子','武蔵小杉','日吉'],
+    '横浜市営ブルーライン':['あざみ野','新横浜','横浜','桜木町','関内','伊勢佐木長者町','上大岡','戸塚','湘南台'],
+    '相鉄本線':['横浜','天王町','星川','和田町','上星川','西谷','鶴ケ峰','二俣川','希望ケ丘','三ツ境','瀬谷','大和','海老名'],
+    '小田急小田原線':['登戸','向ヶ丘遊園','生田','読売ランド前','百合ヶ丘','新百合ヶ丘'],
+    '小田急江ノ島線':['相模大野','中央林間','南林間','鶴間','大和','桜ケ丘','高座渋谷','長後','湘南台','藤沢','片瀬江ノ島'],
+    '京急本線':['品川','北品川','新馬場','青物横丁','鮫洲','立会川','大森海岸','平和島','大森町','梅屋敷','京急蒲田','雑色','六郷土手','川崎']
   },
   '埼玉県':{
-    'JR京浜東北線':['さいたま新都心','大宮','土呂','東大宮','蓮田','久喜'],
-    'JR埼京線':['大宮','北与野','与野本町','武蔵浦和','中浦和','南与野'],
-    '東武伊勢崎線':['竹ノ塚','谷塚','草加','新越谷','越谷','北越谷','せんげん台','武里','春日部'],
-    '東武東上線':['和光市','朝霞','朝霞台','志木','川越'],
-    '西武池袋線':['所沢','秋津','清瀬','東久留米','ひばりヶ丘','保谷','大泉学園'],
+    '京浜東北線':['さいたま新都心','大宮','土呂','東大宮','蓮田','久喜'],
+    '埼京線':['大宮','北与野','与野本町','武蔵浦和','中浦和','南与野','西大宮','指扇','南古谷','川越'],
+    // ★ 東武東上線：埼玉県内（和光市以降）
+    '東武東上線':['和光市','朝霞','朝霞台','志木','柳瀬川','みずほ台','鶴瀬','ふじみ野','上福岡','新河岸','川越'],
+    // ★ 東武伊勢崎線：北千住は東京なので除外
+    '東武伊勢崎線':['小菅','五反野','梅島','西新井','竹ノ塚','谷塚','草加','新越谷','越谷','北越谷','大袋','せんげん台','武里','春日部'],
+    // ★ 東京メトロ有楽町線：埼玉区間
+    '東京メトロ有楽町線':['和光市'],
+    '西武池袋線':['所沢'],
+    '西武新宿線':['所沢']
   },
   '千葉県':{
-    'JR総武線':['江戸川','市川','本八幡','下総中山','西船橋','船橋','東船橋','津田沼','幕張本郷','幕張','新検見川','稲毛','西千葉','千葉'],
-    'JR総武線快速':['市川','本八幡','下総中山','西船橋','船橋','津田沼','稲毛','千葉'],
-    'JR京葉線':['舞浜','新浦安','南船橋','海浜幕張','稲毛海岸','千葉みなと'],
+    '総武線':['市川','本八幡','下総中山','西船橋','船橋','津田沼','幕張本郷','幕張','新検見川','稲毛','西千葉','千葉'],
+    '常磐線':['松戸','柏','我孫子','天王台','取手'],
+    '常磐線各駅停車':['北松戸','馬橋','新松戸','北小金','南柏','柏','北柏','我孫子'],
+    // ★ 京葉線：千葉県内
+    '京葉線':['舞浜','新浦安','南船橋','海浜幕張','稲毛海岸','千葉みなと','蘇我'],
     '東京メトロ東西線':['浦安','南行徳','行徳','妙典','原木中山','西船橋'],
-    '京成本線':['京成高砂','京成船橋','谷津','京成津田沼','京成幕張本郷','京成稲毛','京成千葉','千葉中央'],
-    '京成金町線':['京成高砂','柴又','京成金町'],
+    '京成本線':['日暮里','新三河島','町屋','千住大橋','京成関屋','堀切菖蒲園','お花茶屋','青砥','京成高砂','京成船橋','谷津','京成津田沼','京成幕張本郷','京成稲毛','京成千葉','千葉中央'],
+    'つくばエクスプレス':['八潮','三郷中央','南流山','流山おおたかの森','流山セントラルパーク','柏の葉キャンパス','柏たなか']
   }
 };
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  全路線フラット辞書と駅→路線マップ
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const ALL_LINES={};
-Object.values(LINE_DATA).forEach(lines=>{
-  Object.entries(lines).forEach(([l,s])=>{ALL_LINES[l]=s;});
-});
-
+Object.values(LINE_DATA).forEach(lines=>{Object.entries(lines).forEach(([l,s])=>{ALL_LINES[l]=s;});});
 const STATIONS_MAP={};
 Object.entries(LINE_DATA).forEach(([pref,lines])=>{
   Object.entries(lines).forEach(([line,stations])=>{
     stations.forEach(name=>{
       const key=name+'_'+pref;
-      if(!STATIONS_MAP[key]) STATIONS_MAP[key]={name,pref,lines:[]};
-      if(!STATIONS_MAP[key].lines.includes(line)) STATIONS_MAP[key].lines.push(line);
+      if(!STATIONS_MAP[key])STATIONS_MAP[key]={name,pref,lines:[]};
+      if(!STATIONS_MAP[key].lines.includes(line))STATIONS_MAP[key].lines.push(line);
     });
   });
 });
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  座標データ
-//  ※ 9:33指示分は修正済み。それ以外は5/6時点の座標
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const COORDS_BASE={
-  // 主要駅（5/6オリジナル）
+// ═══ 座標データ（全修正込み）═══
+const COORDS={
   '新宿':[35.6896,139.7006],'渋谷':[35.6580,139.7016],'池袋':[35.7295,139.7109],
-  '東京':[35.6811,139.767],'品川':[35.6284,139.7387],'上野':[35.7122,139.7768],
-  '秋葉原':[35.6984,139.7731],'横浜':[35.4658,139.6223],'武蔵小杉':[35.5755,139.6577],
-  '吉祥寺':[35.7027,139.5796],'新橋':[35.6662,139.7585],'有楽町':[35.6746,139.763],
+  '東京':[35.6812,139.7671],'品川':[35.6284,139.7387],'上野':[35.7141,139.7774],
+  '秋葉原':[35.6984,139.7731],'横浜':[35.4658,139.6223],
+  '吉祥寺':[35.7027,139.5796],'新橋':[35.6662,139.7585],'有楽町':[35.6746,139.7630],
   '銀座':[35.6713,139.765],'日本橋':[35.6817,139.7741],'神田':[35.6917,139.7703],
-  '御茶ノ水':[35.6995,139.7649],'飯田橋':[35.7019,139.7467],'四ツ谷':[35.6856,139.7304],
+  '御茶ノ水':[35.6995,139.7649],'飯田橋':[35.7019,139.7467],'四ツ谷':[35.6876,139.7305],
   '赤坂見附':[35.6766,139.7374],'表参道':[35.6654,139.7122],'代々木':[35.6838,139.7022],
-  '原宿':[35.6702,139.7027],'恵比寿':[35.6467,139.7101],'目黒':[35.6334,139.7159],
-  '五反田':[35.6253,139.7233],'大崎':[35.6197,139.7282],'田町':[35.6457,139.7477],
-  '浜松町':[35.6551,139.7564],'高輪ゲートウェイ':[35.6353,139.7404],
-  '三田':[35.6486,139.7424],'麻布十番':[35.6563,139.7364],'六本木':[35.6628,139.7311],
+  '原宿':[35.6702,139.7027],'恵比寿':[35.6467,139.7101],
+  '目黒':[35.6334,139.7159],'五反田':[35.6253,139.7233],'大崎':[35.6197,139.7282],
+  '田町':[35.6457,139.7477],'浜松町':[35.6551,139.7564],'大門':[35.6569,139.7547],
+  '高輪ゲートウェイ':[35.6353,139.7404],
+  '三田':[35.6477,139.7485],'麻布十番':[35.6563,139.7364],'六本木':[35.6628,139.7311],
   '乃木坂':[35.6657,139.7261],'国会議事堂前':[35.6737,139.7437],'溜池山王':[35.6715,139.7421],
   '虎ノ門':[35.67,139.75],'霞ケ関':[35.6737,139.7508],'日比谷':[35.675,139.7595],
   '二重橋前':[35.6795,139.7635],'大手町':[35.6864,139.7634],'三越前':[35.6869,139.7737],
-  '水天宮前':[35.6824,139.7858],'清澄白河':[35.6821,139.7989],
-  '木場':[35.672,139.818],'豊洲':[35.6546,139.7964],'新木場':[35.6459,139.8264],
-  '辰巳':[35.6451,139.8116],'月島':[35.6643,139.7848],'新富町':[35.6707,139.7738],
-  '築地':[35.6681,139.7726],'東銀座':[35.6706,139.7652],'宝町':[35.6754,139.7718],
-  '人形町':[35.6863,139.7822],'浅草橋':[35.6974,139.7847],'蔵前':[35.7031,139.7908],
-  '浅草':[35.7108,139.7978],'押上':[35.7103,139.8118],'錦糸町':[35.6969,139.8145],
-  '住吉':[35.689,139.8156],'菊川':[35.6887,139.8061],'森下':[35.688,139.7982],
-  '浜町':[35.6874,139.7868],'馬喰横山':[35.6921,139.7829],'岩本町':[35.6955,139.7753],
-  '小川町':[35.6947,139.7654],'神保町':[35.696,139.7581],'九段下':[35.6951,139.7497],
-  '市ケ谷':[35.6916,139.7361],'麹町':[35.6839,139.7376],'永田町':[35.6778,139.7418],
-  '半蔵門':[35.685,139.7416],'東大前':[35.7172,139.7583],'後楽園':[35.7073,139.7508],
-  '春日':[35.7097,139.7533],'本郷三丁目':[35.7075,139.7604],'淡路町':[35.6954,139.7674],
-  '末広町':[35.703,139.7718],'上野広小路':[35.708,139.773],
-  '稲荷町':[35.7113,139.783],'田原町':[35.7098,139.791],
-  // 山手線残り
-  '新大久保':[35.7012,139.6997],'高田馬場':[35.7124,139.7036],'目白':[35.7184,139.7066],
-  '大塚':[35.7318,139.7289],'巣鴨':[35.7333,139.7394],'駒込':[35.7367,139.7475],
-  '田端':[35.7379,139.7605],'西日暮里':[35.7321,139.7665],'日暮里':[35.7278,139.7708],
-  '鶯谷':[35.7211,139.779],'御徒町':[35.707,139.7747],
-  // メトロ
-  '外苑前':[35.6727,139.7183],'青山一丁目':[35.6718,139.7246],
-  '京橋':[35.6762,139.7699],'銀座一丁目':[35.6736,139.7673],
-  '桜田門':[35.6736,139.7512],
-  '新大塚':[35.7277,139.7317],'茗荷谷':[35.7224,139.7333],
-  '淡路町':[35.6954,139.7674],
-  '中目黒':[35.6445,139.6996],'広尾':[35.6518,139.7222],
-  '神谷町':[35.6674,139.7428],'八丁堀':[35.6752,139.7757],
-  '茅場町':[35.6793,139.7801],'小伝馬町':[35.6921,139.7818],
-  '落合':[35.7106,139.6859],'早稲田':[35.7082,139.7176],'神楽坂':[35.7019,139.7402],
-  '竹橋':[35.6887,139.7567],
-  '代々木上原':[35.6739,139.6894],'代々木公園':[35.6707,139.6964],
-  '明治神宮前':[35.6686,139.7052],'乃木坂':[35.6657,139.7261],
-  '赤坂':[35.6722,139.7371],'新御茶ノ水':[35.6969,139.7643],
-  '湯島':[35.7086,139.7701],'根津':[35.7195,139.7626],'千駄木':[35.7269,139.7621],
-  '和光市':[35.7851,139.6063],'地下鉄成増':[35.7727,139.626],'地下鉄赤塚':[35.7751,139.6385],
-  '東池袋':[35.7298,139.7199],'護国寺':[35.7247,139.7272],'江戸川橋':[35.7132,139.7375],
-  '豊洲':[35.6546,139.7964],
-  '白金台':[35.6401,139.7198],'白金高輪':[35.6446,139.7299],
-  '六本木一丁目':[35.6659,139.7374],
-  '本駒込':[35.7243,139.7534],'西ヶ原':[35.7436,139.7459],
-  '王子神谷':[35.7619,139.731],'志茂':[35.7724,139.7277],'赤羽岩淵':[35.7795,139.7218],
-  '雑司が谷':[35.7214,139.714],'西早稲田':[35.7095,139.7197],
-  // 都営
-  '西馬込':[35.6025,139.7072],'馬込':[35.6083,139.7141],
-  '中延':[35.6061,139.7252],'荏原中延':[35.6055,139.7289],'戸越':[35.6074,139.7321],
-  '高輪台':[35.6362,139.7344],'泉岳寺':[35.6388,139.741],
-  '大門':[35.6569,139.7547],'東日本橋':[35.6944,139.783],
-  '本所吾妻橋':[35.7091,139.8051],
-  '芝公園':[35.6567,139.7487],'御成門':[35.6612,139.7497],'内幸町':[35.6694,139.7546],
-  '白山':[35.7169,139.7499],'千石':[35.7238,139.7443],
-  '曙橋':[35.6919,139.7251],
-  '西大島':[35.6929,139.8275],'大島':[35.6963,139.8383],'東大島':[35.6946,139.8491],
-  '船堀':[35.6992,139.8682],'一之江':[35.694,139.8828],'瑞江':[35.6903,139.8976],'篠崎':[35.6895,139.9107],
-  '都庁前':[35.6907,139.693],'落合南長崎':[35.7168,139.6761],'新江古田':[35.7218,139.6667],
-  '練馬':[35.7359,139.6528],'豊島園':[35.7391,139.6484],
-  '国立競技場':[35.6784,139.7163],
-  '汐留':[35.6567,139.7588],'築地市場':[35.6641,139.7692],'勝どき':[35.6581,139.7768],
-  '上野御徒町':[35.7073,139.7742],'牛込神楽坂':[35.7013,139.7319],
-  '牛込柳町':[35.6955,139.729],'若松河田':[35.6981,139.7218],'東新宿':[35.6961,139.7084],
-  // 東急
-  '代官山':[35.6484,139.7036],'祐天寺':[35.6371,139.7025],'学芸大学':[35.6278,139.7034],
-  '都立大学':[35.6205,139.7052],'自由が丘':[35.6087,139.7018],'田園調布':[35.5988,139.6926],
-  '多摩川':[35.5922,139.6811],'新丸子':[35.5738,139.6568],
-  '元住吉':[35.5665,139.6547],'日吉':[35.5626,139.6546],
-  '綱島':[35.5418,139.6498],'大倉山':[35.5308,139.6381],
-  '菊名':[35.5107,139.6276],'妙蓮寺':[35.4992,139.6264],
-  '白楽':[35.4858,139.626],'東白楽':[35.4786,139.6265],'反町':[35.4712,139.6265],
-  '池尻大橋':[35.6516,139.7024],'三軒茶屋':[35.6434,139.6831],
-  '駒沢大学':[35.6284,139.6741],'桜新町':[35.617,139.6686],
-  '用賀':[35.6081,139.6628],'二子玉川':[35.5936,139.629],
-  '二子新地':[35.5873,139.6226],'高津':[35.5809,139.622],
-  '溝の口':[35.5766,139.617],'梶が谷':[35.565,139.6067],
-  '宮崎台':[35.5606,139.5974],'宮前平':[35.5572,139.5777],
-  '鷺沼':[35.5595,139.5658],'たまプラーザ':[35.5694,139.5525],
-  'あざみ野':[35.5753,139.5394],
-  '不動前':[35.6231,139.7124],'武蔵小山':[35.6147,139.7126],
-  '西小山':[35.6078,139.7123],'洗足':[35.5977,139.7139],
-  '大岡山':[35.5989,139.7157],'奥沢':[35.6008,139.6953],
-  '旗の台':[35.5981,139.7152],'長原':[35.5913,139.7092],
-  '洗足池':[35.5849,139.7114],'石川台':[35.5763,139.7131],
-  '雪が谷大塚':[35.5695,139.718],'御嶽山':[35.5647,139.7161],
-  '久が原':[35.5578,139.7132],'千鳥町':[35.5522,139.7116],'池上':[35.5525,139.7027],
-  // 小田急
-  '南新宿':[35.6912,139.6994],'参宮橋':[35.6838,139.6997],'代々木八幡':[35.6766,139.6979],
-  '東北沢':[35.6695,139.6884],'下北沢':[35.6611,139.6684],'世田谷代田':[35.6611,139.6874],
-  '梅ヶ丘':[35.6543,139.6834],'豪徳寺':[35.6488,139.6799],'経堂':[35.6481,139.6583],
-  '千歳船橋':[35.6457,139.643],'祖師ヶ谷大蔵':[35.6382,139.6222],
-  '成城学園前':[35.638,139.6044],'喜多見':[35.6306,139.5914],'狛江':[35.6266,139.5756],
-  '和泉多摩川':[35.6173,139.5632],'登戸':[35.6094,139.5722],
-  '向ヶ丘遊園':[35.5977,139.5649],'生田':[35.5891,139.5395],
-  '読売ランド前':[35.5833,139.5292],'百合ヶ丘':[35.5905,139.5047],
-  '新百合ヶ丘':[35.5971,139.4916],'柿生':[35.5953,139.4658],
-  '鶴川':[35.5772,139.4648],'玉川学園前':[35.5602,139.4719],
-  '町田':[35.5419,139.4459],'相模大野':[35.5285,139.4378],
-  // 京王
-  '初台':[35.6809,139.6896],'幡ヶ谷':[35.6778,139.6801],'笹塚':[35.6736,139.6692],
-  '代田橋':[35.6727,139.6603],'明大前':[35.6697,139.6493],'下高井戸':[35.6666,139.6395],
-  '桜上水':[35.6641,139.6283],'上北沢':[35.663,139.6173],'八幡山':[35.6586,139.6058],
-  '芦花公園':[35.6534,139.5954],'千歳烏山':[35.6491,139.5853],
-  '仙川':[35.6559,139.5744],'つつじヶ丘':[35.652,139.5634],'柴崎':[35.6507,139.5499],
-  '国領':[35.6486,139.5359],'布田':[35.6473,139.5272],'調布':[35.6449,139.5467],
-  '飛田給':[35.6375,139.5065],'府中':[35.6684,139.4776],'分倍河原':[35.6553,139.4334],
-  '聖蹟桜ヶ丘':[35.6388,139.4118],'高幡不動':[35.625,139.3919],
-  '北野':[35.6064,139.3611],'京王八王子':[35.6605,139.2985],
-  '神泉':[35.6551,139.6988],'駒場東大前':[35.6573,139.6875],'池ノ上':[35.6583,139.6808],
-  '新代田':[35.6605,139.6618],'東松原':[35.6577,139.6522],
-  '永福町':[35.6795,139.6407],'西永福':[35.6829,139.6295],'浜田山':[35.6832,139.6184],
-  '高井戸':[35.6759,139.6077],'富士見ヶ丘':[35.6778,139.594],
-  '久我山':[35.6849,139.5824],'三鷹台':[35.6915,139.5699],'井の頭公園':[35.6979,139.5703],
-  // 西武
-  '椎名町':[35.724,139.7025],'東長崎':[35.7261,139.6903],'江古田':[35.7301,139.6789],
-  '桜台':[35.7362,139.665],'中村橋':[35.7387,139.6417],'富士見台':[35.7422,139.6353],
-  '練馬高野台':[35.7464,139.6246],'石神井公園':[35.7487,139.6091],
-  '大泉学園':[35.7566,139.5928],'保谷':[35.7628,139.5642],'ひばりヶ丘':[35.7654,139.5323],
-  '西武新宿':[35.6942,139.7015],'下落合':[35.7139,139.7009],
-  // 東武
-  'とうきょうスカイツリー':[35.7126,139.8119],'曳舟':[35.7195,139.8166],
-  '東向島':[35.7244,139.8192],'鐘ヶ淵':[35.73,139.8212],
-  '堀切':[35.7398,139.8252],'牛田':[35.7443,139.804],
-  '小菅':[35.7621,139.8068],'五反野':[35.7671,139.8059],
-  '梅島':[35.7705,139.806],'西新井':[35.7757,139.8032],'竹ノ塚':[35.7842,139.8019],
-  '北池袋':[35.7345,139.7139],'下板橋':[35.7429,139.7138],
-  '大山':[35.7544,139.7126],'中板橋':[35.7584,139.7082],
-  'ときわ台':[35.7654,139.7053],'上板橋':[35.7713,139.7017],
-  '東武練馬':[35.7732,139.6849],'下赤塚':[35.7751,139.6624],'成増':[35.7727,139.634],
-  // 京成
-  '京成曳舟':[35.7219,139.8108],'八広':[35.7321,139.8246],
-  '四ツ木':[35.7375,139.8413],'京成立石':[35.7413,139.8484],
-  '京成高砂':[35.7511,139.8675],
-  '堀切菖蒲園':[35.7639,139.8496],'千住大橋':[35.7387,139.8064],'京成関屋':[35.7445,139.8048],
-  '柴又':[35.7551,139.876],
-  // りんかい線
-  '品川シーサイド':[35.5967,139.7387],'天王洲アイル':[35.6066,139.7434],
-  '東雲':[35.6387,139.8028],'国際展示場':[35.6328,139.7942],'東京テレポート':[35.6249,139.7768],
-  // ゆりかもめ
-  '竹芝':[35.6538,139.7618],'日の出':[35.6507,139.7631],
-  'お台場海浜公園':[35.6266,139.7754],'台場':[35.6257,139.7766],
-  'テレコムセンター':[35.622,139.7857],'青海':[35.625,139.7872],
-  '有明テニスの森':[35.6295,139.7921],'有明':[35.632,139.7934],
-  '市場前':[35.6354,139.7973],'新豊洲':[35.6477,139.7935],
-  // つくばエクスプレス
-  '青井':[35.7667,139.8187],'六町':[35.7759,139.8237],
-  // 日暮里舎人ライナー
-  '赤土小学校前':[35.7424,139.7717],'熊野前':[35.7467,139.7718],
-  '足立小台':[35.7553,139.7684],'扇大橋':[35.769,139.7688],
-  '高野':[35.775,139.7727],'江北':[35.7786,139.7765],
-  '西新井大師西':[35.783,139.778],'谷在家':[35.7874,139.775],
-  '舎人公園':[35.7892,139.7694],'舎人':[35.7904,139.7639],
-  '見沼代親水公園':[35.7918,139.759],
-  // 神奈川・埼玉・千葉
-  '大船':[35.3382,139.5317],'藤沢':[35.3378,139.4887],'戸塚':[35.3978,139.5354],
-  '川崎':[35.5307,139.6995],'大宮':[35.9065,139.6239],'さいたま新都心':[35.8924,139.6309],
-  '大井町':[35.607,139.735],'大森':[35.5886,139.728],'蒲田':[35.5643,139.7165],
-  '西大井':[35.5943,139.7208],'新川崎':[35.5358,139.7016],
-  '江戸川':[35.7088,139.9082],'市川':[35.7282,139.9155],'本八幡':[35.7281,139.9278],
-  '下総中山':[35.7291,139.9504],'西船橋':[35.7038,139.9468],
-  '船橋':[35.6965,139.9824],'東船橋':[35.6987,140.0068],'津田沼':[35.6755,139.9749],
-  '葛西臨海公園':[35.638,139.8626],
-  // 京浜東北線
-  '上中里':[35.7466,139.7472],'王子':[35.7535,139.7374],
-  '東十条':[35.7639,139.7271],'赤羽':[35.7773,139.7212],
-  '十条':[35.7599,139.7224],'板橋':[35.7465,139.7113],'北赤羽':[35.7867,139.7203],
-  // 常磐線
-  '金町':[35.7695,139.8708],'亀有':[35.7696,139.8488],'松戸':[35.7876,139.9008],'柏':[35.8676,139.9767],
-  // 中央線延長
-  '三鷹':[35.6994,139.5601],'西荻窪':[35.7054,139.6003],'荻窪':[35.7036,139.6201],
-  '阿佐ケ谷':[35.7068,139.6363],'高円寺':[35.7052,139.6497],'中野':[35.7059,139.6655],
-  '東中野':[35.7063,139.6845],'大久保':[35.7038,139.6916],
-  '水道橋':[35.7024,139.7527],
-  // 総武線
-  '両国':[35.6966,139.7945],'亀戸':[35.6985,139.8269],
-  '平井':[35.7063,139.8428],'新小岩':[35.7122,139.8637],'小岩':[35.7147,139.8878],
-  // 総武線快速
-  '新日本橋':[35.6869,139.7751],'馬喰町':[35.6934,139.7807],
-  // 西武新宿線残り
-  '下落合':[35.7139,139.7009],
-  // 京成金町線
-  '京成金町':[35.7701,139.8742],
-  // 中央線快速（千葉方面）
-  '長津田':[35.5323,139.4929],'中央林間':[35.5259,139.4424],
+  '水天宮前':[35.6824,139.7858],'清澄白河':[35.6821,139.7989],'門前仲町':[35.6712,139.7967],
+  '木場':[35.6720,139.8180],'東陽町':[35.6710,139.8193],'南砂町':[35.6707,139.8328],
+  '豊洲':[35.6546,139.7964],'新木場':[35.6477,139.8216],'辰巳':[35.6416,139.8026],
+  '月島':[35.6643,139.7848],'新富町':[35.6707,139.7738],'築地':[35.6681,139.7726],
+  '東銀座':[35.6706,139.7652],'宝町':[35.6754,139.7718],'人形町':[35.6863,139.7822],
+  '浅草橋':[35.6973,139.7862],'蔵前':[35.7033,139.7909],'浅草':[35.712,139.7983],
+  '押上':[35.7103,139.8118],'錦糸町':[35.6969,139.8145],'住吉':[35.689,139.8156],
+  '菊川':[35.6887,139.8061],'森下':[35.688,139.7982],'浜町':[35.6874,139.7868],
+  '馬喰横山':[35.6921,139.7829],'岩本町':[35.6955,139.7753],'小川町':[35.6947,139.7654],
+  '神保町':[35.696,139.7581],'九段下':[35.6951,139.7497],'市ケ谷':[35.6916,139.7361],
+  '麹町':[35.6839,139.7376],'永田町':[35.6778,139.7418],'半蔵門':[35.685,139.7416],
+  '東大前':[35.7172,139.7583],'後楽園':[35.7073,139.7508],'春日':[35.7097,139.7533],
+  '本郷三丁目':[35.7075,139.7604],'淡路町':[35.6954,139.7674],'末広町':[35.703,139.7718],
+  '上野広小路':[35.708,139.773],'稲荷町':[35.7114,139.7831],'田原町':[35.7098,139.7912],
+  '茅場町':[35.6793,139.7801],'八丁堀':[35.6752,139.7757],'入谷':[35.7202,139.7847],
+  '三ノ輪':[35.7259,139.7873],'南千住':[35.7308,139.8009],'北千住':[35.7490,139.8000],
+  '西新宿':[35.6931,139.6934],'新宿三丁目':[35.6882,139.7052],'新宿御苑前':[35.6860,139.7130],
+  '四谷三丁目':[35.6842,139.7251],'代々木上原':[35.6680,139.6833],'代々木公園':[35.6680,139.6945],
+  '明治神宮前':[35.6655,139.7044],'北参道':[35.6745,139.7052],'東新宿':[35.6946,139.7082],
+  '西早稲田':[35.7079,139.7091],'雑司が谷':[35.7238,139.7177],
+  '高田馬場':[35.7130,139.7034],'目白':[35.7204,139.7058],'大塚':[35.7316,139.7282],
+  '巣鴨':[35.7330,139.7394],'駒込':[35.7362,139.7494],'田端':[35.7380,139.7609],
+  '西日暮里':[35.7322,139.7665],'日暮里':[35.7280,139.7709],'鶯谷':[35.7207,139.7793],
+  '御徒町':[35.7077,139.7743],'中野':[35.7074,139.6634],'高円寺':[35.7056,139.6494],
+  '阿佐ケ谷':[35.7056,139.6358],'荻窪':[35.7038,139.6200],'西荻窪':[35.7048,139.6019],
+  '三鷹':[35.7013,139.5800],'武蔵境':[35.7043,139.5449],'東小金井':[35.7006,139.5261],
+  '武蔵小金井':[35.7000,139.5030],'国分寺':[35.6993,139.4755],'西国分寺':[35.7004,139.4627],
+  '国立':[35.6832,139.4545],'立川':[35.6973,139.4130],'日野':[35.6764,139.3953],
+  '豊田':[35.6584,139.3757],'八王子':[35.6556,139.3385],
+  '代官山':[35.648,139.7032],'中目黒':[35.6444,139.6986],'祐天寺':[35.6376,139.6912],
+  '学芸大学':[35.6269,139.6840],'都立大学':[35.6174,139.676],'自由が丘':[35.6077,139.6684],
+  '田園調布':[35.597,139.6674],'多摩川':[35.5895,139.669],'新丸子':[35.5807,139.662],
+  '元住吉':[35.5642,139.6541],'日吉':[35.5533,139.647],'綱島':[35.5366,139.6344],
+  '大倉山':[35.5221,139.63],'菊名':[35.5099,139.6316],'妙蓮寺':[35.4985,139.6334],
+  '白楽':[35.4896,139.628],'東白楽':[35.483,139.6296],'反町':[35.4749,139.6253],
+  '池尻大橋':[35.6508,139.6847],'三軒茶屋':[35.6437,139.6705],'駒沢大学':[35.6332,139.6611],
+  '桜新町':[35.6317,139.6454],'用賀':[35.6271,139.6345],'二子玉川':[35.6123,139.6272],
+  '溝の口':[35.5996,139.6103],'たまプラーザ':[35.5776,139.5592],'あざみ野':[35.5679,139.5533],
+  '江田':[35.5583,139.5511],'市が尾':[35.5512,139.5413],'藤が丘':[35.5438,139.5285],
+  '青葉台':[35.5432,139.5167],'長津田':[35.5315,139.4957],
+  '笹塚':[35.6734,139.6760],'代田橋':[35.6673,139.6640],'明大前':[35.6683,139.6505],
+  '下高井戸':[35.666,139.6416],'桜上水':[35.6674,139.6319],'上北沢':[35.669,139.6234],
+  '八幡山':[35.6701,139.6161],'芦花公園':[35.6705,139.6083],'千歳烏山':[35.6681,139.6013],
+  '仙川':[35.6623,139.5849],'調布':[35.6517,139.5448],'府中':[35.6721,139.4798],
+  '分倍河原':[35.6686,139.4686],'中河原':[35.6598,139.4579],'聖蹟桜ヶ丘':[35.6509,139.447],
+  '高幡不動':[35.6614,139.4149],
+  '下北沢':[35.6613,139.6676],'世田谷代田':[35.6582,139.6616],'梅ヶ丘':[35.656,139.6541],
+  '豪徳寺':[35.6535,139.647],'経堂':[35.6511,139.6366],'千歳船橋':[35.6474,139.6237],
+  '祖師ヶ谷大蔵':[35.6432,139.6096],'成城学園前':[35.6396,139.5983],'狛江':[35.6322,139.5774],
+  '和泉多摩川':[35.6273,139.5736],'登戸':[35.6211,139.5695],'向ヶ丘遊園':[35.6174,139.5647],
+  '生田':[35.615,139.5422],'読売ランド前':[35.615,139.5277],'百合ヶ丘':[35.609,139.5167],
+  '新百合ヶ丘':[35.6036,139.5071],
+  '西武新宿':[35.6934,139.6992],'下落合':[35.7157,139.6954],'中井':[35.7148,139.686],
+  '野方':[35.7201,139.6548],'所沢':[35.7868,139.4729],'成増':[35.7776,139.6332],
+  '和光市':[35.7879,139.613],'朝霞':[35.7956,139.6008],'志木':[35.822,139.5755],
+  '川越':[35.9072,139.4831],'大宮':[35.9067,139.6237],'さいたま新都心':[35.8940,139.6294],
+  '草加':[35.8273,139.8036],'春日部':[35.9798,139.7523],'越谷':[35.8875,139.7864],
+  '市川':[35.7289,139.9076],'本八幡':[35.7205,139.9279],'西船橋':[35.7074,139.9595],
+  '船橋':[35.7014,139.9853],'津田沼':[35.6912,140.0204],'幕張本郷':[35.6644,140.0378],
+  '海浜幕張':[35.6497,140.0434],'稲毛':[35.6542,140.1019],'千葉':[35.6132,140.1122],
+  '新浦安':[35.6657,139.8933],'舞浜':[35.6321,139.8798],'葛西臨海公園':[35.6427,139.8609],
+  '蒲田':[35.5621,139.7157],'大森':[35.5963,139.7346],'川崎':[35.5312,139.6965],
+  '戸塚':[35.4006,139.5344],'大船':[35.3538,139.5311],'藤沢':[35.3384,139.4882],
+  '茅ケ崎':[35.3304,139.4068],'平塚':[35.3276,139.3499],'小田原':[35.2563,139.1550],
+  '海老名':[35.453,139.3914],'大和':[35.4688,139.4624],'相模大野':[35.5321,139.4375],
+  '湘南台':[35.3968,139.4668],'片瀬江ノ島':[35.3085,139.484],
+  '上大岡':[35.4089,139.5964],'新横浜':[35.5068,139.6173],
+  '桜木町':[35.4505,139.6317],'関内':[35.4439,139.6358],
+  '王子':[35.7375,139.7375],'赤羽':[35.7779,139.7208],'大井町':[35.6028,139.7282],
+  '新大久保':[35.7010,139.7007],'田無':[35.7272,139.54],'小平':[35.7369,139.4883],
+  '久米川':[35.7495,139.4727],'東村山':[35.7597,139.4664],
+  '西大島':[35.6894,139.8264],'大島':[35.6899,139.8356],'東大島':[35.6901,139.8459],
+  '一之江':[35.6864,139.8837],'瑞江':[35.693,139.8976],'篠崎':[35.706,139.9038],
+  '高島平':[35.7888,139.6611],'護国寺':[35.7186,139.7337],'東池袋':[35.7256,139.7193],
+  '地下鉄成増':[35.7762,139.6313],'地下鉄赤塚':[35.769,139.6443],
+  '平和台':[35.7757,139.6574],'氷川台':[35.7744,139.6695],
+  '小竹向原':[35.7378,139.6856],'千川':[35.7348,139.6950],'要町':[35.7306,139.7002],
+  '光が丘':[35.7608,139.6210],'練馬春日町':[35.7573,139.6307],'豊島園':[35.7426,139.648],
+  '練馬':[35.7377,139.654],'新桜台':[35.7344,139.6588],'椎名町':[35.7262,139.6947],
+  '東長崎':[35.73,139.683],'江古田':[35.7376,139.6728],'桜台':[35.7387,139.6626],
+  '中村橋':[35.7369,139.6381],'富士見台':[35.7361,139.6301],'練馬高野台':[35.7406,139.6165],
+  '石神井公園':[35.7435,139.6063],'大泉学園':[35.7494,139.5863],'保谷':[35.748,139.5668],
+  'ひばりが丘':[35.7515,139.5455],'東久留米':[35.7603,139.534],'清瀬':[35.7724,139.5203],
+  '秋津':[35.7788,139.497],'新大塚':[35.7190,139.7278],'茗荷谷':[35.7166,139.7335],
+  '落合':[35.7057,139.6862],'早稲田':[35.7082,139.7191],'神楽坂':[35.7043,139.7412],
+  '竹橋':[35.6903,139.7551],'西葛西':[35.6656,139.8654],'葛西':[35.6666,139.8750],
+  '浦安':[35.6657,139.8933],'南行徳':[35.6728,139.9025],'行徳':[35.6831,139.9148],
+  '妙典':[35.6911,139.9244],'原木中山':[35.7031,139.9414],
+  '根津':[35.7211,139.7625],'千駄木':[35.7254,139.7632],'町屋':[35.7380,139.7784],
+  '湯島':[35.7072,139.77],'新御茶ノ水':[35.6974,139.7656],'赤坂':[35.6722,139.7369],
+  '桜田門':[35.6793,139.7528],'銀座一丁目':[35.6738,139.7679],
+  '白金台':[35.638,139.7264],'白金高輪':[35.6429,139.7341],'六本木一丁目':[35.6648,139.7388],
+  '西ケ原':[35.7459,139.7426],'赤羽岩淵':[35.7834,139.7224],'王子神谷':[35.7654,139.7357],
+  '志茂':[35.778,139.7325],
+  '船堀':[35.6837,139.8639],'泉岳寺':[35.6386,139.74],'高輪台':[35.6316,139.7303],
+  '馬込':[35.5966,139.712],'西馬込':[35.5872,139.7062],'中延':[35.6059,139.7133],
+  '戸越':[35.6142,139.7165],'東日本橋':[35.6905,139.7846],'本所吾妻橋':[35.7086,139.8043],
+  '曙橋':[35.6925,139.7227],'西新宿五丁目':[35.6950,139.6916],'中野坂上':[35.7005,139.6734],
+  '東中野':[35.7067,139.6828],'落合南長崎':[35.723,139.6838],'新江古田':[35.7323,139.6703],
+  '汐留':[35.6626,139.76],'赤羽橋':[35.6545,139.7445],'国立競技場':[35.68,139.7139],
+  '都庁前':[35.6892,139.6924],'北池袋':[35.7409,139.7168],'下板橋':[35.745,139.7157],
+  '大山':[35.7484,139.7026],'中板橋':[35.7562,139.6944],'ときわ台':[35.7591,139.6882],
+  '上板橋':[35.7634,139.6766],'東武練馬':[35.7685,139.6627],'下赤塚':[35.7708,139.645],
+  '柳瀬川':[35.8305,139.5631],'みずほ台':[35.8383,139.5517],'鶴瀬':[35.8459,139.5397],
+  'ふじみ野':[35.8597,139.5237],'上福岡':[35.8737,139.5121],'新河岸':[35.8916,139.4973],
+  '北与野':[35.8903,139.6284],'与野本町':[35.8807,139.6261],'武蔵浦和':[35.8457,139.6468],
+  '中浦和':[35.8534,139.6382],'南与野':[35.8675,139.6313],'土呂':[35.932,139.6324],
+  '東大宮':[35.9488,139.6405],'蓮田':[35.9806,139.6529],'久喜':[36.0646,139.6771],
+  '小菅':[35.7584,139.8129],'五反野':[35.766,139.8094],'梅島':[35.7723,139.798],
+  '西新井':[35.7771,139.7903],'竹ノ塚':[35.794,139.7908],'谷塚':[35.8139,139.8014],
+  '新越谷':[35.8763,139.7899],'北越谷':[35.9011,139.7802],'大袋':[35.9234,139.7781],
+  'せんげん台':[35.9356,139.7745],'武里':[35.9487,139.7709],
+  '朝霞台':[35.8007,139.5994],'下総中山':[35.7141,139.9435],
+  '幕張':[35.6572,140.0469],'新検見川':[35.6629,140.0637],'西千葉':[35.6175,140.1030],
+  '千葉みなと':[35.6063,140.1007],'蘇我':[35.5776,140.1106],'稲毛海岸':[35.6380,140.0620],
+  '南船橋':[35.6812,139.9782],'辻堂':[35.3367,139.4476],
+  '伊勢佐木長者町':[35.441,139.6329],'希望ケ丘':[35.4606,139.5144],
+  '三ツ境':[35.4678,139.5025],'瀬谷':[35.4705,139.483],'天王町':[35.4536,139.6028],
+  '星川':[35.4586,139.5951],'和田町':[35.4633,139.5867],'上星川':[35.468,139.5807],
+  '西谷':[35.4781,139.5652],'鶴ケ峰':[35.4749,139.5497],'二俣川':[35.463,139.5319],
+  '中央林間':[35.5076,139.4445],'南林間':[35.4965,139.4482],'鶴間':[35.4899,139.451],
+  '桜ケ丘':[35.4496,139.4653],'高座渋谷':[35.4314,139.4644],'長後':[35.4121,139.4657],
+  '三河島':[35.7368,139.7828],'松戸':[35.7842,139.9005],'柏':[35.8621,139.971],
+  '我孫子':[35.873,140.0111],'天王台':[35.8803,140.0605],'取手':[35.8969,140.064],
+  '綾瀬':[35.7561,139.8234],'亀有':[35.7672,139.8499],'金町':[35.7703,139.8644],
+  '北松戸':[35.8004,139.9118],'馬橋':[35.811,139.9172],'新松戸':[35.8254,139.9212],
+  '北小金':[35.8334,139.9312],'南柏':[35.8446,139.9543],'北柏':[35.8756,139.9884],
+  '青井':[35.7717,139.8205],'六町':[35.785,139.8219],'八潮':[35.8077,139.8446],
+  '三郷中央':[35.8239,139.8781],'南流山':[35.8384,139.9032],
+  '流山おおたかの森':[35.8721,139.9258],'流山セントラルパーク':[35.8531,139.9154],
+  '柏の葉キャンパス':[35.8926,139.9528],'柏たなか':[35.9106,139.9578],
+  '神泉':[35.6572,139.6935],'駒場東大前':[35.6575,139.6815],'池ノ上':[35.6604,139.6729],
+  '新代田':[35.6627,139.6605],'東松原':[35.6626,139.656],'永福町':[35.6762,139.6431],
+  '西永福':[35.6787,139.6355],'浜田山':[35.6817,139.6277],'高井戸':[35.6834,139.6152],
+  '富士見ヶ丘':[35.6845,139.6078],'久我山':[35.6877,139.5996],
+  '三鷹台':[35.6922,139.5886],'井の頭公園':[35.6974,139.5828],
+  '越中島':[35.6705,139.7958],'潮見':[35.6642,139.8124],
+  '不動前':[35.6252,139.713],'武蔵小山':[35.6206,139.7046],'西小山':[35.6155,139.6986],
+  '洗足':[35.6103,139.694],'大岡山':[35.6076,139.6856],'奥沢':[35.604,139.6728],
+  '梶が谷':[35.5936,139.6056],'宮崎台':[35.5868,139.591],'宮前平':[35.5849,139.5825],
+  '鷺沼':[35.5794,139.573],'二子新地':[35.607,139.6225],'高津':[35.6028,139.6167],
+  '下神明':[35.609,139.7255],'戸越公園':[35.6089,139.7182],'荏原町':[35.604,139.7081],
+  '旗の台':[35.6049,139.703],'北千束':[35.6064,139.6931],'緑が丘':[35.6061,139.6799],
+  '九品仏':[35.6057,139.6613],'尾山台':[35.6071,139.6536],'等々力':[35.6085,139.6482],
+  '上野毛':[35.6122,139.6387],
+  '上中里':[35.7442,139.7542],'東十条':[35.7701,139.7208],
+  '北品川':[35.6219,139.7394],'新馬場':[35.6162,139.7415],'青物横丁':[35.6087,139.743],
+  '鮫洲':[35.6047,139.7421],'立会川':[35.5982,139.7389],'大森海岸':[35.5872,139.7352],
+  '平和島':[35.5783,139.7348],'大森町':[35.5722,139.7321],'梅屋敷':[35.5665,139.7281],
+  '京急蒲田':[35.5608,139.7237],'雑色':[35.5491,139.7148],'六郷土手':[35.5407,139.7077],
+  '広尾':[35.6523,139.7198],'神谷町':[35.6634,139.7456],'仲御徒町':[35.7095,139.7759],
+  '京成高砂':[35.7410,139.8717],'京成船橋':[35.6999,139.9859],'谷津':[35.6749,139.9999],
+  '京成津田沼':[35.6837,140.0255],'京成幕張本郷':[35.6622,140.0383],
+  '京成稲毛':[35.6504,140.1028],'京成千葉':[35.6126,140.1195],'千葉中央':[35.6059,140.1218],
+  '新三河島':[35.7370,139.7855],'千住大橋':[35.7396,139.7977],'京成関屋':[35.7439,139.8119],
+  '堀切菖蒲園':[35.7476,139.8275],'お花茶屋':[35.7478,139.8401],'青砥':[35.7477,139.8693],
+  '板橋':[35.7519,139.7098],'十条':[35.7665,139.7218],
+  '西大宮':[35.9223,139.5793],'指扇':[35.9088,139.5467],'南古谷':[35.9033,139.5197],
+  '中野富士見町':[35.7017,139.6693],'中野新橋':[35.7010,139.6760],'方南町':[35.6889,139.6656],
+  '新高島平':[35.79,139.6548],'西高島平':[35.7915,139.6458],
+  '若松河田':[35.6994,139.7185],'牛込柳町':[35.6994,139.7258],'牛込神楽坂':[35.7013,139.7349],
+  '上野御徒町':[35.7079,139.7738],'新御徒町':[35.7071,139.7819],
+  '両国':[35.6961,139.7924],'勝どき':[35.6592,139.7777],'築地市場':[35.6649,139.7669],
+  '東府中':[35.6692,139.4949],'多磨霊園':[35.666,139.5032],'武蔵野台':[35.6641,139.5114],
+  '飛田給':[35.6605,139.5228],'西調布':[35.6572,139.5304],
+  '南平':[35.6546,139.392],'平山城址公園':[35.6473,139.3802],'長沼':[35.6425,139.366],
+  '北野':[35.6446,139.3546],'京王八王子':[35.6579,139.3433],
+  '田奈':[35.5354,139.5043],'つくし野':[35.5261,139.4846],'すずかけ台':[35.5166,139.4814],
+  '南町田グランベリーパーク':[35.5111,139.4715],'つきみ野':[35.5104,139.4586],
+  '武蔵小杉':[35.5766,139.6601],
+  // 追加・修正分
+  '信濃町':[35.6776,139.7165],'千駄ヶ谷':[35.6791,139.7105],
+  '水道橋':[35.7019,139.7529],'二俣新町':[35.6924,139.9735],
+  '板橋区役所前':[35.7607,139.7098],'板橋本町':[35.7655,139.7098],
+  '本蓮沼':[35.7711,139.7098],'志村坂上':[35.7758,139.7021],
+  '志村三丁目':[35.7797,139.6944],'蓮根':[35.7813,139.6839],
+  '西台':[35.7840,139.6740],'西巣鴨':[35.7395,139.7261],
+  '新板橋':[35.7476,139.7195],'千石':[35.7288,139.7393],
+  '白山':[35.7245,139.7478],'御成門':[35.6617,139.7492],
+  '芝公園':[35.6564,139.7496],'内幸町':[35.6734,139.7560],
+  '新宿西口':[35.6923,139.6984],
+  '東伏見':[35.7357,139.5575],'武蔵関':[35.7333,139.5695],
+  '上石神井':[35.7310,139.5816],'上井草':[35.7284,139.5970],
+  '井荻':[35.7248,139.6120],'下井草':[35.7229,139.6279],
+  '鷺ノ宮':[35.7202,139.6403],'都立家政':[35.7197,139.6508],
+  '沼袋':[35.7153,139.6617],'新井薬師前':[35.7117,139.6759]
 };
 
-// 9:33 指示による座標修正を上書き
-const COORDS_933 = {
-  '舞浜':[35.6355,139.8837],'南船橋':[35.6821,139.9954],'谷津':[35.6761,140.0027],
-  '稲毛海岸':[35.6294,140.074],'海浜幕張':[35.6488,140.0415],'新検見川':[35.6519,140.0731],
-  '京成幕張本郷':[35.6732,140.0429],'幕張本郷':[35.673,140.0439],'幕張':[35.6591,140.058],
-  '稲毛':[35.6366,140.0935],'京成稲毛':[35.6373,140.0925],
-  '西千葉':[35.6224,140.1038],'千葉みなと':[35.6085,140.1013],
-  '京成千葉':[35.6116,140.1148],'千葉中央':[35.6071,140.118],'千葉':[35.6137,140.1125],
-  '南砂町':[35.6686,139.8313],'東陽町':[35.6696,139.8174],'潮見':[35.6589,139.8174],
-  '門前仲町':[35.6722,139.7957],'西葛西':[35.6647,139.8594],'葛西':[35.6636,139.873],
-  '新木場':[35.6459,139.8264],'辰巳':[35.6451,139.8116],
-  '大井町':[35.607,139.735],'大森':[35.5886,139.728],
-  '広尾':[35.6518,139.7222],'明治神宮前':[35.6686,139.7052],
-  '北参道':[35.6785,139.7055],'千駄ヶ谷':[35.6812,139.7113],
-  '信濃町':[35.68,139.7204],'四ツ谷':[35.6856,139.7304],
-  '四谷三丁目':[35.6881,139.7203],'新宿御苑前':[35.6886,139.7108],
-  '新宿三丁目':[35.6909,139.7051],'都庁前':[35.6907,139.693],
-  '西新宿五丁目':[35.6899,139.6844],'西新宿':[35.6944,139.6929],
-  '中野坂上':[35.697,139.683],'中野':[35.7059,139.6655],
-  '中野富士見町':[35.6906,139.6666],'中野新橋':[35.6916,139.6742],'方南町':[35.6835,139.6576],
-  '落合':[35.7106,139.6859],'東中野':[35.7063,139.6845],'中井':[35.7139,139.6864],
-  '新井薬師前':[35.7157,139.6727],'沼袋':[35.7193,139.6646],'野方':[35.7196,139.6532],
-  '都立家政':[35.7225,139.6449],'鷺ノ宮':[35.7228,139.6394],
-  '下井草':[35.724,139.6254],'井荻':[35.7248,139.6149],
-  '上井草':[35.7252,139.6033],'上石神井':[35.7258,139.5931],
-  '武蔵関':[35.7282,139.5769],'東伏見':[35.7287,139.5645],
-  '蓮根':[35.7835,139.6791],'西台':[35.787,139.6739],
-  '志村三丁目':[35.7776,139.6851],'本蓮沼':[35.7687,139.7025],
-  '志村坂上':[35.7756,139.6957],'板橋本町':[35.7614,139.7058],
-  '板橋区役所前':[35.7513,139.7101],'新板橋':[35.7488,139.7198],
-  '板橋':[35.7465,139.7113],'西巣鴨':[35.7435,139.7287],
-  '王子':[35.7535,139.7374],'東十条':[35.7639,139.7271],'十条':[35.7599,139.7224],
-  '上中里':[35.7466,139.7472],'駒込':[35.7367,139.7475],
-  '練馬春日町':[35.7514,139.6402],'氷川台':[35.7498,139.6652],
-  '平和台':[35.7578,139.6546],'小竹向原':[35.7432,139.6797],
-  '千川':[35.7383,139.6896],'要町':[35.7333,139.699],
-  '光が丘':[35.7583,139.6292],'南千住':[35.7325,139.799],'三ノ輪':[35.7295,139.7912],
-  '三河島':[35.7333,139.7777],'新三河島':[35.7372,139.774],
-  '町屋':[35.7425,139.7813],'北千住':[35.749,139.805],
-  '綾瀬':[35.7622,139.8249],'金町':[35.7695,139.8708],
-  '青砥':[35.7455,139.8558],'京成高砂':[35.7511,139.8675],
-  '東京':[35.6811,139.767],'仲御徒町':[35.7064,139.7762],
-  '御徒町':[35.707,139.7747],'上野':[35.7122,139.7768],
-  '入谷':[35.7197,139.7839],'赤羽橋':[35.6547,139.7452],
-};
+// DEV MODE：保存済み修正をCOORDSに先行反映
+applyDevFixes();
 
-// COORDS = BASE + 9:33修正
-const COORDS = Object.assign({}, COORDS_BASE, COORDS_933);
+const STATIONS=Object.values(STATIONS_MAP)
+  .filter(s=>COORDS[s.name])
+  .map(s=>({...s,lat:COORDS[s.name][0],lng:COORDS[s.name][1],score:null,details:{}}));
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  DEV修正もCOORDSに反映
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Object.entries(devFixes).forEach(([name,ll])=>{ COORDS[name]=ll; });
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  状態変数
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-let stationData=[]; // {name,pref,lines,lat,lng,score,details}
-let markers=[];
-let tableAx='score';
-let currentPref='', currentLine='';
-const radius=()=>parseInt(document.getElementById('radiusSelect').value)||800;
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  Leaflet地図
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const lmap=L.map('leaflet-map',{center:[35.68,139.73],zoom:12,zoomControl:true});
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  maxZoom:19,subdomains:'abc'
+// ═══ 地図初期化 ═══
+const lmap=L.map('leaflet-map',{zoomControl:isPc()}).setView([35.665,139.720],11);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom:19
 }).addTo(lmap);
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  路線セレクト初期化
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function initLineSelect(){
-  const sel=document.getElementById('lineSelect');
-  const pref=document.getElementById('prefSelect').value;
-  sel.innerHTML='<option value="">全路線</option>';
-  const src = pref&&LINE_DATA[pref] ? LINE_DATA[pref] : ALL_LINES;
-  Object.keys(src).forEach(line=>{
-    const opt=document.createElement('option');
-    opt.value=line; opt.textContent=line;
-    sel.appendChild(opt);
-  });
-}
+let stationData=STATIONS.map(s=>({...s})),markers=[];
+let selectedMarkerInner=null;
 
-function onPrefChange(){
-  currentPref=document.getElementById('prefSelect').value;
-  initLineSelect();
-  render();
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  スコア取得
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const LOCAL_VER='spc_v8_';
-function lcKey(name,pref,r){ return LOCAL_VER+name+'_'+pref+'_'+r; }
-
-function getLocalCache(name,pref,r){
+// ═══ キャッシュ（TTL 6時間）═══
+const CACHE_TTL=6*60*60*1000;
+function lsKey(){return 'spc_stable_v1_'+getRadius();}
+function saveLocal(d){try{localStorage.setItem(lsKey(),JSON.stringify({data:d,ts:Date.now()}));}catch(e){}}
+function loadLocal(){
   try{
-    const v=localStorage.getItem(lcKey(name,pref,r));
-    if(!v) return null;
-    const d=JSON.parse(v);
-    if(Date.now()-d.ts > 6*3600*1000) return null; // 6時間キャッシュ
-    return d;
-  }catch{return null;}
-}
-function setLocalCache(name,pref,r,data){
-  try{ localStorage.setItem(lcKey(name,pref,r),JSON.stringify({...data,ts:Date.now()})); }catch{}
+    const s=localStorage.getItem(lsKey());
+    if(!s)return null;
+    const p=JSON.parse(s);
+    return Array.isArray(p)?{data:p,ts:0}:p;
+  }catch(e){return null;}
 }
 
-async function fetchScore(st,r){
-  const ll=`${st.lat},${st.lng}`;
-  const resp=await fetch(`/api/score?ll=${ll}&radius=${r}`);
-  const d=await resp.json();
-  if(d.error) throw new Error(d.error);
-  return d;
+function setStatus(msg,anim){const el=document.getElementById('statusbar');el.textContent=msg;el.className=anim?'anim':'';}
+function closeInfo(){
+  document.getElementById('info-panel').style.display='none';
+  if(selectedMarkerInner){
+    selectedMarkerInner.style.animation='';
+    selectedMarkerInner.style.boxShadow=selectedMarkerInner._origShadow||'';
+    selectedMarkerInner.style.border=selectedMarkerInner._origBorder||'';
+    selectedMarkerInner=null;
+  }
+  currentStation=null;
+}
+
+async function fetchOne(st){
+  try{
+    const res=await fetch('/api/score?ll='+st.lat+','+st.lng+'&radius='+getRadius());
+    if(!res.ok)throw new Error();
+    return await res.json();
+  }catch(e){return{score:0,details:{}};}
 }
 
 async function loadAll(){
-  document.getElementById('loading').style.display='flex';
-
-  // STATIONSを構築
-  const seen=new Set();
-  stationData=[];
-  Object.entries(LINE_DATA).forEach(([pref,lines])=>{
-    Object.entries(lines).forEach(([line,stations])=>{
-      stations.forEach(name=>{
-        const key=name+'_'+pref;
-        if(seen.has(key)||!COORDS[name]) return;
-        seen.add(key);
-        const info=STATIONS_MAP[key]||{name,pref,lines:[line]};
-        const [lat,lng]=COORDS[name];
-        const r=radius();
-        const cached=getLocalCache(name,pref,r);
-        stationData.push({
-          name,pref,lines:info.lines,lat,lng,
-          score:cached?cached.score:null,
-          details:cached?cached.details:null,
-          loading:!cached
-        });
-      });
+  const cached=loadLocal();
+  if(cached&&cached.data){
+    stationData=STATIONS.map(st=>{
+      const f=cached.data.find(c=>c.name===st.name&&c.pref===st.pref);
+      return f&&f.score?{...st,...f}:{...st,score:null,details:{}};
     });
-  });
-
-  updateStatus();
-  render();
-
-  // バックグラウンドで未取得分を順番に取得
-  const r=radius();
-  for(const st of stationData.filter(s=>s.loading)){
-    try{
-      const d=await fetchScore(st,r);
-      if(d.score===undefined&&!d.error) continue; // エラーレスポンスはスキップ
-      st.score=d.score??0;
-      st.details=d.details??{};
-      st.loading=false;
-      setLocalCache(st.name,st.pref,r,{score:st.score,details:st.details});
-      updateStatus();
-      render();
-    }catch(e){
-      console.warn(st.name,e.message);
-      // エラー時はキャッシュしない（再試行できるよう）
+    document.getElementById('loading').classList.remove('show');
+    render();
+    const age=Date.now()-(cached.ts||0);
+    if(age<CACHE_TTL){setStatus(stationData.filter(s=>s.score).length+'駅表示中',false);return;}
+    setStatus('バックグラウンド更新中...',true);
+    let n=0;
+    for(let i=0;i<STATIONS.length;i+=5){
+      await Promise.all(STATIONS.slice(i,i+5).map(async st=>{
+        const d=await fetchOne(st);
+        const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
+        if(idx>=0){stationData[idx]={...stationData[idx],...d};n++;}
+      }));
+      setStatus(n+'/'+STATIONS.length+' 更新中...',true);
     }
+    saveLocal(stationData);
+    if(!DEV_MODE)render();
+    setStatus(stationData.filter(s=>s.score>0).length+'駅表示中',false);
+  } else {
+    stationData=STATIONS.map(s=>({...s,score:null,details:{}}));
+    document.getElementById('loading').classList.add('show');
+    setStatus('初回取得中...',true);
+    let done=0;
+    for(let i=0;i<STATIONS.length;i+=5){
+      await Promise.all(STATIONS.slice(i,i+5).map(async st=>{
+        const d=await fetchOne(st);
+        const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
+        if(idx>=0)stationData[idx]={...stationData[idx],...d};
+        done++;
+      }));
+      if(done>=10)document.getElementById('loading').classList.remove('show');
+      setStatus(done+'/'+STATIONS.length+' 取得中...',true);
+    }
+    saveLocal(stationData);
+    render();
+    setStatus(stationData.filter(s=>s.score>0).length+'駅表示中',false);
   }
-  document.getElementById('loading').style.display='none';
-  updateStatus();
 }
 
-function updateStatus(){
-  const total=stationData.length;
-  const done=stationData.filter(s=>!s.loading).length;
-  document.getElementById('statusbar').textContent=
-    done<total ? `取得中... ${done}/${total}駅` : `${total}駅表示中`;
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  フィルター済みデータ取得
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function getFiltered(){
   const pref=document.getElementById('prefSelect').value;
   const line=document.getElementById('lineSelect').value;
+  const rank=document.getElementById('rankFilter').value;
+  const q=(document.getElementById('searchInput').value||'').trim();
   return stationData.filter(s=>{
-    if(s.score===null) return false;
-    if(pref&&s.pref!==pref) return false;
-    if(line&&!s.lines.includes(line)) return false;
+    if(!s.score)return false;
+    if(pref&&s.pref!==pref)return false;
+    if(line&&!s.lines.includes(line))return false;
+    if(rank&&getRank(s.score).rank!==rank)return false;
+    if(q&&!s.name.includes(q)&&!s.lines.some(l=>l.includes(q)))return false;
+    if(showFavOnly&&!isFav(s))return false;
     return true;
   });
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  マーカー描画
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function getVisibleStations(data){
-  const bounds=lmap.getBounds();
-  const byScore=[...data].sort((a,b)=>(b.score??0)-(a.score??0));
-  const placed=[];
-  return byScore.filter(st=>{
-    if(!bounds.contains([st.lat,st.lng])) return false;
-    const px=lmap.latLngToContainerPoint([st.lat,st.lng]);
-    const r=getMarkerR(st.score??0);
-    const overlap=placed.some(p=>{
-      const dx=px.x-p.x,dy=px.y-p.y;
-      return Math.sqrt(dx*dx+dy*dy)<(r+p.r)*0.55;
-    });
-    if(overlap) return false;
-    placed.push({x:px.x,y:px.y,r});
-    return true;
-  });
-}
-
-function getMarkerR(score){
-  if(score>=800) return 28;
-  if(score>=600) return 24;
-  if(score>=400) return 20;
-  if(score>=200) return 17;
-  if(score>=100) return 14;
-  return 12;
+function getVisible(){
+  const zoom=lmap.getZoom();
+  const base=isPc()?1.0:1.35;
+  const d=(zoom>=14?22:zoom>=13?40:zoom>=12?65:zoom>=11?100:150)*base;
+  const sorted=[...getFiltered()].sort((a,b)=>b.score-a.score);
+  const vis=[];
+  for(const st of sorted){
+    const p=lmap.latLngToContainerPoint([st.lat,st.lng]);
+    if(!vis.some(v=>{const q=lmap.latLngToContainerPoint([v.lat,v.lng]);return Math.hypot(p.x-q.x,p.y-q.y)<d;}))vis.push(st);
+  }
+  return vis;
 }
 
 function drawMarker(st){
-  const ri=getRankInfo(st.score??0);
-  const r=getMarkerR(st.score??0);
-  const isS=ri.rank==='S';
-  const icon=L.divIcon({
-    className:'',
-    html:`<div style="
-      width:${r*2}px;height:${r*2}px;border-radius:50%;
-      background:${ri.bg};
-      border:2px solid ${ri.color};
-      ${isS?'box-shadow:0 0 10px '+ri.glow+',0 0 20px '+ri.glow:'box-shadow:0 2px 8px rgba(0,0,0,0.5)'};
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      cursor:pointer;transition:transform 0.1s">
-      <div style="font-size:${r*0.55}px;font-weight:900;color:${ri.color};line-height:1">${st.score}</div>
-      ${r>=18?`<div style="font-size:${Math.max(7,r*0.35)}px;color:${ri.color};opacity:0.8;line-height:1">${ri.rank}</div>`:''}
-    </div>`,
-    iconSize:[r*2,r*2],iconAnchor:[r,r]
-  });
-
-  const m=L.marker([st.lat,st.lng],{
-    icon,
-    zIndexOffset:st.score??0,
-    draggable: DEV_MODE
-  }).addTo(lmap);
-
-  m.on('click',()=>showInfo(st));
+  const{rank,color,glow}=getRank(st.score);
+  const sz=Math.max(44,Math.round(32+(st.score/1000)*54));
+  const sf=Math.round(sz*0.30),rf=Math.round(sz*0.21),nf=Math.max(9,Math.round(sz*0.155));
+  const glowPx=Math.round(sz*0.52);
+  const html=`<div style="display:flex;flex-direction:column;align-items:center;cursor:${DEV_MODE?'grab':'pointer'}">
+    <div class="mk-inner" style="width:${sz}px;height:${sz}px;border-radius:50%;
+      background:${color}18;border:${DEV_MODE?'3px dashed':'2.5px solid'} ${color};
+      box-shadow:0 0 ${glowPx}px ${glow};
+      display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <span style="font-weight:900;font-size:${sf}px;color:#fff;line-height:1.1">${st.score}</span>
+      <span style="font-weight:700;font-size:${rf}px;color:${color};line-height:1">${rank}</span>
+    </div>
+    <span style="font-size:${nf}px;color:rgba(255,255,255,0.95);white-space:nowrap;
+      margin-top:2px;text-shadow:0 1px 4px rgba(0,0,0,0.9);font-weight:700">${st.name}</span>
+  </div>`;
+  const icon=L.divIcon({className:'',html,iconSize:[sz+64,sz+20],iconAnchor:[(sz+64)/2,sz/2]});
+  const m=L.marker([st.lat,st.lng],{icon,draggable:DEV_MODE}).addTo(lmap);
+  m._st=st;m._color=color;m._glow=glow;m._glowPx=glowPx;
 
   if(DEV_MODE){
     m.on('dragend',()=>{
       const pos=m.getLatLng();
       const lat=parseFloat(pos.lat.toFixed(4));
       const lng=parseFloat(pos.lng.toFixed(4));
-      // stationDataに反映
       const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
       if(idx>=0){stationData[idx].lat=lat;stationData[idx].lng=lng;}
-      // DEV保存
-      const fixes=JSON.parse(localStorage.getItem('spc_dev_fixes')||'{}');
+      const si=STATIONS.findIndex(s=>s.name===st.name&&s.pref===st.pref);
+      if(si>=0){STATIONS[si].lat=lat;STATIONS[si].lng=lng;}
+      COORDS[st.name]=[lat,lng];
+      const fixes=JSON.parse(localStorage.getItem(DEV_LS_KEY)||'{}');
       fixes[st.name]=[lat,lng];
-      localStorage.setItem('spc_dev_fixes',JSON.stringify(fixes));
-      // オーバーレイ表示
-      showDevOverlay(st.name,lat,lng,Object.keys(fixes).length);
+      localStorage.setItem(DEV_LS_KEY,JSON.stringify(fixes));
+      showDevOverlay(st.name,lat,lng);
     });
   }
 
-  markers.push(m);
-
-  // 駅名ラベル（Sランクのみ常時表示、他はズームで表示）
-  if(lmap.getZoom()>=13 || ri.rank==='S'){
-    const label=L.divIcon({
-      className:'',
-      html:`<div style="font-size:10px;font-weight:700;color:${ri.color};
-        text-shadow:0 0 4px #000,0 0 4px #000;white-space:nowrap;
-        transform:translateX(-50%);margin-top:4px">${st.name}</div>`,
-      iconSize:[0,0],iconAnchor:[0,-r-2]
-    });
-    const lm=L.marker([st.lat,st.lng],{icon:label,interactive:false,zIndexOffset:-1}).addTo(lmap);
-    markers.push(lm);
-  }
-}
-
-let devOverlayTimeout;
-function showDevOverlay(name,lat,lng,total){
-  let el=document.getElementById('dev-overlay');
-  if(!el){
-    el=document.createElement('div');
-    el.id='dev-overlay';el.className='dev-overlay';
-    document.body.appendChild(el);
-  }
-  el.innerHTML=`<b>${name}</b><br>[${lat}, ${lng}]<br>保存済み修正数: ${total}件`;
-  clearTimeout(devOverlayTimeout);
-  devOverlayTimeout=setTimeout(()=>{if(el)el.remove();},4000);
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  情報パネル
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function showInfo(st){
-  const ri=getRankInfo(st.score??0);
-  document.getElementById('ip-name').textContent=st.name;
-  document.getElementById('ip-line').textContent=
-    st.lines.slice(0,2).join(' / ')+(st.lines.length>2?' ほか':'');
-  document.getElementById('ip-score').textContent=st.score??'-';
-  document.getElementById('ip-score').style.color=ri.color;
-  document.getElementById('ip-rank').textContent=ri.rank+'ランク';
-  document.getElementById('ip-rank').style.color=ri.color;
-
-  const axes=document.getElementById('ip-axes');
-  axes.innerHTML='';
-  const d=st.details||{};
-  ['飲食','商業','生活','医療'].forEach(ax=>{
-    const pts=d[ax]?.pts??0;
-    const div=document.createElement('div');
-    div.className='ip-ax';
-    div.innerHTML=`<div class="ip-ax-name">${ax}</div>
-      <div class="ip-ax-val" style="color:${AXIS_COLORS[ax]}">${pts}</div>`;
-    axes.appendChild(div);
+  m.on('click',()=>{
+    if(DEV_MODE)return;
+    if(selectedMarkerInner){
+      selectedMarkerInner.style.animation='';
+      selectedMarkerInner.style.boxShadow=selectedMarkerInner._origShadow;
+      selectedMarkerInner.style.border=selectedMarkerInner._origBorder;
+      selectedMarkerInner=null;
+    }
+    const el=m.getElement();
+    if(el){
+      const inner=el.querySelector('.mk-inner');
+      if(inner){
+        inner._origShadow=inner.style.boxShadow;
+        inner._origBorder=inner.style.border;
+        const bigGlow=`0 0 ${m._glowPx*3}px ${m._glow},0 0 ${m._glowPx*1.5}px ${m._glow},0 0 ${m._glowPx*0.6}px rgba(255,255,255,0.4)`;
+        inner.style.boxShadow=bigGlow;
+        inner.style.border=`4px solid ${m._color}`;
+        inner.style.background=`${m._color}38`;
+        inner.style.animation='selPulse 0.9s ease-in-out infinite';
+        selectedMarkerInner=inner;
+      }
+    }
+    showInfo(m._st);
   });
+  markers.push(m);
+}
+
+function getNearby(st){
+  return stationData
+    .filter(s=>s.score&&(s.name!==st.name||s.pref!==st.pref))
+    .map(s=>({...s,dist:Math.hypot(s.lat-st.lat,s.lng-st.lng)}))
+    .sort((a,b)=>a.dist-b.dist).slice(0,3);
+}
+
+function showInfo(st){
+  currentStation=st;
+  const{rank,color}=getRank(st.score);
+  document.getElementById('ip-name').textContent=st.name+'駅';
+  document.getElementById('ip-line').textContent=formatLinesDisplay(st.lines)+' · '+st.pref;
+  const sc=document.getElementById('ip-score');
+  sc.textContent=st.score;sc.style.color=color;
+  document.getElementById('ip-rank').textContent=rank+'ランク';
+  document.getElementById('ip-rank').style.color=color;
+  updateFavBtn(st);
+  const nearby=getNearby(st);
+  document.getElementById('ip-nearby').innerHTML=
+    '<div class="ip-nearby-title">近隣の強い駅</div>'+
+    nearby.map(n=>{const{color:nc}=getRank(n.score);
+      return`<div class="ip-nearby-row"><span class="ip-nearby-name">${n.name}駅</span><span class="ip-nearby-score" style="color:${nc}">${n.score}pt</span></div>`;
+    }).join('');
+  const axes=['飲食','商業','生活','医療'];
+  const d=st.details||{};
+  document.getElementById('ip-axes').innerHTML=axes.map(name=>{
+    const v=d[name]||{pts:0,max:100};
+    const pct=Math.round((v.pts/v.max)*100);
+    const ac=AC[name];
+    return`<div class="ip-axis">
+      <span class="ip-axis-lbl">${name}</span>
+      <div class="ip-axis-row">
+        <div class="ip-track"><div class="ip-fill" style="width:${pct}%;background:${ac}"></div></div>
+        <span class="ip-pts" style="color:${ac}">${v.pts}<span style="font-size:9px;color:#4050a0">/${v.max}</span></span>
+      </div>
+    </div>`;
+  }).join('');
   document.getElementById('info-panel').style.display='block';
 }
 
-function closeInfo(){
-  document.getElementById('info-panel').style.display='none';
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  テーブル（ランキング）
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function setTableTab(el){
-  document.querySelectorAll('.ttab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  tableAx=el.dataset.ax;
-  updateTable(getFiltered());
-}
-
-function updateTable(data){
-  const sortKey=tableAx==='score'?'score':ax=>ax.details?.[tableAx]?.pts??0;
-  const sorted=[...data].sort((a,b)=>{
-    const va=tableAx==='score'?(a.score??0):(a.details?.[tableAx]?.pts??0);
-    const vb=tableAx==='score'?(b.score??0):(b.details?.[tableAx]?.pts??0);
-    return vb-va;
-  });
-
-  const body=document.getElementById('tbl-body');
-  body.innerHTML=sorted.slice(0,200).map((st,i)=>{
-    const ri=getRankInfo(st.score??0);
-    const dispScore=tableAx==='score'?(st.score??0):(st.details?.[tableAx]?.pts??0);
-    const cats=['飲食','商業','生活','医療'].map(ax=>{
-      const pts=st.details?.[ax]?.pts??0;
-      return `<span class="tcat" style="background:${AXIS_COLORS[ax]}22;color:${AXIS_COLORS[ax]}">${ax[0]}${pts}</span>`;
-    }).join('');
-    return `<div class="trow" onclick="onTableClick('${st.name}','${st.pref}')">
-      <div class="trow-no">${i+1}</div>
-      <div class="trow-badge" style="background:${ri.bg};border-color:${ri.color};color:${ri.color}">${ri.rank}</div>
-      <div class="trow-info">
-        <div class="trow-name">${st.name}</div>
-        <div class="trow-line">${st.lines[0]}${st.lines.length>1?' ほか':''} · ${st.pref}</div>
-        <div class="trow-cats">${cats}</div>
+function updateTable(filtered){
+  const sorted=[...filtered].sort((a,b)=>sortDesc?getAxisScore(b)-getAxisScore(a):getAxisScore(a)-getAxisScore(b));
+  const line=document.getElementById('lineSelect').value;
+  const avgEl=document.getElementById('rank-avg');
+  if(line&&sorted.length>0){
+    const avg=Math.round(sorted.reduce((s,st)=>s+getAxisScore(st),0)/sorted.length);
+    avgEl.textContent='平均 '+avg+'pt';
+  }else{avgEl.textContent='';}
+  document.getElementById('rank-header-txt').textContent=rankAxis==='総合'?'ランキング':rankAxis+'ランキング';
+  const axes=['飲食','商業','生活','医療'];
+  document.getElementById('rank-list').innerHTML=sorted.map((st,i)=>{
+    const{rank,color}=getRank(st.score);
+    const d=st.details||{};
+    const ds=rankAxis==='総合'?st.score:getAxisScore(st);
+    const cats=axes.map(n=>{const v=d[n]||{pts:0};return`<span class="rcat" style="background:${AC[n]}1a;color:${AC[n]};border:1px solid ${AC[n]}33">${n} ${v.pts}</span>`;}).join('');
+    const fIcon=isFav(st)?'♥':'♡';
+    const isTop=i<3;
+    return`<div class="rank-row" onclick="onTableClick('${st.name}','${st.pref}')">
+      <div class="rank-left">
+        <span class="rn${isTop?' top3':''}">${i+1}</span>
+        <span class="rletter${isTop?' top3':''}" style="color:${color}">${rank}</span>
       </div>
-      <div>
-        <div class="trow-score" style="color:${ri.color}">${dispScore}</div>
-        <div class="trow-pts">pts</div>
+      <div class="rinfo">
+        <div class="rname-row">
+          <span class="rname">${st.name}駅</span>
+          <span class="rfav${isFav(st)?' on':''}" onclick="event.stopPropagation();toggleFav(stationData.find(s=>s.name==='${st.name}'&&s.pref==='${st.pref}'))">${fIcon}</span>
+        </div>
+        <div class="rline">${formatLinesDisplay(st.lines)} · ${st.pref}</div>
+        <div class="rcats">${cats}</div>
       </div>
+      <span class="rscore" style="color:${color}">${ds}</span>
     </div>`;
   }).join('');
 }
 
 function onTableClick(name,pref){
   const st=stationData.find(s=>s.name===name&&s.pref===pref);
-  if(!st) return;
-  setView('map');
+  if(!st)return;
+  if(!isPc())setView('map');
   lmap.setView([st.lat,st.lng],14);
-  showInfo(st);
+  setTimeout(()=>{const m=markers.find(mk=>mk._st&&mk._st.name===name&&mk._st.pref===pref);if(m)m.fire('click');else showInfo(st);},350);
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  描画メイン
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function initLineSelect(){
+  const ls=document.getElementById('lineSelect');
+  ls.innerHTML='<option value="">全路線</option>';
+  sortedLineKeys(ALL_LINES).forEach(line=>{
+    const o=document.createElement('option');o.value=line;o.textContent=line;ls.appendChild(o);
+  });
+}
+function onPrefChange(){
+  const pref=document.getElementById('prefSelect').value;
+  const ls=document.getElementById('lineSelect');
+  ls.innerHTML='<option value="">全路線</option>';
+  const src=pref?LINE_DATA[pref]:ALL_LINES;
+  sortedLineKeys(src||{}).forEach(line=>{
+    const o=document.createElement('option');o.value=line;o.textContent=line;ls.appendChild(o);
+  });
+  render();
+}
+
 function render(){
-  markers.forEach(m=>lmap.removeLayer(m)); markers=[];
-  closeInfo();
-  const visible=getVisibleStations(getFiltered());
-  visible.forEach(drawMarker);
+  markers.forEach(m=>lmap.removeLayer(m));markers=[];
+  selectedMarkerInner=null;closeInfo();
+  getVisible().forEach(drawMarker);
   updateTable(getFiltered());
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  ビュー切替
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function setView(v){
+  if(isPc())return;
   document.getElementById('btnMap').classList.toggle('active',v==='map');
   document.getElementById('btnTable').classList.toggle('active',v==='table');
-  document.getElementById('map-area').style.visibility=v==='map'?'visible':'hidden';
-  document.getElementById('table-area').style.display=v==='table'?'flex':'none';
-  if(v==='map') setTimeout(()=>lmap.invalidateSize(),100);
+  const ma=document.getElementById('map-area'),ta=document.getElementById('table-area');
+  if(v==='map'){ma.classList.remove('hidden-mobile');ta.classList.remove('visible-mobile');setTimeout(()=>lmap.invalidateSize(),150);}
+  else{ma.classList.add('hidden-mobile');ta.classList.add('visible-mobile');}
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  半径変更
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function onRadiusChange(){
-  stationData.forEach(s=>{s.loading=true;s.score=null;s.details=null;});
-  loadAll();
-}
+function openModal(){document.getElementById('modal-bg').classList.add('open');}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  モーダル
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function openModal(){ document.getElementById('modal-bg').classList.add('open'); }
-function closeModal(){ document.getElementById('modal-bg').classList.remove('open'); }
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  起動
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+lmap.on('movestart',closeInfo);
 lmap.on('zoomend moveend',()=>{if(stationData.some(s=>s.score)&&!DEV_MODE)render();});
-lmap.on('click',closeInfo);
 
-// PC時はテーブルを常時表示
-if(window.innerWidth>=641){
+if(isPc()){
   document.getElementById('table-area').style.display='flex';
 }
 
