@@ -42,7 +42,7 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 .logo-lines{display:none}
 .logo-line-main,.logo-line-f1,.logo-line-f2{display:none}
 
-.view-tabs{display:none;border:1px solid rgba(120,150,210,0.22);border-radius:8px;overflow:hidden;flex-shrink:0;margin-left:8px}
+.view-tabs{display:none;border:1px solid rgba(120,150,210,0.22);border-radius:8px;overflow:hidden;flex-shrink:0;margin-left:2px}
 .vtab{background:transparent;color:#4858a0;border:none;padding:4px 10px;cursor:pointer;
   transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:1px;font-family:inherit}
 .vtab-icon{font-size:22px;line-height:1}
@@ -57,8 +57,6 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
   .logo-megu{font-size:15px!important}
   .logo-sub-en{font-size:10px!important}
   .fsel{font-size:12px!important}
-  .hsel{font-size:12px!important}
-  #searchInput{font-size:12px!important}
   .info-btn{font-size:11px!important}
 }
 @media(max-width:767px){
@@ -107,10 +105,6 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
   line-height:1;transition:all 0.2s;flex-shrink:0}
 #favFilter.on{background:rgba(255,70,110,0.26);border-color:rgba(255,100,140,0.6);color:#ff5588}
 #favFilter:hover{transform:scale(1.1)}
-#searchInput{background:rgba(255,255,255,0.05);color:#d0daf0;border:1px solid rgba(120,150,210,0.2);
-  padding:4px 8px;border-radius:7px;font-size:11px;outline:none;font-family:inherit;
-  width:110px;min-width:80px;flex-shrink:1}
-#searchInput::placeholder{color:#3a4878}
 #statusbar{font-size:10px;color:#5878b8;white-space:nowrap;flex-shrink:0;font-weight:600;margin-left:auto}
 #statusbar.anim{color:#5a90ff;animation:pulse 1.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:0.35}50%{opacity:1}}
@@ -308,11 +302,6 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
         </div>
       </div>
       <button class="info-btn" onclick="openModal()">街力の見方 ⓘ</button>
-      <select class="hsel" id="radiusSelect" onchange="onRadiusChange()">
-        <option value="500" selected>半径 500m</option>
-        <option value="800">半径 800m</option>
-        <option value="1200">半径 1,200m</option>
-      </select>
     </div>
   </div>
 
@@ -331,7 +320,11 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
       <option value="B">B</option><option value="C">C</option><option value="D">D</option>
     </select>
     <button id="favFilter" onclick="toggleFavFilter()">♥</button>
-    <input type="text" id="searchInput" placeholder="駅名・路線名..." oninput="render()">
+    <select class="fsel" id="radiusSelect" onchange="onRadiusChange()">
+      <option value="500" selected>半径 500m</option>
+      <option value="800">半径 800m</option>
+      <option value="1200">半径 1,200m</option>
+    </select>
     <span id="statusbar"></span>
   </div>
 
@@ -1119,13 +1112,11 @@ function getFiltered(){
   const pref=document.getElementById('prefSelect').value;
   const line=document.getElementById('lineSelect').value;
   const rank=document.getElementById('rankFilter').value;
-  const q=(document.getElementById('searchInput').value||'').trim();
   return stationData.filter(s=>{
     if(!s.score)return false;
     if(pref&&s.pref!==pref)return false;
     if(line&&!s.lines.includes(line))return false;
     if(rank&&getRank(s.score).rank!==rank)return false;
-    if(q&&!s.name.includes(q)&&!s.lines.some(l=>l.includes(q)))return false;
     if(showFavOnly&&!isFav(s))return false;
     return true;
   });
