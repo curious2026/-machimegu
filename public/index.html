@@ -74,6 +74,20 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
   padding:4px 9px;border-radius:16px;cursor:pointer;white-space:nowrap;
   background:rgba(80,110,255,0.08);font-family:inherit}
 .info-btn:hover{border-color:rgba(160,200,255,0.55);color:#d8eaff}
+#auth-area{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.auth-btn{font-size:10px;color:#b0c4ff;font-weight:700;border:1px solid rgba(120,160,255,0.3);
+  padding:4px 9px;border-radius:16px;cursor:pointer;white-space:nowrap;
+  background:rgba(80,110,255,0.08);font-family:inherit}
+.auth-btn:hover{border-color:rgba(160,200,255,0.55);color:#d8eaff}
+.user-info{display:flex;align-items:center;gap:6px}
+.user-avatar{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(120,160,255,0.5);object-fit:cover;flex-shrink:0}
+.user-name{font-size:11px;color:#d0e0ff;font-weight:600;max-width:90px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:767px){
+  .user-name{display:none}
+  .auth-btn{font-size:10px;padding:3px 8px}
+  .user-avatar{width:24px;height:24px}
+}
 .hsel{background:rgba(8,12,26,0.8);color:#c8d6f0;border:1px solid rgba(120,150,210,0.28);
   padding:4px 7px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600}
 
@@ -277,6 +291,14 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
       </button>
     </div>
     <div id="header-controls">
+      <div id="auth-area">
+        <button class="auth-btn" id="loginBtn" onclick="signInWithGoogle()" style="display:none">Googleでログイン</button>
+        <div class="user-info" id="userInfo" style="display:none">
+          <img class="user-avatar" id="userAvatar" src="" alt="">
+          <span class="user-name" id="userName"></span>
+          <button class="auth-btn" onclick="signOutUser()">ログアウト</button>
+        </div>
+      </div>
       <button class="info-btn" onclick="openModal()">街力の見方 ⓘ</button>
       <select class="hsel" id="radiusSelect" onchange="onRadiusChange()">
         <option value="500" selected>半径 500m</option>
@@ -1304,6 +1326,66 @@ if(isPc()){
 
 initLineSelect();
 loadAll();
+</script>
+
+<!-- ═══ Firebase Authentication (Phase 1) ═══ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB88IewpQSXzLeICeilSCwP5R6Q6vTlSDI",
+  authDomain: "machi-megu-project.firebaseapp.com",
+  projectId: "machi-megu-project",
+  storageBucket: "machi-megu-project.firebasestorage.app",
+  messagingSenderId: "851136375513",
+  appId: "1:851136375513:web:8aa9f969c5013506382cc8"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+// 既存スクリプトから呼び出せるようグローバル公開
+window.signInWithGoogle = async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    console.error('ログインエラー:', e);
+    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
+      alert('ログインに失敗しました: ' + e.message);
+    }
+  }
+};
+
+window.signOutUser = async () => {
+  try {
+    await signOut(auth);
+  } catch (e) {
+    console.error('ログアウトエラー:', e);
+  }
+};
+
+// ログイン状態の監視
+onAuthStateChanged(auth, (user) => {
+  const loginBtn = document.getElementById('loginBtn');
+  const userInfo = document.getElementById('userInfo');
+  if (!loginBtn || !userInfo) return;
+  if (user) {
+    loginBtn.style.display = 'none';
+    userInfo.style.display = 'flex';
+    document.getElementById('userAvatar').src = user.photoURL || '';
+    document.getElementById('userName').textContent = user.displayName || 'ユーザー';
+    console.log('ログイン中:', user.displayName, user.uid);
+  } else {
+    loginBtn.style.display = 'inline-block';
+    userInfo.style.display = 'none';
+    console.log('未ログイン');
+  }
+});
+
+console.log('Firebase Auth 初期化完了');
 </script>
 </body>
 </html>
