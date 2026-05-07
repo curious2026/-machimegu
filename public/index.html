@@ -83,10 +83,16 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 .user-avatar{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(120,160,255,0.5);object-fit:cover;flex-shrink:0}
 .user-name{font-size:11px;color:#d0e0ff;font-weight:600;max-width:90px;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
+.auth-lbl-short{display:none}
 @media(max-width:767px){
   .user-name{display:none}
-  .auth-btn{font-size:10px;padding:3px 8px}
-  .user-avatar{width:24px;height:24px}
+  .signout-btn-pc{display:none}
+  .auth-lbl-full{display:none}
+  .auth-lbl-short{display:inline}
+  .auth-btn{font-size:10px;padding:3px 9px}
+  .user-avatar{width:30px;height:30px;cursor:pointer}
+  #auth-area{gap:4px}
+  .user-info{gap:4px}
 }
 .hsel{background:rgba(8,12,26,0.8);color:#c8d6f0;border:1px solid rgba(120,150,210,0.28);
   padding:4px 7px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600}
@@ -292,11 +298,13 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
     </div>
     <div id="header-controls">
       <div id="auth-area">
-        <button class="auth-btn" id="loginBtn" onclick="signInWithGoogle()" style="display:none">Googleでログイン</button>
+        <button class="auth-btn" id="loginBtn" onclick="signInWithGoogle()" style="display:none">
+          <span class="auth-lbl-full">Googleでログイン</span><span class="auth-lbl-short">ログイン</span>
+        </button>
         <div class="user-info" id="userInfo" style="display:none">
-          <img class="user-avatar" id="userAvatar" src="" alt="">
+          <img class="user-avatar" id="userAvatar" src="" alt="" onclick="handleAvatarClick()" title="クリックでログアウト">
           <span class="user-name" id="userName"></span>
-          <button class="auth-btn" onclick="signOutUser()">ログアウト</button>
+          <button class="auth-btn signout-btn-pc" onclick="signOutUser()">ログアウト</button>
         </div>
       </div>
       <button class="info-btn" onclick="openModal()">街力の見方 ⓘ</button>
@@ -1364,6 +1372,15 @@ window.signOutUser = async () => {
     await signOut(auth);
   } catch (e) {
     console.error('ログアウトエラー:', e);
+  }
+};
+
+// スマホ用：アバタークリックでログアウト確認
+window.handleAvatarClick = () => {
+  // PCでは何もしない（ログアウトボタンが表示されているため）
+  if (window.innerWidth >= 768) return;
+  if (confirm('ログアウトしますか？')) {
+    window.signOutUser();
   }
 };
 
