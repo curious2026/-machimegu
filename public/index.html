@@ -290,17 +290,17 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
         <span class="vtab-label">RANK</span>
       </button>
     </div>
-    <div id="header-controls">
-      <div id="auth-area">
-        <button class="auth-btn" id="loginBtn" onclick="signInWithGoogle()" style="display:none">
-          <span class="auth-lbl-full">Googleでログイン</span><span class="auth-lbl-short">ログイン</span>
-        </button>
-        <div class="user-info" id="userInfo" style="display:none">
-          <img class="user-avatar" id="userAvatar" src="" alt="" onclick="handleAvatarClick()" title="クリックでログアウト">
-          <span class="user-name" id="userName"></span>
-          <button class="auth-btn signout-btn-pc" onclick="signOutUser()">ログアウト</button>
-        </div>
+    <div id="auth-area">
+      <button class="auth-btn" id="loginBtn" onclick="signInWithGoogle()" style="display:none">
+        <span class="auth-lbl-full">Googleでログイン</span><span class="auth-lbl-short">ログイン</span>
+      </button>
+      <div class="user-info" id="userInfo" style="display:none">
+        <img class="user-avatar" id="userAvatar" src="" alt="" onclick="handleAvatarClick()" title="クリックでログアウト">
+        <span class="user-name" id="userName"></span>
+        <button class="auth-btn signout-btn-pc" onclick="signOutUser()">ログアウト</button>
       </div>
+    </div>
+    <div id="header-controls">
       <button class="info-btn" onclick="openModal()">街力の見方 ⓘ</button>
     </div>
   </div>
@@ -1125,7 +1125,7 @@ function getFiltered(){
 function getVisible(){
   const zoom=lmap.getZoom();
   const base=isPc()?1.0:1.35;
-  const d=(zoom>=14?22:zoom>=13?40:zoom>=12?65:zoom>=11?100:150)*base;
+  const d=(zoom>=14?40:zoom>=13?45:zoom>=12?52:zoom>=11?60:zoom>=10?70:85)*base;
   const sorted=[...getFiltered()].sort((a,b)=>b.score-a.score);
   const vis=[];
   for(const st of sorted){
