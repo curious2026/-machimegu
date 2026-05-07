@@ -261,59 +261,59 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
   border-top:1px solid rgba(255,255,255,0.08);padding-top:14px}
 
 /* ── プロフィール設定モーダル ── */
-#profile-modal-bg{position:fixed;inset:0;background:rgba(8,5,18,0.92);z-index:7000;
+#profile-modal-bg{position:fixed;inset:0;background:rgba(5,12,22,0.93);z-index:7000;
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
 #profile-modal-bg.open{display:flex}
-#profile-modal{background:linear-gradient(160deg,#161028 0%,#0e0a20 60%,#0a0818 100%);
-  border:1px solid rgba(200,170,230,0.18);border-radius:20px;
-  padding:26px 24px;width:380px;max-width:92vw;max-height:90vh;overflow-y:auto;
-  box-shadow:0 24px 80px rgba(0,0,0,0.85),0 0 60px rgba(180,140,220,0.08),inset 0 1px 0 rgba(255,255,255,0.08);
+#profile-modal{background:linear-gradient(160deg,#0c1830 0%,#091020 60%,#06101c 100%);
+  border:1px solid rgba(120,180,230,0.22);border-radius:22px;
+  padding:30px 28px;width:420px;max-width:94vw;max-height:92vh;overflow-y:auto;
+  box-shadow:0 24px 80px rgba(0,0,0,0.85),0 0 60px rgba(56,189,248,0.1),inset 0 1px 0 rgba(255,255,255,0.08);
   position:relative}
 #profile-modal::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1.5px;
-  background:linear-gradient(90deg,transparent,rgba(220,180,240,0.5),transparent)}
-.pmd-title{font-size:22px;font-weight:900;text-align:center;margin-bottom:4px;letter-spacing:0.5px;
-  background:linear-gradient(135deg,#ffffff 0%,#e8d4f0 60%,#f0c8e0 100%);
+  background:linear-gradient(90deg,transparent,rgba(125,211,252,0.55),transparent)}
+.pmd-title{font-size:25px;font-weight:900;text-align:center;margin-bottom:6px;letter-spacing:0.5px;
+  background:linear-gradient(135deg,#ffffff 0%,#c8eafa 60%,#58a8e0 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.pmd-welcome{font-size:13px;color:#d8b8e0;text-align:center;margin-bottom:16px;font-weight:600;letter-spacing:0.3px}
-.pmd-desc{font-size:13px;color:#a0a0c8;text-align:center;margin-bottom:22px;line-height:1.7}
-.pmd-group{margin-bottom:15px}
-.pmd-label{display:block;font-size:12px;color:#d0c8e0;font-weight:700;margin-bottom:7px;letter-spacing:0.3px}
-.pmd-req{color:#ec8fbb;font-size:9px;font-weight:700;margin-left:5px;letter-spacing:0.5px}
-.pmd-input{width:100%;background:rgba(255,255,255,0.04);color:#f0e8f8;
-  border:1px solid rgba(180,160,210,0.2);border-radius:11px;
-  padding:10px 13px;font-size:14px;outline:none;font-family:inherit;
+.pmd-welcome{font-size:15px;color:#a8d8f0;text-align:center;margin-bottom:18px;font-weight:600;letter-spacing:0.3px}
+.pmd-desc{font-size:14px;color:#8aa0bc;text-align:center;margin-bottom:24px;line-height:1.7}
+.pmd-group{margin-bottom:17px}
+.pmd-label{display:block;font-size:14px;color:#c8e0f0;font-weight:700;margin-bottom:8px;letter-spacing:0.3px}
+.pmd-req{color:#7dd3fc;font-size:11px;font-weight:700;margin-left:6px;letter-spacing:0.5px}
+.pmd-input{width:100%;background:rgba(255,255,255,0.04);color:#e8f4ff;
+  border:1px solid rgba(120,180,230,0.22);border-radius:12px;
+  padding:12px 15px;font-size:16px;outline:none;font-family:inherit;
   transition:all 0.2s;box-sizing:border-box}
-.pmd-input:focus{border-color:rgba(220,170,230,0.55);background:rgba(255,255,255,0.07);
-  box-shadow:0 0 0 3px rgba(200,160,230,0.08)}
-.pmd-input::placeholder{color:#6a607a}
-.pmd-input option{background:#15102a;color:#f0e8f8}
+.pmd-input:focus{border-color:rgba(125,211,252,0.6);background:rgba(255,255,255,0.07);
+  box-shadow:0 0 0 3px rgba(125,211,252,0.1)}
+.pmd-input::placeholder{color:#5a708a}
+.pmd-input option{background:#0e1828;color:#e8f4ff}
 .pmd-station-wrap{position:relative}
-.pmd-station-suffix{position:absolute;right:14px;top:50%;transform:translateY(-50%);
-  color:#a890b8;font-size:14px;font-weight:700;pointer-events:none}
-.pmd-station-wrap .pmd-input{padding-right:32px}
-.pmd-bdate{display:flex;gap:8px}
+.pmd-station-suffix{position:absolute;right:15px;top:50%;transform:translateY(-50%);
+  color:#88b8d0;font-size:16px;font-weight:700;pointer-events:none}
+.pmd-station-wrap .pmd-input{padding-right:36px}
+.pmd-bdate{display:flex;gap:10px}
 .pmd-bdate .pmd-input{flex:1}
-.pmd-gender{display:flex;gap:7px}
+.pmd-gender{display:flex;gap:8px}
 .pmd-gender-btn{flex:1;background:rgba(255,255,255,0.04);
-  color:#a8a0c0;border:1px solid rgba(180,160,210,0.2);
-  border-radius:11px;padding:11px 6px;font-size:13px;
+  color:#a0b8d0;border:1px solid rgba(120,180,230,0.22);
+  border-radius:12px;padding:13px 6px;font-size:15px;
   cursor:pointer;font-family:inherit;font-weight:700;
   transition:all 0.2s;letter-spacing:0.3px}
-.pmd-gender-btn:hover{border-color:rgba(220,180,230,0.4);color:#d8c8e0;background:rgba(255,255,255,0.06)}
+.pmd-gender-btn:hover{border-color:rgba(125,211,252,0.45);color:#d0e8f8;background:rgba(255,255,255,0.06)}
 .pmd-gender-btn.selected{
-  background:linear-gradient(135deg,rgba(140,120,220,0.28) 0%,rgba(220,140,180,0.28) 100%);
-  border-color:rgba(220,170,230,0.6);color:#fff;
-  box-shadow:0 0 18px rgba(200,150,220,0.18),inset 0 1px 0 rgba(255,255,255,0.08)}
+  background:linear-gradient(135deg,rgba(34,211,238,0.28) 0%,rgba(125,211,252,0.28) 100%);
+  border-color:rgba(125,211,252,0.65);color:#fff;
+  box-shadow:0 0 18px rgba(56,189,248,0.22),inset 0 1px 0 rgba(255,255,255,0.08)}
 .pmd-save{width:100%;
-  background:linear-gradient(135deg,#7c6df0 0%,#c87ad4 60%,#e879b4 100%);
-  color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;
-  font-weight:800;cursor:pointer;font-family:inherit;margin-top:14px;letter-spacing:0.5px;
-  box-shadow:0 6px 20px rgba(180,100,200,0.35),inset 0 1px 0 rgba(255,255,255,0.18);
+  background:linear-gradient(135deg,#22d3ee 0%,#38bdf8 60%,#2563eb 100%);
+  color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;
+  font-weight:800;cursor:pointer;font-family:inherit;margin-top:16px;letter-spacing:0.5px;
+  box-shadow:0 6px 22px rgba(56,189,248,0.4),inset 0 1px 0 rgba(255,255,255,0.2);
   transition:all 0.15s}
-.pmd-save:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(180,100,200,0.45),inset 0 1px 0 rgba(255,255,255,0.18)}
+.pmd-save:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(56,189,248,0.5),inset 0 1px 0 rgba(255,255,255,0.2)}
 .pmd-save:active{transform:translateY(0)}
 .pmd-save:disabled{opacity:0.5;cursor:not-allowed;transform:none}
-.pmd-error{color:#ec8fbb;font-size:12px;margin-top:10px;text-align:center;display:none;font-weight:600;letter-spacing:0.3px}
+.pmd-error{color:#fb7185;font-size:14px;margin-top:12px;text-align:center;display:none;font-weight:600;letter-spacing:0.3px}
 .pmd-error.show{display:block}
 
 /* ── 対数スケール説明モーダル ── */
@@ -503,9 +503,9 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 <!-- プロフィール設定モーダル -->
 <div id="profile-modal-bg">
   <div id="profile-modal">
-    <div class="pmd-title">街巡へようこそ</div>
+    <div class="pmd-title">街巡-まちめぐ- へようこそ</div>
     <div class="pmd-welcome" id="pmd-welcome"></div>
-    <div class="pmd-desc">プロフィールを設定してください<br><span style="font-size:11px;color:#7088b0">※あとから変更できます</span></div>
+    <div class="pmd-desc">プロフィールを設定してください<br><span style="font-size:12px;color:#7a96b6;line-height:1.9;display:inline-block;margin-top:8px">※あとから変更できます<br>※ハンドルネーム以外の情報はほかのユーザーからみられません</span></div>
     
     <div class="pmd-group">
       <label class="pmd-label">ハンドルネーム<span class="pmd-req">必須</span></label>
