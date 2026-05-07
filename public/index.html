@@ -518,7 +518,7 @@ let currentStation=null;
 function shareStation(){
   if(!currentStation)return;
   const txt=`${currentStation.name}駅の街スコアは ${currentStation.score}点（${getRank(currentStation.score).rank}ランク）！ #街巡まちめぐ`;
-  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent('https://street-power-production.up.railway.app'),'_blank');
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent('https://machimegu-production.up.railway.app'),'_blank');
 }
 
 let rankAxis='総合',sortDesc=true;
