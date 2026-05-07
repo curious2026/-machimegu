@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto Sans JP',sans-serif}
+html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto Sans JP',sans-serif}
 #app{display:flex;flex-direction:column;height:100vh}
 
 #header{
@@ -50,6 +50,17 @@ html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto
 .vtab.active{background:rgba(70,100,220,0.28)}
 .vtab.active .vtab-icon,.vtab.active .vtab-label{color:#e0eaff}
 .vtab:hover:not(.active) .vtab-icon,.vtab:hover:not(.active) .vtab-label{color:#a0b8e0}
+
+@media(max-width:767px){
+  .logo-icon{width:50px!important;height:50px!important}
+  .logo-main{font-size:21px!important}
+  .logo-megu{font-size:15px!important}
+  .logo-sub-en{font-size:10px!important}
+  .fsel{font-size:12px!important}
+  .hsel{font-size:12px!important}
+  #searchInput{font-size:12px!important}
+  .info-btn{font-size:11px!important}
+}
 @media(max-width:767px){
   .view-tabs{display:flex}
   #header{height:64px}
@@ -66,8 +77,8 @@ html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto
 .hsel{background:rgba(8,12,26,0.8);color:#c8d6f0;border:1px solid rgba(120,150,210,0.28);
   padding:4px 7px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600}
 
-#filters{display:flex;align-items:center;gap:4px;padding:4px 10px;
-  background:#050810;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;overflow-x:auto}
+#filters{display:flex;align-items:center;gap:3px;padding:3px 6px;
+  background:#181828;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;overflow-x:auto}
 .fsel{background:rgba(255,255,255,0.05);color:#c8d6f0;border:1px solid rgba(120,150,210,0.2);
   padding:4px 5px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600}
 .fsel option{background:#0e1220;color:#d8e8ff;font-weight:600}
@@ -94,7 +105,7 @@ html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto
   border-color:rgba(0,0,0,0.15)!important;width:28px!important;height:28px!important;line-height:28px!important;font-size:15px!important}
 .leaflet-control-zoom a:hover{background:#f4f4f4!important}
 
-#table-area{width:400px;flex-shrink:0;background:#050810;
+#table-area{width:400px;flex-shrink:0;background:#181828;
   border-left:1px solid rgba(255,255,255,0.07);flex-direction:column;display:none}
 @media(min-width:768px){#table-area{display:flex!important;position:static!important;width:400px!important}}
 @media(max-width:767px){
@@ -180,7 +191,7 @@ html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto
 .dev-clear{flex:1;background:#882244;border:none;color:#fff;padding:9px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;font-family:inherit}
 .dev-close{flex:1;background:#101828;border:1px solid #2a3860;color:#7080b0;padding:9px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit}
 
-#rank-tabs{display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;background:#050810}
+#rank-tabs{display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;background:#181828}
 .rank-tab{background:transparent;border:none;color:#5060a0;padding:9px 11px;
   font-size:14px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;font-weight:700;
   letter-spacing:1px;border-bottom:2px solid transparent;flex-shrink:0}
@@ -205,7 +216,7 @@ html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto
 .rinfo{flex:1;min-width:0}
 .rname-row{display:flex;align-items:center;gap:5px}
 .rname{font-size:15px;font-weight:700;color:#e0ecff;letter-spacing:0.3px}
-.rfav{font-size:13px;cursor:pointer;line-height:1;flex-shrink:0;transition:transform 0.15s;color:#4a5070}
+.rfav{font-size:15px;cursor:pointer;line-height:1;flex-shrink:0;transition:transform 0.15s;color:#8090c0;font-weight:700}
 .rfav.on{color:#ff5588}
 .rfav:hover{transform:scale(1.3)}
 .rline{font-size:11px;color:#b0c4e0;margin-top:2px;font-weight:500}
@@ -266,11 +277,11 @@ html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto
       </button>
     </div>
     <div id="header-controls">
-      <button class="info-btn" onclick="openModal()">スコアの見方 ⓘ</button>
+      <button class="info-btn" onclick="openModal()">街力の見方 ⓘ</button>
       <select class="hsel" id="radiusSelect" onchange="onRadiusChange()">
         <option value="500" selected>半径 500m</option>
         <option value="800">半径 800m</option>
-        <option value="1000">半径 1,000m</option>
+        <option value="1200">半径 1,200m</option>
       </select>
     </div>
   </div>
@@ -358,8 +369,8 @@ html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto
 <!-- 街スコア説明モーダル -->
 <div id="modal-bg" onclick="closeModal()">
   <div id="modal" onclick="event.stopPropagation()">
-    <div class="modal-hdr"><div class="modal-title">街スコアの算出方法</div><button class="modal-x" onclick="closeModal()">✕</button></div>
-    <div class="modal-desc">各駅から指定半径圏内の商業施設数をもとに<strong style="color:#e8f4ff">1000点満点</strong>で数値化。<br><a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline;font-weight:700">対数スケール</a>採用により自然なランク分布になります。<br><br>データ：<strong style="color:#90b8ff">Overture Maps</strong>（Meta・Microsoft・Amazon等提供）</div>
+    <div class="modal-hdr"><div class="modal-title">街力（まちりょく）の算出方法</div><button class="modal-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-desc">各駅から指定半径圏内の商業施設数をもとに<strong style="color:#e8f4ff">1000点満点</strong>で街力を数値化。<br><a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline;font-weight:700">対数スケール</a>採用により自然なランク分布になります。<br><br>データ：<strong style="color:#90b8ff">Overture Maps</strong>（Meta・Microsoft・Amazon等提供）</div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#ff3355,#ff6080)">350</div><div><div class="modal-ax-name">飲食充実</div><div class="modal-ax-desc">飲食店・カフェ・バー・ファストフード等</div></div></div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#7b5fe8,#a080ff)">350</div><div><div class="modal-ax-name">商業・小売</div><div class="modal-ax-desc">百貨店・ショッピング・アパレル・娯楽施設等</div></div></div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#2a8fd4,#50b8ff)">200</div><div><div class="modal-ax-name">生活利便</div><div class="modal-ax-desc">コンビニ・スーパー・薬局・銀行・美容院等</div></div></div>
@@ -368,7 +379,7 @@ html,body{height:100%;background:#050810;color:#d8e0f0;font-family:'Inter','Noto
       ※ 各軸は施設数最多の駅を基準とした<a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline">対数相対評価</a>です。<br>
       ※ 本スコアは商業施設密度のみを反映。居住環境・治安等は含みません。<br>
       ※ Overture Mapsデータは月次更新。スコアは自動で更新されます。<br>
-      ※ 街スコアはビジネス・不動産・街選びの参考情報です。
+      ※ 街力（まちりょく）はビジネス・不動産・街選びの参考情報です。
     </div>
   </div>
 </div>
@@ -517,8 +528,8 @@ function toggleFavFilter(){
 let currentStation=null;
 function shareStation(){
   if(!currentStation)return;
-  const txt=`${currentStation.name}駅の街スコアは ${currentStation.score}点（${getRank(currentStation.score).rank}ランク）！ #街巡まちめぐ`;
-  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent('https://machimegu-production.up.railway.app'),'_blank');
+  const txt=`${currentStation.name}駅の街力は ${currentStation.score}点（${getRank(currentStation.score).rank}ランク）！ #街巡まちめぐ`;
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent('https://street-power-production.up.railway.app'),'_blank');
 }
 
 let rankAxis='総合',sortDesc=true;
@@ -667,7 +678,7 @@ const COORDS={
   '秋葉原':[35.6984,139.7731],'横浜':[35.4658,139.6223],
   '吉祥寺':[35.7027,139.5796],'新橋':[35.6662,139.7585],'有楽町':[35.6746,139.763],
   '銀座':[35.6713,139.765],'日本橋':[35.6817,139.7741],'神田':[35.6917,139.7703],
-  '御茶ノ水':[35.6995,139.7649],'飯田橋':[35.7019,139.7467],'四ツ谷':[35.6856,139.7304],
+  '御茶ノ水':[35.6995,139.7649],'飯田橋':[35.7011,139.7441],'四ツ谷':[35.6856,139.7304],
   '赤坂見附':[35.6766,139.7374],'表参道':[35.6654,139.7122],'代々木':[35.6838,139.7022],
   '原宿':[35.6702,139.7027],'恵比寿':[35.6467,139.7101],
   '目黒':[35.6334,139.7159],'五反田':[35.6253,139.7233],'大崎':[35.6197,139.7282],
@@ -676,22 +687,22 @@ const COORDS={
   '三田':[35.6477,139.7485],'麻布十番':[35.6563,139.7364],'六本木':[35.6628,139.7311],
   '乃木坂':[35.6657,139.7261],'国会議事堂前':[35.6737,139.7437],'溜池山王':[35.6715,139.7421],
   '虎ノ門':[35.67,139.75],'霞ケ関':[35.6737,139.7508],'日比谷':[35.675,139.7595],
-  '二重橋前':[35.6795,139.7635],'大手町':[35.6864,139.7634],'三越前':[35.6869,139.7737],
+  '二重橋前':[35.6802,139.7617],'大手町':[35.6864,139.7634],'三越前':[35.6869,139.7737],
   '水天宮前':[35.6824,139.7858],'清澄白河':[35.6821,139.7989],
   '木場':[35.6693,139.8066],'東陽町':[35.6696,139.8174],'南砂町':[35.6686,139.8313],
   '豊洲':[35.6546,139.7964],'新木場':[35.6459,139.8264],'辰巳':[35.6451,139.8116],
   '月島':[35.6643,139.7848],'新富町':[35.6707,139.7738],'築地':[35.6681,139.7726],
-  '東銀座':[35.6706,139.7652],'宝町':[35.6754,139.7718],'人形町':[35.6863,139.7822],
+  '東銀座':[35.6697,139.7671],'宝町':[35.6754,139.7718],'人形町':[35.6863,139.7822],
   '浅草橋':[35.6973,139.7862],'蔵前':[35.7033,139.7909],'浅草':[35.712,139.7983],
   '押上':[35.7103,139.8118],'錦糸町':[35.6969,139.8145],'住吉':[35.689,139.8156],
   '菊川':[35.6887,139.8061],'森下':[35.688,139.7982],'浜町':[35.6874,139.7868],
   '馬喰横山':[35.6921,139.7829],'岩本町':[35.6955,139.7753],'小川町':[35.6947,139.7654],
   '神保町':[35.696,139.7581],'九段下':[35.6951,139.7497],'市ケ谷':[35.6916,139.7361],
   '麹町':[35.6839,139.7376],'永田町':[35.6778,139.7418],'半蔵門':[35.685,139.7416],
-  '東大前':[35.7172,139.7583],'後楽園':[35.7073,139.7508],'春日':[35.7097,139.7533],
+  '東大前':[35.7172,139.7583],'後楽園':[35.7076,139.7517],'春日':[35.7097,139.7533],
   '本郷三丁目':[35.7075,139.7604],'淡路町':[35.6954,139.7674],'末広町':[35.703,139.7718],
-  '上野広小路':[35.708,139.773],'稲荷町':[35.7114,139.7831],'田原町':[35.7098,139.7912],
-  '茅場町':[35.6793,139.7801],'八丁堀':[35.6752,139.7757],
+  '上野広小路':[35.7078,139.773],'稲荷町':[35.7114,139.7831],'田原町':[35.7098,139.7912],
+  '茅場町':[35.6793,139.7801],'八丁堀':[35.6749,139.7771],
   // ── 9:33修正分 ──
   '入谷':[35.7197,139.7839],'三ノ輪':[35.7295,139.7912],
   '南千住':[35.7325,139.799],'北千住':[35.749,139.805],
@@ -715,7 +726,7 @@ const COORDS={
   '立川':[35.6973,139.413],'日野':[35.6795,139.3937],
   '豊田':[35.6591,139.3816],'八王子':[35.6556,139.3385],
   '千駄ヶ谷':[35.6812,139.7113],'信濃町':[35.68,139.7204],
-  '水道橋':[35.7024,139.7527],
+  '水道橋':[35.7019,139.7545],
   '代官山':[35.648,139.7032],'中目黒':[35.6445,139.6986],
   '祐天寺':[35.6371,139.7025],'学芸大学':[35.6278,139.7034],
   '都立大学':[35.6173,139.6761],'自由が丘':[35.6075,139.6688],
@@ -728,8 +739,8 @@ const COORDS={
   '池尻大橋':[35.6516,139.6847],'三軒茶屋':[35.6437,139.6705],
   '駒沢大学':[35.6332,139.6611],'桜新町':[35.6317,139.6454],
   '用賀':[35.6271,139.6345],'二子玉川':[35.5936,139.629],
-  '溝の口':[35.5766,139.617],'たまプラーザ':[35.5694,139.5525],
-  'あざみ野':[35.5753,139.5394],'江田':[35.5583,139.5511],
+  '溝の口':[35.5766,139.617],'たまプラーザ':[35.5775,139.5589],
+  'あざみ野':[35.5682,139.5534],'江田':[35.5583,139.5511],
   '市が尾':[35.5512,139.5413],'藤が丘':[35.5438,139.5285],
   '青葉台':[35.5432,139.5167],'長津田':[35.5315,139.4957],
   '笹塚':[35.6736,139.6675],'代田橋':[35.6709,139.659],
@@ -765,8 +776,8 @@ const COORDS={
   '西千葉':[35.6224,140.1038],'千葉':[35.6137,140.1125],
   '海浜幕張':[35.6488,140.0415],'稲毛海岸':[35.6294,140.074],
   '千葉みなと':[35.6085,140.1013],'蘇我':[35.5776,140.1106],
-  '新浦安':[35.6657,139.8933],'舞浜':[35.6355,139.8837],
-  '葛西臨海公園':[35.638,139.8626],'南船橋':[35.6821,139.9954],
+  '新浦安':[35.6657,139.8933],'舞浜':[35.6362,139.8839],
+  '葛西臨海公園':[35.6445,139.8617],'南船橋':[35.6821,139.9954],
   '谷津':[35.6761,140.0027],
   '京成幕張本郷':[35.6732,140.0429],'京成稲毛':[35.6373,140.0925],
   '京成千葉':[35.6116,140.1148],'千葉中央':[35.6071,140.118],
@@ -774,7 +785,7 @@ const COORDS={
   '門前仲町':[35.6722,139.7957],'西葛西':[35.6647,139.8594],
   '葛西':[35.6636,139.873],'潮見':[35.6589,139.8174],
   '大井町':[35.607,139.735],'大森':[35.5886,139.728],
-  '蒲田':[35.5621,139.7157],'川崎':[35.5307,139.6995],
+  '蒲田':[35.5621,139.7157],'川崎':[35.5309,139.697],
   '広尾':[35.6518,139.7222],'神谷町':[35.6634,139.7456],
   '都庁前':[35.6907,139.693],'西新宿五丁目':[35.6899,139.6844],
   '中野坂上':[35.697,139.683],'東中野':[35.7063,139.6845],
@@ -803,15 +814,15 @@ const COORDS={
   // ── 西武・東武等 ──
   '新大久保':[35.7012,139.6997],'田無':[35.7272,139.54],
   '小平':[35.7369,139.4883],'久米川':[35.7495,139.4727],'東村山':[35.7597,139.4664],
-  '西大島':[35.6893,139.8267],'大島':[35.6963,139.8383],'東大島':[35.6946,139.8491],
+  '西大島':[35.6893,139.8267],'大島':[35.6899,139.8357],'東大島':[35.6904,139.8461],
   '一之江':[35.6864,139.8837],'瑞江':[35.693,139.8976],'篠崎':[35.706,139.9038],
   '高島平':[35.7888,139.6611],'護国寺':[35.7208,139.7265],'東池袋':[35.7258,139.7195],
   '地下鉄成増':[35.7762,139.6313],'地下鉄赤塚':[35.769,139.6443],
   '練馬':[35.7377,139.654],'豊島園':[35.7426,139.648],
   '新高島平':[35.79,139.6548],'西高島平':[35.7915,139.6458],
   '若松河田':[35.6994,139.7185],'牛込柳町':[35.6994,139.7258],
-  '牛込神楽坂':[35.7013,139.7349],'上野御徒町':[35.7073,139.7742],
-  '新御徒町':[35.7071,139.7819],'両国':[35.6966,139.7924],
+  '牛込神楽坂':[35.7013,139.7349],'上野御徒町':[35.708,139.7733],
+  '新御徒町':[35.7071,139.7819],'両国':[35.6957,139.7931],
   '勝どき':[35.6592,139.7777],'築地市場':[35.6651,139.7673],
   '東府中':[35.6692,139.4949],'多磨霊園':[35.666,139.5032],
   '武蔵野台':[35.6641,139.5114],'飛田給':[35.6605,139.5228],
@@ -819,7 +830,7 @@ const COORDS={
   '平山城址公園':[35.6473,139.3802],'長沼':[35.6425,139.366],
   '北野':[35.6446,139.3546],'京王八王子':[35.6579,139.3433],
   '新大塚':[35.7259,139.73],'茗荷谷':[35.7176,139.7372],
-  '後楽園':[35.7073,139.7508],'本郷三丁目':[35.7075,139.7604],
+  '後楽園':[35.7076,139.7517],'本郷三丁目':[35.7075,139.7604],
   '新御茶ノ水':[35.6969,139.7643],'赤坂':[35.6722,139.7369],
   '桜田門':[35.6793,139.7528],'銀座一丁目':[35.6738,139.7679],
   '白金台':[35.638,139.7264],'白金高輪':[35.6429,139.7341],
@@ -873,9 +884,9 @@ const COORDS={
   '池ノ上':[35.6605,139.673],'新代田':[35.6626,139.6605],
   '東松原':[35.6626,139.6558],'永福町':[35.6762,139.6431],
   '西永福':[35.6787,139.6355],'浜田山':[35.6817,139.6277],
-  '高井戸':[35.6759,139.6077],'富士見ヶ丘':[35.6778,139.594],
-  '久我山':[35.6849,139.5824],'三鷹台':[35.6915,139.5699],
-  '井の頭公園':[35.6979,139.5703],
+  '高井戸':[35.6832,139.6148],'富士見ヶ丘':[35.6846,139.6074],
+  '久我山':[35.6878,139.5996],'三鷹台':[35.692,139.5889],
+  '井の頭公園':[35.6974,139.583],
   '椎名町':[35.7264,139.695],'東長崎':[35.7304,139.6831],
   '江古田':[35.7374,139.6727],'桜台':[35.7386,139.6625],
   '中村橋':[35.7368,139.6379],'富士見台':[35.736,139.6301],
@@ -883,9 +894,9 @@ const COORDS={
   '大泉学園':[35.7496,139.5863],'保谷':[35.7483,139.5672],
   'ひばりが丘':[35.7516,139.5458],'東久留米':[35.7603,139.534],
   '清瀬':[35.7724,139.5203],'秋津':[35.7788,139.497],
-  '千石':[35.7288,139.7443],'御成門':[35.6612,139.7497],
-  '芝公園':[35.6567,139.7487],'内幸町':[35.6694,139.7546],
-  '白山':[35.7169,139.7499],'松戸':[35.7839,139.9007],
+  '千石':[35.7276,139.7453],'御成門':[35.661,139.7514],
+  '芝公園':[35.654,139.7498],'内幸町':[35.6694,139.7546],
+  '白山':[35.7211,139.7521],'松戸':[35.7839,139.9007],
   '柏':[35.8621,139.971],'我孫子':[35.873,140.0111],
   '天王台':[35.8803,140.0605],'取手':[35.8969,140.064],
   '北松戸':[35.8004,139.9118],'馬橋':[35.811,139.9172],
@@ -901,7 +912,7 @@ const COORDS={
   '茅ケ崎':[35.3304,139.4068],'平塚':[35.3276,139.3499],
   '小田原':[35.2563,139.155],
   '海老名':[35.453,139.3914],'大和':[35.4688,139.4624],
-  '相模大野':[35.5285,139.4378],'湘南台':[35.3968,139.4668],
+  '相模大野':[35.5303,139.4367],'湘南台':[35.3968,139.4668],
   '片瀬江ノ島':[35.3085,139.484],'上大岡':[35.4089,139.5964],
   '新横浜':[35.5068,139.6173],'桜木町':[35.4505,139.6317],
   '関内':[35.4439,139.6358],'伊勢佐木長者町':[35.441,139.6329],
@@ -911,19 +922,19 @@ const COORDS={
   '上星川':[35.468,139.5807],'西谷':[35.4781,139.5652],
   '鶴ケ峰':[35.4749,139.5497],'二俣川':[35.463,139.5319],
   '登戸':[35.6211,139.5695],'向ヶ丘遊園':[35.6174,139.5647],
-  '柿生':[35.5953,139.4658],'鶴川':[35.5772,139.4648],
-  '玉川学園前':[35.5602,139.4719],'町田':[35.5419,139.4459],
+  '柿生':[35.5894,139.4977],'鶴川':[35.5831,139.4814],
+  '玉川学園前':[35.5635,139.4635],'町田':[35.5432,139.4455],
   '中央林間':[35.5076,139.4445],'南林間':[35.4965,139.4482],
   '鶴間':[35.4899,139.451],'桜ケ丘':[35.4496,139.4653],
   '高座渋谷':[35.4314,139.4644],'長後':[35.4121,139.4657],
-  '武蔵小杉':[35.5766,139.6601],'西大井':[35.5943,139.7208],
-  '新川崎':[35.5358,139.7016],
+  '武蔵小杉':[35.5766,139.6601],'西大井':[35.6014,139.7217],
+  '新川崎':[35.5509,139.6708],
   // りんかい線
-  '品川シーサイド':[35.5967,139.7387],'天王洲アイル':[35.6066,139.7434],
+  '品川シーサイド':[35.6094,139.7498],'天王洲アイル':[35.6203,139.7509],
   '東京テレポート':[35.6249,139.7768],'東雲':[35.6412,139.8026],
   '国際展示場':[35.6328,139.7942],
   // ゆりかもめ・舎人ライナー
-  '竹芝':[35.6538,139.7618],'日の出':[35.6507,139.7631],
+  '竹芝':[35.6538,139.7618],'日の出':[35.6506,139.7597],
   'お台場海浜公園':[35.6294,139.7786],'台場':[35.6257,139.7717],
   'テレコムセンター':[35.6174,139.7793],'青海':[35.6249,139.7812],
   '有明テニスの森':[35.6395,139.789],'有明':[35.6343,139.7934],
@@ -939,7 +950,7 @@ const COORDS={
   '代々木八幡':[35.6697,139.6887],'東北沢':[35.665,139.6724],
   'つくし野':[35.5261,139.4846],'すずかけ台':[35.5166,139.4814],
   '南町田グランベリーパーク':[35.5111,139.4715],'つきみ野':[35.5104,139.4586],
-  '新日本橋':[35.6869,139.7751],'馬喰町':[35.6934,139.7807],
+  '新日本橋':[35.6891,139.7743],'馬喰町':[35.6929,139.782],
 };
 
 // DEV MODE：保存済み修正をCOORDSに先行反映（全半径共通）
@@ -961,7 +972,7 @@ let selectedMarkerInner=null;
 
 // ═══ キャッシュ（TTL 6時間・半径別・lat/lngはSTATIONSから） ═══
 const CACHE_TTL=6*60*60*1000;
-function lsKey(){return 'spc_stable_v2_'+getRadius();}
+function lsKey(){return 'spc_stable_v3_'+getRadius();}
 function saveLocal(d){try{localStorage.setItem(lsKey(),JSON.stringify({data:d,ts:Date.now()}));}catch(e){}}
 function loadLocal(){
   try{
@@ -1215,7 +1226,7 @@ function updateTable(filtered){
     const avg=Math.round(sorted.reduce((s,st)=>s+getAxisScore(st),0)/sorted.length);
     avgEl.textContent='平均 '+avg+'pt';
   }else{avgEl.textContent='';}
-  document.getElementById('rank-header-txt').textContent=rankAxis==='総合'?'ランキング':rankAxis+'ランキング';
+  document.getElementById('rank-header-txt').textContent=rankAxis==='総合'?'街力ランキング':rankAxis+'街力ランキング';
   const axes=['飲食','商業','生活','医療'];
   document.getElementById('rank-list').innerHTML=sorted.map((st,i)=>{
     const{rank,color}=getRank(st.score);
