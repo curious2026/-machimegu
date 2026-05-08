@@ -17,13 +17,13 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto Sans JP',sans-serif}
+html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto Sans JP',sans-serif}
 #app{display:flex;flex-direction:column;height:100vh}
 
 #header{
   display:flex;align-items:center;padding:0 12px;
   height:60px;flex-shrink:0;gap:8px;z-index:2000;position:relative;overflow:visible;
-  background:linear-gradient(180deg,#3a3e52 0%,#21253a 8%,#141726 25%,#0d1020 55%,#090c18 100%);
+  background:linear-gradient(180deg,#3a4060 0%,#21283e 8%,#162038 25%,#0f1830 55%,#0a1428 100%);
   border-bottom:1px solid rgba(180,200,230,0.18);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.14),inset 0 -1px 0 rgba(0,0,0,0.4),0 3px 18px rgba(0,0,0,0.6)
 }
@@ -32,7 +32,7 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 
 .logo-wrap{
   flex-shrink:0;cursor:pointer;display:flex;align-items:center;gap:8px;
-  padding:4px 10px;background:#07091a;border-radius:10px;border:1px solid #1a3060
+  padding:4px 10px;background:#0a1428;border-radius:10px;border:1px solid #1a3060
 }
 .logo-icon{width:44px;height:44px;border-radius:50%;flex-shrink:0;object-fit:cover}
 .logo-text-block{display:flex;flex-direction:column;justify-content:center}
@@ -109,7 +109,7 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
   padding:4px 7px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600}
 
 #filters{display:flex;align-items:center;gap:3px;padding:3px 5px;
-  background:#181828;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+  background:#162038;border-bottom:1px solid rgba(180,200,230,0.08);flex-shrink:0}
 @media(max-width:767px){
   #filters{gap:2px;padding:3px 4px}
   .fsel{padding:3px 3px!important;font-size:11px!important}
@@ -118,7 +118,7 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 }
 .fsel{background:rgba(255,255,255,0.05);color:#c8d6f0;border:1px solid rgba(120,150,210,0.2);
   padding:4px 5px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600;flex-shrink:0}
-.fsel option{background:#0e1220;color:#d8e8ff;font-weight:600}
+.fsel option{background:#15203a;color:#d8e8f8;font-weight:600}
 #favFilter{background:rgba(255,70,110,0.1);border:1px solid rgba(255,80,120,0.32);
   color:#cc4466;font-size:22px;cursor:pointer;padding:1px 7px;border-radius:7px;
   line-height:1;transition:all 0.2s;flex-shrink:0}
@@ -132,14 +132,14 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 #map-area{position:relative;flex:1;min-width:0;overflow:hidden}
 #leaflet-map{width:100%;height:100%}
 .leaflet-container{background:#e8e8e8!important}
-.leaflet-tile-pane{filter:brightness(0.72) saturate(0.6)}
+.leaflet-tile-pane{filter:brightness(0.85) saturate(0.75)}
 .leaflet-control-zoom{margin:12px!important}
 .leaflet-control-zoom a{background:#fff!important;color:#555!important;
   border-color:rgba(0,0,0,0.15)!important;width:28px!important;height:28px!important;line-height:28px!important;font-size:15px!important}
 .leaflet-control-zoom a:hover{background:#f4f4f4!important}
 
-#table-area{width:400px;flex-shrink:0;background:#181828;
-  border-left:1px solid rgba(255,255,255,0.07);flex-direction:column;display:none}
+#table-area{width:400px;flex-shrink:0;background:#0f1830;
+  border-left:1px solid rgba(180,200,230,0.08);flex-direction:column;display:none}
 @media(min-width:768px){#table-area{display:flex!important;position:static!important;width:400px!important}}
 @media(max-width:767px){
   .leaflet-control-zoom{display:none!important}
@@ -152,11 +152,11 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
   color:#444;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
   box-shadow:0 2px 6px rgba(0,0,0,0.15)}
 #legend-toggle{position:absolute;bottom:10px;left:10px;z-index:1001;
-  background:rgba(4,7,18,0.9);border:1px solid rgba(255,255,255,0.15);
-  border-radius:8px;color:#9098c8;padding:5px 9px;cursor:pointer;
+  background:rgba(15,24,48,0.92);border:1px solid rgba(120,180,230,0.22);
+  border-radius:8px;color:#a0b8d0;padding:5px 9px;cursor:pointer;
   font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap}
 #legend{position:absolute;bottom:46px;left:10px;z-index:1000;
-  background:rgba(4,7,18,0.94);border:1px solid rgba(255,255,255,0.1);
+  background:rgba(15,24,48,0.95);border:1px solid rgba(120,180,230,0.18);
   border-radius:10px;padding:10px 13px;backdrop-filter:blur(10px);
   transform:translateX(-160%);transition:transform 0.25s ease}
 #legend.show{transform:translateX(0)}
@@ -169,9 +169,9 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 .leg-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
 
 #info-panel{position:absolute;bottom:8px;right:8px;z-index:1001;
-  background:rgba(4,7,20,0.97);border:1px solid rgba(255,255,255,0.12);
+  background:rgba(15,24,48,0.96);border:1px solid rgba(120,180,230,0.18);
   border-radius:13px;padding:14px;min-width:215px;max-width:255px;
-  display:none;backdrop-filter:blur(16px);box-shadow:0 10px 40px rgba(0,0,0,0.8)}
+  display:none;backdrop-filter:blur(16px);box-shadow:0 10px 40px rgba(0,0,0,0.7),0 0 30px rgba(56,189,248,0.06)}
 .ip-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
 .ip-name{font-size:18px;font-weight:900;color:#fff;letter-spacing:0.5px}
 .ip-line{font-size:10px;color:#a0b4d8;margin-top:3px;line-height:1.5}
@@ -200,7 +200,7 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 .ip-pts{font-size:12px;font-weight:700;min-width:32px;text-align:right}
 
 #loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
-  background:rgba(4,7,18,0.75);z-index:3000;backdrop-filter:blur(4px)}
+  background:rgba(15,24,48,0.78);z-index:3000;backdrop-filter:blur(4px)}
 #loading.show{display:flex}
 .ld-ring{width:36px;height:36px;border:2px solid rgba(255,255,255,0.07);border-top-color:#5a88ff;
   border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
@@ -224,7 +224,7 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 .dev-clear{flex:1;background:#882244;border:none;color:#fff;padding:9px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;font-family:inherit}
 .dev-close{flex:1;background:#101828;border:1px solid #2a3860;color:#7080b0;padding:9px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit}
 
-#rank-tabs{display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;background:#181828}
+#rank-tabs{display:flex;align-items:stretch;border-bottom:1px solid rgba(180,200,230,0.08);flex-shrink:0;background:#162038}
 .rank-tab{background:transparent;border:none;color:#5060a0;padding:9px 11px;
   font-size:14px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;font-weight:700;
   letter-spacing:1px;border-bottom:2px solid transparent;flex-shrink:0}
@@ -258,10 +258,10 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 .rscore{font-size:23px;font-weight:900;flex-shrink:0;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;min-width:46px;text-align:right;padding-top:1px}
 
 /* ── モーダル（フォントサイズ+1、下4行白色） ── */
-#modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.87);z-index:5000;
+#modal-bg{position:fixed;inset:0;background:rgba(8,16,32,0.88);z-index:5000;
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(7px)}
 #modal-bg.open{display:flex}
-#modal{background:linear-gradient(160deg,#0c1025 0%,#09101e 60%,#07091a 100%);
+#modal{background:linear-gradient(160deg,#162038 0%,#0f1830 60%,#0a1428 100%);
   border:1px solid rgba(130,170,255,0.2);border-radius:18px;
   padding:24px;width:360px;max-height:90vh;overflow-y:auto;
   box-shadow:0 24px 80px rgba(0,0,0,0.9),inset 0 1px 0 rgba(255,255,255,0.08)}
@@ -413,10 +413,10 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 .cs-close:hover{transform:translateY(-1px)}
 
 /* ── 対数スケール説明モーダル ── */
-#log-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.87);z-index:6000;
+#log-modal-bg{position:fixed;inset:0;background:rgba(8,16,32,0.88);z-index:6000;
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(7px)}
 #log-modal-bg.open{display:flex}
-#log-modal{background:linear-gradient(160deg,#0c1025 0%,#09101e 60%,#07091a 100%);
+#log-modal{background:linear-gradient(160deg,#162038 0%,#0f1830 60%,#0a1428 100%);
   border:1px solid rgba(130,170,255,0.2);border-radius:18px;
   padding:22px;width:340px;max-height:90vh;overflow-y:auto;
   box-shadow:0 24px 80px rgba(0,0,0,0.9)}
