@@ -319,6 +319,80 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 .pmd-error{color:#fb7185;font-size:13px;margin-top:8px;text-align:center;display:none;font-weight:600;letter-spacing:0.3px}
 .pmd-error.show{display:block}
 
+/* ── チェックイン (info-panel内のセクション) ── */
+.ip-checkin{margin-top:11px;padding:11px 12px;background:rgba(34,211,238,0.06);
+  border:1px solid rgba(56,189,248,0.18);border-radius:11px}
+.ip-ci-status{font-size:11px;color:#7da8c8;font-weight:600;text-align:center;margin-bottom:7px;letter-spacing:0.3px;line-height:1.5}
+.ip-ci-status.near{color:#7dd3fc}
+.ip-ci-status.locked{color:#a0b0c8}
+.ip-ci-btn{width:100%;background:linear-gradient(135deg,#22d3ee 0%,#38bdf8 60%,#2563eb 100%);
+  color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;
+  font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.5px;
+  box-shadow:0 4px 14px rgba(56,189,248,0.35),inset 0 1px 0 rgba(255,255,255,0.18);
+  transition:all 0.15s}
+.ip-ci-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(56,189,248,0.45),inset 0 1px 0 rgba(255,255,255,0.18)}
+.ip-ci-btn:disabled{background:linear-gradient(135deg,#3a4860 0%,#2d3850 100%);
+  cursor:not-allowed;transform:none;box-shadow:none;color:#7080a0}
+.ip-ci-btn.cancel{background:linear-gradient(135deg,#64748b 0%,#475569 100%);
+  box-shadow:0 4px 14px rgba(100,116,139,0.3)}
+.ip-ci-quota{font-size:11px;color:#a0b8d0;text-align:center;margin-top:7px;font-weight:600}
+.ip-ci-progress{margin-top:8px}
+.ip-ci-time{font-size:18px;font-weight:900;color:#7dd3fc;text-align:center;margin-bottom:6px;
+  font-variant-numeric:tabular-nums;letter-spacing:1px}
+.ip-ci-bar{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.ip-ci-fill{height:100%;background:linear-gradient(90deg,#22d3ee 0%,#ffb070 100%);
+  border-radius:3px;transition:width 0.5s linear;box-shadow:0 0 8px rgba(56,189,248,0.5)}
+
+/* ── 進行中フローティングインジケーター ── */
+#checkin-indicator{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);
+  z-index:5500;background:linear-gradient(135deg,rgba(12,24,48,0.96) 0%,rgba(9,16,32,0.96) 100%);
+  border:1px solid rgba(125,211,252,0.4);border-radius:14px;
+  padding:10px 16px;display:none;align-items:center;gap:12px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.6),0 0 24px rgba(56,189,248,0.2);
+  backdrop-filter:blur(8px);min-width:280px;max-width:92vw}
+#checkin-indicator.show{display:flex}
+.ci-ind-icon{font-size:20px;flex-shrink:0}
+.ci-ind-body{flex:1;min-width:0}
+.ci-ind-name{font-size:13px;font-weight:800;color:#fff;letter-spacing:0.3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-ind-row{display:flex;align-items:center;gap:8px;margin-top:3px}
+.ci-ind-time{font-size:13px;font-weight:800;color:#7dd3fc;font-variant-numeric:tabular-nums;flex-shrink:0}
+.ci-ind-bar{flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.ci-ind-fill{height:100%;background:linear-gradient(90deg,#22d3ee 0%,#ffb070 100%);
+  border-radius:2px;transition:width 0.5s linear}
+
+/* ── チェックイン成功モーダル ── */
+#checkin-success-bg{position:fixed;inset:0;background:rgba(5,12,22,0.93);z-index:7500;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+#checkin-success-bg.open{display:flex}
+#checkin-success{background:linear-gradient(160deg,#0c1830 0%,#091020 60%,#06101c 100%);
+  border:1px solid rgba(125,211,252,0.3);border-radius:22px;
+  padding:28px 26px;width:380px;max-width:92vw;
+  box-shadow:0 24px 80px rgba(0,0,0,0.85),0 0 80px rgba(56,189,248,0.18),inset 0 1px 0 rgba(255,255,255,0.08);
+  position:relative;text-align:center}
+#checkin-success::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1.5px;
+  background:linear-gradient(90deg,transparent,rgba(255,176,112,0.7),rgba(125,211,252,0.7),transparent)}
+.cs-emoji{font-size:42px;margin-bottom:6px;display:block;animation:csBounce 0.6s ease-out}
+@keyframes csBounce{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.cs-title{font-size:22px;font-weight:900;margin-bottom:14px;letter-spacing:0.5px;
+  background:linear-gradient(135deg,#ffffff 0%,#c8eafa 50%,#ffb070 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.cs-station{font-size:26px;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:0.5px}
+.cs-score-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px}
+.cs-score{font-size:32px;font-weight:900;font-variant-numeric:tabular-nums}
+.cs-rank{font-size:18px;font-weight:900;padding:3px 12px;border-radius:8px;border:2px solid currentColor}
+.cs-badge{display:inline-block;padding:7px 14px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(255,176,112,0.18) 0%,rgba(34,211,238,0.18) 100%);
+  border:1px solid rgba(255,176,112,0.4);
+  font-size:13px;font-weight:800;color:#ffd0a0;margin-bottom:14px;letter-spacing:0.3px}
+.cs-visit-count{font-size:13px;color:#a0b8d0;margin-bottom:14px;font-weight:600}
+.cs-quota{font-size:12px;color:#7da8c8;margin-bottom:18px;font-weight:600}
+.cs-close{width:100%;background:linear-gradient(135deg,#22d3ee 0%,#38bdf8 60%,#2563eb 100%);
+  color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;
+  font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.5px;
+  box-shadow:0 6px 22px rgba(56,189,248,0.4),inset 0 1px 0 rgba(255,255,255,0.18)}
+.cs-close:hover{transform:translateY(-1px)}
+
 /* ── 対数スケール説明モーダル ── */
 #log-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.87);z-index:6000;
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(7px)}
@@ -414,6 +488,7 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
         <div class="ip-rank-lbl" id="ip-rank"></div>
         <div class="ip-nearby" id="ip-nearby"></div>
         <div class="ip-axes-grid" id="ip-axes"></div>
+        <div class="ip-checkin" id="ip-checkin" style="display:none"></div>
       </div>
       <div id="loading"><div><div class="ld-ring"></div><div class="ld-txt">データ取得中...</div></div></div>
     </div>
@@ -500,6 +575,35 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
       </div>
     </div>
     <button onclick="closeLogModal()" style="margin-top:16px;width:100%;padding:10px;background:rgba(80,120,255,0.15);border:1px solid rgba(100,150,255,0.3);border-radius:8px;color:#a0c0ff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit">とじる</button>
+  </div>
+</div>
+
+<!-- チェックイン進行中インジケーター -->
+<div id="checkin-indicator">
+  <div class="ci-ind-icon">📍</div>
+  <div class="ci-ind-body">
+    <div class="ci-ind-name" id="ci-ind-name"></div>
+    <div class="ci-ind-row">
+      <div class="ci-ind-bar"><div class="ci-ind-fill" id="ci-ind-fill" style="width:0%"></div></div>
+      <span class="ci-ind-time" id="ci-ind-time">10:00</span>
+    </div>
+  </div>
+</div>
+
+<!-- チェックイン成功モーダル -->
+<div id="checkin-success-bg">
+  <div id="checkin-success">
+    <span class="cs-emoji">✨</span>
+    <div class="cs-title">チェックイン成功！</div>
+    <div class="cs-station" id="cs-station"></div>
+    <div class="cs-score-row">
+      <span class="cs-score" id="cs-score"></span>
+      <span class="cs-rank" id="cs-rank"></span>
+    </div>
+    <div class="cs-badge" id="cs-badge" style="display:none">🎉 初訪問！カード獲得</div>
+    <div class="cs-visit-count" id="cs-visit-count"></div>
+    <div class="cs-quota" id="cs-quota"></div>
+    <button class="cs-close" onclick="closeCheckinSuccess()">閉じる</button>
   </div>
 </div>
 
@@ -611,6 +715,7 @@ const RANKS=[
   {rank:'D',color:'#44aaff',glow:'rgba(68,170,255,0.65)',min:0}
 ];
 function getRank(s){return RANKS.find(r=>s>=r.min)||RANKS[4];}
+window.getRank=getRank;
 const AC={'飲食':'#ff4466','商業':'#9070ff','生活':'#3aa0ff','医療':'#f09030'};
 const isPc=()=>window.innerWidth>=768;
 
@@ -1130,6 +1235,7 @@ function closeInfo(){
     selectedMarkerInner=null;
   }
   currentStation=null;
+  window.currentStation=null;
 }
 
 async function fetchOne(st){
@@ -1321,6 +1427,7 @@ function getNearby(st){
 
 function showInfo(st){
   currentStation=st;
+  window.currentStation=st;
   const{rank,color}=getRank(st.score);
   document.getElementById('ip-name').textContent=st.name+'駅';
   document.getElementById('ip-line').textContent=formatLinesDisplay(st.lines)+' · '+st.pref;
@@ -1350,6 +1457,8 @@ function showInfo(st){
     </div>`;
   }).join('');
   document.getElementById('info-panel').style.display='block';
+  // チェックインセクションを更新
+  if(window.renderCheckinSection)window.renderCheckinSection(st);
 }
 
 function updateTable(filtered){
@@ -1440,12 +1549,12 @@ initLineSelect();
 loadAll();
 </script>
 
-<!-- ═══ Firebase Authentication + Firestore (Phase 1+2) ═══ -->
+<!-- ═══ Firebase Authentication + Firestore (Phase 1+2+3) ═══ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
+import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, query, where, getDocs, serverTimestamp, increment, Timestamp }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1611,6 +1720,440 @@ function showProfileSetupModal(user) {
   document.getElementById('profile-modal-bg').classList.add('open');
 }
 
+// ─── Phase 3: チェックイン機能 ───
+const CHECKIN_DURATION_MS = 10 * 60 * 1000; // 10分
+const CHECKIN_RADIUS_M = 500;
+const DAILY_LIMIT = 3;
+const PENDING_KEY = 'machimegu_pending_checkin';
+
+let currentLocation = null; // { lat, lng, accuracy }
+let watchId = null;
+let pendingCheckin = null; // { uid, stationName, stationPref, stationLat, stationLng, startTime, endTime }
+let checkinTimer = null;
+let todayCount = 0;
+let userProfileCache = null; // 今ログイン中のユーザー情報
+
+// stationId生成
+function makeStationId(st) {
+  return `${st.name}_${st.pref}`;
+}
+
+// ハーバーサイン公式で2点間の距離(m)
+function getDistanceM(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 +
+    Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+    Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// GPS現在地取得（promise版）
+function getCurrentPos() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject(new Error('位置情報が利用できません')); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+      err => reject(err),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+    );
+  });
+}
+
+// 位置監視開始
+function startWatchPosition() {
+  if (watchId !== null) return;
+  if (!navigator.geolocation) return;
+  watchId = navigator.geolocation.watchPosition(
+    pos => { currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }; },
+    err => { console.warn('位置監視エラー:', err.message); },
+    { enableHighAccuracy: true, maximumAge: 30000 }
+  );
+}
+
+// 位置監視停止
+function stopWatchPosition() {
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+}
+
+// 今日のチェックイン回数取得
+async function getTodayCheckinCount(uid) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  try {
+    const ckRef = collection(db, 'users', uid, 'checkins');
+    const q = query(ckRef,
+      where('checkedInAt', '>=', Timestamp.fromDate(today)),
+      where('checkedInAt', '<', Timestamp.fromDate(tomorrow)));
+    const snap = await getDocs(q);
+    return snap.size;
+  } catch (e) {
+    console.error('今日のチェックイン数取得エラー:', e);
+    return 0;
+  }
+}
+
+// ステーションカードあるかチェック
+async function hasStationCard(uid, stationId) {
+  try {
+    const cardRef = doc(db, 'users', uid, 'stationCards', stationId);
+    const cardDoc = await getDoc(cardRef);
+    return cardDoc.exists();
+  } catch (e) {
+    console.error('カード確認エラー:', e);
+    return false;
+  }
+}
+
+// localStorage 保存・読込・削除
+function savePending(p) { localStorage.setItem(PENDING_KEY, JSON.stringify(p)); }
+function loadPending() { try { return JSON.parse(localStorage.getItem(PENDING_KEY)); } catch { return null; } }
+function clearPending() { localStorage.removeItem(PENDING_KEY); pendingCheckin = null; }
+
+// info-panel内のチェックインセクション描画
+window.renderCheckinSection = async function(st) {
+  const sec = document.getElementById('ip-checkin');
+  if (!sec) return;
+  sec.style.display = 'block';
+
+  const user = auth.currentUser;
+
+  // 未ログイン
+  if (!user) {
+    sec.innerHTML = `<div class="ip-ci-status locked">ログインしてチェックイン</div>
+      <button class="ip-ci-btn" onclick="signInWithGoogle()">Googleでログイン</button>`;
+    return;
+  }
+
+  // 別の駅でチェックイン中
+  if (pendingCheckin && (pendingCheckin.stationName !== st.name || pendingCheckin.stationPref !== st.pref)) {
+    sec.innerHTML = `<div class="ip-ci-status locked">他の駅でチェックイン中<br>(${pendingCheckin.stationName}駅)</div>`;
+    return;
+  }
+
+  // 同じ駅でチェックイン中
+  if (pendingCheckin) {
+    const remain = Math.max(0, pendingCheckin.endTime - Date.now());
+    const total = CHECKIN_DURATION_MS;
+    const elapsed = total - remain;
+    const pct = Math.min(100, Math.round(elapsed / total * 100));
+    const mm = String(Math.floor(remain / 60000)).padStart(2, '0');
+    const ss = String(Math.floor((remain % 60000) / 1000)).padStart(2, '0');
+    sec.innerHTML = `<div class="ip-ci-status near">🕐 チェックイン中...</div>
+      <div class="ip-ci-progress">
+        <div class="ip-ci-time">${mm}:${ss}</div>
+        <div class="ip-ci-bar"><div class="ip-ci-fill" style="width:${pct}%"></div></div>
+      </div>
+      <button class="ip-ci-btn cancel" onclick="cancelCheckin()">キャンセル</button>`;
+    return;
+  }
+
+  // 今日のチェックイン数チェック
+  if (todayCount >= DAILY_LIMIT) {
+    sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br>明日また来てね</div>`;
+    return;
+  }
+
+  // 現在地取得状況
+  if (!currentLocation) {
+    sec.innerHTML = `<div class="ip-ci-status">📍 位置情報を取得中...</div>
+      <button class="ip-ci-btn" onclick="requestLocationAndRender()">位置情報を許可</button>`;
+    return;
+  }
+
+  // 距離計算
+  const dist = getDistanceM(currentLocation.lat, currentLocation.lng, st.lat, st.lng);
+  if (dist > CHECKIN_RADIUS_M) {
+    const distStr = dist >= 1000 ? (dist/1000).toFixed(1) + 'km' : Math.round(dist) + 'm';
+    sec.innerHTML = `<div class="ip-ci-status">駅から ${distStr} 離れています<br>500m以内に近づいてください</div>
+      <div class="ip-ci-quota">本日 ${todayCount}/${DAILY_LIMIT}駅</div>`;
+    return;
+  }
+
+  // チェックイン可能
+  sec.innerHTML = `<div class="ip-ci-status near">✓ 駅から ${Math.round(dist)}m</div>
+    <button class="ip-ci-btn" onclick="startCheckin('${st.name.replace(/'/g,"\\'")}','${st.pref}',${st.lat},${st.lng})">📍 チェックイン</button>
+    <div class="ip-ci-quota">本日 ${todayCount}/${DAILY_LIMIT}駅</div>`;
+};
+
+// 現在地取得をリクエスト（ボタンクリック時）
+window.requestLocationAndRender = async () => {
+  try {
+    currentLocation = await getCurrentPos();
+    startWatchPosition();
+    if (window.currentStation) window.renderCheckinSection(window.currentStation);
+  } catch (e) {
+    alert('位置情報の取得に失敗しました: ' + e.message);
+  }
+};
+
+// チェックイン開始
+window.startCheckin = async (name, pref, lat, lng) => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  if (pendingCheckin) { alert('既に別の駅でチェックイン中です'); return; }
+
+  // 改めて今日の回数チェック
+  todayCount = await getTodayCheckinCount(user.uid);
+  if (todayCount >= DAILY_LIMIT) {
+    alert('本日のチェックイン上限に達しました');
+    if (window.currentStation) window.renderCheckinSection(window.currentStation);
+    return;
+  }
+
+  // 改めて現在地確認
+  try {
+    currentLocation = await getCurrentPos();
+  } catch (e) {
+    alert('位置情報の取得に失敗しました');
+    return;
+  }
+
+  const dist = getDistanceM(currentLocation.lat, currentLocation.lng, lat, lng);
+  if (dist > CHECKIN_RADIUS_M) {
+    alert(`駅から ${Math.round(dist)}m 離れています。500m以内に近づいてください`);
+    return;
+  }
+
+  const now = Date.now();
+  pendingCheckin = {
+    uid: user.uid,
+    stationName: name,
+    stationPref: pref,
+    stationLat: lat,
+    stationLng: lng,
+    startTime: now,
+    endTime: now + CHECKIN_DURATION_MS
+  };
+  savePending(pendingCheckin);
+  startWatchPosition();
+  startCheckinTimer();
+  showCheckinIndicator();
+  if (window.currentStation) window.renderCheckinSection(window.currentStation);
+};
+
+// チェックインキャンセル
+window.cancelCheckin = () => {
+  if (!confirm('チェックインをキャンセルしますか？')) return;
+  if (checkinTimer) { clearInterval(checkinTimer); checkinTimer = null; }
+  clearPending();
+  hideCheckinIndicator();
+  if (window.currentStation) window.renderCheckinSection(window.currentStation);
+};
+
+// タイマー開始
+function startCheckinTimer() {
+  if (checkinTimer) clearInterval(checkinTimer);
+  checkinTimer = setInterval(async () => {
+    if (!pendingCheckin) { clearInterval(checkinTimer); checkinTimer = null; return; }
+    const remain = pendingCheckin.endTime - Date.now();
+    if (remain <= 0) {
+      clearInterval(checkinTimer); checkinTimer = null;
+      await tryCompleteCheckin();
+      return;
+    }
+    updateCheckinIndicator();
+    if (window.currentStation &&
+        window.currentStation.name === pendingCheckin.stationName &&
+        window.currentStation.pref === pendingCheckin.stationPref) {
+      window.renderCheckinSection(window.currentStation);
+    }
+  }, 1000);
+}
+
+// 進行中インジケーター
+function showCheckinIndicator() {
+  const ind = document.getElementById('checkin-indicator');
+  if (!ind || !pendingCheckin) return;
+  document.getElementById('ci-ind-name').textContent = pendingCheckin.stationName + '駅 チェックイン中';
+  ind.classList.add('show');
+  updateCheckinIndicator();
+}
+function updateCheckinIndicator() {
+  if (!pendingCheckin) return;
+  const remain = Math.max(0, pendingCheckin.endTime - Date.now());
+  const total = CHECKIN_DURATION_MS;
+  const pct = Math.min(100, Math.round((total - remain) / total * 100));
+  const mm = String(Math.floor(remain / 60000)).padStart(2, '0');
+  const ss = String(Math.floor((remain % 60000) / 1000)).padStart(2, '0');
+  const t = document.getElementById('ci-ind-time');
+  const f = document.getElementById('ci-ind-fill');
+  if (t) t.textContent = `${mm}:${ss}`;
+  if (f) f.style.width = pct + '%';
+}
+function hideCheckinIndicator() {
+  document.getElementById('checkin-indicator').classList.remove('show');
+}
+
+// チェックイン成立処理
+async function tryCompleteCheckin() {
+  if (!pendingCheckin) return;
+  const user = auth.currentUser;
+  if (!user || user.uid !== pendingCheckin.uid) {
+    clearPending();
+    hideCheckinIndicator();
+    return;
+  }
+
+  // 最終位置確認
+  let finalPos;
+  try {
+    finalPos = await getCurrentPos();
+  } catch (e) {
+    alert('チェックイン成立確認のため位置情報が必要です。位置情報を許可してください');
+    // タイマー再起動して30秒後に再試行
+    setTimeout(() => tryCompleteCheckin(), 30000);
+    return;
+  }
+
+  const dist = getDistanceM(finalPos.lat, finalPos.lng, pendingCheckin.stationLat, pendingCheckin.stationLng);
+  if (dist > CHECKIN_RADIUS_M) {
+    alert(`現在地が駅から ${Math.round(dist)}m 離れているためチェックインが成立しませんでした`);
+    clearPending();
+    hideCheckinIndicator();
+    if (window.currentStation) window.renderCheckinSection(window.currentStation);
+    return;
+  }
+
+  // Firestore書き込み
+  try {
+    const stationId = `${pendingCheckin.stationName}_${pendingCheckin.stationPref}`;
+    // 駅情報を取得
+    const st = stationData.find(s => s.name === pendingCheckin.stationName && s.pref === pendingCheckin.stationPref);
+    const score = st && st.score ? st.score : 0;
+    const rankInfo = window.getRank ? window.getRank(score) : { rank: '-' };
+    const isFirstVisit = !(await hasStationCard(user.uid, stationId));
+
+    // チェックイン履歴に追加
+    await addDoc(collection(db, 'users', user.uid, 'checkins'), {
+      stationName: pendingCheckin.stationName,
+      stationPref: pendingCheckin.stationPref,
+      stationId,
+      stationLat: pendingCheckin.stationLat,
+      stationLng: pendingCheckin.stationLng,
+      checkinLat: finalPos.lat,
+      checkinLng: finalPos.lng,
+      score,
+      rank: rankInfo.rank,
+      checkedInAt: serverTimestamp(),
+      isFirstVisit
+    });
+
+    // 初回ならステーションカード生成
+    if (isFirstVisit) {
+      await setDoc(doc(db, 'users', user.uid, 'stationCards', stationId), {
+        stationName: pendingCheckin.stationName,
+        stationPref: pendingCheckin.stationPref,
+        stationId,
+        stationLat: pendingCheckin.stationLat,
+        stationLng: pendingCheckin.stationLng,
+        lines: st && st.lines ? st.lines : [],
+        firstScore: score,
+        firstRank: rankInfo.rank,
+        firstVisitAt: serverTimestamp(),
+        lastVisitAt: serverTimestamp(),
+        visitCount: 1
+      });
+      // ユーザー統計更新
+      await updateDoc(doc(db, 'users', user.uid), {
+        totalCheckins: increment(1),
+        uniqueStations: increment(1)
+      });
+    } else {
+      // 既存カードの訪問回数アップ
+      await updateDoc(doc(db, 'users', user.uid, 'stationCards', stationId), {
+        lastVisitAt: serverTimestamp(),
+        visitCount: increment(1)
+      });
+      await updateDoc(doc(db, 'users', user.uid), {
+        totalCheckins: increment(1)
+      });
+    }
+
+    // 今日の回数を再取得
+    todayCount = await getTodayCheckinCount(user.uid);
+
+    // 訪問回数取得
+    let visitCount = 1;
+    try {
+      const cardDoc = await getDoc(doc(db, 'users', user.uid, 'stationCards', stationId));
+      if (cardDoc.exists()) visitCount = cardDoc.data().visitCount || 1;
+    } catch {}
+
+    showCheckinSuccess({
+      name: pendingCheckin.stationName,
+      pref: pendingCheckin.stationPref,
+      score,
+      rank: rankInfo.rank,
+      color: rankInfo.color,
+      isFirstVisit,
+      visitCount
+    });
+
+    clearPending();
+    hideCheckinIndicator();
+    if (window.currentStation) window.renderCheckinSection(window.currentStation);
+  } catch (e) {
+    console.error('チェックイン保存エラー:', e);
+    alert('チェックインの保存に失敗しました: ' + e.message);
+  }
+}
+
+// 成功モーダル表示
+function showCheckinSuccess(data) {
+  document.getElementById('cs-station').textContent = data.name + '駅';
+  const sc = document.getElementById('cs-score');
+  sc.textContent = data.score;
+  sc.style.color = data.color;
+  const rk = document.getElementById('cs-rank');
+  rk.textContent = data.rank;
+  rk.style.color = data.color;
+  const badge = document.getElementById('cs-badge');
+  const vc = document.getElementById('cs-visit-count');
+  if (data.isFirstVisit) {
+    badge.style.display = 'inline-block';
+    vc.textContent = '';
+  } else {
+    badge.style.display = 'none';
+    vc.textContent = `訪問回数 ${data.visitCount}回目`;
+  }
+  document.getElementById('cs-quota').textContent =
+    `本日 ${todayCount}/${DAILY_LIMIT}駅`;
+  document.getElementById('checkin-success-bg').classList.add('open');
+}
+window.closeCheckinSuccess = () => {
+  document.getElementById('checkin-success-bg').classList.remove('open');
+};
+
+// リロード時の復元
+async function restorePendingCheckin() {
+  const p = loadPending();
+  if (!p) return;
+  const user = auth.currentUser;
+  if (!user || user.uid !== p.uid) { clearPending(); return; }
+
+  pendingCheckin = p;
+  if (Date.now() >= p.endTime) {
+    // 既に時間経過 → 即座に判定
+    await tryCompleteCheckin();
+  } else {
+    // 継続
+    startWatchPosition();
+    startCheckinTimer();
+    showCheckinIndicator();
+  }
+}
+
+// 既存の getRank をモジュール側からも使える形で公開
+setTimeout(() => { if (typeof getRank === 'function') window.getRank = getRank; }, 100);
+
 // ─── ログイン状態の監視 ───
 onAuthStateChanged(auth, async (user) => {
   const loginBtn = document.getElementById('loginBtn');
@@ -1635,6 +2178,7 @@ onAuthStateChanged(auth, async (user) => {
       } else {
         // 2回目以降 → lastLoginAt更新 + ハンドルネーム表示
         const userData = userDoc.data();
+        userProfileCache = userData;
         await setDoc(userRef, {
           lastLoginAt: serverTimestamp()
         }, { merge: true });
@@ -1642,6 +2186,14 @@ onAuthStateChanged(auth, async (user) => {
           document.getElementById('userName').textContent = userData.handleName;
         }
         console.log('ログイン成功:', userData.handleName);
+
+        // Phase 3: 今日のチェックイン数取得・進行中チェックインの復元・位置監視開始
+        todayCount = await getTodayCheckinCount(user.uid);
+        console.log(`今日のチェックイン: ${todayCount}/${DAILY_LIMIT}駅`);
+        startWatchPosition();
+        await restorePendingCheckin();
+        // 既に駅情報が表示されている場合は更新
+        if (window.currentStation) window.renderCheckinSection(window.currentStation);
       }
     } catch (e) {
       console.error('プロフィール確認エラー:', e);
@@ -1651,10 +2203,19 @@ onAuthStateChanged(auth, async (user) => {
     userInfo.style.display = 'none';
     // 途中ログアウト時にモーダルが開いていたら閉じる
     document.getElementById('profile-modal-bg').classList.remove('open');
+    // Phase 3: ログアウト時はチェックイン中止
+    if (checkinTimer) { clearInterval(checkinTimer); checkinTimer = null; }
+    pendingCheckin = null;
+    todayCount = 0;
+    userProfileCache = null;
+    stopWatchPosition();
+    hideCheckinIndicator();
+    const sec = document.getElementById('ip-checkin');
+    if (sec) sec.style.display = 'none';
   }
 });
 
-console.log('Firebase Auth + Firestore 初期化完了');
+console.log('Firebase Auth + Firestore 初期化完了 (Phase 1+2+3)');
 </script>
 </body>
 </html>
