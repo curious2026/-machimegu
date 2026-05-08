@@ -421,6 +421,196 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   border:1px solid rgba(130,170,255,0.2);border-radius:18px;
   padding:22px;width:340px;max-height:90vh;overflow-y:auto;
   box-shadow:0 24px 80px rgba(0,0,0,0.9)}
+
+/* ─── チェックイン成功 ミニ通知 ─── */
+#checkin-success-mini{
+  background:linear-gradient(160deg,#0c1830 0%,#091020 60%,#06101c 100%);
+  border:1px solid rgba(120,150,210,0.3);
+  border-radius:18px;
+  padding:24px 32px;
+  text-align:center;
+  max-width:340px;
+  width:90%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 40px rgba(88,168,224,0.15);
+  position:relative;
+  animation:csm-pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes csm-pop{
+  0%{transform:scale(0.7);opacity:0}
+  100%{transform:scale(1);opacity:1}
+}
+.csm-emoji{font-size:36px;display:block;margin-bottom:8px;animation:csm-spark 0.6s ease-out}
+@keyframes csm-spark{
+  0%{transform:scale(0) rotate(-180deg);opacity:0}
+  60%{transform:scale(1.3) rotate(20deg);opacity:1}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+.csm-title{font-size:20px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:0.5px}
+.csm-station{font-size:24px;font-weight:900;color:#58a8e0;margin-bottom:12px;letter-spacing:1px}
+.csm-badge{font-size:14px;font-weight:700;color:#ffb070;margin-bottom:8px}
+.csm-quota{font-size:11px;color:#7a96b6;margin-top:6px}
+
+/* ─── ステーションカード モーダル ─── */
+#card-modal-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:7600;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);
+}
+#card-modal-bg.open{display:flex}
+#card-modal{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:20px;
+  perspective:1200px;
+}
+#card-flip-wrap{
+  animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
+  transform-style:preserve-3d;
+}
+@keyframes cardEnter{
+  0%{transform:scale(0.3) rotateY(180deg);opacity:0}
+  50%{opacity:1}
+  100%{transform:scale(1) rotateY(0);opacity:1}
+}
+
+#station-card{
+  width:300px;height:480px;border-radius:20px;
+  position:relative;overflow:hidden;
+  background:#0a0e18;
+  border:2px solid var(--card-color,#58a8e0);
+  box-shadow:0 0 60px var(--card-glow,rgba(88,168,224,0.4)),
+             0 20px 60px rgba(0,0,0,0.7),
+             inset 0 0 40px var(--card-inner-glow,rgba(88,168,224,0.08));
+}
+
+/* やわらかい背景色（ランク連動） */
+.sc-bg-glow{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 30% 20%, var(--card-soft,rgba(88,168,224,0.18)), transparent 50%),
+    radial-gradient(circle at 70% 80%, var(--card-soft,rgba(88,168,224,0.12)), transparent 50%);
+  pointer-events:none;
+}
+
+/* シマー（光沢効果） */
+.sc-shimmer{
+  position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,0.08) 48%,rgba(255,255,255,0.15) 50%,rgba(255,255,255,0.08) 52%,transparent 70%);
+  pointer-events:none;
+  animation:shimmerSweep 3.5s ease-in-out infinite;
+}
+@keyframes shimmerSweep{
+  0%,100%{transform:translateX(-30%) translateY(-30%)}
+  50%{transform:translateX(30%) translateY(30%)}
+}
+
+.sc-content{
+  position:relative;z-index:2;padding:20px;height:100%;
+  display:flex;flex-direction:column;
+}
+.sc-header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.sc-rank-emblem{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:900;color:#fff;
+  background:var(--card-color,#58a8e0);
+  box-shadow:0 0 20px var(--card-glow,rgba(88,168,224,0.5));
+  flex-shrink:0;
+}
+.sc-line-info{flex:1;min-width:0}
+.sc-line-name{font-size:13px;font-weight:700;color:#cfdaee;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-pref{font-size:11px;color:#7a96b6;margin-top:2px}
+.sc-station-name{
+  font-size:34px;font-weight:900;color:#fff;text-align:center;
+  margin:8px 0 4px;letter-spacing:2px;
+  text-shadow:0 2px 12px var(--card-glow,rgba(88,168,224,0.6));
+}
+.sc-score-block{text-align:center;margin-bottom:10px}
+.sc-score-num{
+  font-size:60px;font-weight:900;line-height:1;
+  color:var(--card-color,#58a8e0);
+  letter-spacing:-2px;
+  text-shadow:0 0 24px var(--card-glow,rgba(88,168,224,0.5));
+}
+.sc-score-label{font-size:11px;color:#7a96b6;letter-spacing:4px;margin-top:2px}
+
+.sc-radar-wrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+#sc-radar{width:180px;height:160px;max-width:100%;max-height:100%}
+
+.sc-axis-list{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;
+  font-size:11px;color:#cfdaee;margin:8px 0;
+}
+.sc-axis-item{display:flex;align-items:center;gap:6px}
+.sc-axis-item b{margin-left:auto;color:#fff;font-weight:700}
+.sc-axis-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+.sc-footer{
+  border-top:1px solid rgba(255,255,255,0.08);
+  padding-top:8px;display:flex;justify-content:space-between;font-size:10px;color:#7a96b6;
+}
+.sc-visit-count{font-weight:700;color:#cfdaee}
+
+.sc-close-btn{
+  background:linear-gradient(135deg,#58a8e0,#3a8ac4);
+  color:#fff;border:none;border-radius:24px;
+  padding:12px 48px;font-weight:900;font-size:15px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(88,168,224,0.4);
+  transition:transform 0.15s ease;
+}
+.sc-close-btn:hover{transform:translateY(-2px)}
+.sc-close-btn:active{transform:translateY(0)}
+
+/* ─── ランク別カラー定義（やわらか背景色） ─── */
+#station-card[data-rank="S"]{
+  --card-color:#fb7185;
+  --card-glow:rgba(251,113,133,0.5);
+  --card-inner-glow:rgba(251,113,133,0.10);
+  --card-soft:rgba(251,113,133,0.20);
+}
+#station-card[data-rank="A"]{
+  --card-color:#ffb070;
+  --card-glow:rgba(255,176,112,0.5);
+  --card-inner-glow:rgba(255,176,112,0.10);
+  --card-soft:rgba(255,176,112,0.20);
+}
+#station-card[data-rank="B"]{
+  --card-color:#ffd966;
+  --card-glow:rgba(255,217,102,0.5);
+  --card-inner-glow:rgba(255,217,102,0.10);
+  --card-soft:rgba(255,217,102,0.20);
+}
+#station-card[data-rank="C"]{
+  --card-color:#84d49b;
+  --card-glow:rgba(132,212,155,0.5);
+  --card-inner-glow:rgba(132,212,155,0.10);
+  --card-soft:rgba(132,212,155,0.20);
+}
+#station-card[data-rank="D"]{
+  --card-color:#7fb8e0;
+  --card-glow:rgba(127,184,224,0.5);
+  --card-inner-glow:rgba(127,184,224,0.10);
+  --card-soft:rgba(127,184,224,0.20);
+}
+#station-card[data-rank="E"]{
+  --card-color:#a0b0c0;
+  --card-glow:rgba(160,176,192,0.4);
+  --card-inner-glow:rgba(160,176,192,0.08);
+  --card-soft:rgba(160,176,192,0.15);
+}
+
+/* ─── ランキング表：チェックイン済み駅の網かけ ─── */
+.tbl tr.checked-in td:first-child{
+  position:relative;
+}
+.tbl tr.checked-in td:first-child::before{
+  content:'✓';
+  display:inline-block;
+  margin-right:6px;
+  font-weight:900;
+  color:#84d49b;
+  font-size:11px;
+}
+.tbl tr.checked-in{
+  background:linear-gradient(90deg,rgba(132,212,155,0.06),transparent 30%);
+}
 </style>
 </head>
 <body>
@@ -612,20 +802,54 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   </div>
 </div>
 
-<!-- チェックイン成功モーダル -->
+<!-- チェックイン成功 ミニ通知 -->
 <div id="checkin-success-bg">
-  <div id="checkin-success">
-    <span class="cs-emoji">✨</span>
-    <div class="cs-title">チェックイン成功！</div>
-    <div class="cs-station" id="cs-station"></div>
-    <div class="cs-score-row">
-      <span class="cs-score" id="cs-score"></span>
-      <span class="cs-rank" id="cs-rank"></span>
+  <div id="checkin-success-mini">
+    <span class="csm-emoji">✨</span>
+    <div class="csm-title">チェックイン成功！</div>
+    <div class="csm-station" id="csm-station"></div>
+    <div class="csm-badge" id="csm-badge"></div>
+    <div class="csm-quota" id="csm-quota"></div>
+  </div>
+</div>
+
+<!-- ステーションカード モーダル -->
+<div id="card-modal-bg" onclick="closeCardModal(event)">
+  <div id="card-modal" onclick="event.stopPropagation()">
+    <div id="card-flip-wrap">
+      <div id="station-card">
+        <div class="sc-bg-glow"></div>
+        <div class="sc-shimmer"></div>
+        <div class="sc-content">
+          <div class="sc-header">
+            <div class="sc-rank-emblem" id="sc-rank-emblem"></div>
+            <div class="sc-line-info">
+              <div class="sc-line-name" id="sc-line-name"></div>
+              <div class="sc-pref" id="sc-pref"></div>
+            </div>
+          </div>
+          <div class="sc-station-name" id="sc-station-name"></div>
+          <div class="sc-score-block">
+            <div class="sc-score-num" id="sc-score-num"></div>
+            <div class="sc-score-label">街力</div>
+          </div>
+          <div class="sc-radar-wrap">
+            <svg id="sc-radar" viewBox="0 0 200 180"></svg>
+          </div>
+          <div class="sc-axis-list">
+            <div class="sc-axis-item"><span class="sc-axis-dot" style="background:#ff4466"></span>飲食 <b id="sc-ax-food">-</b></div>
+            <div class="sc-axis-item"><span class="sc-axis-dot" style="background:#9070ff"></span>商業 <b id="sc-ax-com">-</b></div>
+            <div class="sc-axis-item"><span class="sc-axis-dot" style="background:#3aa0ff"></span>生活 <b id="sc-ax-life">-</b></div>
+            <div class="sc-axis-item"><span class="sc-axis-dot" style="background:#f09030"></span>医療 <b id="sc-ax-med">-</b></div>
+          </div>
+          <div class="sc-footer">
+            <div class="sc-checkin-date" id="sc-checkin-date"></div>
+            <div class="sc-visit-count" id="sc-visit-count"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="cs-badge" id="cs-badge" style="display:none">🎉 初訪問！カード獲得</div>
-    <div class="cs-visit-count" id="cs-visit-count"></div>
-    <div class="cs-quota" id="cs-quota"></div>
-    <button class="cs-close" onclick="closeCheckinSuccess()">閉じる</button>
+    <button class="sc-close-btn" onclick="closeCardModal()">閉じる</button>
   </div>
 </div>
 
@@ -1642,9 +1866,12 @@ function drawMarker(st){
   const sz=Math.max(44,Math.round(32+(st.score/1000)*54));
   const sf=Math.round(sz*0.30),rf=Math.round(sz*0.21),nf=Math.max(9,Math.round(sz*0.155));
   const glowPx=Math.round(sz*0.52);
+  // ★ チェックイン済み判定：薄く塗りつぶし
+  const isCheckedIn = window.checkedInStations && window.checkedInStations.has(st.name+'_'+st.pref);
+  const bgColor = isCheckedIn ? color+'55' : color+'18';
   const html=`<div style="display:flex;flex-direction:column;align-items:center;cursor:${DEV_MODE?'grab':'pointer'}">
     <div class="mk-inner" style="width:${sz}px;height:${sz}px;border-radius:50%;
-      background:${color}18;border:${DEV_MODE?'3px dashed':'2.5px solid'} ${color};
+      background:${bgColor};border:${DEV_MODE?'3px dashed':'2.5px solid'} ${color};
       box-shadow:0 0 ${glowPx}px ${glow};
       display:flex;flex-direction:column;align-items:center;justify-content:center">
       <span style="font-weight:900;font-size:${sf}px;color:#fff;line-height:1.1">${st.score}</span>
@@ -1827,6 +2054,23 @@ lmap.on('zoomend moveend',()=>{if(stationData.some(s=>s.score)&&!DEV_MODE)render
 if(isPc()){
   document.getElementById('table-area').style.display='flex';
 }
+
+
+// チェックイン済み駅のテーブル行に class 付与
+function markCheckedInRows(){
+  if (!window.checkedInStations || window.checkedInStations.size === 0) return;
+  document.querySelectorAll('.tbl tbody tr').forEach(tr => {
+    const td = tr.querySelector('td:first-child');
+    if (!td) return;
+    const name = (td.dataset.name || td.textContent || '').trim();
+    const pref = tr.dataset.pref || '';
+    if (window.checkedInStations.has(name+'_'+pref)) {
+      tr.classList.add('checked-in');
+    }
+  });
+}
+// renderTable をフック
+const _originalRenderTable = (typeof renderTable === 'function') ? renderTable : null;
 
 initLineSelect();
 loadAll();
@@ -2370,6 +2614,8 @@ async function tryCompleteCheckin() {
       if (cardDoc.exists()) visitCount = cardDoc.data().visitCount || 1;
     } catch {}
 
+    if (window.markCheckedIn) window.markCheckedIn(pendingCheckin.stationName, pendingCheckin.stationPref);
+
     showCheckinSuccess({
       name: pendingCheckin.stationName,
       pref: pendingCheckin.stationPref,
@@ -2389,31 +2635,119 @@ async function tryCompleteCheckin() {
   }
 }
 
-// 成功モーダル表示
+// 成功ミニ通知 → 閉じるとカードを開く（初訪問）or そのまま終了（再訪問）
 function showCheckinSuccess(data) {
-  document.getElementById('cs-station').textContent = data.name + '駅';
-  const sc = document.getElementById('cs-score');
-  sc.textContent = data.score;
-  sc.style.color = data.color;
-  const rk = document.getElementById('cs-rank');
-  rk.textContent = data.rank;
-  rk.style.color = data.color;
-  const badge = document.getElementById('cs-badge');
-  const vc = document.getElementById('cs-visit-count');
+  document.getElementById('csm-station').textContent = data.name + '駅';
+  const badge = document.getElementById('csm-badge');
   if (data.isFirstVisit) {
-    badge.style.display = 'inline-block';
-    vc.textContent = '';
+    badge.innerHTML = '🎉 初訪問！カードゲット';
   } else {
-    badge.style.display = 'none';
-    vc.textContent = `訪問回数 ${data.visitCount}回目`;
+    badge.innerHTML = `${data.visitCount}回目の訪問！`;
   }
-  document.getElementById('cs-quota').textContent =
+  document.getElementById('csm-quota').textContent =
     `本日 ${todayCount}/${DAILY_LIMIT}駅`;
   document.getElementById('checkin-success-bg').classList.add('open');
+  
+  // 1.8秒後にミニ通知を閉じて、カードを開く（初訪問のみ）
+  setTimeout(() => {
+    document.getElementById('checkin-success-bg').classList.remove('open');
+    if (data.isFirstVisit) {
+      setTimeout(() => openStationCard(data), 200);
+    }
+  }, 1800);
 }
 window.closeCheckinSuccess = () => {
   document.getElementById('checkin-success-bg').classList.remove('open');
 };
+
+// ─── ステーションカード表示 ───
+function openStationCard(data) {
+  const card = document.getElementById('station-card');
+  card.setAttribute('data-rank', data.rank);
+  
+  // 駅情報
+  const st = stationData.find(s => s.name === data.name && s.pref === data.pref);
+  const lines = (st && st.lines) ? st.lines.slice(0, 3).join(' / ') : '';
+  document.getElementById('sc-line-name').textContent = lines || '-';
+  document.getElementById('sc-pref').textContent = data.pref;
+  document.getElementById('sc-station-name').textContent = data.name;
+  document.getElementById('sc-rank-emblem').textContent = data.rank;
+  document.getElementById('sc-rank-emblem').style.background = data.color;
+  document.getElementById('sc-score-num').textContent = data.score;
+  
+  // 4軸詳細
+  const details = (st && st.details) ? st.details : {};
+  const food = details['飲食'] || 0;
+  const com = details['商業'] || 0;
+  const life = details['生活'] || 0;
+  const med = details['医療'] || 0;
+  document.getElementById('sc-ax-food').textContent = `${food}/350`;
+  document.getElementById('sc-ax-com').textContent = `${com}/350`;
+  document.getElementById('sc-ax-life').textContent = `${life}/200`;
+  document.getElementById('sc-ax-med').textContent = `${med}/100`;
+  
+  // レーダーチャート描画
+  drawCardRadar(food, com, life, med);
+  
+  // チェックイン日時
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+  document.getElementById('sc-checkin-date').textContent = `Check-in: ${dateStr}`;
+  document.getElementById('sc-visit-count').textContent = data.isFirstVisit ? '初訪問' : `${data.visitCount}回目`;
+  
+  // モーダルを開く（カード入場アニメ）
+  const wrap = document.getElementById('card-flip-wrap');
+  wrap.style.animation = 'none';
+  setTimeout(() => { wrap.style.animation = ''; }, 10);
+  document.getElementById('card-modal-bg').classList.add('open');
+}
+
+window.closeCardModal = (e) => {
+  if (e && e.target.id !== 'card-modal-bg') return;
+  document.getElementById('card-modal-bg').classList.remove('open');
+};
+window.closeCardModal = function(e) {
+  if (e && e.target && e.target.id !== 'card-modal-bg') return;
+  document.getElementById('card-modal-bg').classList.remove('open');
+};
+
+function drawCardRadar(food, com, life, med) {
+  // 各軸を満点で正規化（0-1）
+  const v = [food/350, com/350, life/200, med/100];
+  const cx = 100, cy = 90, r = 60;
+  // 4軸の角度（上から時計回り：飲食/商業/生活/医療）
+  const angs = [-Math.PI/2, 0, Math.PI/2, Math.PI];
+  const colors = ['#ff4466','#9070ff','#3aa0ff','#f09030'];
+  
+  let pathD = '';
+  let dots = '';
+  v.forEach((val, i) => {
+    const x = cx + Math.cos(angs[i]) * r * Math.min(1, val);
+    const y = cy + Math.sin(angs[i]) * r * Math.min(1, val);
+    pathD += (i === 0 ? 'M' : 'L') + x + ',' + y + ' ';
+    dots += `<circle cx="${x}" cy="${y}" r="3.5" fill="${colors[i]}" stroke="#0a0e18" stroke-width="1.5"/>`;
+  });
+  pathD += 'Z';
+  
+  // 背景の同心円（薄いガイド）
+  let grid = '';
+  [0.33, 0.66, 1.0].forEach(s => {
+    const pts = angs.map(a => `${cx+Math.cos(a)*r*s},${cy+Math.sin(a)*r*s}`).join(' ');
+    grid += `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>`;
+  });
+  // 軸線
+  let axes = '';
+  angs.forEach(a => {
+    axes += `<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(a)*r}" y2="${cy+Math.sin(a)*r}" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>`;
+  });
+  
+  document.getElementById('sc-radar').innerHTML = `
+    ${grid}
+    ${axes}
+    <path d="${pathD}" fill="rgba(88,168,224,0.18)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+    ${dots}
+  `;
+}
 
 // リロード時の復元
 async function restorePendingCheckin() {
@@ -2434,6 +2768,34 @@ async function restorePendingCheckin() {
   }
 }
 
+
+// ステーションカードキャッシュ（訪問済み駅の判定用）
+window.checkedInStations = new Set();
+
+async function loadCheckedInStations(uid) {
+  try {
+    const cardsRef = collection(db, 'users', uid, 'stationCards');
+    const snap = await getDocs(cardsRef);
+    window.checkedInStations.clear();
+    snap.forEach(d => {
+      const data = d.data();
+      window.checkedInStations.add(`${data.stationName}_${data.stationPref}`);
+    });
+    console.log('✅ チェックイン済み駅:', window.checkedInStations.size, '駅');
+    if (typeof render === 'function' && stationData.some(s=>s.score)) render();
+    if (typeof renderTable === 'function') renderTable();
+  } catch (e) {
+    console.error('チェックイン済み駅の取得エラー:', e);
+  }
+}
+
+// チェックイン成立時にキャッシュも更新
+window.markCheckedIn = function(name, pref) {
+  window.checkedInStations.add(`${name}_${pref}`);
+  if (typeof render === 'function' && stationData.some(s=>s.score)) render();
+  if (typeof renderTable === 'function') renderTable();
+};
+
 // 既存の getRank をモジュール側からも使える形で公開
 setTimeout(() => { if (typeof getRank === 'function') window.getRank = getRank; }, 100);
 
@@ -2444,6 +2806,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!loginBtn || !userInfo) return;
 
   if (user) {
+    loadCheckedInStations(user.uid);
     loginBtn.style.display = 'none';
     userInfo.style.display = 'flex';
     document.getElementById('userAvatar').src = user.photoURL || '';
