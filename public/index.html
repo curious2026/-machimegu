@@ -1594,19 +1594,45 @@ function getFiltered(){
   });
 }
 
+// ★ 特別扱い駅：どんなズームでも常時表示
+const ALWAYS_VISIBLE_STATIONS=new Set([
+  '銀座_東京都','新宿_東京都','渋谷_東京都','池袋_東京都','吉祥寺_東京都','立川_東京都',
+  '横浜_神奈川県','川崎_神奈川県','千葉_千葉県','柏_千葉県','大宮_埼玉県','本川越_埼玉県'
+]);
+
+// ★ ズーム別の画面幅比率（マーカー間最小距離 = 画面幅 × この比率）
+const ZOOM_RATIO={
+  9:0.18, 10:0.16, 11:0.13, 12:0.11, 13:0.09, 14:0.07, 15:0.05, 16:0.03
+};
+
+function getMinPx(zoom,mapWidth){
+  const z=Math.max(8,Math.min(16,Math.floor(zoom)));
+  const ratio=ZOOM_RATIO[z]!==undefined?ZOOM_RATIO[z]:(z<9?0.20:0.02);
+  return mapWidth*ratio;
+}
+
 function getVisible(){
   const zoom=lmap.getZoom();
-  // v14のbase値 (引いた時はそのまま)
-  const baseV14=isPc()?1.0:1.35;
-  // 拡大時 (zoom 13以上) のみ駅数を減らす: PC 0.8倍, スマホ 0.9倍 → d値は約1.12倍, 1.05倍
-  const zoomMul=zoom>=13?(isPc()?1.12:1.05):1.0;
-  const base=baseV14*zoomMul;
-  const d=(zoom>=14?40:zoom>=13?45:zoom>=12?52:zoom>=11?60:zoom>=10?70:85)*base;
-  const sorted=[...getFiltered()].sort((a,b)=>b.score-a.score);
-  const vis=[];
-  for(const st of sorted){
+  const mapEl=document.getElementById('lmap');
+  const mapW=mapEl?mapEl.offsetWidth:800;
+  const d=getMinPx(zoom,mapW);
+  
+  const filtered=getFiltered();
+  // 特別扱い駅を抽出
+  const always=filtered.filter(s=>ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref));
+  // それ以外をスコア降順
+  const others=filtered.filter(s=>!ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref))
+    .sort((a,b)=>b.score-a.score);
+  
+  // 特別扱い駅から先に配置（必ず表示）
+  const vis=[...always];
+  // その他は重なり判定で間引き（特別駅とも重ならないように）
+  for(const st of others){
     const p=lmap.latLngToContainerPoint([st.lat,st.lng]);
-    if(!vis.some(v=>{const q=lmap.latLngToContainerPoint([v.lat,v.lng]);return Math.hypot(p.x-q.x,p.y-q.y)<d;}))vis.push(st);
+    if(!vis.some(v=>{
+      const q=lmap.latLngToContainerPoint([v.lat,v.lng]);
+      return Math.hypot(p.x-q.x,p.y-q.y)<d;
+    }))vis.push(st);
   }
   return vis;
 }
