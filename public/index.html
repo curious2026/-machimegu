@@ -64,9 +64,9 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
   #header{height:64px}
 }
 
-#header-controls{display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:auto}
+#header-controls{display:flex;flex-direction:column;align-items:flex-end;gap:5px;margin-left:auto}
 @media(min-width:768px){
-  #header-controls{flex-direction:row;align-items:center;gap:8px}
+  #header-controls{flex-direction:row-reverse;align-items:center;gap:10px}
 }
 .info-btn{font-size:10px;color:#b0c4ff;font-weight:700;border:1px solid rgba(120,160,255,0.3);
   padding:4px 9px;border-radius:16px;cursor:pointer;white-space:nowrap;
@@ -95,17 +95,23 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
 .hsel{background:rgba(8,12,26,0.8);color:#c8d6f0;border:1px solid rgba(120,150,210,0.28);
   padding:4px 7px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600}
 
-#filters{display:flex;align-items:center;gap:3px;padding:3px 6px;
-  background:#181828;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;overflow-x:auto}
+#filters{display:flex;align-items:center;gap:3px;padding:3px 5px;
+  background:#181828;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+@media(max-width:767px){
+  #filters{gap:2px;padding:3px 4px}
+  .fsel{padding:3px 3px!important;font-size:11px!important}
+  #favFilter{font-size:18px!important;padding:1px 5px!important}
+  #statusbar{font-size:9px!important}
+}
 .fsel{background:rgba(255,255,255,0.05);color:#c8d6f0;border:1px solid rgba(120,150,210,0.2);
-  padding:4px 5px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600}
+  padding:4px 5px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600;flex-shrink:0}
 .fsel option{background:#0e1220;color:#d8e8ff;font-weight:600}
 #favFilter{background:rgba(255,70,110,0.1);border:1px solid rgba(255,80,120,0.32);
   color:#cc4466;font-size:22px;cursor:pointer;padding:1px 7px;border-radius:7px;
   line-height:1;transition:all 0.2s;flex-shrink:0}
 #favFilter.on{background:rgba(255,70,110,0.26);border-color:rgba(255,100,140,0.6);color:#ff5588}
 #favFilter:hover{transform:scale(1.1)}
-#statusbar{font-size:10px;color:#5878b8;white-space:nowrap;flex-shrink:0;font-weight:600;margin-left:auto}
+#statusbar{font-size:10px;color:#5878b8;white-space:nowrap;flex-shrink:0;font-weight:600;margin-left:auto;padding-right:2px}
 #statusbar.anim{color:#5a90ff;animation:pulse 1.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:0.35}50%{opacity:1}}
 
@@ -423,18 +429,18 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
         <span class="vtab-label">RANK</span>
       </button>
     </div>
-    <div id="auth-area">
-      <button class="auth-btn" id="loginBtn" onclick="signInWithGoogle()" style="display:none">
-        <span class="auth-lbl-full">Googleでログイン</span><span class="auth-lbl-short">ログイン</span>
-      </button>
-      <div class="user-info" id="userInfo" style="display:none">
-        <img class="user-avatar" id="userAvatar" src="" alt="" onclick="handleAvatarClick()" title="クリックでログアウト">
-        <span class="user-name" id="userName"></span>
-        <button class="auth-btn signout-btn-pc" onclick="signOutUser()">ログアウト</button>
-      </div>
-    </div>
     <div id="header-controls">
       <button class="info-btn" onclick="openModal()">街力の見方 ⓘ</button>
+      <div id="auth-area">
+        <button class="auth-btn" id="loginBtn" onclick="signInWithGoogle()" style="display:none">
+          <span class="auth-lbl-full">Googleでログイン</span><span class="auth-lbl-short">ログイン</span>
+        </button>
+        <div class="user-info" id="userInfo" style="display:none">
+          <img class="user-avatar" id="userAvatar" src="" alt="" onclick="handleAvatarClick()" title="クリックでログアウト">
+          <span class="user-name" id="userName"></span>
+          <button class="auth-btn signout-btn-pc" onclick="signOutUser()">ログアウト</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -454,9 +460,9 @@ html,body{height:100%;background:#181828;color:#d8e0f0;font-family:'Inter','Noto
     </select>
     <button id="favFilter" onclick="toggleFavFilter()">♥</button>
     <select class="fsel" id="radiusSelect" onchange="onRadiusChange()">
-      <option value="500" selected>半径 500m</option>
-      <option value="800">半径 800m</option>
-      <option value="1200">半径 1,200m</option>
+      <option value="500" selected>半径500m</option>
+      <option value="800">半径800m</option>
+      <option value="1200">半径1.2km</option>
     </select>
     <span id="statusbar"></span>
   </div>
@@ -1343,8 +1349,8 @@ function getFiltered(){
 
 function getVisible(){
   const zoom=lmap.getZoom();
-  const base=isPc()?1.0:1.35;
-  const d=(zoom>=14?40:zoom>=13?45:zoom>=12?52:zoom>=11?60:zoom>=10?70:85)*base;
+  const base=isPc()?0.85:1.18;
+  const d=(zoom>=14?40:zoom>=13?45:zoom>=12?50:zoom>=11?55:zoom>=10?62:72)*base;
   const sorted=[...getFiltered()].sort((a,b)=>b.score-a.score);
   const vis=[];
   for(const st of sorted){
