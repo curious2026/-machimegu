@@ -1,25 +1,27 @@
 {
-  "name": "街巡-まちめぐ-",
-  "short_name": "街巡",
-  "description": "駅エリアの街力（商業活力）を可視化する地図アプリ",
-  "start_url": "/",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0f1830",
-  "theme_color": "#0c1830",
-  "lang": "ja",
+  "short_name": "街巡-まちめぐ-",
+  "name": "街巡-まちめぐ- | 街力で日本を可視化",
+  "description": "駅エリアの商業活力を1-1000のスコアで可視化。チェックインで街を制覇しよう。",
   "icons": [
     {
       "src": "/logo192.png",
-      "sizes": "192x192",
       "type": "image/png",
+      "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
       "src": "/logo512.png",
-      "sizes": "512x512",
       "type": "image/png",
+      "sizes": "512x512",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0c1830",
+  "background_color": "#0a1020",
+  "lang": "ja",
+  "dir": "ltr"
 }
