@@ -596,20 +596,22 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   --card-soft:rgba(160,176,192,0.15);
 }
 
-/* ─── ランキング表：チェックイン済み駅の網かけ ─── */
-.tbl tr.checked-in td:first-child{
+/* ─── ランキング表：チェックイン済み駅の表示 ─── */
+.rank-row.checked-in{
+  background:linear-gradient(90deg,rgba(132,212,155,0.10),rgba(132,212,155,0.03) 60%,transparent 90%);
   position:relative;
 }
-.tbl tr.checked-in td:first-child::before{
-  content:'✓';
-  display:inline-block;
-  margin-right:6px;
-  font-weight:900;
+.rank-row.checked-in .rname::before{
+  content:'✓ ';
   color:#84d49b;
-  font-size:11px;
+  font-weight:900;
+  font-size:0.9em;
+  margin-right:2px;
 }
-.tbl tr.checked-in{
-  background:linear-gradient(90deg,rgba(132,212,155,0.06),transparent 30%);
+.rank-row.checked-in::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#84d49b,#3aa0ff);
+  opacity:0.6;
 }
 </style>
 </head>
@@ -1864,16 +1866,22 @@ function getVisible(){
 function drawMarker(st){
   const{rank,color,glow}=getRank(st.score);
   const sz=Math.max(44,Math.round(32+(st.score/1000)*54));
-  const sf=Math.round(sz*0.30),rf=Math.round(sz*0.21),nf=Math.max(9,Math.round(sz*0.155));
+  // ★ フォントサイズUP: 数字+1, ランク+2
+  const sf=Math.round(sz*0.30)+1,rf=Math.round(sz*0.21)+2,nf=Math.max(9,Math.round(sz*0.155));
   const glowPx=Math.round(sz*0.52);
-  // ★ チェックイン済み判定：薄く塗りつぶし
+  // ★ チェックイン済み判定（背景は全駅統一）
   const isCheckedIn = window.checkedInStations && window.checkedInStations.has(st.name+'_'+st.pref);
-  const bgColor = isCheckedIn ? color+'55' : color+'18';
+  const bgColor = color+'18';  // 全駅統一
+  // ★ チェックマーク（円と同色、数字の上に重ねる）
+  const checkSize = Math.round(sz*0.22);
+  const checkMark = isCheckedIn ? `<div style="position:absolute;top:${Math.round(sz*0.10)}px;left:50%;transform:translateX(-50%);font-weight:900;font-size:${checkSize}px;color:${color};line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.6),0 0 4px rgba(0,0,0,0.4);z-index:3;pointer-events:none">✓</div>` : '';
   const html=`<div style="display:flex;flex-direction:column;align-items:center;cursor:${DEV_MODE?'grab':'pointer'}">
     <div class="mk-inner" style="width:${sz}px;height:${sz}px;border-radius:50%;
       background:${bgColor};border:${DEV_MODE?'3px dashed':'2.5px solid'} ${color};
       box-shadow:0 0 ${glowPx}px ${glow};
-      display:flex;flex-direction:column;align-items:center;justify-content:center">
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      position:relative">
+      ${checkMark}
       <span style="font-weight:900;font-size:${sf}px;color:#fff;line-height:1.1">${st.score}</span>
       <span style="font-weight:700;font-size:${rf}px;color:${color};line-height:1">${rank}</span>
     </div>
@@ -1988,7 +1996,8 @@ function updateTable(filtered){
     const cats=axes.map(n=>{const v=d[n]||{pts:0};return`<span class="rcat" style="background:${AC[n]}1a;color:${AC[n]};border:1px solid ${AC[n]}33">${n} ${v.pts}</span>`;}).join('');
     const fIcon=isFav(st)?'♥':'♡';
     const isTop=i<3;
-    return`<div class="rank-row" onclick="onTableClick('${st.name}','${st.pref}')">
+    const isCheckedIn = window.checkedInStations && window.checkedInStations.has(st.name+'_'+st.pref);
+    return`<div class="rank-row${isCheckedIn?' checked-in':''}" onclick="onTableClick('${st.name}','${st.pref}')">
       <div class="rank-left">
         <span class="rn${isTop?' top3':''}">${i+1}</span>
         <span class="rletter${isTop?' top3':''}" style="color:${color}">${rank}</span>
@@ -2056,21 +2065,6 @@ if(isPc()){
 }
 
 
-// チェックイン済み駅のテーブル行に class 付与
-function markCheckedInRows(){
-  if (!window.checkedInStations || window.checkedInStations.size === 0) return;
-  document.querySelectorAll('.tbl tbody tr').forEach(tr => {
-    const td = tr.querySelector('td:first-child');
-    if (!td) return;
-    const name = (td.dataset.name || td.textContent || '').trim();
-    const pref = tr.dataset.pref || '';
-    if (window.checkedInStations.has(name+'_'+pref)) {
-      tr.classList.add('checked-in');
-    }
-  });
-}
-// renderTable をフック
-const _originalRenderTable = (typeof renderTable === 'function') ? renderTable : null;
 
 initLineSelect();
 loadAll();
@@ -2689,11 +2683,24 @@ function openStationCard(data) {
   // レーダーチャート描画
   drawCardRadar(food, com, life, med);
   
-  // チェックイン日時
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+  // チェックイン日時：data.checkinDate（Firestore日付）があればそれを使う、無ければ今日
+  let dateStr;
+  if (data.checkinDate) {
+    const d = (data.checkinDate instanceof Date) ? data.checkinDate : new Date(data.checkinDate);
+    dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  } else {
+    const now = new Date();
+    dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+  }
   document.getElementById('sc-checkin-date').textContent = `Check-in: ${dateStr}`;
-  document.getElementById('sc-visit-count').textContent = data.isFirstVisit ? '初訪問' : `${data.visitCount}回目`;
+  // 訪問カウント
+  if (data.isFirstVisit) {
+    document.getElementById('sc-visit-count').textContent = '初訪問';
+  } else if (data.visitCount && data.visitCount > 1) {
+    document.getElementById('sc-visit-count').textContent = `${data.visitCount}回目`;
+  } else {
+    document.getElementById('sc-visit-count').textContent = '訪問済み';
+  }
   
   // モーダルを開く（カード入場アニメ）
   const wrap = document.getElementById('card-flip-wrap');
@@ -2788,6 +2795,46 @@ async function loadCheckedInStations(uid) {
     console.error('チェックイン済み駅の取得エラー:', e);
   }
 }
+
+
+// ─── 既存カード再表示（マイページ用 / Firestoreの記録日付を使用）───
+window.openCardFromHistory = async function(stationName, stationPref) {
+  const user = auth.currentUser;
+  if (!user) { alert('ログインしてください'); return; }
+  try {
+    const stationId = `${stationName}_${stationPref}`;
+    const cardDoc = await getDoc(doc(db, 'users', user.uid, 'stationCards', stationId));
+    if (!cardDoc.exists()) { alert('このカードはまだ取得していません'); return; }
+    const cd = cardDoc.data();
+    
+    // 駅情報を取得（現在の score を取得）
+    const st = stationData.find(s => s.name === stationName && s.pref === stationPref);
+    if (!st) { alert('駅情報が見つかりません'); return; }
+    
+    const score = cd.firstScore || st.score || 0;
+    const rankInfo = window.getRank ? window.getRank(score) : { rank: '-', color: '#888' };
+    
+    // firstVisitAt を Date に変換
+    let checkinDate = null;
+    if (cd.firstVisitAt) {
+      checkinDate = cd.firstVisitAt.toDate ? cd.firstVisitAt.toDate() : new Date(cd.firstVisitAt);
+    }
+    
+    openStationCard({
+      name: stationName,
+      pref: stationPref,
+      score,
+      rank: cd.firstRank || rankInfo.rank,
+      color: rankInfo.color,
+      isFirstVisit: false,
+      visitCount: cd.visitCount || 1,
+      checkinDate
+    });
+  } catch (e) {
+    console.error('カード取得エラー:', e);
+    alert('カードの読み込みに失敗しました: ' + e.message);
+  }
+};
 
 // チェックイン成立時にキャッシュも更新
 window.markCheckedIn = function(name, pref) {
