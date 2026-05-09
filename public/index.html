@@ -50,7 +50,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .logo-lines{display:none}
 .logo-line-main,.logo-line-f1,.logo-line-f2{display:none}
 
-.view-tabs{display:none;border:1px solid rgba(120,150,210,0.22);border-radius:8px;overflow:hidden;flex-shrink:0;margin-left:2px;margin-right:0}
+.view-tabs{display:none;border:1px solid rgba(120,150,210,0.22);border-radius:8px;overflow:hidden;flex-shrink:0;margin-left:2px;margin-right:0;margin-top:2px}
 .vtab{background:transparent;color:#4858a0;border:none;padding:4px 10px;cursor:pointer;
   transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:1px;font-family:inherit}
 .vtab-icon{font-size:22px;line-height:1}
@@ -673,12 +673,14 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .mp-meta{font-size:12px;color:#7a96b6}
 
 .mp-stats{padding:18px 20px;border-bottom:1px solid rgba(120,150,210,0.12)}
+.mp-stat-grid-2{grid-template-columns:repeat(2,1fr)!important}
 .mp-stat-grid{
   display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
   margin-bottom:14px;
 }
 @media (max-width:640px){
-  .mp-stat-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .mp-stat-grid-2{grid-template-columns:repeat(2,1fr)!important}
+.mp-stat-grid{grid-template-columns:repeat(2,1fr);gap:8px}
 }
 .mp-stat-item{
   background:rgba(255,255,255,0.04);
@@ -782,6 +784,288 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   transition:all 0.15s;
 }
 .mp-logout-btn:hover{background:rgba(255,255,255,0.04);color:#fb7185;border-color:rgba(251,113,133,0.4)}
+
+/* ─── マイページリンク（スマホ用テキスト） ─── */
+.user-mypage-link{
+  display:none;
+  background:linear-gradient(135deg,#58a8e0,#3a8ac4);
+  color:#fff;font-weight:900;font-size:11px;letter-spacing:1px;
+  padding:6px 10px;border-radius:14px;border:none;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(88,168,224,0.35);
+  transition:transform 0.12s;
+}
+.user-mypage-link:active{transform:scale(0.95)}
+@media (max-width:640px){
+  .user-avatar{display:none!important}
+  .user-mypage-link{display:inline-flex;align-items:center;gap:4px}
+}
+@media (min-width:641px){
+  .user-mypage-link{display:inline-flex;align-items:center;gap:4px}
+}
+
+/* ─── ステーションカード モーダル（V2: スクショ忠実版）─── */
+#card-modal-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:7600;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);
+  overflow-y:auto;padding:20px 12px;
+}
+#card-modal-bg.open{display:flex}
+#card-modal{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:16px;
+  perspective:1200px;width:100%;max-width:380px;
+}
+#card-flip-wrap{
+  animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
+  transform-style:preserve-3d;
+  width:100%;
+}
+@keyframes cardEnter{
+  0%{transform:scale(0.3) rotateY(180deg);opacity:0}
+  50%{opacity:1}
+  100%{transform:scale(1) rotateY(0);opacity:1}
+}
+
+#station-card{
+  width:100%;
+  border-radius:20px;
+  position:relative;overflow:hidden;
+  background:var(--card-bg,#fff5f5);
+  border:3px solid var(--card-color,#fb7185);
+  box-shadow:0 0 30px var(--card-glow,rgba(251,113,133,0.3)),
+             0 12px 40px rgba(0,0,0,0.5);
+}
+.sc-content{padding:18px 18px 22px;color:#1a2030}
+
+/* トップバー */
+.sc-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sc-rank-badge{
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:900;color:#fff;
+  background:var(--card-color);
+  box-shadow:0 2px 8px var(--card-glow);
+  flex-shrink:0;
+}
+.sc-checkin-info{flex:1;min-width:0}
+.sc-checkin-label{font-size:10px;font-weight:900;color:#7a96b6;letter-spacing:2px}
+.sc-checkin-date{font-size:13px;font-weight:900;color:#1a2030;line-height:1.2}
+.sc-stats-mini{
+  font-size:10px;font-weight:900;color:#fff;
+  background:var(--card-color);
+  padding:5px 10px;border-radius:12px;
+  letter-spacing:0.5px;
+  white-space:nowrap;
+}
+
+/* 駅名 */
+.sc-station-name{
+  font-size:38px;font-weight:900;color:#1a2030;
+  text-align:center;letter-spacing:6px;line-height:1.1;
+  margin:6px 0 12px;
+}
+
+/* 路線色帯 */
+.sc-line-bar{
+  display:flex;height:5px;border-radius:3px;overflow:hidden;
+  margin-bottom:6px;gap:2px;
+}
+.sc-line-bar > div{flex:1}
+
+.sc-line-text{
+  font-size:11px;color:#5a6a7a;
+  text-align:left;margin-bottom:14px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* スコア */
+.sc-score-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:14px}
+.sc-score-num{
+  font-size:64px;font-weight:900;line-height:0.95;
+  color:var(--card-color);letter-spacing:-2px;
+}
+.sc-score-label{
+  font-size:11px;font-weight:900;color:#7a96b6;letter-spacing:2px;line-height:1.2;
+  padding-bottom:4px;
+}
+
+/* 4軸ダイヤ */
+.sc-axes{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  margin-bottom:16px;
+}
+.sc-ax{
+  width:64px;height:64px;
+  background:#fff;
+  border:2px solid;
+  transform:rotate(45deg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:auto;
+}
+.sc-ax > span{transform:rotate(-45deg);text-align:center}
+.sc-ax-name{font-size:10px;font-weight:700;line-height:1;margin-bottom:2px}
+.sc-ax-val{font-size:14px;font-weight:900;line-height:1}
+
+.sc-ax-food{border-color:#ff4466}
+.sc-ax-food .sc-ax-name{color:#ff4466}
+.sc-ax-food .sc-ax-val{color:#ff4466}
+
+.sc-ax-com{border-color:#9070ff}
+.sc-ax-com .sc-ax-name{color:#9070ff}
+.sc-ax-com .sc-ax-val{color:#9070ff}
+
+.sc-ax-life{border-color:#3aa0ff}
+.sc-ax-life .sc-ax-name{color:#3aa0ff}
+.sc-ax-life .sc-ax-val{color:#3aa0ff}
+
+.sc-ax-med{border-color:#f09030}
+.sc-ax-med .sc-ax-name{color:#f09030}
+.sc-ax-med .sc-ax-val{color:#f09030}
+
+/* 駅情報 */
+.sc-info-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;
+  border-top:1px solid #ccd5e0;padding-top:12px;margin-bottom:12px;
+}
+.sc-info-item{display:flex;flex-direction:row;align-items:baseline;gap:6px}
+.sc-info-val{font-size:14px;font-weight:900;color:#1a2030;line-height:1;min-width:60px}
+.sc-info-lbl{font-size:10px;color:#7a96b6;font-weight:600}
+
+/* 特徴 */
+.sc-features{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.sc-feature{
+  background:#fff;border:1px solid var(--card-color);
+  color:#1a2030;
+  padding:7px 12px;border-radius:14px;
+  font-size:11px;font-weight:600;
+  display:flex;align-items:center;gap:6px;
+}
+.sc-feature::before{content:'★';color:var(--card-color)}
+
+/* メモ */
+.sc-memo{
+  background:#fff;border:1px dashed #ccd5e0;
+  border-radius:8px;padding:10px;
+  min-height:78px;
+}
+.sc-memo-lbl{font-size:9px;font-weight:900;color:#9aa5b5;letter-spacing:2px;margin-bottom:4px}
+.sc-memo-content{
+  font-size:12px;color:#3a4658;line-height:1.6;min-height:54px;
+}
+
+/* ─── ランク別カラー（やわらか背景色）─── */
+#station-card[data-rank="S"]{
+  --card-color:#fb7185;
+  --card-glow:rgba(251,113,133,0.45);
+  --card-bg:#fff5f5;
+}
+#station-card[data-rank="A"]{
+  --card-color:#ff8c44;
+  --card-glow:rgba(255,140,68,0.45);
+  --card-bg:#fff7ed;
+}
+#station-card[data-rank="B"]{
+  --card-color:#d4a017;
+  --card-glow:rgba(212,160,23,0.45);
+  --card-bg:#fefbe8;
+}
+#station-card[data-rank="C"]{
+  --card-color:#3aa46c;
+  --card-glow:rgba(58,164,108,0.45);
+  --card-bg:#f0fdf4;
+}
+#station-card[data-rank="D"]{
+  --card-color:#3a8ac4;
+  --card-glow:rgba(58,138,196,0.45);
+  --card-bg:#eff6ff;
+}
+#station-card[data-rank="E"]{
+  --card-color:#7a8aa0;
+  --card-glow:rgba(122,138,160,0.30);
+  --card-bg:#f1f5f9;
+}
+
+.sc-close-btn{
+  background:linear-gradient(135deg,#58a8e0,#3a8ac4);
+  color:#fff;border:none;border-radius:24px;
+  padding:12px 48px;font-weight:900;font-size:15px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(88,168,224,0.4);
+  transition:transform 0.15s ease;
+}
+.sc-close-btn:hover{transform:translateY(-2px)}
+.sc-close-btn:active{transform:translateY(0)}
+
+.mp-link{
+  background:transparent;border:none;color:#58a8e0;
+  font-size:12px;font-weight:700;cursor:pointer;
+  padding:4px 0;letter-spacing:0.5px;
+  transition:color 0.15s;
+}
+.mp-link:hover{color:#7fbce8;text-decoration:underline}
+.mp-badge-preview{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px;
+  min-height:80px;
+}
+.mp-badge-preview .mp-empty{grid-column:1/-1;padding:30px 20px;font-size:13px}
+
+/* カード一覧専用ページ */
+#cardlist-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.96);z-index:7900;
+  display:none;backdrop-filter:blur(8px);
+  overflow-y:auto;
+}
+#cardlist-bg.open{display:block}
+#cardlist-modal{
+  max-width:760px;margin:20px auto;padding:0;
+  background:linear-gradient(160deg,#0c1830 0%,#091020 60%,#06101c 100%);
+  border:1px solid rgba(120,150,210,0.25);
+  border-radius:18px;
+  overflow:hidden;
+}
+@media (max-width:640px){
+  #cardlist-modal{margin:0;border-radius:0;min-height:100vh}
+}
+.cl-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid rgba(120,150,210,0.15);
+  background:rgba(255,255,255,0.02);
+  position:sticky;top:0;z-index:10;
+  backdrop-filter:blur(10px);
+}
+.cl-back{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:#cfdaee;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cl-title{font-size:16px;font-weight:900;color:#fff;letter-spacing:1px}
+.cl-hint{font-size:11px;color:#7a96b6}
+.cl-body{padding:18px 16px}
+.cl-body .mp-card-grid{margin:0}
+
+/* バッジ専用ページ */
+#badgepage-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.96);z-index:7900;
+  display:none;backdrop-filter:blur(8px);
+  overflow-y:auto;
+}
+#badgepage-bg.open{display:block}
+#badgepage-modal{
+  max-width:760px;margin:20px auto;padding:0;
+  background:linear-gradient(160deg,#0c1830 0%,#091020 60%,#06101c 100%);
+  border:1px solid rgba(120,150,210,0.25);
+  border-radius:18px;
+  overflow:hidden;
+}
+@media (max-width:640px){
+  #badgepage-modal{margin:0;border-radius:0;min-height:100vh}
+}
+.bp-section-title{font-size:13px;font-weight:900;color:#cfdaee;letter-spacing:2px;margin:18px 0 10px}
+.bp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:10px}
+.bp-badge-locked{
+  aspect-ratio:1;border-radius:14px;
+  background:rgba(255,255,255,0.03);
+  border:1px dashed rgba(120,150,210,0.25);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:8px;
+}
+.bp-badge-locked .bp-icon{font-size:24px;opacity:0.3;margin-bottom:4px}
+.bp-badge-locked .bp-name{font-size:9px;color:#7a96b6;line-height:1.2;letter-spacing:0.3px}
 </style>
 </head>
 <body>
@@ -814,6 +1098,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
         </button>
         <div class="user-info" id="userInfo" style="display:none">
           <img class="user-avatar" id="userAvatar" src="" alt="" onclick="handleAvatarClick()" title="マイページ">
+          <button class="user-mypage-link" onclick="handleAvatarClick()" type="button">👤 マイページ</button>
           <span class="user-name" id="userName"></span>
           
         </div>
@@ -989,33 +1274,55 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   <div id="card-modal" onclick="event.stopPropagation()">
     <div id="card-flip-wrap">
       <div id="station-card">
-        <div class="sc-bg-glow"></div>
-        <div class="sc-shimmer"></div>
         <div class="sc-content">
-          <div class="sc-header">
-            <div class="sc-rank-emblem" id="sc-rank-emblem"></div>
-            <div class="sc-line-info">
-              <div class="sc-line-name" id="sc-line-name"></div>
-              <div class="sc-pref" id="sc-pref"></div>
+          <!-- ヘッダー -->
+          <div class="sc-top">
+            <div class="sc-rank-badge" id="sc-rank-badge"></div>
+            <div class="sc-checkin-info">
+              <div class="sc-checkin-label">CHECK IN</div>
+              <div class="sc-checkin-date" id="sc-checkin-date">-</div>
             </div>
+            <div class="sc-stats-mini" id="sc-visit-count">初訪問</div>
           </div>
+          
+          <!-- 駅名 -->
           <div class="sc-station-name" id="sc-station-name"></div>
-          <div class="sc-score-block">
-            <div class="sc-score-num" id="sc-score-num"></div>
-            <div class="sc-score-label">街力</div>
+          
+          <!-- 路線色帯 -->
+          <div class="sc-line-bar" id="sc-line-bar"></div>
+          
+          <!-- 路線名 -->
+          <div class="sc-line-text" id="sc-line-text">-</div>
+          
+          <!-- スコア -->
+          <div class="sc-score-row">
+            <div class="sc-score-num" id="sc-score-num">-</div>
+            <div class="sc-score-label">MACHI<br>SCORE</div>
           </div>
-          <div class="sc-radar-wrap">
-            <svg id="sc-radar" viewBox="0 0 200 180"></svg>
+          
+          <!-- 4軸ダイヤ -->
+          <div class="sc-axes">
+            <div class="sc-ax sc-ax-food"><span class="sc-ax-name">飲食</span><span class="sc-ax-val" id="sc-ax-food">-</span></div>
+            <div class="sc-ax sc-ax-com"><span class="sc-ax-name">商業</span><span class="sc-ax-val" id="sc-ax-com">-</span></div>
+            <div class="sc-ax sc-ax-life"><span class="sc-ax-name">生活</span><span class="sc-ax-val" id="sc-ax-life">-</span></div>
+            <div class="sc-ax sc-ax-med"><span class="sc-ax-name">医療</span><span class="sc-ax-val" id="sc-ax-med">-</span></div>
           </div>
-          <div class="sc-axis-list">
-            <div class="sc-axis-item"><span class="sc-axis-dot" style="background:#ff4466"></span>飲食 <b id="sc-ax-food">-</b></div>
-            <div class="sc-axis-item"><span class="sc-axis-dot" style="background:#9070ff"></span>商業 <b id="sc-ax-com">-</b></div>
-            <div class="sc-axis-item"><span class="sc-axis-dot" style="background:#3aa0ff"></span>生活 <b id="sc-ax-life">-</b></div>
-            <div class="sc-axis-item"><span class="sc-axis-dot" style="background:#f09030"></span>医療 <b id="sc-ax-med">-</b></div>
+          
+          <!-- 駅情報 -->
+          <div class="sc-info-grid">
+            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-opened">-</div><div class="sc-info-lbl">開業</div></div>
+            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-riders">-</div><div class="sc-info-lbl">乗降客/日</div></div>
+            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-lines">-</div><div class="sc-info-lbl">接続</div></div>
+            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-loc">-</div><div class="sc-info-lbl">所在地</div></div>
           </div>
-          <div class="sc-footer">
-            <div class="sc-checkin-date" id="sc-checkin-date"></div>
-            <div class="sc-visit-count" id="sc-visit-count"></div>
+          
+          <!-- 特徴 -->
+          <div class="sc-features" id="sc-features"></div>
+          
+          <!-- メモ -->
+          <div class="sc-memo">
+            <div class="sc-memo-lbl">MEMO</div>
+            <div class="sc-memo-content" id="sc-memo-content"></div>
           </div>
         </div>
       </div>
@@ -1045,7 +1352,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
     
     <!-- 統計 -->
     <div class="mp-stats">
-      <div class="mp-stat-grid">
+      <div class="mp-stat-grid mp-stat-grid-2">
         <div class="mp-stat-item">
           <div class="mp-stat-num" id="mp-st-cards">-</div>
           <div class="mp-stat-label">獲得カード</div>
@@ -1054,31 +1361,80 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
           <div class="mp-stat-num" id="mp-st-checkins">-</div>
           <div class="mp-stat-label">チェックイン</div>
         </div>
-        <div class="mp-stat-item">
-          <div class="mp-stat-num" id="mp-st-best">-</div>
-          <div class="mp-stat-label">最高ランク</div>
-        </div>
-        <div class="mp-stat-item">
-          <div class="mp-stat-num" id="mp-st-power">-</div>
-          <div class="mp-stat-label">街力合計</div>
-        </div>
       </div>
       <div class="mp-rank-bar" id="mp-rank-bar"></div>
     </div>
     
-    <!-- カードコレクション -->
+    <!-- カードコレクション（マイページ内プレビュー：6枚まで） -->
     <div class="mp-section">
       <div class="mp-section-title">
         <span>カードコレクション</span>
-        <span class="mp-section-count" id="mp-card-count">0枚</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="mp-section-count" id="mp-card-count">0枚</span>
+          <button class="mp-link" onclick="openCardListPage()">全部見る →</button>
+        </div>
       </div>
       <div class="mp-card-grid" id="mp-card-grid">
         <div class="mp-empty" id="mp-empty">まだカードを獲得していません<br><span style="font-size:11px;color:#7a96b6;margin-top:8px;display:block">駅でチェックインしてカードを集めよう！</span></div>
       </div>
     </div>
     
+    <!-- バッジコレクション -->
+    <div class="mp-section">
+      <div class="mp-section-title">
+        <span>バッジコレクション</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="mp-section-count" id="mp-badge-count">0個</span>
+          <button class="mp-link" onclick="openBadgePage()">全部見る →</button>
+        </div>
+      </div>
+      <div class="mp-badge-preview" id="mp-badge-preview">
+        <div class="mp-empty">バッジ機能は近日実装<br><span style="font-size:11px;color:#7a96b6;margin-top:8px;display:block">路線制覇・エリア制覇などのバッジを準備中</span></div>
+      </div>
+    </div>
+    
     <div class="mp-footer">
       <button class="mp-logout-btn" onclick="signOutFromMypage()">ログアウト</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- カード一覧専用ページ -->
+<div id="cardlist-bg" onclick="closeCardList(event)">
+  <div id="cardlist-modal" onclick="event.stopPropagation()">
+    <div class="cl-header">
+      <button class="cl-back" onclick="closeCardList()">←</button>
+      <div>
+        <div class="cl-title">カードコレクション</div>
+        <div class="cl-hint">タッチで詳細</div>
+      </div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="cl-body">
+      <div class="mp-card-grid" id="cl-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- バッジ専用ページ -->
+<div id="badgepage-bg" onclick="closeBadgePage(event)">
+  <div id="badgepage-modal" onclick="event.stopPropagation()">
+    <div class="cl-header">
+      <button class="cl-back" onclick="closeBadgePage()">←</button>
+      <div>
+        <div class="cl-title">バッジコレクション</div>
+        <div class="cl-hint">近日実装</div>
+      </div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="cl-body" id="bp-body">
+      <div class="bp-section-title">路線制覇</div>
+      <div class="bp-grid" id="bp-line"></div>
+      <div class="bp-section-title">ランク制覇</div>
+      <div class="bp-grid" id="bp-rank"></div>
+      <div class="bp-section-title">エリア制覇</div>
+      <div class="bp-grid" id="bp-area"></div>
     </div>
   </div>
 </div>
@@ -2295,9 +2651,9 @@ if(isPc()){
 
 
 
-// ★ 起動時から位置追従を開始（マーカー表示＆チェックイン精度向上）
+// ★ 起動時から位置追従を開始（lmap初期化後に遅延実行）
 if (navigator.geolocation) {
-  startWatchPosition();
+  setTimeout(() => { try { startWatchPosition(); } catch(e) { console.warn('位置監視開始エラー', e); } }, 1500);
 }
 initLineSelect();
 loadAll();
@@ -2965,36 +3321,29 @@ window.closeCheckinSuccess = () => {
   document.getElementById('checkin-success-bg').classList.remove('open');
 };
 
-// ─── ステーションカード表示 ───
+// ─── ステーションカード表示（V2: スクショ忠実版）───
+const LINE_COLORS = {"山手線": "#9acd32", "京浜東北線": "#00b2e5", "中央線": "#ff8c00", "中央線快速": "#ff8c00", "中央・総武線各駅停車": "#ffd700", "総武線快速": "#0033cc", "京葉線": "#cc0033", "横須賀線": "#0033cc", "東海道線": "#f68b1e", "武蔵野線": "#ff6600", "南武線": "#ffd700", "横浜線": "#7cb342", "根岸線": "#00b2e5", "川越線": "#80754d", "埼京線": "#00ac9b", "高崎線": "#f68b1e", "宇都宮線": "#f68b1e", "相模線": "#0a8043", "青梅線": "#ff8c00", "五日市線": "#ff8c00", "鶴見線": "#fbb33d", "常磐線": "#3aa6e8", "常磐線各駅停車": "#00b29a", "湘南新宿ライン": "#e83828", "上野東京ライン": "#0e6cb6", "東京メトロ銀座線": "#ff9500", "東京メトロ丸ノ内線": "#f62e36", "東京メトロ日比谷線": "#b5b5ac", "東京メトロ東西線": "#009bbf", "東京メトロ千代田線": "#00bb85", "東京メトロ有楽町線": "#c1a470", "東京メトロ半蔵門線": "#8f76d6", "東京メトロ南北線": "#00ac9b", "東京メトロ副都心線": "#9c5e31", "都営浅草線": "#ec4980", "都営三田線": "#0079c2", "都営新宿線": "#6cbb5a", "都営大江戸線": "#b6007a", "都電荒川線": "#dc143c", "日暮里舎人ライナー": "#df8126", "東急東横線": "#dc143c", "東急目黒線": "#a0006e", "東急田園都市線": "#20b2aa", "東急大井町線": "#ff7f50", "東急池上線": "#ec407a", "東急多摩川線": "#a020f0", "東急世田谷線": "#b22222", "東急こどもの国線": "#ff69b4", "東急新横浜線": "#003366", "小田急小田原線": "#1d51e3", "小田急江ノ島線": "#1d51e3", "小田急多摩線": "#1d51e3", "京王線": "#dc0451", "京王新線": "#dc0451", "京王井の頭線": "#0099ff", "京王相模原線": "#dc0451", "京王高尾線": "#dc0451", "西武池袋線": "#0099cc", "西武新宿線": "#cc0066", "西武有楽町線": "#0099cc", "西武多摩湖線": "#999999", "西武国分寺線": "#999999", "西武拝島線": "#999999", "西武多摩川線": "#999999", "西武狭山線": "#999999", "西武園線": "#999999", "西武豊島線": "#0099cc", "西武山口線": "#999999", "東武東上線": "#fb6e52", "東武スカイツリーライン": "#0066b3", "東武亀戸線": "#0066b3", "東武大師線": "#0066b3", "東武アーバンパークライン": "#a4d4af", "京急本線": "#cc0033", "京急空港線": "#0066cc", "京急大師線": "#9c8c4e", "京急逗子線": "#cc0033", "京急久里浜線": "#cc0033", "京成本線": "#1d51e3", "京成押上線": "#0066cc", "京成金町線": "#cc0033", "京成千葉線": "#fbb533", "京成千原線": "#1d51e3", "京成東成田線": "#1d51e3", "成田スカイアクセス線": "#cc6600", "相鉄本線": "#1d51e3", "相鉄いずみ野線": "#7d2cd1", "相鉄新横浜線": "#cc0099", "北総線": "#a8c47f", "新京成線": "#ff6699", "東葉高速線": "#cc66ff", "埼玉高速鉄道線": "#0078b4", "つくばエクスプレス": "#7c63a8", "東京モノレール": "#0098d8", "ゆりかもめ": "#1f8ed5", "ニューシャトル": "#3399cc", "千葉モノレール1号線": "#1ba29c", "千葉モノレール2号線": "#fcb53c", "多摩モノレール": "#1d8b7d", "横浜市営ブルーライン": "#3098d4", "横浜市営グリーンライン": "#5db142", "金沢シーサイドライン": "#0070c0", "みなとみらい線": "#000080", "りんかい線": "#a40080", "ユーカリが丘線": "#ff66cc", "流鉄流山線": "#669999", "ディズニーリゾートライン": "#ff66cc", "江ノ電": "#1d51e3", "湘南モノレール": "#1d6de8"};
+const STATION_INFO = {"新宿_東京都":{"opened":"1885年","lines_count":12,"riders":"約340万人","location":"新宿区","features":["世界最多乗降客数の駅","東日本最大のターミナル","歌舞伎町・思い出横丁の街"]},"渋谷_東京都":{"opened":"1885年","lines_count":9,"riders":"約335万人","location":"渋谷区","features":["スクランブル交差点の聖地","ハチ公像で知られる象徴駅","ファッション・若者文化の中心地"]},"池袋_東京都":{"opened":"1903年","lines_count":8,"riders":"約260万人","location":"豊島区","features":["乗降客数日本2位の巨大ターミナル","サンシャインシティの玄関口","東口・西口で異なる雰囲気"]},"東京_東京都":{"opened":"1914年","lines_count":13,"riders":"約115万人","location":"千代田区","features":["日本の鉄道網の中心","赤レンガ駅舎は重要文化財","丸の内ビジネス街の象徴"]},"新橋_東京都":{"opened":"1872年","lines_count":6,"riders":"約80万人","location":"港区","features":["日本初の鉄道駅","サラリーマンの聖地","SL広場とゆりかもめの起点"]},"銀座_東京都":{"opened":"1934年","lines_count":3,"riders":"約20万人","location":"中央区","features":["日本最高地価の街","世界有数の高級商業地","銀座四丁目交差点の象徴"]},"品川_東京都":{"opened":"1872年","lines_count":5,"riders":"約78万人","location":"港区","features":["東海道新幹線の発着駅","日本初の鉄道駅の一つ","高層ビル街への玄関"]},"上野_東京都":{"opened":"1883年","lines_count":6,"riders":"約65万人","location":"台東区","features":["北の玄関口","上野公園・アメ横の街","美術館・博物館の集積地"]},"六本木_東京都":{"opened":"1964年","lines_count":2,"riders":"約12万人","location":"港区","features":["国際的なナイトライフの中心","六本木ヒルズの玄関","大使館街・高級住宅地"]},"横浜_神奈川県":{"opened":"1872年","lines_count":6,"riders":"約230万人","location":"横浜市西区","features":["日本初の鉄道駅の一つ","神奈川県最大のターミナル","みなとみらい・中華街の玄関"]},"大宮_埼玉県":{"opened":"1885年","lines_count":11,"riders":"約66万人","location":"さいたま市大宮区","features":["北関東への玄関口","東北・上越新幹線の分岐点","鉄道博物館で知られる"]},"日本橋_東京都":{"opened":"1932年","lines_count":3,"riders":"約20万人","location":"中央区","features":["日本の道路の起点","老舗百貨店の街","江戸文化の中心地"]},"有楽町_東京都":{"opened":"1910年","lines_count":2,"riders":"約17万人","location":"千代田区","features":["映画と劇場の街","ガード下グルメの聖地","銀座と直結する好立地"]},"原宿_東京都":{"opened":"1906年","lines_count":1,"riders":"約7万人","location":"渋谷区","features":["若者ファッションの聖地","明治神宮の最寄り駅","竹下通りの玄関口"]},"表参道_東京都":{"opened":"1938年","lines_count":3,"riders":"約15万人","location":"港区","features":["ハイブランドの旗艦店街","ケヤキ並木の美しい大通り","青山・表参道の文化発信地"]},"吉祥寺_東京都":{"opened":"1899年","lines_count":2,"riders":"約14万人","location":"武蔵野市","features":["住みたい街ランキング常連","井の頭公園の玄関","サブカルと飲食の街"]},"北千住_東京都":{"opened":"1896年","lines_count":5,"riders":"約45万人","location":"足立区","features":["足立区最大の商業集積地","5路線が乗り入れるハブ駅","東京北東部の中心"]},"中野_東京都":{"opened":"1889年","lines_count":2,"riders":"約20万人","location":"中野区","features":["中野ブロードウェイのサブカル聖地","中央線文化の象徴","ラーメン激戦区"]},"高田馬場_東京都":{"opened":"1910年","lines_count":3,"riders":"約30万人","location":"新宿区","features":["学生街として有名","早稲田大学の最寄り","飲食店密集の若者の街"]},"神田_東京都":{"opened":"1919年","lines_count":5,"riders":"約13万人","location":"千代田区","features":["古書店街・神保町への入口","居酒屋の聖地","ビジネス街と下町の混在"]},"秋葉原_東京都":{"opened":"1890年","lines_count":4,"riders":"約25万人","location":"千代田区","features":["世界最大級の電気街","アニメ・サブカルの聖地","メイド喫茶発祥の地"]},"銀座一丁目_東京都":{"opened":"1974年","lines_count":1,"riders":"約4万人","location":"中央区","features":["有楽町線の銀座エリア駅","銀座の北端を担う","京橋エリアにも近い"]},"霞ヶ関_東京都":{"opened":"1958年","lines_count":3,"riders":"約14万人","location":"千代田区","features":["官公庁街の中心","中央省庁が集積","日本の政治の心臓部"]},"永田町_東京都":{"opened":"1974年","lines_count":3,"riders":"約6万人","location":"千代田区","features":["国会議事堂・首相官邸の最寄り","政治の代名詞","赤坂見附と一体駅"]},"赤坂見附_東京都":{"opened":"1938年","lines_count":2,"riders":"約9万人","location":"港区","features":["赤坂・永田町の玄関","ホテル・歓楽街への入口","丸ノ内線と銀座線の乗換要衝"]},"大手町_東京都":{"opened":"1956年","lines_count":5,"riders":"約32万人","location":"千代田区","features":["日本最大級のオフィス街","5路線が交わる地下迷宮","金融機関の本店集積"]},"溜池山王_東京都":{"opened":"1997年","lines_count":2,"riders":"約13万人","location":"港区","features":["官庁・財界エリアのハブ","ビジネス街と赤坂の境界","南北線・銀座線の交点"]},"東銀座_東京都":{"opened":"1963年","lines_count":2,"riders":"約8万人","location":"中央区","features":["歌舞伎座への玄関","築地に近接","銀座の東端を担う"]},"築地_東京都":{"opened":"1963年","lines_count":1,"riders":"約5万人","location":"中央区","features":["元・築地市場の街","波除神社・築地本願寺","寿司の聖地・場外市場の活気"]},"人形町_東京都":{"opened":"1962年","lines_count":2,"riders":"約10万人","location":"中央区","features":["江戸情緒残る下町","甘酒横丁の老舗","水天宮への参道"]},"茅場町_東京都":{"opened":"1963年","lines_count":2,"riders":"約9万人","location":"中央区","features":["日本橋兜町の金融街","東京証券取引所の街","日本のウォール街"]},"門前仲町_東京都":{"opened":"1969年","lines_count":2,"riders":"約9万人","location":"江東区","features":["富岡八幡宮・深川不動の門前","下町グルメと居酒屋の聖地","深川めしと祭りの街"]},"木場_東京都":{"opened":"1967年","lines_count":1,"riders":"約6万人","location":"江東区","features":["江戸時代から続く材木の街","木場公園のオアシス","深川エリアの中心"]},"清澄白河_東京都":{"opened":"2000年","lines_count":2,"riders":"約5万人","location":"江東区","features":["カフェの聖地・サードウェーブの街","東京都現代美術館","清澄庭園のオアシス"]},"麻布十番_東京都":{"opened":"2000年","lines_count":2,"riders":"約7万人","location":"港区","features":["高級住宅地の麻布","商店街と老舗の街","芸能人御用達の隠れ家"]},"広尾_東京都":{"opened":"1964年","lines_count":1,"riders":"約5万人","location":"渋谷区","features":["大使館街・高級住宅地","インターナショナルな雰囲気","おしゃれカフェ密集地"]},"恵比寿_東京都":{"opened":"1901年","lines_count":3,"riders":"約25万人","location":"渋谷区","features":["恵比寿ガーデンプレイスの玄関","エビスビール発祥の地","おしゃれタウンの代名詞"]},"中目黒_東京都":{"opened":"1927年","lines_count":2,"riders":"約20万人","location":"目黒区","features":["目黒川の桜並木で有名","スターバックスリザーブ","おしゃれ飲食店の集積地"]},"代官山_東京都":{"opened":"1927年","lines_count":1,"riders":"約3万人","location":"渋谷区","features":["ハイセンスな街の代名詞","蔦屋書店T-SITE","隠れ家カフェとセレクトショップ"]},"自由が丘_東京都":{"opened":"1927年","lines_count":2,"riders":"約15万人","location":"目黒区","features":["住みたい街ランキング常連","スイーツの街として有名","雑貨とカフェの集積地"]},"二子玉川_東京都":{"opened":"1907年","lines_count":2,"riders":"約16万人","location":"世田谷区","features":["ニコタマ・お洒落タウン","二子玉川ライズの大型商業","多摩川河川敷の憩い"]},"町田_東京都":{"opened":"1908年","lines_count":2,"riders":"約45万人","location":"町田市","features":["東京都南西部の最大商圏","神奈川との境界の街","小田急と横浜線が交差"]},"錦糸町_東京都":{"opened":"1894年","lines_count":3,"riders":"約30万人","location":"墨田区","features":["東京スカイツリー至近","北口・南口で異なる顔","下町と商業の融合"]},"川崎_神奈川県":{"opened":"1872年","lines_count":5,"riders":"約76万人","location":"川崎市川崎区","features":["神奈川県第二の街","工業と商業の融合","ラ チッタデッラの集積"]},"武蔵小杉_神奈川県":{"opened":"1939年","lines_count":5,"riders":"約55万人","location":"川崎市中原区","features":["タワマン林立の新興街","5路線が交わる神奈川のハブ","富士山ビューで人気"]},"溝の口_神奈川県":{"opened":"1927年","lines_count":2,"riders":"約25万人","location":"川崎市高津区","features":["田園都市線の主要駅","溝口商店街の活気","ノクティプラザの拠点"]},"たまプラーザ_神奈川県":{"opened":"1966年","lines_count":1,"riders":"約10万人","location":"横浜市青葉区","features":["田園都市線の代表的住宅街","美しが丘の落ち着いた街並み","たまプラーザテラスの集積"]},"青葉台_神奈川県":{"opened":"1966年","lines_count":1,"riders":"約12万人","location":"横浜市青葉区","features":["横浜の高級住宅街","東急田園都市線の主要駅","青葉台フィットネスセンター"]},"本厚木_神奈川県":{"opened":"1927年","lines_count":1,"riders":"約14万人","location":"厚木市","features":["神奈川県央の中心","小田急小田原線の主要駅","本厚木ミロード"]},"巣鴨_東京都":{"opened":"1903年","lines_count":2,"riders":"約13万人","location":"豊島区","features":["おばあちゃんの原宿","とげぬき地蔵の参道","昭和情緒残る商店街"]},"駒込_東京都":{"opened":"1910年","lines_count":2,"riders":"約7万人","location":"豊島区","features":["六義園の名園","染井吉野桜の発祥地","落ち着いた住宅街"]},"田端_東京都":{"opened":"1896年","lines_count":2,"riders":"約5万人","location":"北区","features":["文士の街として有名","芥川龍之介・室生犀星ゆかりの地","山手線唯一の北区駅"]},"日暮里_東京都":{"opened":"1905年","lines_count":4,"riders":"約22万人","location":"荒川区","features":["谷中銀座の下町情緒","繊維街として有名","京成スカイライナーの起点"]},"鶯谷_東京都":{"opened":"1912年","lines_count":1,"riders":"約3万人","location":"台東区","features":["台東区の隠れた名所","寛永寺の最寄り","昭和の風情残る歓楽街"]},"御徒町_東京都":{"opened":"1925年","lines_count":1,"riders":"約7万人","location":"台東区","features":["上野アメ横の北端","宝石・貴金属街として有名","昔ながらの問屋街"]},"田町_東京都":{"opened":"1909年","lines_count":2,"riders":"約16万人","location":"港区","features":["慶應義塾の街","ビジネス街と学生街の融合","芝浦エリアの玄関"]},"浜松町_東京都":{"opened":"1909年","lines_count":2,"riders":"約15万人","location":"港区","features":["東京モノレール・羽田空港への玄関","世界貿易センタービル","小便小僧像で知られる"]},"目黒_東京都":{"opened":"1885年","lines_count":4,"riders":"約20万人","location":"品川区","features":["目黒川の桜の名所","アトレ目黒の商業集積","ビジネスとレジデンスの融合"]},"五反田_東京都":{"opened":"1911年","lines_count":3,"riders":"約21万人","location":"品川区","features":["IT企業集積のオフィス街","飲食街の活気","池上線の起点駅"]},"大崎_東京都":{"opened":"1901年","lines_count":4,"riders":"約13万人","location":"品川区","features":["ゲートシティ大崎の象徴","りんかい線の起点","副都心線直通の要衝"]},"代々木_東京都":{"opened":"1906年","lines_count":3,"riders":"約7万人","location":"渋谷区","features":["新宿駅至近のビジネス街","ドコモタワーがランドマーク","代々木公園への玄関"]},"新大久保_東京都":{"opened":"1914年","lines_count":1,"riders":"約4万人","location":"新宿区","features":["コリアンタウンの代表","K-POPと韓国グルメの聖地","多国籍な飲食店街"]},"目白_東京都":{"opened":"1885年","lines_count":1,"riders":"約3万人","location":"豊島区","features":["学習院大学の最寄り","高級住宅街の玄関","落ち着いた山手線駅"]},"大塚_東京都":{"opened":"1903年","lines_count":2,"riders":"約4万人","location":"豊島区","features":["都電荒川線の乗換駅","レトロな商店街","池袋に近い穴場"]},"西日暮里_東京都":{"opened":"1971年","lines_count":3,"riders":"約20万人","location":"荒川区","features":["山手線最後の開業駅","日暮里・舎人ライナー起点","千代田線との接続駅"]},"飯田橋_東京都":{"opened":"1928年","lines_count":5,"riders":"約24万人","location":"千代田区","features":["法政大学の最寄り","神楽坂への玄関口","5路線交差の要衝"]},"市ヶ谷_東京都":{"opened":"1895年","lines_count":4,"riders":"約20万人","location":"千代田区","features":["防衛省の最寄り","釣り堀で有名な外濠","私立大学の集積地"]},"四ツ谷_東京都":{"opened":"1894年","lines_count":4,"riders":"約18万人","location":"新宿区","features":["上智大学の最寄り","四ツ谷見附の歴史","ビジネスと文教地区の融合"]},"神保町_東京都":{"opened":"1972年","lines_count":3,"riders":"約9万人","location":"千代田区","features":["世界最大級の古書店街","カレーの聖地","出版社・大学の街"]},"九段下_東京都":{"opened":"1964年","lines_count":3,"riders":"約12万人","location":"千代田区","features":["靖国神社の最寄り","日本武道館への玄関","千鳥ヶ淵の桜で有名"]},"虎ノ門_東京都":{"opened":"1938年","lines_count":1,"riders":"約7万人","location":"港区","features":["官庁街と高層ビル群","虎ノ門ヒルズの新拠点","霞が関と新橋の中間"]},"京橋_東京都":{"opened":"1932年","lines_count":1,"riders":"約3万人","location":"中央区","features":["銀座と日本橋の中間","骨董と画廊の街","東京駅至近のビジネス街"]},"小川町_東京都":{"opened":"1980年","lines_count":3,"riders":"約7万人","location":"千代田区","features":["古書街と楽器店街","スポーツ用品店の集積","神保町と一体エリア"]},"末広町_東京都":{"opened":"1925年","lines_count":1,"riders":"約2万人","location":"千代田区","features":["秋葉原の北側","電気街の延長","銀座線の地味駅"]},"本郷三丁目_東京都":{"opened":"1954年","lines_count":2,"riders":"約7万人","location":"文京区","features":["東京大学の最寄り","医学部・赤門に近い","学生街の落ち着き"]},"後楽園_東京都":{"opened":"1954年","lines_count":2,"riders":"約10万人","location":"文京区","features":["東京ドームシティの玄関","後楽園遊園地のランドマーク","巨人戦の聖地"]},"茗荷谷_東京都":{"opened":"1954年","lines_count":1,"riders":"約7万人","location":"文京区","features":["お茶の水女子大学最寄り","文教地区の代表","播磨坂の桜並木"]},"築地市場_東京都":{"opened":"2000年","lines_count":1,"riders":"約3万人","location":"中央区","features":["元市場跡地の再開発エリア","築地場外の活気","汐留に近い"]},"汐留_東京都":{"opened":"2002年","lines_count":2,"riders":"約12万人","location":"港区","features":["日本テレビ・電通の街","カレッタ汐留の高層ビル群","浜離宮恩賜庭園に隣接"]},"学芸大学_東京都":{"opened":"1927年","lines_count":1,"riders":"約6万人","location":"目黒区","features":["住みやすさで人気","商店街の活気","目黒区の中心エリア"]},"都立大学_東京都":{"opened":"1927年","lines_count":1,"riders":"約4万人","location":"目黒区","features":["閑静な高級住宅街","碑文谷公園の緑","東横線沿線の人気駅"]},"神泉_東京都":{"opened":"1933年","lines_count":1,"riders":"約2万人","location":"渋谷区","features":["渋谷の隠れた裏路地","ミニシアターと隠れ家","井の頭線の隣駅"]},"駒場東大前_東京都":{"opened":"1933年","lines_count":1,"riders":"約2万人","location":"目黒区","features":["東京大学駒場キャンパス","駒場野公園の緑","学生街の落ち着き"]},"下北沢_東京都":{"opened":"1933年","lines_count":2,"riders":"約15万人","location":"世田谷区","features":["シモキタ・サブカルの聖地","古着屋とライブハウス","小劇場文化の発信地"]},"明大前_東京都":{"opened":"1913年","lines_count":2,"riders":"約12万人","location":"世田谷区","features":["明治大学和泉キャンパスの最寄り","京王と井の頭線の交差","学生街の活気"]},"高井戸_東京都":{"opened":"1933年","lines_count":1,"riders":"約4万人","location":"杉並区","features":["井の頭線の中間駅","高井戸第二小学校の地域","杉並区西部の住宅街"]},"王子_東京都":{"opened":"1883年","lines_count":3,"riders":"約15万人","location":"北区","features":["北区役所の最寄り","飛鳥山公園の桜の名所"]},"赤羽_東京都":{"opened":"1885年","lines_count":4,"riders":"約34万人","location":"北区","features":["北区最大の商業集積地","居酒屋の聖地として有名"]},"十条_東京都":{"opened":"1910年","lines_count":1,"riders":"約4万人","location":"北区","features":["昭和レトロな商店街","住宅街の落ち着き"]},"板橋_東京都":{"opened":"1885年","lines_count":1,"riders":"約4万人","location":"板橋区","features":["板橋区の玄関","中山道の宿場町だった歴史"]},"練馬_東京都":{"opened":"1915年","lines_count":4,"riders":"約16万人","location":"練馬区","features":["練馬区の中心駅","4路線が乗り入れるハブ"]},"光が丘_東京都":{"opened":"1991年","lines_count":1,"riders":"約7万人","location":"練馬区","features":["大規模団地と公園の街","IMA光が丘の商業集積"]},"荻窪_東京都":{"opened":"1891年","lines_count":2,"riders":"約16万人","location":"杉並区","features":["ラーメン激戦区として有名","中央線文化の継承地"]},"高円寺_東京都":{"opened":"1922年","lines_count":1,"riders":"約11万人","location":"杉並区","features":["古着・ライブハウス・阿波踊り","中央線サブカル文化の聖地"]},"阿佐ヶ谷_東京都":{"opened":"1922年","lines_count":1,"riders":"約8万人","location":"杉並区","features":["七夕祭りで有名","住みやすい中央線の街"]},"西荻窪_東京都":{"opened":"1922年","lines_count":1,"riders":"約7万人","location":"杉並区","features":["アンティークの街","隠れ家カフェの集積"]},"三鷹_東京都":{"opened":"1930年","lines_count":1,"riders":"約9万人","location":"三鷹市","features":["ジブリ美術館の街","中央線の主要駅"]},"武蔵境_東京都":{"opened":"1889年","lines_count":2,"riders":"約10万人","location":"武蔵野市","features":["武蔵野市の文化拠点","西武多摩川線の乗換駅"]},"国分寺_東京都":{"opened":"1889年","lines_count":3,"riders":"約25万人","location":"国分寺市","features":["国分寺市の中心","西武多摩湖線・国分寺線の起点"]},"立川_東京都":{"opened":"1889年","lines_count":4,"riders":"約34万人","location":"立川市","features":["多摩地域最大の商業都市","IKEAやららぽーとの集積"]},"八王子_東京都":{"opened":"1889年","lines_count":2,"riders":"約16万人","location":"八王子市","features":["東京西部の中心都市","大学が多い学生の街"]},"蒲田_東京都":{"opened":"1904年","lines_count":4,"riders":"約30万人","location":"大田区","features":["大田区の商業中心","町工場と下町情緒"]},"大森_東京都":{"opened":"1876年","lines_count":2,"riders":"約20万人","location":"大田区","features":["大田区北部の中心","駅周辺の活発な商業集積"]},"大井町_東京都":{"opened":"1901年","lines_count":3,"riders":"約30万人","location":"品川区","features":["アトレ大井町の集積","りんかい線の主要駅"]},"北綾瀬_東京都":{"opened":"1979年","lines_count":1,"riders":"約3万人","location":"足立区","features":["千代田線の終点","足立区東部の住宅街"]},"綾瀬_東京都":{"opened":"1943年","lines_count":2,"riders":"約14万人","location":"足立区","features":["千代田線と常磐線の境界","足立区の交通要衝"]},"亀有_東京都":{"opened":"1897年","lines_count":1,"riders":"約8万人","location":"葛飾区","features":["こち亀の舞台で有名","葛飾区東部の中心"]},"金町_東京都":{"opened":"1897年","lines_count":1,"riders":"約11万人","location":"葛飾区","features":["葛飾区の北東の玄関","金町理科大学の街"]},"西船橋_千葉県":{"opened":"1958年","lines_count":4,"riders":"約25万人","location":"船橋市","features":["千葉県西部の交通要衝","4路線が交わるハブ駅"]},"船橋_千葉県":{"opened":"1894年","lines_count":3,"riders":"約13万人","location":"船橋市","features":["千葉県北西部の商業中心","京成と総武の両方の中心"]},"津田沼_千葉県":{"opened":"1895年","lines_count":2,"riders":"約10万人","location":"習志野市","features":["千葉県北西部の郊外中心","モリシアの大型商業"]},"柏_千葉県":{"opened":"1896年","lines_count":3,"riders":"約24万人","location":"柏市","features":["千葉県北西部の商業中心","そごう・高島屋の集積"]},"松戸_千葉県":{"opened":"1896年","lines_count":3,"riders":"約20万人","location":"松戸市","features":["千葉県西部の中心都市","常磐線・新京成・東葉高速の交点"]},"舞浜_千葉県":{"opened":"1988年","lines_count":1,"riders":"約8万人","location":"浦安市","features":["東京ディズニーリゾートの玄関","イクスピアリの大型商業"]},"海浜幕張_千葉県":{"opened":"1986年","lines_count":1,"riders":"約6万人","location":"千葉市美浜区","features":["幕張新都心の中心","ZOZOマリンスタジアムの最寄り"]},"千葉_千葉県":{"opened":"1894年","lines_count":4,"riders":"約18万人","location":"千葉市中央区","features":["千葉県の県庁所在地","モノレールが分岐する中心駅"]},"本川越_埼玉県":{"opened":"1895年","lines_count":1,"riders":"約3万人","location":"川越市","features":["小江戸川越の蔵造りの街","時の鐘の歴史的観光地"]},"川越_埼玉県":{"opened":"1940年","lines_count":2,"riders":"約9万人","location":"川越市","features":["川越市のJR玄関","クレアモールの商業集積"]},"所沢_埼玉県":{"opened":"1895年","lines_count":2,"riders":"約11万人","location":"所沢市","features":["埼玉県南西部の商業中心","西武鉄道の本社所在地"]},"浦和_埼玉県":{"opened":"1883年","lines_count":3,"riders":"約9万人","location":"さいたま市浦和区","features":["埼玉県の旧県都","浦和レッズの本拠地"]},"川口_埼玉県":{"opened":"1910年","lines_count":1,"riders":"約8万人","location":"川口市","features":["埼玉南部の人口最多市","タワマン林立の急成長エリア"]},"上大岡_神奈川県":{"opened":"1930年","lines_count":2,"riders":"約11万人","location":"横浜市港南区","features":["横浜南部の商業中心","京急とブルーラインの交点"]},"関内_神奈川県":{"opened":"1872年","lines_count":2,"riders":"約8万人","location":"横浜市中区","features":["横浜の旧市街地","中華街・スタジアムの最寄り"]},"桜木町_神奈川県":{"opened":"1872年","lines_count":2,"riders":"約14万人","location":"横浜市中区","features":["みなとみらいの玄関","横浜の文化発信地"]},"みなとみらい_神奈川県":{"opened":"2004年","lines_count":1,"riders":"約12万人","location":"横浜市西区","features":["横浜の再開発エリア","ランドマークタワーの最寄り"]},"元町・中華街_神奈川県":{"opened":"2004年","lines_count":1,"riders":"約8万人","location":"横浜市中区","features":["横浜中華街の玄関","元町ショッピングストリート"]},"新横浜_神奈川県":{"opened":"1964年","lines_count":4,"riders":"約23万人","location":"横浜市港北区","features":["東海道新幹線の駅","横浜アリーナと日産スタジアムの最寄り"]},"東陽町_東京都":{"opened":"1967年","lines_count":1,"riders":"約10万人","location":"江東区","features":["東西線の主要駅","江東区南部の住宅と商業エリア"]},"洗足池_東京都":{"opened":"1927年","lines_count":1,"riders":"約2万人","location":"大田区","features":["西郷隆盛ゆかりの洗足池が隣接","緑豊かな池畔の静かな住宅街"]},"長原_東京都":{"opened":"1927年","lines_count":1,"riders":"約1万人","location":"大田区","features":["池上線の中間駅","住宅街の中の小駅"]},"石川台_東京都":{"opened":"1927年","lines_count":1,"riders":"約1万人","location":"大田区","features":["池上線の住宅地駅","小規模な商店街"]},"雪が谷大塚_東京都":{"opened":"1923年","lines_count":1,"riders":"約2万人","location":"大田区","features":["池上線の東急ストア最寄り","住宅街の生活駅"]},"代田橋_東京都":{"opened":"1913年","lines_count":1,"riders":"約1.5万人","location":"世田谷区","features":["京王線の小規模駅"]},"上北沢_東京都":{"opened":"1913年","lines_count":1,"riders":"約1.6万人","location":"世田谷区","features":["静かな住宅街の駅"]}};
+
+
 function openStationCard(data) {
   const card = document.getElementById('station-card');
   card.setAttribute('data-rank', data.rank);
   
-  // 駅情報
-  const st = stationData.find(s => s.name === data.name && s.pref === data.pref);
-  const lines = (st && st.lines) ? st.lines.slice(0, 3).join(' / ') : '';
-  document.getElementById('sc-line-name').textContent = lines || '-';
-  document.getElementById('sc-pref').textContent = data.pref;
+  // 駅名
   document.getElementById('sc-station-name').textContent = data.name;
-  document.getElementById('sc-rank-emblem').textContent = data.rank;
-  document.getElementById('sc-rank-emblem').style.background = data.color;
-  document.getElementById('sc-score-num').textContent = data.score;
   
-  // 4軸詳細
-  const details = (st && st.details) ? st.details : {};
-  const food = details['飲食'] || 0;
-  const com = details['商業'] || 0;
-  const life = details['生活'] || 0;
-  const med = details['医療'] || 0;
-  document.getElementById('sc-ax-food').textContent = `${food}/350`;
-  document.getElementById('sc-ax-com').textContent = `${com}/350`;
-  document.getElementById('sc-ax-life').textContent = `${life}/200`;
-  document.getElementById('sc-ax-med').textContent = `${med}/100`;
+  // ランクバッジ
+  document.getElementById('sc-rank-badge').textContent = data.rank;
   
-  // レーダーチャート描画
-  drawCardRadar(food, com, life, med);
+  // 訪問回数
+  let visitText = '初訪問';
+  if (!data.isFirstVisit) {
+    visitText = (data.visitCount && data.visitCount > 1) ? `${data.visitCount}回訪問` : '訪問済';
+  }
+  document.getElementById('sc-visit-count').textContent = visitText;
   
-  // チェックイン日時：data.checkinDate（Firestore日付）があればそれを使う、無ければ今日
+  // チェックイン日時
   let dateStr;
   if (data.checkinDate) {
     const d = (data.checkinDate instanceof Date) ? data.checkinDate : new Date(data.checkinDate);
@@ -3003,69 +3352,97 @@ function openStationCard(data) {
     const now = new Date();
     dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
   }
-  document.getElementById('sc-checkin-date').textContent = `Check-in: ${dateStr}`;
-  // 訪問カウント
-  if (data.isFirstVisit) {
-    document.getElementById('sc-visit-count').textContent = '初訪問';
-  } else if (data.visitCount && data.visitCount > 1) {
-    document.getElementById('sc-visit-count').textContent = `${data.visitCount}回目`;
+  document.getElementById('sc-checkin-date').textContent = dateStr;
+  
+  // 駅情報を取得
+  const st = stationData.find(s => s.name === data.name && s.pref === data.pref);
+  const lines = (st && st.lines) ? st.lines : [];
+  
+  // 路線色帯
+  const lineBar = document.getElementById('sc-line-bar');
+  const colors = lines.slice(0, 8).map(l => LINE_COLORS[l] || '#999');
+  if (colors.length === 0) {
+    lineBar.innerHTML = '<div style="background:#ccd5e0"></div>';
   } else {
-    document.getElementById('sc-visit-count').textContent = '訪問済み';
+    lineBar.innerHTML = colors.map(c => `<div style="background:${c}"></div>`).join('');
   }
   
-  // モーダルを開く（カード入場アニメ）
+  // 路線名（短縮）
+  const lineDisplay = lines.slice(0, 4).map(l => l.replace(/^東京メトロ/,'').replace(/線$/,'線')).join(' / ');
+  document.getElementById('sc-line-text').textContent = lineDisplay || '-';
+  
+  // スコア
+  document.getElementById('sc-score-num').textContent = data.score;
+  
+  // 4軸詳細
+  const details = (st && st.details) ? st.details : {};
+  const food = (details['飲食'] && details['飲食'].pts !== undefined) ? details['飲食'].pts : (details['飲食'] || 0);
+  const com = (details['商業'] && details['商業'].pts !== undefined) ? details['商業'].pts : (details['商業'] || 0);
+  const life = (details['生活'] && details['生活'].pts !== undefined) ? details['生活'].pts : (details['生活'] || 0);
+  const med = (details['医療'] && details['医療'].pts !== undefined) ? details['医療'].pts : (details['医療'] || 0);
+  document.getElementById('sc-ax-food').textContent = food;
+  document.getElementById('sc-ax-com').textContent = com;
+  document.getElementById('sc-ax-life').textContent = life;
+  document.getElementById('sc-ax-med').textContent = med;
+  
+  // 駅情報 DB から取得
+  const stKey = `${data.name}_${data.pref}`;
+  const info = STATION_INFO[stKey];
+  if (info) {
+    document.getElementById('sc-info-opened').textContent = info.opened || '-';
+    document.getElementById('sc-info-riders').textContent = info.riders || '-';
+    document.getElementById('sc-info-lines').textContent = info.lines_count ? info.lines_count + '路線' : '-';
+    document.getElementById('sc-info-loc').textContent = info.location || '-';
+  } else {
+    // 駅情報なしの場合は乗り入れ路線数だけ自動計算
+    document.getElementById('sc-info-opened').textContent = '-';
+    document.getElementById('sc-info-riders').textContent = '-';
+    document.getElementById('sc-info-lines').textContent = lines.length + '路線';
+    document.getElementById('sc-info-loc').textContent = data.pref;
+  }
+  
+  // 特徴コメント（ランク別の数）
+  const featuresContainer = document.getElementById('sc-features');
+  let featureList = info && info.features ? info.features : [];
+  // ランクに応じてカウント調整: S=3, A=3, B=2, C=2, D=1, E=1
+  const limitMap = { S:3, A:3, B:2, C:2, D:1, E:1 };
+  const limit = limitMap[data.rank] || 0;
+  featureList = featureList.slice(0, limit);
+  
+  if (featureList.length === 0) {
+    featuresContainer.innerHTML = '<div class="sc-feature">街力データから抽出された特徴駅</div>';
+  } else {
+    featuresContainer.innerHTML = featureList.map(f => `<div class="sc-feature">${f}</div>`).join('');
+  }
+  
+  // メモは空欄（将来編集可）
+  document.getElementById('sc-memo-content').textContent = '';
+  
+  // 入場アニメ
   const wrap = document.getElementById('card-flip-wrap');
   wrap.style.animation = 'none';
   setTimeout(() => { wrap.style.animation = ''; }, 10);
   document.getElementById('card-modal-bg').classList.add('open');
 }
 
-window.closeCardModal = (e) => {
-  if (e && e.target.id !== 'card-modal-bg') return;
-  document.getElementById('card-modal-bg').classList.remove('open');
-};
 window.closeCardModal = function(e) {
   if (e && e.target && e.target.id !== 'card-modal-bg') return;
   document.getElementById('card-modal-bg').classList.remove('open');
+  // 戻り先処理：マイページ or カード一覧 or マップ
+  const ret = window.cardCloseReturn;
+  window.cardCloseReturn = null;
+  if (ret === 'cardlist') {
+    // カード一覧は既に開いたままなので何もしない
+  } else if (ret === 'mypage') {
+    // マイページは既に開いたままなので何もしない
+  } else {
+    // 通常（チェックイン成功からの新規カード）はマップに戻る
+    document.body.style.overflow = '';
+  }
 };
 
-function drawCardRadar(food, com, life, med) {
-  // 各軸を満点で正規化（0-1）
-  const v = [food/350, com/350, life/200, med/100];
-  const cx = 100, cy = 90, r = 60;
-  // 4軸の角度（上から時計回り：飲食/商業/生活/医療）
-  const angs = [-Math.PI/2, 0, Math.PI/2, Math.PI];
-  const colors = ['#ff4466','#9070ff','#3aa0ff','#f09030'];
-  
-  let pathD = '';
-  let dots = '';
-  v.forEach((val, i) => {
-    const x = cx + Math.cos(angs[i]) * r * Math.min(1, val);
-    const y = cy + Math.sin(angs[i]) * r * Math.min(1, val);
-    pathD += (i === 0 ? 'M' : 'L') + x + ',' + y + ' ';
-    dots += `<circle cx="${x}" cy="${y}" r="3.5" fill="${colors[i]}" stroke="#0a0e18" stroke-width="1.5"/>`;
-  });
-  pathD += 'Z';
-  
-  // 背景の同心円（薄いガイド）
-  let grid = '';
-  [0.33, 0.66, 1.0].forEach(s => {
-    const pts = angs.map(a => `${cx+Math.cos(a)*r*s},${cy+Math.sin(a)*r*s}`).join(' ');
-    grid += `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>`;
-  });
-  // 軸線
-  let axes = '';
-  angs.forEach(a => {
-    axes += `<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(a)*r}" y2="${cy+Math.sin(a)*r}" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>`;
-  });
-  
-  document.getElementById('sc-radar').innerHTML = `
-    ${grid}
-    ${axes}
-    <path d="${pathD}" fill="rgba(88,168,224,0.18)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
-    ${dots}
-  `;
-}
+// drawCardRadar removed (V2)
+
 
 // リロード時の復元
 async function restorePendingCheckin() {
@@ -3217,8 +3594,6 @@ async function loadMypageData(uid) {
     
     document.getElementById('mp-st-cards').textContent = cards.length;
     document.getElementById('mp-st-checkins').textContent = totalCheckins;
-    document.getElementById('mp-st-best').textContent = cards.length > 0 ? bestRank : '-';
-    document.getElementById('mp-st-power').textContent = totalPower.toLocaleString();
     
     // ランクバー
     const rankColors = {S:'#fb7185',A:'#ffb070',B:'#ffd966',C:'#84d49b',D:'#7fb8e0',E:'#a0b0c0'};
@@ -3248,7 +3623,8 @@ async function loadMypageData(uid) {
         return tb - ta;
       });
       
-      cards.forEach(c => {
+      // マイページでは最新6枚のみプレビュー
+      cards.slice(0, 6).forEach(c => {
         const lines = (c.lines || []).slice(0, 1).join('') || '-';
         const div = document.createElement('div');
         div.className = 'mp-mini-card';
@@ -3262,8 +3638,8 @@ async function loadMypageData(uid) {
           <div class="mc-visit">${visit}</div>
         `;
         div.onclick = () => {
-          document.getElementById('mypage-bg').classList.remove('open');
-          document.body.style.overflow = '';
+          // マイページから開いた時は、閉じたらマイページに戻る
+          window.cardCloseReturn = 'mypage';
           if (window.openCardFromHistory) {
             window.openCardFromHistory(c.stationName, c.stationPref);
           }
@@ -3276,6 +3652,113 @@ async function loadMypageData(uid) {
     grid.innerHTML = '<div class="mp-empty">読み込みエラー: ' + e.message + '</div>';
   }
 }
+
+
+// ─── カード一覧専用ページ ───
+window.openCardListPage = async () => {
+  const user = auth.currentUser;
+  if (!user) { alert('ログインしてください'); return; }
+  
+  const grid = document.getElementById('cl-grid');
+  grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1">読み込み中...</div>';
+  
+  document.getElementById('cardlist-bg').classList.add('open');
+  // マイページは閉じない（戻り先として残しておく）
+  document.body.style.overflow = 'hidden';
+  
+  try {
+    const cardsRef = collection(db, 'users', user.uid, 'stationCards');
+    const snap = await getDocs(cardsRef);
+    const cards = [];
+    snap.forEach(d => cards.push({ id: d.id, ...d.data() }));
+    
+    if (cards.length === 0) {
+      grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1">まだカードを獲得していません</div>';
+      return;
+    }
+    
+    cards.sort((a, b) => {
+      const ta = a.firstVisitAt && a.firstVisitAt.toMillis ? a.firstVisitAt.toMillis() : 0;
+      const tb = b.firstVisitAt && b.firstVisitAt.toMillis ? b.firstVisitAt.toMillis() : 0;
+      return tb - ta;
+    });
+    
+    grid.innerHTML = '';
+    cards.forEach(c => {
+      const lines = (c.lines || []).slice(0, 1).join('') || '-';
+      const div = document.createElement('div');
+      div.className = 'mp-mini-card';
+      div.setAttribute('data-rank', c.firstRank || 'E');
+      const visit = (c.visitCount || 1) > 1 ? `${c.visitCount}回訪問` : '初訪問';
+      div.innerHTML = `
+        <div class="mc-rank">${c.firstRank || '-'}</div>
+        <div class="mc-name">${c.stationName}</div>
+        <div class="mc-line">${lines}</div>
+        <div class="mc-score">${c.firstScore || 0}</div>
+        <div class="mc-visit">${visit}</div>
+      `;
+      div.onclick = () => {
+        // カード詳細を開く（カード一覧は背後に残す）
+        if (window.openCardFromHistory) {
+          window.cardCloseReturn = 'cardlist'; // 閉じた時の戻り先
+          window.openCardFromHistory(c.stationName, c.stationPref);
+        }
+      };
+      grid.appendChild(div);
+    });
+  } catch (e) {
+    console.error('カード一覧取得エラー:', e);
+    grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1">エラー: ' + e.message + '</div>';
+  }
+};
+
+window.closeCardList = (e) => {
+  if (e && e.target && e.target.id !== 'cardlist-bg') return;
+  document.getElementById('cardlist-bg').classList.remove('open');
+  // マイページがまだ開いてればそれが見える、なければスクロール戻す
+  if (!document.getElementById('mypage-bg').classList.contains('open')) {
+    document.body.style.overflow = '';
+  }
+};
+
+// ─── バッジ専用ページ ───
+window.openBadgePage = () => {
+  document.getElementById('badgepage-bg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  
+  // プレースホルダーバッジ表示
+  const lineLines = ['山手線','中央線','京浜東北線','東京メトロ銀座線','東京メトロ丸ノ内線','東京メトロ日比谷線','東京メトロ東西線','東京メトロ千代田線'];
+  document.getElementById('bp-line').innerHTML = lineLines.map(l => `
+    <div class="bp-badge-locked">
+      <div class="bp-icon">🚃</div>
+      <div class="bp-name">${l}<br>制覇</div>
+    </div>
+  `).join('');
+  
+  const ranks = ['S','A','B','C','D'];
+  document.getElementById('bp-rank').innerHTML = ranks.map(r => `
+    <div class="bp-badge-locked">
+      <div class="bp-icon">🏆</div>
+      <div class="bp-name">${r}ランク<br>10駅制覇</div>
+    </div>
+  `).join('');
+  
+  const areas = ['千代田区','中央区','港区','新宿区','渋谷区','豊島区','江東区','品川区'];
+  document.getElementById('bp-area').innerHTML = areas.map(a => `
+    <div class="bp-badge-locked">
+      <div class="bp-icon">🛡️</div>
+      <div class="bp-name">${a}<br>制覇</div>
+    </div>
+  `).join('');
+};
+
+window.closeBadgePage = (e) => {
+  if (e && e.target && e.target.id !== 'badgepage-bg') return;
+  document.getElementById('badgepage-bg').classList.remove('open');
+  if (!document.getElementById('mypage-bg').classList.contains('open')) {
+    document.body.style.overflow = '';
+  }
+};
 
 // チェックイン成立時にキャッシュも更新
 window.markCheckedIn = function(name, pref) {
