@@ -452,7 +452,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 /* ─── ステーションカード モーダル ─── */
 #card-modal-bg{
-  position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:7600;
+  position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:8000;
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);
 }
 #card-modal-bg.open{display:flex}
@@ -551,9 +551,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .sc-close-btn{
   background:linear-gradient(135deg,#58a8e0,#3a8ac4);
   color:#fff;border:none;border-radius:24px;
-  padding:12px 48px;font-weight:900;font-size:15px;
-  cursor:pointer;box-shadow:0 4px 16px rgba(88,168,224,0.4);
+  padding:13px 56px;font-weight:900;font-size:15px;letter-spacing:2px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(88,168,224,0.4),0 0 0 3px rgba(88,168,224,0.15);
   transition:transform 0.15s ease;
+  margin-top:6px;
 }
 .sc-close-btn:hover{transform:translateY(-2px)}
 .sc-close-btn:active{transform:translateY(0)}
@@ -806,18 +807,33 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 /* ─── ステーションカード モーダル（V3: スクロール対応・スマホ最適化）─── */
 #card-modal-bg{
-  position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:7600;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(5,12,22,0.94);z-index:8000;
   display:none;backdrop-filter:blur(8px);
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overflow-y:scroll;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
 }
 #card-modal-bg.open{display:block}
 #card-modal{
   position:relative;
-  margin:16px auto 30px;
-  padding:0 14px;
+  margin:0 auto;
+  padding:18px 14px 60px;
   max-width:400px;
+  width:100%;
   display:flex;flex-direction:column;align-items:center;gap:14px;
   perspective:1200px;
+  min-height:auto;
+}
+#card-flip-wrap{
+  width:100%;
+  animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
+  transform-style:flat;
+}
+#station-card{
+  width:100%!important;
+  max-width:100%;
 }
 #card-flip-wrap{
   animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
@@ -991,9 +1007,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .sc-close-btn{
   background:linear-gradient(135deg,#58a8e0,#3a8ac4);
   color:#fff;border:none;border-radius:24px;
-  padding:12px 48px;font-weight:900;font-size:15px;
-  cursor:pointer;box-shadow:0 4px 16px rgba(88,168,224,0.4);
+  padding:13px 56px;font-weight:900;font-size:15px;letter-spacing:2px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(88,168,224,0.4),0 0 0 3px rgba(88,168,224,0.15);
   transition:transform 0.15s ease;
+  margin-top:6px;
 }
 .sc-close-btn:hover{transform:translateY(-2px)}
 .sc-close-btn:active{transform:translateY(0)}
@@ -1122,6 +1139,20 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .rcardico:hover{background:#58a8e0;color:#fff;transform:scale(1.1)}
 .rank-row.checked-in .rcardico{display:inline-flex}
+
+/* ─── info-panel: スコア横のカードアイコン ─── */
+.ip-score-wrap{display:flex;align-items:center;gap:10px}
+.ip-card-icon{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(88,168,224,0.18),rgba(88,168,224,0.08));
+  border:1.5px solid rgba(88,168,224,0.45);
+  color:#58a8e0;font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;flex-shrink:0;
+  box-shadow:0 0 8px rgba(88,168,224,0.25);
+}
+.ip-card-icon:hover{background:#58a8e0;color:#fff;transform:scale(1.08);box-shadow:0 0 12px rgba(88,168,224,0.5)}
+.ip-card-icon:active{transform:scale(0.95)}
 </style>
 </head>
 <body>
@@ -1208,12 +1239,14 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
             <button class="ip-close" onclick="closeInfo()">✕</button>
           </div>
         </div>
-        <div class="ip-score" id="ip-score"></div>
+        <div class="ip-score-wrap">
+          <div class="ip-score" id="ip-score"></div>
+          <button class="ip-card-icon" id="ip-card-icon" style="display:none" onclick="openCardFromPanel()" title="マイカード">📇</button>
+        </div>
         <div class="ip-rank-lbl" id="ip-rank"></div>
         <div class="ip-nearby" id="ip-nearby"></div>
         <div class="ip-axes-grid" id="ip-axes"></div>
         <div class="ip-checkin" id="ip-checkin" style="display:none"></div>
-        <div class="ip-card-link" id="ip-card-link" style="display:none"></div>
       </div>
       <div id="loading"><div><div class="ld-ring"></div><div class="ld-txt">データ取得中...</div></div></div>
     </div>
@@ -3546,20 +3579,27 @@ window.openCardFromRanking = function(name, pref) {
 
 // ─── チェックイン済み駅のカードリンク表示 ───
 window.updateCardLinkInPanel = function(st) {
-  const link = document.getElementById('ip-card-link');
-  if (!link) return;
+  const icon = document.getElementById('ip-card-icon');
+  if (!icon) return;
   const isCheckedIn = window.checkedInStations && window.checkedInStations.has(st.name+'_'+st.pref);
   if (isCheckedIn && auth && auth.currentUser) {
-    link.style.display = 'flex';
-    link.textContent = `${st.name}駅のマイカードを見る`;
-    link.onclick = () => {
-      if (window.openCardFromHistory) {
-        window.cardCloseReturn = null; // マップに戻る
-        window.openCardFromHistory(st.name, st.pref);
-      }
-    };
+    icon.style.display = 'flex';
+    icon.dataset.station = st.name;
+    icon.dataset.pref = st.pref;
   } else {
-    link.style.display = 'none';
+    icon.style.display = 'none';
+  }
+};
+
+window.openCardFromPanel = function() {
+  const icon = document.getElementById('ip-card-icon');
+  if (!icon) return;
+  const name = icon.dataset.station;
+  const pref = icon.dataset.pref;
+  if (!name || !pref) return;
+  if (window.openCardFromHistory) {
+    window.cardCloseReturn = null;
+    window.openCardFromHistory(name, pref);
   }
 };
 
