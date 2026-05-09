@@ -608,6 +608,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   font-size:0.95em;
   margin-right:3px;
   text-shadow:0 0 6px rgba(88,168,224,0.4);
+  -webkit-text-stroke:0.6px #58a8e0;
+  letter-spacing:1px;
 }
 .rank-row.checked-in::after{
   content:'';position:absolute;left:0;top:0;bottom:0;width:6px;
@@ -1872,12 +1874,12 @@ function drawMarker(st){
   const glowPx=Math.round(sz*0.52);
   // ★ チェックイン済み判定
   const isCheckedIn = window.checkedInStations && window.checkedInStations.has(st.name+'_'+st.pref);
-  // ★ 訪問済み: 濃い背景 + glow / 未訪問: 薄い背景 + glowなし（地味に）
-  const bgColor = isCheckedIn ? color+'55' : color+'18';
+  // ★ 訪問済み: 濃い背景 + glow / 未訪問: 背景ゼロ + glowなし
+  const bgColor = isCheckedIn ? color+'55' : 'transparent';
   const shadowStyle = isCheckedIn ? `box-shadow:0 0 ${glowPx}px ${glow};` : '';
-  // ★ チェックマーク（flex item として円内上部に配置 → 数字・ランクが自動で下にずれる）
+  // ★ チェックマーク（白＋太字、flex itemで上部配置）
   const checkSize = Math.round(sz*0.22);
-  const checkMark = isCheckedIn ? `<span style="font-weight:900;font-size:${checkSize}px;color:${color};line-height:0.9;text-shadow:0 1px 2px rgba(0,0,0,0.5);margin-bottom:-2px">✓</span>` : '';
+  const checkMark = isCheckedIn ? `<span style="font-weight:900;font-size:${checkSize}px;color:#fff;line-height:0.9;text-shadow:0 1px 3px rgba(0,0,0,0.7),0 0 4px rgba(0,0,0,0.5);margin-bottom:-2px;-webkit-text-stroke:0.5px #fff">✓</span>` : '';
   const html=`<div style="display:flex;flex-direction:column;align-items:center;cursor:${DEV_MODE?'grab':'pointer'}">
     <div class="mk-inner" style="width:${sz}px;height:${sz}px;border-radius:50%;
       background:${bgColor};border:${DEV_MODE?'3px dashed':'2.5px solid'} ${color};
