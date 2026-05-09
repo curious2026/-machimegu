@@ -804,154 +804,6 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   .user-mypage-link{display:inline-flex;align-items:center;gap:4px}
 }
 
-/* ─── ステーションカード モーダル（V2: スクショ忠実版）─── */
-#card-modal-bg{
-  position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:7600;
-  display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);
-  overflow-y:auto;padding:20px 12px;
-}
-#card-modal-bg.open{display:flex}
-#card-modal{
-  position:relative;display:flex;flex-direction:column;align-items:center;gap:16px;
-  perspective:1200px;width:100%;max-width:380px;
-}
-#card-flip-wrap{
-  animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
-  transform-style:preserve-3d;
-  width:100%;
-}
-@keyframes cardEnter{
-  0%{transform:scale(0.3) rotateY(180deg);opacity:0}
-  50%{opacity:1}
-  100%{transform:scale(1) rotateY(0);opacity:1}
-}
-
-#station-card{
-  width:100%;
-  border-radius:20px;
-  position:relative;overflow:hidden;
-  background:var(--card-bg,#fff5f5);
-  border:3px solid var(--card-color,#fb7185);
-  box-shadow:0 0 30px var(--card-glow,rgba(251,113,133,0.3)),
-             0 12px 40px rgba(0,0,0,0.5);
-}
-.sc-content{padding:18px 18px 22px;color:#1a2030}
-
-/* トップバー */
-.sc-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.sc-rank-badge{
-  width:42px;height:42px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;font-weight:900;color:#fff;
-  background:var(--card-color);
-  box-shadow:0 2px 8px var(--card-glow);
-  flex-shrink:0;
-}
-.sc-checkin-info{flex:1;min-width:0}
-.sc-checkin-label{font-size:10px;font-weight:900;color:#7a96b6;letter-spacing:2px}
-.sc-checkin-date{font-size:13px;font-weight:900;color:#1a2030;line-height:1.2}
-.sc-stats-mini{
-  font-size:10px;font-weight:900;color:#fff;
-  background:var(--card-color);
-  padding:5px 10px;border-radius:12px;
-  letter-spacing:0.5px;
-  white-space:nowrap;
-}
-
-/* 駅名 */
-.sc-station-name{
-  font-size:38px;font-weight:900;color:#1a2030;
-  text-align:center;letter-spacing:6px;line-height:1.1;
-  margin:6px 0 12px;
-}
-
-/* 路線色帯 */
-.sc-line-bar{
-  display:flex;height:5px;border-radius:3px;overflow:hidden;
-  margin-bottom:6px;gap:2px;
-}
-.sc-line-bar > div{flex:1}
-
-.sc-line-text{
-  font-size:11px;color:#5a6a7a;
-  text-align:left;margin-bottom:14px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-
-/* スコア */
-.sc-score-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:14px}
-.sc-score-num{
-  font-size:64px;font-weight:900;line-height:0.95;
-  color:var(--card-color);letter-spacing:-2px;
-}
-.sc-score-label{
-  font-size:11px;font-weight:900;color:#7a96b6;letter-spacing:2px;line-height:1.2;
-  padding-bottom:4px;
-}
-
-/* 4軸ダイヤ */
-.sc-axes{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
-  margin-bottom:16px;
-}
-.sc-ax{
-  width:64px;height:64px;
-  background:#fff;
-  border:2px solid;
-  transform:rotate(45deg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  margin:auto;
-}
-.sc-ax > span{transform:rotate(-45deg);text-align:center}
-.sc-ax-name{font-size:10px;font-weight:700;line-height:1;margin-bottom:2px}
-.sc-ax-val{font-size:14px;font-weight:900;line-height:1}
-
-.sc-ax-food{border-color:#ff4466}
-.sc-ax-food .sc-ax-name{color:#ff4466}
-.sc-ax-food .sc-ax-val{color:#ff4466}
-
-.sc-ax-com{border-color:#9070ff}
-.sc-ax-com .sc-ax-name{color:#9070ff}
-.sc-ax-com .sc-ax-val{color:#9070ff}
-
-.sc-ax-life{border-color:#3aa0ff}
-.sc-ax-life .sc-ax-name{color:#3aa0ff}
-.sc-ax-life .sc-ax-val{color:#3aa0ff}
-
-.sc-ax-med{border-color:#f09030}
-.sc-ax-med .sc-ax-name{color:#f09030}
-.sc-ax-med .sc-ax-val{color:#f09030}
-
-/* 駅情報 */
-.sc-info-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;
-  border-top:1px solid #ccd5e0;padding-top:12px;margin-bottom:12px;
-}
-.sc-info-item{display:flex;flex-direction:row;align-items:baseline;gap:6px}
-.sc-info-val{font-size:14px;font-weight:900;color:#1a2030;line-height:1;min-width:60px}
-.sc-info-lbl{font-size:10px;color:#7a96b6;font-weight:600}
-
-/* 特徴 */
-.sc-features{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.sc-feature{
-  background:#fff;border:1px solid var(--card-color);
-  color:#1a2030;
-  padding:7px 12px;border-radius:14px;
-  font-size:11px;font-weight:600;
-  display:flex;align-items:center;gap:6px;
-}
-.sc-feature::before{content:'★';color:var(--card-color)}
-
-/* メモ */
-.sc-memo{
-  background:#fff;border:1px dashed #ccd5e0;
-  border-radius:8px;padding:10px;
-  min-height:78px;
-}
-.sc-memo-lbl{font-size:9px;font-weight:900;color:#9aa5b5;letter-spacing:2px;margin-bottom:4px}
-.sc-memo-content{
-  font-size:12px;color:#3a4658;line-height:1.6;min-height:54px;
-}
 
 /* ─── ランク別カラー（やわらか背景色）─── */
 #station-card[data-rank="S"]{
@@ -1066,6 +918,206 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .bp-badge-locked .bp-icon{font-size:24px;opacity:0.3;margin-bottom:4px}
 .bp-badge-locked .bp-name{font-size:9px;color:#7a96b6;line-height:1.2;letter-spacing:0.3px}
+
+/* ═══ ステーションカード V3（確定版・プレビュー反映）═══ */
+#card-modal-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.94);
+  z-index:9000;  /* ★ マイページ(7800)・カード一覧(7900)より上 */
+  display:none;align-items:flex-start;justify-content:center;
+  backdrop-filter:blur(8px);
+  overflow-y:auto;padding:20px 12px;
+}
+#card-modal-bg.open{display:flex}
+#card-modal{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;
+  perspective:1200px;width:100%;max-width:380px;
+  margin-top:auto;margin-bottom:auto;
+}
+#card-flip-wrap{
+  animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
+  transform-style:preserve-3d;
+  width:100%;
+}
+
+#station-card{
+  width:100%;
+  border-radius:24px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 0 40px var(--glow),0 16px 48px rgba(0,0,0,0.6);
+  font-family:'Noto Sans JP',sans-serif;
+}
+#station-card .card-bg{position:absolute;inset:0;background:var(--card-bg)}
+#station-card .card-content{position:relative;padding:22px 22px 26px;color:#1a2030}
+
+/* トップ行 */
+#station-card .top-row{
+  display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;
+}
+#station-card .rank-area{display:flex;align-items:center;gap:14px}
+#station-card .rank-letter{
+  font-family:'Inter',sans-serif;
+  font-size:62px;font-weight:900;
+  color:var(--rank);
+  line-height:0.85;letter-spacing:-3px;
+  margin-top:-4px;
+  text-shadow:0 0 30px var(--glow);
+}
+#station-card .checkin-info{margin-top:4px}
+#station-card .checkin-label{
+  font-family:'Inter',sans-serif;
+  font-size:10px;font-weight:900;color:#7a96b6;letter-spacing:3px;margin-bottom:2px;
+}
+#station-card .checkin-date{
+  font-family:'Inter',sans-serif;
+  font-size:14px;font-weight:900;color:#1a2030;letter-spacing:1px;
+}
+#station-card .visit-pill{
+  background:var(--rank);color:#fff;
+  font-size:11px;font-weight:900;
+  padding:5px 12px;border-radius:14px;
+  letter-spacing:0.5px;margin-top:6px;white-space:nowrap;
+}
+
+/* 駅名 */
+#station-card .station-name{
+  font-size:42px;font-weight:900;color:#1a2030;
+  letter-spacing:6px;line-height:1.1;
+  margin:14px 0 10px;text-align:left;
+}
+
+/* 路線色帯 */
+#station-card .line-bar{
+  display:flex;height:6px;border-radius:3px;overflow:hidden;
+  gap:2px;margin-bottom:8px;
+}
+#station-card .line-bar > div{flex:1}
+
+/* 路線名 */
+#station-card .line-text{
+  font-size:12px;color:#5a6a7a;font-weight:600;
+  margin-bottom:18px;letter-spacing:0.3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* スコア */
+#station-card .score-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:14px}
+#station-card .score-num{
+  font-family:'Inter',sans-serif;
+  font-size:72px;font-weight:900;color:var(--rank);
+  letter-spacing:-3px;line-height:0.85;
+  text-shadow:0 0 24px var(--glow);
+}
+#station-card .score-label{
+  font-family:'Inter',sans-serif;
+  font-size:11px;font-weight:900;color:#7a96b6;
+  letter-spacing:2px;line-height:1.3;padding-bottom:6px;
+}
+
+/* 4軸ダイヤ */
+#station-card .axes{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  margin-bottom:18px;margin-top:6px;
+}
+#station-card .axis{
+  width:62px;height:62px;background:#fff;border:2.5px solid;
+  transform:rotate(45deg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:auto;box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+#station-card .axis > span{transform:rotate(-45deg);text-align:center;font-family:'Noto Sans JP',sans-serif}
+#station-card .axis-name{font-size:10px;font-weight:700;line-height:1;margin-bottom:3px}
+#station-card .axis-val{font-size:15px;font-weight:900;line-height:1;font-family:'Inter',sans-serif}
+
+#station-card .ax-food{border-color:#ff4466}
+#station-card .ax-food .axis-name,#station-card .ax-food .axis-val{color:#ff4466}
+#station-card .ax-com{border-color:#9070ff}
+#station-card .ax-com .axis-name,#station-card .ax-com .axis-val{color:#9070ff}
+#station-card .ax-life{border-color:#3aa0ff}
+#station-card .ax-life .axis-name,#station-card .ax-life .axis-val{color:#3aa0ff}
+#station-card .ax-med{border-color:#f09030}
+#station-card .ax-med .axis-name,#station-card .ax-med .axis-val{color:#f09030}
+
+/* 駅情報 */
+#station-card .info-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;
+  border-top:1px solid rgba(0,0,0,0.10);
+  padding-top:14px;margin-bottom:16px;
+}
+#station-card .info-item{display:flex;align-items:baseline;gap:8px}
+#station-card .info-val{
+  font-family:'Inter',sans-serif;
+  font-size:15px;font-weight:900;color:#1a2030;line-height:1;min-width:62px;
+}
+#station-card .info-lbl{font-size:10px;color:#7a96b6;font-weight:600}
+
+/* 特徴 */
+#station-card .features{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+#station-card .feature{
+  background:rgba(255,255,255,0.7);border:1.5px solid var(--rank);
+  color:#1a2030;padding:8px 14px;border-radius:18px;
+  font-size:11.5px;font-weight:600;
+  display:flex;align-items:center;gap:8px;letter-spacing:0.2px;
+}
+#station-card .feature::before{content:'★';color:var(--rank);font-size:13px}
+
+/* メモ */
+#station-card .memo{
+  background:rgba(255,255,255,0.5);
+  border:1.5px dashed rgba(120,140,170,0.45);
+  border-radius:10px;padding:10px 14px 12px;min-height:84px;
+}
+#station-card .memo-label{
+  font-family:'Inter',sans-serif;
+  font-size:9px;font-weight:900;color:#9aa5b5;letter-spacing:3px;margin-bottom:6px;
+}
+#station-card .memo-content{font-size:12px;color:#3a4658;line-height:1.7;min-height:54px}
+#station-card .memo-line{
+  border-bottom:1px solid rgba(120,140,170,0.18);height:18px;margin-bottom:6px;
+}
+
+/* ─── ランク別カラー ─── */
+#station-card[data-rank="S"]{
+  --rank:#fb5d75;
+  --glow:rgba(251,93,117,0.35);
+  --card-bg:linear-gradient(150deg,#fff5f5 0%,#ffe8ec 50%,#ffd8de 100%);
+}
+#station-card[data-rank="A"]{
+  --rank:#ff8c44;
+  --glow:rgba(255,140,68,0.35);
+  --card-bg:linear-gradient(150deg,#fff8f0 0%,#ffeed8 50%,#ffdfb8 100%);
+}
+#station-card[data-rank="B"]{
+  --rank:#d4a017;
+  --glow:rgba(212,160,23,0.35);
+  --card-bg:linear-gradient(150deg,#fefcec 0%,#faf2cd 50%,#f4e3a0 100%);
+}
+#station-card[data-rank="C"]{
+  --rank:#3aa46c;
+  --glow:rgba(58,164,108,0.35);
+  --card-bg:linear-gradient(150deg,#f0fdf4 0%,#dcfce8 50%,#b8eccd 100%);
+}
+#station-card[data-rank="D"]{
+  --rank:#3a8ac4;
+  --glow:rgba(58,138,196,0.35);
+  --card-bg:linear-gradient(150deg,#eff6ff 0%,#dbeafe 50%,#b6d4f0 100%);
+}
+#station-card[data-rank="E"]{
+  --rank:#7a8aa0;
+  --glow:rgba(122,138,160,0.30);
+  --card-bg:linear-gradient(150deg,#f5f7fa 0%,#e6ebf2 50%,#d4dde8 100%);
+}
+
+.sc-close-btn{
+  background:linear-gradient(135deg,#58a8e0,#3a8ac4);
+  color:#fff;border:none;border-radius:24px;
+  padding:13px 56px;font-weight:900;font-size:15px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(88,168,224,0.4);
+  transition:transform 0.15s ease;
+  letter-spacing:1px;
+}
+.sc-close-btn:hover{transform:translateY(-2px)}
+.sc-close-btn:active{transform:translateY(0)}
 </style>
 </head>
 <body>
@@ -1269,61 +1321,60 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   </div>
 </div>
 
-<!-- ステーションカード モーダル -->
+<!-- ステーションカード モーダル（V3：プレビュー確定版） -->
 <div id="card-modal-bg" onclick="closeCardModal(event)">
   <div id="card-modal" onclick="event.stopPropagation()">
     <div id="card-flip-wrap">
-      <div id="station-card">
-        <div class="sc-content">
-          <!-- ヘッダー -->
-          <div class="sc-top">
-            <div class="sc-rank-badge" id="sc-rank-badge"></div>
-            <div class="sc-checkin-info">
-              <div class="sc-checkin-label">CHECK IN</div>
-              <div class="sc-checkin-date" id="sc-checkin-date">-</div>
+      <div id="station-card" data-rank="S">
+        <div class="card-bg"></div>
+        <div class="card-content">
+          
+          <div class="top-row">
+            <div class="rank-area">
+              <div class="rank-letter" id="sc-rank-letter">S</div>
+              <div class="checkin-info">
+                <div class="checkin-label">CHECK IN</div>
+                <div class="checkin-date" id="sc-checkin-date">-</div>
+              </div>
             </div>
-            <div class="sc-stats-mini" id="sc-visit-count">初訪問</div>
+            <div class="visit-pill" id="sc-visit-pill">初訪問</div>
           </div>
           
-          <!-- 駅名 -->
-          <div class="sc-station-name" id="sc-station-name"></div>
+          <div class="station-name" id="sc-station-name">-</div>
           
-          <!-- 路線色帯 -->
-          <div class="sc-line-bar" id="sc-line-bar"></div>
+          <div class="line-bar" id="sc-line-bar"></div>
+          <div class="line-text" id="sc-line-text">-</div>
           
-          <!-- 路線名 -->
-          <div class="sc-line-text" id="sc-line-text">-</div>
-          
-          <!-- スコア -->
-          <div class="sc-score-row">
-            <div class="sc-score-num" id="sc-score-num">-</div>
-            <div class="sc-score-label">MACHI<br>SCORE</div>
+          <div class="score-row">
+            <div class="score-num" id="sc-score-num">-</div>
+            <div class="score-label">MACHI<br>SCORE</div>
           </div>
           
-          <!-- 4軸ダイヤ -->
-          <div class="sc-axes">
-            <div class="sc-ax sc-ax-food"><span class="sc-ax-name">飲食</span><span class="sc-ax-val" id="sc-ax-food">-</span></div>
-            <div class="sc-ax sc-ax-com"><span class="sc-ax-name">商業</span><span class="sc-ax-val" id="sc-ax-com">-</span></div>
-            <div class="sc-ax sc-ax-life"><span class="sc-ax-name">生活</span><span class="sc-ax-val" id="sc-ax-life">-</span></div>
-            <div class="sc-ax sc-ax-med"><span class="sc-ax-name">医療</span><span class="sc-ax-val" id="sc-ax-med">-</span></div>
+          <div class="axes">
+            <div class="axis ax-food"><span class="axis-name">飲食</span><span class="axis-val" id="sc-ax-food">-</span></div>
+            <div class="axis ax-com"><span class="axis-name">商業</span><span class="axis-val" id="sc-ax-com">-</span></div>
+            <div class="axis ax-life"><span class="axis-name">生活</span><span class="axis-val" id="sc-ax-life">-</span></div>
+            <div class="axis ax-med"><span class="axis-name">医療</span><span class="axis-val" id="sc-ax-med">-</span></div>
           </div>
           
-          <!-- 駅情報 -->
-          <div class="sc-info-grid">
-            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-opened">-</div><div class="sc-info-lbl">開業</div></div>
-            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-riders">-</div><div class="sc-info-lbl">乗降客/日</div></div>
-            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-lines">-</div><div class="sc-info-lbl">接続</div></div>
-            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-loc">-</div><div class="sc-info-lbl">所在地</div></div>
+          <div class="info-grid">
+            <div class="info-item"><span class="info-val" id="sc-info-opened">-</span><span class="info-lbl">開業</span></div>
+            <div class="info-item"><span class="info-val" id="sc-info-riders">-</span><span class="info-lbl">乗降客/日</span></div>
+            <div class="info-item"><span class="info-val" id="sc-info-lines">-</span><span class="info-lbl">接続</span></div>
+            <div class="info-item"><span class="info-val" id="sc-info-loc">-</span><span class="info-lbl">所在地</span></div>
           </div>
           
-          <!-- 特徴 -->
-          <div class="sc-features" id="sc-features"></div>
+          <div class="features" id="sc-features"></div>
           
-          <!-- メモ -->
-          <div class="sc-memo">
-            <div class="sc-memo-lbl">MEMO</div>
-            <div class="sc-memo-content" id="sc-memo-content"></div>
+          <div class="memo">
+            <div class="memo-label">MEMO</div>
+            <div class="memo-content" id="sc-memo-content">
+              <div class="memo-line"></div>
+              <div class="memo-line"></div>
+              <div class="memo-line"></div>
+            </div>
           </div>
+          
         </div>
       </div>
     </div>
@@ -3330,20 +3381,20 @@ function openStationCard(data) {
   const card = document.getElementById('station-card');
   card.setAttribute('data-rank', data.rank);
   
+  // ランク文字（左上の大きい文字）
+  document.getElementById('sc-rank-letter').textContent = data.rank;
+  
   // 駅名
   document.getElementById('sc-station-name').textContent = data.name;
   
-  // ランクバッジ
-  document.getElementById('sc-rank-badge').textContent = data.rank;
-  
-  // 訪問回数
+  // 訪問回数ピル
   let visitText = '初訪問';
   if (!data.isFirstVisit) {
     visitText = (data.visitCount && data.visitCount > 1) ? `${data.visitCount}回訪問` : '訪問済';
   }
-  document.getElementById('sc-visit-count').textContent = visitText;
+  document.getElementById('sc-visit-pill').textContent = visitText;
   
-  // チェックイン日時
+  // チェックイン日付
   let dateStr;
   if (data.checkinDate) {
     const d = (data.checkinDate instanceof Date) ? data.checkinDate : new Date(data.checkinDate);
@@ -3367,9 +3418,16 @@ function openStationCard(data) {
     lineBar.innerHTML = colors.map(c => `<div style="background:${c}"></div>`).join('');
   }
   
-  // 路線名（短縮）
-  const lineDisplay = lines.slice(0, 4).map(l => l.replace(/^東京メトロ/,'').replace(/線$/,'線')).join(' / ');
-  document.getElementById('sc-line-text').textContent = lineDisplay || '-';
+  // 路線名（短縮表記）
+  let lineDisplay;
+  if (lines.length === 0) {
+    lineDisplay = '-';
+  } else if (lines.length <= 3) {
+    lineDisplay = lines.map(l => l.replace(/^東京メトロ/,'').replace(/^都営/,'都営')).join(' / ');
+  } else {
+    lineDisplay = lines.slice(0, 2).map(l => l.replace(/^東京メトロ/,'').replace(/^都営/,'都営')).join(' / ') + ' ほか';
+  }
+  document.getElementById('sc-line-text').textContent = lineDisplay;
   
   // スコア
   document.getElementById('sc-score-num').textContent = data.score;
@@ -3385,7 +3443,7 @@ function openStationCard(data) {
   document.getElementById('sc-ax-life').textContent = life;
   document.getElementById('sc-ax-med').textContent = med;
   
-  // 駅情報 DB から取得
+  // 駅情報DB
   const stKey = `${data.name}_${data.pref}`;
   const info = STATION_INFO[stKey];
   if (info) {
@@ -3394,29 +3452,27 @@ function openStationCard(data) {
     document.getElementById('sc-info-lines').textContent = info.lines_count ? info.lines_count + '路線' : '-';
     document.getElementById('sc-info-loc').textContent = info.location || '-';
   } else {
-    // 駅情報なしの場合は乗り入れ路線数だけ自動計算
     document.getElementById('sc-info-opened').textContent = '-';
     document.getElementById('sc-info-riders').textContent = '-';
     document.getElementById('sc-info-lines').textContent = lines.length + '路線';
     document.getElementById('sc-info-loc').textContent = data.pref;
   }
   
-  // 特徴コメント（ランク別の数）
+  // 特徴コメント（ランク別）
   const featuresContainer = document.getElementById('sc-features');
   let featureList = info && info.features ? info.features : [];
-  // ランクに応じてカウント調整: S=3, A=3, B=2, C=2, D=1, E=1
   const limitMap = { S:3, A:3, B:2, C:2, D:1, E:1 };
   const limit = limitMap[data.rank] || 0;
   featureList = featureList.slice(0, limit);
   
   if (featureList.length === 0) {
-    featuresContainer.innerHTML = '<div class="sc-feature">街力データから抽出された特徴駅</div>';
+    featuresContainer.innerHTML = '<div class="feature">街力データから抽出された駅</div>';
   } else {
-    featuresContainer.innerHTML = featureList.map(f => `<div class="sc-feature">${f}</div>`).join('');
+    featuresContainer.innerHTML = featureList.map(f => `<div class="feature">${f}</div>`).join('');
   }
   
-  // メモは空欄（将来編集可）
-  document.getElementById('sc-memo-content').textContent = '';
+  // メモは空欄（3行のスペースは memo-line で確保済み）
+  // 編集機能は未実装
   
   // 入場アニメ
   const wrap = document.getElementById('card-flip-wrap');
@@ -3431,12 +3487,17 @@ window.closeCardModal = function(e) {
   // 戻り先処理：マイページ or カード一覧 or マップ
   const ret = window.cardCloseReturn;
   window.cardCloseReturn = null;
-  if (ret === 'cardlist') {
-    // カード一覧は既に開いたままなので何もしない
-  } else if (ret === 'mypage') {
-    // マイページは既に開いたままなので何もしない
+  // 開いている下層モーダルがあるかチェック
+  const mypageOpen = document.getElementById('mypage-bg').classList.contains('open');
+  const cardlistOpen = document.getElementById('cardlist-bg').classList.contains('open');
+  if (ret === 'cardlist' && cardlistOpen) {
+    // カード一覧が開いてればそれを残す
+  } else if (ret === 'mypage' && mypageOpen) {
+    // マイページが開いてればそれを残す
+  } else if (mypageOpen || cardlistOpen) {
+    // 戻り先指定がなくても、何かが開いていればbodyスクロール固定維持
   } else {
-    // 通常（チェックイン成功からの新規カード）はマップに戻る
+    // 何も開いてない → マップに戻る、bodyスクロール解除
     document.body.style.overflow = '';
   }
 };
@@ -3555,7 +3616,12 @@ window.openMypage = async () => {
 window.closeMypage = (e) => {
   if (e && e.target && e.target.id !== 'mypage-bg') return;
   document.getElementById('mypage-bg').classList.remove('open');
-  document.body.style.overflow = '';
+  // ほかに開いてるモーダルがなければスクロール解除
+  const cardOpen = document.getElementById('card-modal-bg').classList.contains('open');
+  const cardlistOpen = document.getElementById('cardlist-bg').classList.contains('open');
+  if (!cardOpen && !cardlistOpen) {
+    document.body.style.overflow = '';
+  }
 };
 
 window.signOutFromMypage = async () => {
