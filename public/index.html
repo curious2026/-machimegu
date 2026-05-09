@@ -54,14 +54,27 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .logo-lines{display:none}
 .logo-line-main,.logo-line-f1,.logo-line-f2{display:none}
 
-.view-tabs{display:none;border:1px solid rgba(120,150,210,0.22);border-radius:8px;overflow:hidden;flex-shrink:0;margin-left:2px;margin-right:0;margin-top:2px}
-.vtab{background:transparent;color:#4858a0;border:none;padding:4px 10px;cursor:pointer;
-  transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:1px;font-family:inherit}
-.vtab-icon{font-size:22px;line-height:1}
-.vtab-label{font-size:10px;font-weight:700;letter-spacing:0.5px;line-height:1;color:#4858a0}
-.vtab.active{background:rgba(70,100,220,0.28)}
-.vtab.active .vtab-icon,.vtab.active .vtab-label{color:#e0eaff}
-.vtab:hover:not(.active) .vtab-icon,.vtab:hover:not(.active) .vtab-label{color:#a0b8e0}
+.view-tabs{display:none;flex-shrink:0;gap:5px;margin-left:2px;margin-right:0;margin-top:2px}
+.vtab{
+  background:rgba(255,255,255,0.05);
+  color:#7a96b6;border:1px solid rgba(120,150,210,0.25);
+  border-radius:14px;
+  padding:6px 11px;cursor:pointer;
+  transition:all 0.15s;
+  display:flex;align-items:center;gap:4px;
+  font-family:inherit;font-weight:900;
+  letter-spacing:0.8px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.2);
+}
+.vtab-icon{font-size:14px;line-height:1}
+.vtab-label{font-size:11px;font-weight:900;letter-spacing:1px;line-height:1.15}
+.vtab.active{
+  background:linear-gradient(135deg,#58a8e0,#3a8ac4);
+  color:#fff;border-color:#58a8e0;
+  box-shadow:0 2px 8px rgba(88,168,224,0.35);
+}
+.vtab.active .vtab-icon,.vtab.active .vtab-label{color:#fff}
+.vtab:hover:not(.active){background:rgba(88,168,224,0.10);border-color:rgba(88,168,224,0.35);color:#cfdaee}
 
 @media(max-width:767px){
   .logo-icon{width:50px!important;height:50px!important}
@@ -73,9 +86,9 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 @media(max-width:767px){
   .view-tabs{display:flex}
   #header{height:64px;padding:0 14px 0 6px!important;gap:4px!important}
-  .vtab{padding:3px 7px!important}
-  .vtab-icon{font-size:18px!important}
-  .vtab-label{font-size:9px!important}
+  .vtab{padding:5px 9px!important}
+  .vtab-icon{font-size:13px!important}
+  .vtab-label{font-size:10px!important}
   #header-right{flex-direction:column!important;gap:3px!important}
   .info-btn{font-size:9px!important;padding:2px 5px!important}
   .user-avatar{width:26px!important;height:26px!important}
@@ -1313,6 +1326,35 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   .hist-row .hr-date{font-size:11px}
   .hist-row .hr-name{font-size:13px;letter-spacing:0.3px}
 }
+
+/* ─── メモ書き込み機能 ─── */
+.sc-memo-content{
+  font-size:13px;color:#3a4658;line-height:1.7;
+  min-height:64px;
+  outline:none;
+  cursor:text;
+  padding:2px;
+}
+.sc-memo-content:focus{
+  background:rgba(255,255,255,0.6);
+  border-radius:4px;
+  outline:1px solid var(--card-color,#58a8e0);
+}
+.sc-memo-content:empty::before{
+  content:attr(data-placeholder);
+  color:#a0b0c0;
+  font-style:italic;
+  font-size:12px;
+  pointer-events:none;
+}
+.sc-memo-status{
+  font-size:9px;color:#9aa5b5;font-weight:700;
+  margin-left:6px;letter-spacing:1px;
+  transition:color 0.2s;
+}
+.sc-memo-status.saving{color:#f09030}
+.sc-memo-status.saved{color:#3aa46c}
+.sc-memo-status.dirty{color:#f09030}
 </style>
 </head>
 <body>
@@ -1575,8 +1617,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
           
           <!-- メモ -->
           <div class="sc-memo">
-            <div class="sc-memo-lbl">MEMO</div>
-            <div class="sc-memo-content" id="sc-memo-content"></div>
+            <div class="sc-memo-lbl">MEMO <span class="sc-memo-status" id="sc-memo-status"></span></div>
+            <div class="sc-memo-content" id="sc-memo-content" contenteditable="true" data-placeholder="ここに思い出を書き込み..." onblur="saveMemoOnBlur(this)" oninput="markMemoDirty(this)"></div>
           </div>
         </div>
       </div>
@@ -3854,9 +3896,14 @@ function openStationCard(data) {
   
   // メモは空欄（将来編集可）
   const memoEl = document.getElementById('sc-memo-content');
+  const memoStatus = document.getElementById('sc-memo-status');
   if (memoEl) {
-    memoEl.textContent = '';
-    memoEl.parentElement.style.display = 'block'; // メモ欄全体を強制表示
+    memoEl.textContent = data.memo || '';
+    memoEl.parentElement.style.display = 'block';
+    if (memoStatus) {
+      memoStatus.textContent = '';
+      memoStatus.className = 'sc-memo-status';
+    }
   }
   
   // 入場アニメ：初訪問は派手に
@@ -3993,6 +4040,52 @@ window.shareCard = async function() {
   }
 };
 
+
+// ─── メモ機能 ───
+let memoSaveTimer = null;
+
+window.markMemoDirty = function(el) {
+  const status = document.getElementById('sc-memo-status');
+  if (status) {
+    status.textContent = '編集中...';
+    status.className = 'sc-memo-status dirty';
+  }
+};
+
+window.saveMemoOnBlur = async function(el) {
+  if (!currentCardStation) return;
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  const memo = el.innerText.trim();
+  const status = document.getElementById('sc-memo-status');
+  
+  if (status) {
+    status.textContent = '保存中...';
+    status.className = 'sc-memo-status saving';
+  }
+  
+  try {
+    const stationId = `${currentCardStation.name}_${currentCardStation.pref}`;
+    const cardRef = doc(db, 'users', user.uid, 'stationCards', stationId);
+    await updateDoc(cardRef, { memo: memo, memoUpdatedAt: serverTimestamp() });
+    
+    if (status) {
+      status.textContent = '✓ 保存済';
+      status.className = 'sc-memo-status saved';
+      setTimeout(() => {
+        if (status.textContent === '✓ 保存済') status.textContent = '';
+      }, 2000);
+    }
+  } catch (e) {
+    console.error('メモ保存エラー', e);
+    if (status) {
+      status.textContent = '保存失敗';
+      status.className = 'sc-memo-status dirty';
+    }
+  }
+};
+
 // ステーションカードキャッシュ（訪問済み駅の判定用）
 window.checkedInStations = new Set();
 
@@ -4046,7 +4139,8 @@ window.openCardFromHistory = async function(stationName, stationPref) {
       isFirstVisit: false,
       visitCount: cd.visitCount || 1,
       checkinDate,
-      lines: cd.lines || (st ? st.lines : []) // フォールバック付き
+      lines: cd.lines || (st ? st.lines : []),
+      memo: cd.memo || ''
     });
   } catch (e) {
     console.error('カード取得エラー:', e);
