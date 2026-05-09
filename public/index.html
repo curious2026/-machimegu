@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- VERSION: index31 (cache-bust 2026.05.08-12:30) -->
 <title>街巡－まちめぐ－</title>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -886,15 +890,18 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 /* 路線色帯 */
 .sc-line-bar{
-  display:flex;height:5px;border-radius:3px;overflow:hidden;
+  display:flex!important;height:5px!important;border-radius:3px;overflow:hidden;
   margin-bottom:6px;gap:2px;
+  width:100%;
 }
-.sc-line-bar > div{flex:1}
+.sc-line-bar > div{flex:1!important;min-height:5px}
 
 .sc-line-text{
+  display:block!important;
   font-size:11px;color:#5a6a7a;
   text-align:left;margin-bottom:14px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  min-height:14px;
 }
 
 /* スコア */
@@ -963,9 +970,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 /* メモ */
 .sc-memo{
-  background:#fff;border:1px dashed #ccd5e0;
+  display:block!important;
+  background:#fff;border:1.5px dashed #ccd5e0;
   border-radius:8px;padding:10px;
-  min-height:78px;
+  min-height:78px!important;
 }
 .sc-memo-lbl{font-size:9px;font-weight:900;color:#9aa5b5;letter-spacing:2px;margin-bottom:4px}
 .sc-memo-content{
@@ -1185,7 +1193,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
         </button>
         <div class="user-info" id="userInfo" style="display:none">
           <img class="user-avatar" id="userAvatar" src="" alt="" onclick="handleAvatarClick()" title="マイページ">
-          <button class="user-mypage-link" onclick="handleAvatarClick()" type="button">👤 マイページ</button>
+          <button class="user-mypage-link" onclick="handleAvatarClick()" type="button">マイページ</button>
           <span class="user-name" id="userName"></span>
           
         </div>
@@ -3455,20 +3463,32 @@ function openStationCard(data) {
   
   // 駅情報を取得
   const st = stationData.find(s => s.name === data.name && s.pref === data.pref);
-  const lines = (st && st.lines) ? st.lines : [];
+  let lines = (st && st.lines && st.lines.length > 0) ? st.lines : [];
+  // フォールバック: stationDataから取得できない場合、data.lines を使う
+  if (lines.length === 0 && data.lines && data.lines.length > 0) {
+    lines = data.lines;
+  }
+  console.log('[Card]', data.name, 'lines:', lines);
   
-  // 路線色帯
+  // 路線色帯（必ず1本以上表示）
   const lineBar = document.getElementById('sc-line-bar');
-  const colors = lines.slice(0, 8).map(l => LINE_COLORS[l] || '#999');
-  if (colors.length === 0) {
-    lineBar.innerHTML = '<div style="background:#ccd5e0"></div>';
-  } else {
-    lineBar.innerHTML = colors.map(c => `<div style="background:${c}"></div>`).join('');
+  if (lineBar) {
+    const colors = lines.slice(0, 8).map(l => LINE_COLORS[l] || '#888');
+    if (colors.length === 0) {
+      lineBar.innerHTML = '<div style="background:#ccd5e0;flex:1"></div>';
+    } else {
+      lineBar.innerHTML = colors.map(c => `<div style="background:${c};flex:1"></div>`).join('');
+    }
+    lineBar.style.display = 'flex'; // 強制表示
   }
   
   // 路線名（短縮）
   const lineDisplay = lines.slice(0, 4).map(l => l.replace(/^東京メトロ/,'').replace(/線$/,'線')).join(' / ');
-  document.getElementById('sc-line-text').textContent = lineDisplay || '-';
+  const lineTextEl = document.getElementById('sc-line-text');
+  if (lineTextEl) {
+    lineTextEl.textContent = lineDisplay || '路線情報なし';
+    lineTextEl.style.display = 'block'; // 強制表示
+  }
   
   // スコア
   document.getElementById('sc-score-num').textContent = data.score;
@@ -3515,7 +3535,11 @@ function openStationCard(data) {
   }
   
   // メモは空欄（将来編集可）
-  document.getElementById('sc-memo-content').textContent = '';
+  const memoEl = document.getElementById('sc-memo-content');
+  if (memoEl) {
+    memoEl.textContent = '';
+    memoEl.parentElement.style.display = 'block'; // メモ欄全体を強制表示
+  }
   
   // 入場アニメ
   const wrap = document.getElementById('card-flip-wrap');
@@ -3697,7 +3721,8 @@ window.openCardFromHistory = async function(stationName, stationPref) {
       color: rankInfo.color,
       isFirstVisit: false,
       visitCount: cd.visitCount || 1,
-      checkinDate
+      checkinDate,
+      lines: cd.lines || (st ? st.lines : []) // フォールバック付き
     });
   } catch (e) {
     console.error('カード取得エラー:', e);
@@ -4025,5 +4050,22 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<script>
+// Service Worker 強制更新（古いHTMLキャッシュを破棄）
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => {
+      r.update();
+      // 旧版が動いている場合は強制リロード（1日1回まで）
+      const lastReload = sessionStorage.getItem('sw_force_reload');
+      if (!lastReload) {
+        sessionStorage.setItem('sw_force_reload', Date.now());
+      }
+    });
+  });
+}
+</script>
+
 </body>
 </html>
