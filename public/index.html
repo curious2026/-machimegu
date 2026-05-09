@@ -804,6 +804,157 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   .user-mypage-link{display:inline-flex;align-items:center;gap:4px}
 }
 
+/* ─── ステーションカード モーダル（V3: スクロール対応・スマホ最適化）─── */
+#card-modal-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:7600;
+  display:none;backdrop-filter:blur(8px);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+#card-modal-bg.open{display:block}
+#card-modal{
+  position:relative;
+  margin:16px auto 30px;
+  padding:0 14px;
+  max-width:400px;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  perspective:1200px;
+}
+#card-flip-wrap{
+  animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
+  transform-style:preserve-3d;
+  width:100%;
+}
+@keyframes cardEnter{
+  0%{transform:scale(0.3) rotateY(180deg);opacity:0}
+  50%{opacity:1}
+  100%{transform:scale(1) rotateY(0);opacity:1}
+}
+
+#station-card{
+  width:100%;
+  border-radius:20px;
+  position:relative;overflow:hidden;
+  background:var(--card-bg,#fff5f5);
+  border:3px solid var(--card-color,#fb7185);
+  box-shadow:0 0 30px var(--card-glow,rgba(251,113,133,0.3)),
+             0 12px 40px rgba(0,0,0,0.5);
+}
+.sc-content{padding:18px 18px 22px;color:#1a2030}
+
+/* トップバー */
+.sc-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sc-rank-badge{
+  font-family:'Inter','Noto Sans JP',sans-serif;
+  font-size:62px;font-weight:900;color:var(--card-color);
+  line-height:0.85;letter-spacing:-3px;
+  text-shadow:0 0 24px var(--card-glow);
+  flex-shrink:0;margin-top:-4px;margin-right:6px;
+}
+.sc-checkin-info{flex:1;min-width:0}
+.sc-checkin-label{font-size:10px;font-weight:900;color:#7a96b6;letter-spacing:2px}
+.sc-checkin-date{font-size:13px;font-weight:900;color:#1a2030;line-height:1.2}
+.sc-stats-mini{
+  font-size:10px;font-weight:900;color:#fff;
+  background:var(--card-color);
+  padding:5px 10px;border-radius:12px;
+  letter-spacing:0.5px;
+  white-space:nowrap;
+}
+
+/* 駅名 */
+.sc-station-name{
+  font-size:42px;font-weight:900;color:#1a2030;
+  text-align:left;letter-spacing:5px;line-height:1.1;
+  margin:10px 0 10px;
+}
+
+/* 路線色帯 */
+.sc-line-bar{
+  display:flex;height:5px;border-radius:3px;overflow:hidden;
+  margin-bottom:6px;gap:2px;
+}
+.sc-line-bar > div{flex:1}
+
+.sc-line-text{
+  font-size:11px;color:#5a6a7a;
+  text-align:left;margin-bottom:14px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* スコア */
+.sc-score-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:14px}
+.sc-score-num{
+  font-size:64px;font-weight:900;line-height:0.95;
+  color:var(--card-color);letter-spacing:-2px;
+}
+.sc-score-label{
+  font-size:11px;font-weight:900;color:#7a96b6;letter-spacing:2px;line-height:1.2;
+  padding-bottom:4px;
+}
+
+/* 4軸ダイヤ */
+.sc-axes{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  margin-bottom:16px;
+}
+.sc-ax{
+  width:64px;height:64px;
+  background:#fff;
+  border:2px solid;
+  transform:rotate(45deg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:auto;
+}
+.sc-ax > span{transform:rotate(-45deg);text-align:center}
+.sc-ax-name{font-size:10px;font-weight:700;line-height:1;margin-bottom:2px}
+.sc-ax-val{font-size:14px;font-weight:900;line-height:1}
+
+.sc-ax-food{border-color:#ff4466}
+.sc-ax-food .sc-ax-name{color:#ff4466}
+.sc-ax-food .sc-ax-val{color:#ff4466}
+
+.sc-ax-com{border-color:#9070ff}
+.sc-ax-com .sc-ax-name{color:#9070ff}
+.sc-ax-com .sc-ax-val{color:#9070ff}
+
+.sc-ax-life{border-color:#3aa0ff}
+.sc-ax-life .sc-ax-name{color:#3aa0ff}
+.sc-ax-life .sc-ax-val{color:#3aa0ff}
+
+.sc-ax-med{border-color:#f09030}
+.sc-ax-med .sc-ax-name{color:#f09030}
+.sc-ax-med .sc-ax-val{color:#f09030}
+
+/* 駅情報 */
+.sc-info-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;
+  border-top:1px solid #ccd5e0;padding-top:12px;margin-bottom:12px;
+}
+.sc-info-item{display:flex;flex-direction:row;align-items:baseline;gap:6px}
+.sc-info-val{font-size:14px;font-weight:900;color:#1a2030;line-height:1;min-width:60px}
+.sc-info-lbl{font-size:10px;color:#7a96b6;font-weight:600}
+
+/* 特徴 */
+.sc-features{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.sc-feature{
+  background:#fff;border:1px solid var(--card-color);
+  color:#1a2030;
+  padding:7px 12px;border-radius:14px;
+  font-size:11px;font-weight:600;
+  display:flex;align-items:center;gap:6px;
+}
+.sc-feature::before{content:'★';color:var(--card-color)}
+
+/* メモ */
+.sc-memo{
+  background:#fff;border:1px dashed #ccd5e0;
+  border-radius:8px;padding:10px;
+  min-height:78px;
+}
+.sc-memo-lbl{font-size:9px;font-weight:900;color:#9aa5b5;letter-spacing:2px;margin-bottom:4px}
+.sc-memo-content{
+  font-size:12px;color:#3a4658;line-height:1.6;min-height:54px;
+}
 
 /* ─── ランク別カラー（やわらか背景色）─── */
 #station-card[data-rank="S"]{
@@ -919,205 +1070,58 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .bp-badge-locked .bp-icon{font-size:24px;opacity:0.3;margin-bottom:4px}
 .bp-badge-locked .bp-name{font-size:9px;color:#7a96b6;line-height:1.2;letter-spacing:0.3px}
 
-/* ═══ ステーションカード V3（確定版・プレビュー反映）═══ */
-#card-modal-bg{
-  position:fixed;inset:0;background:rgba(5,12,22,0.94);
-  z-index:9000;  /* ★ マイページ(7800)・カード一覧(7900)より上 */
-  display:none;align-items:flex-start;justify-content:center;
-  backdrop-filter:blur(8px);
-  overflow-y:auto;padding:20px 12px;
+/* ─── カード上部：訪問回数とアクションボタン ─── */
+.sc-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.sc-checkin-info{flex:1;min-width:0;padding-top:6px}
+.sc-checkin-label{font-family:'Inter',sans-serif;font-size:10px;font-weight:900;color:#7a96b6;letter-spacing:3px;margin-bottom:1px}
+.sc-checkin-date{font-family:'Inter',sans-serif;font-size:14px;font-weight:900;color:#1a2030;line-height:1.2;letter-spacing:0.5px}
+.sc-visit-count{
+  font-size:10px;font-weight:900;color:#fff;background:var(--card-color);
+  padding:3px 10px;border-radius:10px;letter-spacing:0.3px;
+  display:inline-block;margin-top:6px;
+  box-shadow:0 1px 4px var(--card-glow);
 }
-#card-modal-bg.open{display:flex}
-#card-modal{
-  position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;
-  perspective:1200px;width:100%;max-width:380px;
-  margin-top:auto;margin-bottom:auto;
+.sc-actions{display:flex;gap:8px;flex-shrink:0;padding-top:6px}
+.sc-act-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,0.7);border:1.5px solid var(--card-color);
+  color:var(--card-color);font-size:18px;font-weight:900;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;line-height:1;
 }
-#card-flip-wrap{
-  animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
-  transform-style:preserve-3d;
-  width:100%;
-}
+.sc-act-btn:hover{background:var(--card-color);color:#fff;transform:translateY(-2px)}
+.sc-act-btn.active{background:var(--card-color);color:#fff}
 
-#station-card{
-  width:100%;
-  border-radius:24px;
-  position:relative;
-  overflow:hidden;
-  box-shadow:0 0 40px var(--glow),0 16px 48px rgba(0,0,0,0.6);
-  font-family:'Noto Sans JP',sans-serif;
+/* ─── info-panel: マイカード表示リンク ─── */
+.ip-card-link{
+  margin-top:9px;padding:11px 12px;
+  background:linear-gradient(135deg,rgba(88,168,224,0.10),rgba(88,168,224,0.04));
+  border:1px solid rgba(88,168,224,0.30);
+  border-radius:10px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:700;color:#58a8e0;
+  transition:all 0.15s;
 }
-#station-card .card-bg{position:absolute;inset:0;background:var(--card-bg)}
-#station-card .card-content{position:relative;padding:22px 22px 26px;color:#1a2030}
+.ip-card-link:hover{background:rgba(88,168,224,0.15);transform:translateY(-1px)}
+.ip-card-link::before{content:'📇';font-size:16px}
+.ip-card-link::after{content:'›';margin-left:auto;font-size:18px;font-weight:900;opacity:0.6}
 
-/* トップ行 */
-#station-card .top-row{
-  display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;
+/* ─── ランキング表：チェック済み駅のカードアイコン ─── */
+.rname-row{position:relative}
+.rcardico{
+  display:none;
+  width:22px;height:22px;border-radius:50%;
+  background:rgba(88,168,224,0.15);
+  border:1px solid rgba(88,168,224,0.4);
+  color:#58a8e0;font-size:11px;
+  align-items:center;justify-content:center;
+  margin-left:6px;
+  cursor:pointer;
+  flex-shrink:0;
+  transition:all 0.15s;
 }
-#station-card .rank-area{display:flex;align-items:center;gap:14px}
-#station-card .rank-letter{
-  font-family:'Inter',sans-serif;
-  font-size:62px;font-weight:900;
-  color:var(--rank);
-  line-height:0.85;letter-spacing:-3px;
-  margin-top:-4px;
-  text-shadow:0 0 30px var(--glow);
-}
-#station-card .checkin-info{margin-top:4px}
-#station-card .checkin-label{
-  font-family:'Inter',sans-serif;
-  font-size:10px;font-weight:900;color:#7a96b6;letter-spacing:3px;margin-bottom:2px;
-}
-#station-card .checkin-date{
-  font-family:'Inter',sans-serif;
-  font-size:14px;font-weight:900;color:#1a2030;letter-spacing:1px;
-}
-#station-card .visit-pill{
-  background:var(--rank);color:#fff;
-  font-size:11px;font-weight:900;
-  padding:5px 12px;border-radius:14px;
-  letter-spacing:0.5px;margin-top:6px;white-space:nowrap;
-}
-
-/* 駅名 */
-#station-card .station-name{
-  font-size:42px;font-weight:900;color:#1a2030;
-  letter-spacing:6px;line-height:1.1;
-  margin:14px 0 10px;text-align:left;
-}
-
-/* 路線色帯 */
-#station-card .line-bar{
-  display:flex;height:6px;border-radius:3px;overflow:hidden;
-  gap:2px;margin-bottom:8px;
-}
-#station-card .line-bar > div{flex:1}
-
-/* 路線名 */
-#station-card .line-text{
-  font-size:12px;color:#5a6a7a;font-weight:600;
-  margin-bottom:18px;letter-spacing:0.3px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-
-/* スコア */
-#station-card .score-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:14px}
-#station-card .score-num{
-  font-family:'Inter',sans-serif;
-  font-size:72px;font-weight:900;color:var(--rank);
-  letter-spacing:-3px;line-height:0.85;
-  text-shadow:0 0 24px var(--glow);
-}
-#station-card .score-label{
-  font-family:'Inter',sans-serif;
-  font-size:11px;font-weight:900;color:#7a96b6;
-  letter-spacing:2px;line-height:1.3;padding-bottom:6px;
-}
-
-/* 4軸ダイヤ */
-#station-card .axes{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
-  margin-bottom:18px;margin-top:6px;
-}
-#station-card .axis{
-  width:62px;height:62px;background:#fff;border:2.5px solid;
-  transform:rotate(45deg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  margin:auto;box-shadow:0 2px 8px rgba(0,0,0,0.06);
-}
-#station-card .axis > span{transform:rotate(-45deg);text-align:center;font-family:'Noto Sans JP',sans-serif}
-#station-card .axis-name{font-size:10px;font-weight:700;line-height:1;margin-bottom:3px}
-#station-card .axis-val{font-size:15px;font-weight:900;line-height:1;font-family:'Inter',sans-serif}
-
-#station-card .ax-food{border-color:#ff4466}
-#station-card .ax-food .axis-name,#station-card .ax-food .axis-val{color:#ff4466}
-#station-card .ax-com{border-color:#9070ff}
-#station-card .ax-com .axis-name,#station-card .ax-com .axis-val{color:#9070ff}
-#station-card .ax-life{border-color:#3aa0ff}
-#station-card .ax-life .axis-name,#station-card .ax-life .axis-val{color:#3aa0ff}
-#station-card .ax-med{border-color:#f09030}
-#station-card .ax-med .axis-name,#station-card .ax-med .axis-val{color:#f09030}
-
-/* 駅情報 */
-#station-card .info-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;
-  border-top:1px solid rgba(0,0,0,0.10);
-  padding-top:14px;margin-bottom:16px;
-}
-#station-card .info-item{display:flex;align-items:baseline;gap:8px}
-#station-card .info-val{
-  font-family:'Inter',sans-serif;
-  font-size:15px;font-weight:900;color:#1a2030;line-height:1;min-width:62px;
-}
-#station-card .info-lbl{font-size:10px;color:#7a96b6;font-weight:600}
-
-/* 特徴 */
-#station-card .features{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
-#station-card .feature{
-  background:rgba(255,255,255,0.7);border:1.5px solid var(--rank);
-  color:#1a2030;padding:8px 14px;border-radius:18px;
-  font-size:11.5px;font-weight:600;
-  display:flex;align-items:center;gap:8px;letter-spacing:0.2px;
-}
-#station-card .feature::before{content:'★';color:var(--rank);font-size:13px}
-
-/* メモ */
-#station-card .memo{
-  background:rgba(255,255,255,0.5);
-  border:1.5px dashed rgba(120,140,170,0.45);
-  border-radius:10px;padding:10px 14px 12px;min-height:84px;
-}
-#station-card .memo-label{
-  font-family:'Inter',sans-serif;
-  font-size:9px;font-weight:900;color:#9aa5b5;letter-spacing:3px;margin-bottom:6px;
-}
-#station-card .memo-content{font-size:12px;color:#3a4658;line-height:1.7;min-height:54px}
-#station-card .memo-line{
-  border-bottom:1px solid rgba(120,140,170,0.18);height:18px;margin-bottom:6px;
-}
-
-/* ─── ランク別カラー ─── */
-#station-card[data-rank="S"]{
-  --rank:#fb5d75;
-  --glow:rgba(251,93,117,0.35);
-  --card-bg:linear-gradient(150deg,#fff5f5 0%,#ffe8ec 50%,#ffd8de 100%);
-}
-#station-card[data-rank="A"]{
-  --rank:#ff8c44;
-  --glow:rgba(255,140,68,0.35);
-  --card-bg:linear-gradient(150deg,#fff8f0 0%,#ffeed8 50%,#ffdfb8 100%);
-}
-#station-card[data-rank="B"]{
-  --rank:#d4a017;
-  --glow:rgba(212,160,23,0.35);
-  --card-bg:linear-gradient(150deg,#fefcec 0%,#faf2cd 50%,#f4e3a0 100%);
-}
-#station-card[data-rank="C"]{
-  --rank:#3aa46c;
-  --glow:rgba(58,164,108,0.35);
-  --card-bg:linear-gradient(150deg,#f0fdf4 0%,#dcfce8 50%,#b8eccd 100%);
-}
-#station-card[data-rank="D"]{
-  --rank:#3a8ac4;
-  --glow:rgba(58,138,196,0.35);
-  --card-bg:linear-gradient(150deg,#eff6ff 0%,#dbeafe 50%,#b6d4f0 100%);
-}
-#station-card[data-rank="E"]{
-  --rank:#7a8aa0;
-  --glow:rgba(122,138,160,0.30);
-  --card-bg:linear-gradient(150deg,#f5f7fa 0%,#e6ebf2 50%,#d4dde8 100%);
-}
-
-.sc-close-btn{
-  background:linear-gradient(135deg,#58a8e0,#3a8ac4);
-  color:#fff;border:none;border-radius:24px;
-  padding:13px 56px;font-weight:900;font-size:15px;
-  cursor:pointer;box-shadow:0 4px 16px rgba(88,168,224,0.4);
-  transition:transform 0.15s ease;
-  letter-spacing:1px;
-}
-.sc-close-btn:hover{transform:translateY(-2px)}
-.sc-close-btn:active{transform:translateY(0)}
+.rcardico:hover{background:#58a8e0;color:#fff;transform:scale(1.1)}
+.rank-row.checked-in .rcardico{display:inline-flex}
 </style>
 </head>
 <body>
@@ -1209,6 +1213,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
         <div class="ip-nearby" id="ip-nearby"></div>
         <div class="ip-axes-grid" id="ip-axes"></div>
         <div class="ip-checkin" id="ip-checkin" style="display:none"></div>
+        <div class="ip-card-link" id="ip-card-link" style="display:none"></div>
       </div>
       <div id="loading"><div><div class="ld-ring"></div><div class="ld-txt">データ取得中...</div></div></div>
     </div>
@@ -1321,60 +1326,65 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   </div>
 </div>
 
-<!-- ステーションカード モーダル（V3：プレビュー確定版） -->
+<!-- ステーションカード モーダル -->
 <div id="card-modal-bg" onclick="closeCardModal(event)">
   <div id="card-modal" onclick="event.stopPropagation()">
     <div id="card-flip-wrap">
-      <div id="station-card" data-rank="S">
-        <div class="card-bg"></div>
-        <div class="card-content">
-          
-          <div class="top-row">
-            <div class="rank-area">
-              <div class="rank-letter" id="sc-rank-letter">S</div>
-              <div class="checkin-info">
-                <div class="checkin-label">CHECK IN</div>
-                <div class="checkin-date" id="sc-checkin-date">-</div>
-              </div>
+      <div id="station-card">
+        <div class="sc-content">
+          <!-- ヘッダー -->
+          <div class="sc-top">
+            <div class="sc-rank-badge" id="sc-rank-badge">S</div>
+            <div class="sc-checkin-info">
+              <div class="sc-checkin-label">CHECK IN</div>
+              <div class="sc-checkin-date" id="sc-checkin-date">-</div>
+              <div class="sc-visit-count" id="sc-visit-count">初訪問</div>
             </div>
-            <div class="visit-pill" id="sc-visit-pill">初訪問</div>
-          </div>
-          
-          <div class="station-name" id="sc-station-name">-</div>
-          
-          <div class="line-bar" id="sc-line-bar"></div>
-          <div class="line-text" id="sc-line-text">-</div>
-          
-          <div class="score-row">
-            <div class="score-num" id="sc-score-num">-</div>
-            <div class="score-label">MACHI<br>SCORE</div>
-          </div>
-          
-          <div class="axes">
-            <div class="axis ax-food"><span class="axis-name">飲食</span><span class="axis-val" id="sc-ax-food">-</span></div>
-            <div class="axis ax-com"><span class="axis-name">商業</span><span class="axis-val" id="sc-ax-com">-</span></div>
-            <div class="axis ax-life"><span class="axis-name">生活</span><span class="axis-val" id="sc-ax-life">-</span></div>
-            <div class="axis ax-med"><span class="axis-name">医療</span><span class="axis-val" id="sc-ax-med">-</span></div>
-          </div>
-          
-          <div class="info-grid">
-            <div class="info-item"><span class="info-val" id="sc-info-opened">-</span><span class="info-lbl">開業</span></div>
-            <div class="info-item"><span class="info-val" id="sc-info-riders">-</span><span class="info-lbl">乗降客/日</span></div>
-            <div class="info-item"><span class="info-val" id="sc-info-lines">-</span><span class="info-lbl">接続</span></div>
-            <div class="info-item"><span class="info-val" id="sc-info-loc">-</span><span class="info-lbl">所在地</span></div>
-          </div>
-          
-          <div class="features" id="sc-features"></div>
-          
-          <div class="memo">
-            <div class="memo-label">MEMO</div>
-            <div class="memo-content" id="sc-memo-content">
-              <div class="memo-line"></div>
-              <div class="memo-line"></div>
-              <div class="memo-line"></div>
+            <div class="sc-actions">
+              <button class="sc-act-btn" id="sc-fav-btn" onclick="toggleCardFav()" title="お気に入り">♡</button>
+              <button class="sc-act-btn" onclick="shareCard()" title="共有">↗</button>
             </div>
           </div>
           
+          <!-- 駅名 -->
+          <div class="sc-station-name" id="sc-station-name"></div>
+          
+          <!-- 路線色帯 -->
+          <div class="sc-line-bar" id="sc-line-bar"></div>
+          
+          <!-- 路線名 -->
+          <div class="sc-line-text" id="sc-line-text">-</div>
+          
+          <!-- スコア -->
+          <div class="sc-score-row">
+            <div class="sc-score-num" id="sc-score-num">-</div>
+            <div class="sc-score-label">MACHI<br>SCORE</div>
+          </div>
+          
+          <!-- 4軸ダイヤ -->
+          <div class="sc-axes">
+            <div class="sc-ax sc-ax-food"><span class="sc-ax-name">飲食</span><span class="sc-ax-val" id="sc-ax-food">-</span></div>
+            <div class="sc-ax sc-ax-com"><span class="sc-ax-name">商業</span><span class="sc-ax-val" id="sc-ax-com">-</span></div>
+            <div class="sc-ax sc-ax-life"><span class="sc-ax-name">生活</span><span class="sc-ax-val" id="sc-ax-life">-</span></div>
+            <div class="sc-ax sc-ax-med"><span class="sc-ax-name">医療</span><span class="sc-ax-val" id="sc-ax-med">-</span></div>
+          </div>
+          
+          <!-- 駅情報 -->
+          <div class="sc-info-grid">
+            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-opened">-</div><div class="sc-info-lbl">開業</div></div>
+            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-riders">-</div><div class="sc-info-lbl">乗降客/日</div></div>
+            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-lines">-</div><div class="sc-info-lbl">接続</div></div>
+            <div class="sc-info-item"><div class="sc-info-val" id="sc-info-loc">-</div><div class="sc-info-lbl">所在地</div></div>
+          </div>
+          
+          <!-- 特徴 -->
+          <div class="sc-features" id="sc-features"></div>
+          
+          <!-- メモ -->
+          <div class="sc-memo">
+            <div class="sc-memo-lbl">MEMO</div>
+            <div class="sc-memo-content" id="sc-memo-content"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -2613,6 +2623,8 @@ function showInfo(st){
   document.getElementById('info-panel').style.display='block';
   // チェックインセクションを更新
   if(window.renderCheckinSection)window.renderCheckinSection(st);
+
+  if (window.updateCardLinkInPanel) window.updateCardLinkInPanel(st);
 }
 
 function updateTable(filtered){
@@ -2641,6 +2653,7 @@ function updateTable(filtered){
       <div class="rinfo">
         <div class="rname-row">
           <span class="rname">${st.name}駅</span>
+          <span class="rcardico" onclick="event.stopPropagation();openCardFromRanking('${st.name}','${st.pref}')" title="マイカード">📇</span>
           <span class="rfav${isFav(st)?' on':''}" onclick="event.stopPropagation();toggleFav(stationData.find(s=>s.name==='${st.name}'&&s.pref==='${st.pref}'))">${fIcon}</span>
         </div>
         <div class="rline">${formatLinesDisplay(st.lines)} · ${st.pref}</div>
@@ -3374,27 +3387,29 @@ window.closeCheckinSuccess = () => {
 
 // ─── ステーションカード表示（V2: スクショ忠実版）───
 const LINE_COLORS = {"山手線": "#9acd32", "京浜東北線": "#00b2e5", "中央線": "#ff8c00", "中央線快速": "#ff8c00", "中央・総武線各駅停車": "#ffd700", "総武線快速": "#0033cc", "京葉線": "#cc0033", "横須賀線": "#0033cc", "東海道線": "#f68b1e", "武蔵野線": "#ff6600", "南武線": "#ffd700", "横浜線": "#7cb342", "根岸線": "#00b2e5", "川越線": "#80754d", "埼京線": "#00ac9b", "高崎線": "#f68b1e", "宇都宮線": "#f68b1e", "相模線": "#0a8043", "青梅線": "#ff8c00", "五日市線": "#ff8c00", "鶴見線": "#fbb33d", "常磐線": "#3aa6e8", "常磐線各駅停車": "#00b29a", "湘南新宿ライン": "#e83828", "上野東京ライン": "#0e6cb6", "東京メトロ銀座線": "#ff9500", "東京メトロ丸ノ内線": "#f62e36", "東京メトロ日比谷線": "#b5b5ac", "東京メトロ東西線": "#009bbf", "東京メトロ千代田線": "#00bb85", "東京メトロ有楽町線": "#c1a470", "東京メトロ半蔵門線": "#8f76d6", "東京メトロ南北線": "#00ac9b", "東京メトロ副都心線": "#9c5e31", "都営浅草線": "#ec4980", "都営三田線": "#0079c2", "都営新宿線": "#6cbb5a", "都営大江戸線": "#b6007a", "都電荒川線": "#dc143c", "日暮里舎人ライナー": "#df8126", "東急東横線": "#dc143c", "東急目黒線": "#a0006e", "東急田園都市線": "#20b2aa", "東急大井町線": "#ff7f50", "東急池上線": "#ec407a", "東急多摩川線": "#a020f0", "東急世田谷線": "#b22222", "東急こどもの国線": "#ff69b4", "東急新横浜線": "#003366", "小田急小田原線": "#1d51e3", "小田急江ノ島線": "#1d51e3", "小田急多摩線": "#1d51e3", "京王線": "#dc0451", "京王新線": "#dc0451", "京王井の頭線": "#0099ff", "京王相模原線": "#dc0451", "京王高尾線": "#dc0451", "西武池袋線": "#0099cc", "西武新宿線": "#cc0066", "西武有楽町線": "#0099cc", "西武多摩湖線": "#999999", "西武国分寺線": "#999999", "西武拝島線": "#999999", "西武多摩川線": "#999999", "西武狭山線": "#999999", "西武園線": "#999999", "西武豊島線": "#0099cc", "西武山口線": "#999999", "東武東上線": "#fb6e52", "東武スカイツリーライン": "#0066b3", "東武亀戸線": "#0066b3", "東武大師線": "#0066b3", "東武アーバンパークライン": "#a4d4af", "京急本線": "#cc0033", "京急空港線": "#0066cc", "京急大師線": "#9c8c4e", "京急逗子線": "#cc0033", "京急久里浜線": "#cc0033", "京成本線": "#1d51e3", "京成押上線": "#0066cc", "京成金町線": "#cc0033", "京成千葉線": "#fbb533", "京成千原線": "#1d51e3", "京成東成田線": "#1d51e3", "成田スカイアクセス線": "#cc6600", "相鉄本線": "#1d51e3", "相鉄いずみ野線": "#7d2cd1", "相鉄新横浜線": "#cc0099", "北総線": "#a8c47f", "新京成線": "#ff6699", "東葉高速線": "#cc66ff", "埼玉高速鉄道線": "#0078b4", "つくばエクスプレス": "#7c63a8", "東京モノレール": "#0098d8", "ゆりかもめ": "#1f8ed5", "ニューシャトル": "#3399cc", "千葉モノレール1号線": "#1ba29c", "千葉モノレール2号線": "#fcb53c", "多摩モノレール": "#1d8b7d", "横浜市営ブルーライン": "#3098d4", "横浜市営グリーンライン": "#5db142", "金沢シーサイドライン": "#0070c0", "みなとみらい線": "#000080", "りんかい線": "#a40080", "ユーカリが丘線": "#ff66cc", "流鉄流山線": "#669999", "ディズニーリゾートライン": "#ff66cc", "江ノ電": "#1d51e3", "湘南モノレール": "#1d6de8"};
-const STATION_INFO = {"新宿_東京都":{"opened":"1885年","lines_count":12,"riders":"約340万人","location":"新宿区","features":["世界最多乗降客数の駅","東日本最大のターミナル","歌舞伎町・思い出横丁の街"]},"渋谷_東京都":{"opened":"1885年","lines_count":9,"riders":"約335万人","location":"渋谷区","features":["スクランブル交差点の聖地","ハチ公像で知られる象徴駅","ファッション・若者文化の中心地"]},"池袋_東京都":{"opened":"1903年","lines_count":8,"riders":"約260万人","location":"豊島区","features":["乗降客数日本2位の巨大ターミナル","サンシャインシティの玄関口","東口・西口で異なる雰囲気"]},"東京_東京都":{"opened":"1914年","lines_count":13,"riders":"約115万人","location":"千代田区","features":["日本の鉄道網の中心","赤レンガ駅舎は重要文化財","丸の内ビジネス街の象徴"]},"新橋_東京都":{"opened":"1872年","lines_count":6,"riders":"約80万人","location":"港区","features":["日本初の鉄道駅","サラリーマンの聖地","SL広場とゆりかもめの起点"]},"銀座_東京都":{"opened":"1934年","lines_count":3,"riders":"約20万人","location":"中央区","features":["日本最高地価の街","世界有数の高級商業地","銀座四丁目交差点の象徴"]},"品川_東京都":{"opened":"1872年","lines_count":5,"riders":"約78万人","location":"港区","features":["東海道新幹線の発着駅","日本初の鉄道駅の一つ","高層ビル街への玄関"]},"上野_東京都":{"opened":"1883年","lines_count":6,"riders":"約65万人","location":"台東区","features":["北の玄関口","上野公園・アメ横の街","美術館・博物館の集積地"]},"六本木_東京都":{"opened":"1964年","lines_count":2,"riders":"約12万人","location":"港区","features":["国際的なナイトライフの中心","六本木ヒルズの玄関","大使館街・高級住宅地"]},"横浜_神奈川県":{"opened":"1872年","lines_count":6,"riders":"約230万人","location":"横浜市西区","features":["日本初の鉄道駅の一つ","神奈川県最大のターミナル","みなとみらい・中華街の玄関"]},"大宮_埼玉県":{"opened":"1885年","lines_count":11,"riders":"約66万人","location":"さいたま市大宮区","features":["北関東への玄関口","東北・上越新幹線の分岐点","鉄道博物館で知られる"]},"日本橋_東京都":{"opened":"1932年","lines_count":3,"riders":"約20万人","location":"中央区","features":["日本の道路の起点","老舗百貨店の街","江戸文化の中心地"]},"有楽町_東京都":{"opened":"1910年","lines_count":2,"riders":"約17万人","location":"千代田区","features":["映画と劇場の街","ガード下グルメの聖地","銀座と直結する好立地"]},"原宿_東京都":{"opened":"1906年","lines_count":1,"riders":"約7万人","location":"渋谷区","features":["若者ファッションの聖地","明治神宮の最寄り駅","竹下通りの玄関口"]},"表参道_東京都":{"opened":"1938年","lines_count":3,"riders":"約15万人","location":"港区","features":["ハイブランドの旗艦店街","ケヤキ並木の美しい大通り","青山・表参道の文化発信地"]},"吉祥寺_東京都":{"opened":"1899年","lines_count":2,"riders":"約14万人","location":"武蔵野市","features":["住みたい街ランキング常連","井の頭公園の玄関","サブカルと飲食の街"]},"北千住_東京都":{"opened":"1896年","lines_count":5,"riders":"約45万人","location":"足立区","features":["足立区最大の商業集積地","5路線が乗り入れるハブ駅","東京北東部の中心"]},"中野_東京都":{"opened":"1889年","lines_count":2,"riders":"約20万人","location":"中野区","features":["中野ブロードウェイのサブカル聖地","中央線文化の象徴","ラーメン激戦区"]},"高田馬場_東京都":{"opened":"1910年","lines_count":3,"riders":"約30万人","location":"新宿区","features":["学生街として有名","早稲田大学の最寄り","飲食店密集の若者の街"]},"神田_東京都":{"opened":"1919年","lines_count":5,"riders":"約13万人","location":"千代田区","features":["古書店街・神保町への入口","居酒屋の聖地","ビジネス街と下町の混在"]},"秋葉原_東京都":{"opened":"1890年","lines_count":4,"riders":"約25万人","location":"千代田区","features":["世界最大級の電気街","アニメ・サブカルの聖地","メイド喫茶発祥の地"]},"銀座一丁目_東京都":{"opened":"1974年","lines_count":1,"riders":"約4万人","location":"中央区","features":["有楽町線の銀座エリア駅","銀座の北端を担う","京橋エリアにも近い"]},"霞ヶ関_東京都":{"opened":"1958年","lines_count":3,"riders":"約14万人","location":"千代田区","features":["官公庁街の中心","中央省庁が集積","日本の政治の心臓部"]},"永田町_東京都":{"opened":"1974年","lines_count":3,"riders":"約6万人","location":"千代田区","features":["国会議事堂・首相官邸の最寄り","政治の代名詞","赤坂見附と一体駅"]},"赤坂見附_東京都":{"opened":"1938年","lines_count":2,"riders":"約9万人","location":"港区","features":["赤坂・永田町の玄関","ホテル・歓楽街への入口","丸ノ内線と銀座線の乗換要衝"]},"大手町_東京都":{"opened":"1956年","lines_count":5,"riders":"約32万人","location":"千代田区","features":["日本最大級のオフィス街","5路線が交わる地下迷宮","金融機関の本店集積"]},"溜池山王_東京都":{"opened":"1997年","lines_count":2,"riders":"約13万人","location":"港区","features":["官庁・財界エリアのハブ","ビジネス街と赤坂の境界","南北線・銀座線の交点"]},"東銀座_東京都":{"opened":"1963年","lines_count":2,"riders":"約8万人","location":"中央区","features":["歌舞伎座への玄関","築地に近接","銀座の東端を担う"]},"築地_東京都":{"opened":"1963年","lines_count":1,"riders":"約5万人","location":"中央区","features":["元・築地市場の街","波除神社・築地本願寺","寿司の聖地・場外市場の活気"]},"人形町_東京都":{"opened":"1962年","lines_count":2,"riders":"約10万人","location":"中央区","features":["江戸情緒残る下町","甘酒横丁の老舗","水天宮への参道"]},"茅場町_東京都":{"opened":"1963年","lines_count":2,"riders":"約9万人","location":"中央区","features":["日本橋兜町の金融街","東京証券取引所の街","日本のウォール街"]},"門前仲町_東京都":{"opened":"1969年","lines_count":2,"riders":"約9万人","location":"江東区","features":["富岡八幡宮・深川不動の門前","下町グルメと居酒屋の聖地","深川めしと祭りの街"]},"木場_東京都":{"opened":"1967年","lines_count":1,"riders":"約6万人","location":"江東区","features":["江戸時代から続く材木の街","木場公園のオアシス","深川エリアの中心"]},"清澄白河_東京都":{"opened":"2000年","lines_count":2,"riders":"約5万人","location":"江東区","features":["カフェの聖地・サードウェーブの街","東京都現代美術館","清澄庭園のオアシス"]},"麻布十番_東京都":{"opened":"2000年","lines_count":2,"riders":"約7万人","location":"港区","features":["高級住宅地の麻布","商店街と老舗の街","芸能人御用達の隠れ家"]},"広尾_東京都":{"opened":"1964年","lines_count":1,"riders":"約5万人","location":"渋谷区","features":["大使館街・高級住宅地","インターナショナルな雰囲気","おしゃれカフェ密集地"]},"恵比寿_東京都":{"opened":"1901年","lines_count":3,"riders":"約25万人","location":"渋谷区","features":["恵比寿ガーデンプレイスの玄関","エビスビール発祥の地","おしゃれタウンの代名詞"]},"中目黒_東京都":{"opened":"1927年","lines_count":2,"riders":"約20万人","location":"目黒区","features":["目黒川の桜並木で有名","スターバックスリザーブ","おしゃれ飲食店の集積地"]},"代官山_東京都":{"opened":"1927年","lines_count":1,"riders":"約3万人","location":"渋谷区","features":["ハイセンスな街の代名詞","蔦屋書店T-SITE","隠れ家カフェとセレクトショップ"]},"自由が丘_東京都":{"opened":"1927年","lines_count":2,"riders":"約15万人","location":"目黒区","features":["住みたい街ランキング常連","スイーツの街として有名","雑貨とカフェの集積地"]},"二子玉川_東京都":{"opened":"1907年","lines_count":2,"riders":"約16万人","location":"世田谷区","features":["ニコタマ・お洒落タウン","二子玉川ライズの大型商業","多摩川河川敷の憩い"]},"町田_東京都":{"opened":"1908年","lines_count":2,"riders":"約45万人","location":"町田市","features":["東京都南西部の最大商圏","神奈川との境界の街","小田急と横浜線が交差"]},"錦糸町_東京都":{"opened":"1894年","lines_count":3,"riders":"約30万人","location":"墨田区","features":["東京スカイツリー至近","北口・南口で異なる顔","下町と商業の融合"]},"川崎_神奈川県":{"opened":"1872年","lines_count":5,"riders":"約76万人","location":"川崎市川崎区","features":["神奈川県第二の街","工業と商業の融合","ラ チッタデッラの集積"]},"武蔵小杉_神奈川県":{"opened":"1939年","lines_count":5,"riders":"約55万人","location":"川崎市中原区","features":["タワマン林立の新興街","5路線が交わる神奈川のハブ","富士山ビューで人気"]},"溝の口_神奈川県":{"opened":"1927年","lines_count":2,"riders":"約25万人","location":"川崎市高津区","features":["田園都市線の主要駅","溝口商店街の活気","ノクティプラザの拠点"]},"たまプラーザ_神奈川県":{"opened":"1966年","lines_count":1,"riders":"約10万人","location":"横浜市青葉区","features":["田園都市線の代表的住宅街","美しが丘の落ち着いた街並み","たまプラーザテラスの集積"]},"青葉台_神奈川県":{"opened":"1966年","lines_count":1,"riders":"約12万人","location":"横浜市青葉区","features":["横浜の高級住宅街","東急田園都市線の主要駅","青葉台フィットネスセンター"]},"本厚木_神奈川県":{"opened":"1927年","lines_count":1,"riders":"約14万人","location":"厚木市","features":["神奈川県央の中心","小田急小田原線の主要駅","本厚木ミロード"]},"巣鴨_東京都":{"opened":"1903年","lines_count":2,"riders":"約13万人","location":"豊島区","features":["おばあちゃんの原宿","とげぬき地蔵の参道","昭和情緒残る商店街"]},"駒込_東京都":{"opened":"1910年","lines_count":2,"riders":"約7万人","location":"豊島区","features":["六義園の名園","染井吉野桜の発祥地","落ち着いた住宅街"]},"田端_東京都":{"opened":"1896年","lines_count":2,"riders":"約5万人","location":"北区","features":["文士の街として有名","芥川龍之介・室生犀星ゆかりの地","山手線唯一の北区駅"]},"日暮里_東京都":{"opened":"1905年","lines_count":4,"riders":"約22万人","location":"荒川区","features":["谷中銀座の下町情緒","繊維街として有名","京成スカイライナーの起点"]},"鶯谷_東京都":{"opened":"1912年","lines_count":1,"riders":"約3万人","location":"台東区","features":["台東区の隠れた名所","寛永寺の最寄り","昭和の風情残る歓楽街"]},"御徒町_東京都":{"opened":"1925年","lines_count":1,"riders":"約7万人","location":"台東区","features":["上野アメ横の北端","宝石・貴金属街として有名","昔ながらの問屋街"]},"田町_東京都":{"opened":"1909年","lines_count":2,"riders":"約16万人","location":"港区","features":["慶應義塾の街","ビジネス街と学生街の融合","芝浦エリアの玄関"]},"浜松町_東京都":{"opened":"1909年","lines_count":2,"riders":"約15万人","location":"港区","features":["東京モノレール・羽田空港への玄関","世界貿易センタービル","小便小僧像で知られる"]},"目黒_東京都":{"opened":"1885年","lines_count":4,"riders":"約20万人","location":"品川区","features":["目黒川の桜の名所","アトレ目黒の商業集積","ビジネスとレジデンスの融合"]},"五反田_東京都":{"opened":"1911年","lines_count":3,"riders":"約21万人","location":"品川区","features":["IT企業集積のオフィス街","飲食街の活気","池上線の起点駅"]},"大崎_東京都":{"opened":"1901年","lines_count":4,"riders":"約13万人","location":"品川区","features":["ゲートシティ大崎の象徴","りんかい線の起点","副都心線直通の要衝"]},"代々木_東京都":{"opened":"1906年","lines_count":3,"riders":"約7万人","location":"渋谷区","features":["新宿駅至近のビジネス街","ドコモタワーがランドマーク","代々木公園への玄関"]},"新大久保_東京都":{"opened":"1914年","lines_count":1,"riders":"約4万人","location":"新宿区","features":["コリアンタウンの代表","K-POPと韓国グルメの聖地","多国籍な飲食店街"]},"目白_東京都":{"opened":"1885年","lines_count":1,"riders":"約3万人","location":"豊島区","features":["学習院大学の最寄り","高級住宅街の玄関","落ち着いた山手線駅"]},"大塚_東京都":{"opened":"1903年","lines_count":2,"riders":"約4万人","location":"豊島区","features":["都電荒川線の乗換駅","レトロな商店街","池袋に近い穴場"]},"西日暮里_東京都":{"opened":"1971年","lines_count":3,"riders":"約20万人","location":"荒川区","features":["山手線最後の開業駅","日暮里・舎人ライナー起点","千代田線との接続駅"]},"飯田橋_東京都":{"opened":"1928年","lines_count":5,"riders":"約24万人","location":"千代田区","features":["法政大学の最寄り","神楽坂への玄関口","5路線交差の要衝"]},"市ヶ谷_東京都":{"opened":"1895年","lines_count":4,"riders":"約20万人","location":"千代田区","features":["防衛省の最寄り","釣り堀で有名な外濠","私立大学の集積地"]},"四ツ谷_東京都":{"opened":"1894年","lines_count":4,"riders":"約18万人","location":"新宿区","features":["上智大学の最寄り","四ツ谷見附の歴史","ビジネスと文教地区の融合"]},"神保町_東京都":{"opened":"1972年","lines_count":3,"riders":"約9万人","location":"千代田区","features":["世界最大級の古書店街","カレーの聖地","出版社・大学の街"]},"九段下_東京都":{"opened":"1964年","lines_count":3,"riders":"約12万人","location":"千代田区","features":["靖国神社の最寄り","日本武道館への玄関","千鳥ヶ淵の桜で有名"]},"虎ノ門_東京都":{"opened":"1938年","lines_count":1,"riders":"約7万人","location":"港区","features":["官庁街と高層ビル群","虎ノ門ヒルズの新拠点","霞が関と新橋の中間"]},"京橋_東京都":{"opened":"1932年","lines_count":1,"riders":"約3万人","location":"中央区","features":["銀座と日本橋の中間","骨董と画廊の街","東京駅至近のビジネス街"]},"小川町_東京都":{"opened":"1980年","lines_count":3,"riders":"約7万人","location":"千代田区","features":["古書街と楽器店街","スポーツ用品店の集積","神保町と一体エリア"]},"末広町_東京都":{"opened":"1925年","lines_count":1,"riders":"約2万人","location":"千代田区","features":["秋葉原の北側","電気街の延長","銀座線の地味駅"]},"本郷三丁目_東京都":{"opened":"1954年","lines_count":2,"riders":"約7万人","location":"文京区","features":["東京大学の最寄り","医学部・赤門に近い","学生街の落ち着き"]},"後楽園_東京都":{"opened":"1954年","lines_count":2,"riders":"約10万人","location":"文京区","features":["東京ドームシティの玄関","後楽園遊園地のランドマーク","巨人戦の聖地"]},"茗荷谷_東京都":{"opened":"1954年","lines_count":1,"riders":"約7万人","location":"文京区","features":["お茶の水女子大学最寄り","文教地区の代表","播磨坂の桜並木"]},"築地市場_東京都":{"opened":"2000年","lines_count":1,"riders":"約3万人","location":"中央区","features":["元市場跡地の再開発エリア","築地場外の活気","汐留に近い"]},"汐留_東京都":{"opened":"2002年","lines_count":2,"riders":"約12万人","location":"港区","features":["日本テレビ・電通の街","カレッタ汐留の高層ビル群","浜離宮恩賜庭園に隣接"]},"学芸大学_東京都":{"opened":"1927年","lines_count":1,"riders":"約6万人","location":"目黒区","features":["住みやすさで人気","商店街の活気","目黒区の中心エリア"]},"都立大学_東京都":{"opened":"1927年","lines_count":1,"riders":"約4万人","location":"目黒区","features":["閑静な高級住宅街","碑文谷公園の緑","東横線沿線の人気駅"]},"神泉_東京都":{"opened":"1933年","lines_count":1,"riders":"約2万人","location":"渋谷区","features":["渋谷の隠れた裏路地","ミニシアターと隠れ家","井の頭線の隣駅"]},"駒場東大前_東京都":{"opened":"1933年","lines_count":1,"riders":"約2万人","location":"目黒区","features":["東京大学駒場キャンパス","駒場野公園の緑","学生街の落ち着き"]},"下北沢_東京都":{"opened":"1933年","lines_count":2,"riders":"約15万人","location":"世田谷区","features":["シモキタ・サブカルの聖地","古着屋とライブハウス","小劇場文化の発信地"]},"明大前_東京都":{"opened":"1913年","lines_count":2,"riders":"約12万人","location":"世田谷区","features":["明治大学和泉キャンパスの最寄り","京王と井の頭線の交差","学生街の活気"]},"高井戸_東京都":{"opened":"1933年","lines_count":1,"riders":"約4万人","location":"杉並区","features":["井の頭線の中間駅","高井戸第二小学校の地域","杉並区西部の住宅街"]},"王子_東京都":{"opened":"1883年","lines_count":3,"riders":"約15万人","location":"北区","features":["北区役所の最寄り","飛鳥山公園の桜の名所"]},"赤羽_東京都":{"opened":"1885年","lines_count":4,"riders":"約34万人","location":"北区","features":["北区最大の商業集積地","居酒屋の聖地として有名"]},"十条_東京都":{"opened":"1910年","lines_count":1,"riders":"約4万人","location":"北区","features":["昭和レトロな商店街","住宅街の落ち着き"]},"板橋_東京都":{"opened":"1885年","lines_count":1,"riders":"約4万人","location":"板橋区","features":["板橋区の玄関","中山道の宿場町だった歴史"]},"練馬_東京都":{"opened":"1915年","lines_count":4,"riders":"約16万人","location":"練馬区","features":["練馬区の中心駅","4路線が乗り入れるハブ"]},"光が丘_東京都":{"opened":"1991年","lines_count":1,"riders":"約7万人","location":"練馬区","features":["大規模団地と公園の街","IMA光が丘の商業集積"]},"荻窪_東京都":{"opened":"1891年","lines_count":2,"riders":"約16万人","location":"杉並区","features":["ラーメン激戦区として有名","中央線文化の継承地"]},"高円寺_東京都":{"opened":"1922年","lines_count":1,"riders":"約11万人","location":"杉並区","features":["古着・ライブハウス・阿波踊り","中央線サブカル文化の聖地"]},"阿佐ヶ谷_東京都":{"opened":"1922年","lines_count":1,"riders":"約8万人","location":"杉並区","features":["七夕祭りで有名","住みやすい中央線の街"]},"西荻窪_東京都":{"opened":"1922年","lines_count":1,"riders":"約7万人","location":"杉並区","features":["アンティークの街","隠れ家カフェの集積"]},"三鷹_東京都":{"opened":"1930年","lines_count":1,"riders":"約9万人","location":"三鷹市","features":["ジブリ美術館の街","中央線の主要駅"]},"武蔵境_東京都":{"opened":"1889年","lines_count":2,"riders":"約10万人","location":"武蔵野市","features":["武蔵野市の文化拠点","西武多摩川線の乗換駅"]},"国分寺_東京都":{"opened":"1889年","lines_count":3,"riders":"約25万人","location":"国分寺市","features":["国分寺市の中心","西武多摩湖線・国分寺線の起点"]},"立川_東京都":{"opened":"1889年","lines_count":4,"riders":"約34万人","location":"立川市","features":["多摩地域最大の商業都市","IKEAやららぽーとの集積"]},"八王子_東京都":{"opened":"1889年","lines_count":2,"riders":"約16万人","location":"八王子市","features":["東京西部の中心都市","大学が多い学生の街"]},"蒲田_東京都":{"opened":"1904年","lines_count":4,"riders":"約30万人","location":"大田区","features":["大田区の商業中心","町工場と下町情緒"]},"大森_東京都":{"opened":"1876年","lines_count":2,"riders":"約20万人","location":"大田区","features":["大田区北部の中心","駅周辺の活発な商業集積"]},"大井町_東京都":{"opened":"1901年","lines_count":3,"riders":"約30万人","location":"品川区","features":["アトレ大井町の集積","りんかい線の主要駅"]},"北綾瀬_東京都":{"opened":"1979年","lines_count":1,"riders":"約3万人","location":"足立区","features":["千代田線の終点","足立区東部の住宅街"]},"綾瀬_東京都":{"opened":"1943年","lines_count":2,"riders":"約14万人","location":"足立区","features":["千代田線と常磐線の境界","足立区の交通要衝"]},"亀有_東京都":{"opened":"1897年","lines_count":1,"riders":"約8万人","location":"葛飾区","features":["こち亀の舞台で有名","葛飾区東部の中心"]},"金町_東京都":{"opened":"1897年","lines_count":1,"riders":"約11万人","location":"葛飾区","features":["葛飾区の北東の玄関","金町理科大学の街"]},"西船橋_千葉県":{"opened":"1958年","lines_count":4,"riders":"約25万人","location":"船橋市","features":["千葉県西部の交通要衝","4路線が交わるハブ駅"]},"船橋_千葉県":{"opened":"1894年","lines_count":3,"riders":"約13万人","location":"船橋市","features":["千葉県北西部の商業中心","京成と総武の両方の中心"]},"津田沼_千葉県":{"opened":"1895年","lines_count":2,"riders":"約10万人","location":"習志野市","features":["千葉県北西部の郊外中心","モリシアの大型商業"]},"柏_千葉県":{"opened":"1896年","lines_count":3,"riders":"約24万人","location":"柏市","features":["千葉県北西部の商業中心","そごう・高島屋の集積"]},"松戸_千葉県":{"opened":"1896年","lines_count":3,"riders":"約20万人","location":"松戸市","features":["千葉県西部の中心都市","常磐線・新京成・東葉高速の交点"]},"舞浜_千葉県":{"opened":"1988年","lines_count":1,"riders":"約8万人","location":"浦安市","features":["東京ディズニーリゾートの玄関","イクスピアリの大型商業"]},"海浜幕張_千葉県":{"opened":"1986年","lines_count":1,"riders":"約6万人","location":"千葉市美浜区","features":["幕張新都心の中心","ZOZOマリンスタジアムの最寄り"]},"千葉_千葉県":{"opened":"1894年","lines_count":4,"riders":"約18万人","location":"千葉市中央区","features":["千葉県の県庁所在地","モノレールが分岐する中心駅"]},"本川越_埼玉県":{"opened":"1895年","lines_count":1,"riders":"約3万人","location":"川越市","features":["小江戸川越の蔵造りの街","時の鐘の歴史的観光地"]},"川越_埼玉県":{"opened":"1940年","lines_count":2,"riders":"約9万人","location":"川越市","features":["川越市のJR玄関","クレアモールの商業集積"]},"所沢_埼玉県":{"opened":"1895年","lines_count":2,"riders":"約11万人","location":"所沢市","features":["埼玉県南西部の商業中心","西武鉄道の本社所在地"]},"浦和_埼玉県":{"opened":"1883年","lines_count":3,"riders":"約9万人","location":"さいたま市浦和区","features":["埼玉県の旧県都","浦和レッズの本拠地"]},"川口_埼玉県":{"opened":"1910年","lines_count":1,"riders":"約8万人","location":"川口市","features":["埼玉南部の人口最多市","タワマン林立の急成長エリア"]},"上大岡_神奈川県":{"opened":"1930年","lines_count":2,"riders":"約11万人","location":"横浜市港南区","features":["横浜南部の商業中心","京急とブルーラインの交点"]},"関内_神奈川県":{"opened":"1872年","lines_count":2,"riders":"約8万人","location":"横浜市中区","features":["横浜の旧市街地","中華街・スタジアムの最寄り"]},"桜木町_神奈川県":{"opened":"1872年","lines_count":2,"riders":"約14万人","location":"横浜市中区","features":["みなとみらいの玄関","横浜の文化発信地"]},"みなとみらい_神奈川県":{"opened":"2004年","lines_count":1,"riders":"約12万人","location":"横浜市西区","features":["横浜の再開発エリア","ランドマークタワーの最寄り"]},"元町・中華街_神奈川県":{"opened":"2004年","lines_count":1,"riders":"約8万人","location":"横浜市中区","features":["横浜中華街の玄関","元町ショッピングストリート"]},"新横浜_神奈川県":{"opened":"1964年","lines_count":4,"riders":"約23万人","location":"横浜市港北区","features":["東海道新幹線の駅","横浜アリーナと日産スタジアムの最寄り"]},"東陽町_東京都":{"opened":"1967年","lines_count":1,"riders":"約10万人","location":"江東区","features":["東西線の主要駅","江東区南部の住宅と商業エリア"]},"洗足池_東京都":{"opened":"1927年","lines_count":1,"riders":"約2万人","location":"大田区","features":["西郷隆盛ゆかりの洗足池が隣接","緑豊かな池畔の静かな住宅街"]},"長原_東京都":{"opened":"1927年","lines_count":1,"riders":"約1万人","location":"大田区","features":["池上線の中間駅","住宅街の中の小駅"]},"石川台_東京都":{"opened":"1927年","lines_count":1,"riders":"約1万人","location":"大田区","features":["池上線の住宅地駅","小規模な商店街"]},"雪が谷大塚_東京都":{"opened":"1923年","lines_count":1,"riders":"約2万人","location":"大田区","features":["池上線の東急ストア最寄り","住宅街の生活駅"]},"代田橋_東京都":{"opened":"1913年","lines_count":1,"riders":"約1.5万人","location":"世田谷区","features":["京王線の小規模駅"]},"上北沢_東京都":{"opened":"1913年","lines_count":1,"riders":"約1.6万人","location":"世田谷区","features":["静かな住宅街の駅"]}};
+const STATION_INFO = {"新宿_東京都":{"opened":"1885年","lines_count":12,"riders":"約340万人","location":"新宿区","features":["世界最多乗降客数のギネス記録駅","ゴールデン街・思い出横丁の昭和酒場文化","歌舞伎町・新宿御苑が共存する多面性"]},"渋谷_東京都":{"opened":"1885年","lines_count":9,"riders":"約335万人","location":"渋谷区","features":["1日50万人渡るスクランブル交差点","忠犬ハチ公・センター街・宮下パーク","若者カルチャー発信源の聖地"]},"池袋_東京都":{"opened":"1903年","lines_count":8,"riders":"約260万人","location":"豊島区","features":["乙女ロード・サンシャイン60の聖地","西武・東武・サンシャインシティの巨大商圏","ラーメン激戦区＆深夜まで賑わう街"]},"東京_東京都":{"opened":"1914年","lines_count":13,"riders":"約115万人","location":"千代田区","features":["赤レンガ駅舎は重要文化財の名建築","日本の鉄道網の中心・全新幹線の起点","丸の内ビル群と皇居外苑のコントラスト"]},"新橋_東京都":{"opened":"1872年","lines_count":6,"riders":"約80万人","location":"港区","features":["日本初の鉄道発祥の地","SL広場とサラリーマン文化の聖地","烏森神社と歓楽街が織りなす昭和情緒"]},"銀座_東京都":{"opened":"1934年","lines_count":3,"riders":"約20万人","location":"中央区","features":["日本最高地価・1坪6000万の街","歌舞伎座・銀座シックス・名店ひしめく王道","並木通りのバーと寿司の至福"]},"品川_東京都":{"opened":"1872年","lines_count":5,"riders":"約78万人","location":"港区","features":["東海道新幹線で大阪まで2.5時間","日本初の鉄道駅の一つ","旧東海道の宿場町・北品川商店街"]},"上野_東京都":{"opened":"1883年","lines_count":6,"riders":"約65万人","location":"台東区","features":["アメ横の活気と桜の名所上野公園","美術館・博物館・動物園の文化集積","北の玄関口・東京の下町情緒"]},"六本木_東京都":{"opened":"1964年","lines_count":2,"riders":"約12万人","location":"港区","features":["国際的ナイトライフと六本木ヒルズ","大使館街・スタイリッシュな街","森美術館と眺望のNight Tokyo"]},"横浜_神奈川県":{"opened":"1872年","lines_count":6,"riders":"約230万人","location":"横浜市西区","features":["みなとみらい・赤レンガ・中華街の玄関","日本初の鉄道駅の一つ・港町ロマン","そごう・高島屋・JOINUSの大型商業"]},"大宮_埼玉県":{"opened":"1885年","lines_count":11,"riders":"約66万人","location":"さいたま市大宮区","features":["11路線が交わる北関東の玄関","鉄道博物館・氷川神社の参道","北の新幹線分岐点・東日本最大級ハブ"]},"日本橋_東京都":{"opened":"1932年","lines_count":3,"riders":"約20万人","location":"中央区","features":["日本道路網の起点・国道1号の零地点","三井・三越・日本銀行の老舗の街","コレド室町と江戸文化の融合"]},"有楽町_東京都":{"opened":"1910年","lines_count":2,"riders":"約17万人","location":"千代田区","features":["ガード下グルメと映画街の聖地","TOHOシネマズ・帝国劇場の劇場街","銀座と直結・国際フォーラム至近"]},"原宿_東京都":{"opened":"1906年","lines_count":1,"riders":"約7万人","location":"渋谷区","features":["竹下通り・若者ファッション発信地","明治神宮の杜と表参道のコントラスト","カワイイ文化の世界的発信源"]},"表参道_東京都":{"opened":"1938年","lines_count":3,"riders":"約15万人","location":"港区","features":["ケヤキ並木とハイブランド旗艦店街","青山・骨董通りの大人の街","表参道ヒルズとカフェ文化"]},"吉祥寺_東京都":{"opened":"1899年","lines_count":2,"riders":"約14万人","location":"武蔵野市","features":["住みたい街ランキング常連No.1常連","井の頭公園とハーモニカ横丁","メンチカツ・サードウェーブカフェの聖地"]},"北千住_東京都":{"opened":"1896年","lines_count":5,"riders":"約45万人","location":"足立区","features":["5路線交差・東京北東部最大ハブ","ルミネ・マルイ・北千住駅前商店街","千住宿の歴史と居酒屋の街"]},"中野_東京都":{"opened":"1889年","lines_count":2,"riders":"約20万人","location":"中野区","features":["中野ブロードウェイ・サブカル聖地","まんだらけ・古書とレトロアニメ","中野サンプラザの音楽の街"]},"高田馬場_東京都":{"opened":"1910年","lines_count":3,"riders":"約30万人","location":"新宿区","features":["早稲田生御用達の激安学生グルメ街","リトルヤンゴンと呼ばれる多国籍タウン","BIG BOXの待ち合わせ文化"]},"神田_東京都":{"opened":"1919年","lines_count":5,"riders":"約13万人","location":"千代田区","features":["神田駅ガード下の老舗居酒屋","神田明神と江戸総鎮守の歴史","古書店街・神保町への入口"]},"秋葉原_東京都":{"opened":"1890年","lines_count":4,"riders":"約25万人","location":"千代田区","features":["世界最大級の電気街・PCパーツの聖地","アニメ・メイド喫茶・推し活文化","ガード下のカレーと立ち食い文化"]},"霞ヶ関_東京都":{"opened":"1958年","lines_count":3,"riders":"約14万人","location":"千代田区","features":["日本の政治・行政の心臓部","中央省庁の集積地","弁護士・官僚が行き交う街"]},"永田町_東京都":{"opened":"1974年","lines_count":3,"riders":"約6万人","location":"千代田区","features":["国会議事堂・首相官邸の最寄り駅","日本政治の代名詞","憲政記念館と桜田門の歴史"]},"赤坂見附_東京都":{"opened":"1938年","lines_count":2,"riders":"約9万人","location":"港区","features":["赤坂Bizタワー・銀座の隣の隠れ家グルメ","ホテルニューオータニ・歓楽街の入口","溜池山王と一体の地下迷宮"]},"大手町_東京都":{"opened":"1956年","lines_count":5,"riders":"約32万人","location":"千代田区","features":["5路線交差・日本最大級オフィス街","日経・三井物産・三菱商事の本社街","皇居ランナー御用達の隠れ名所"]},"溜池山王_東京都":{"opened":"1997年","lines_count":2,"riders":"約13万人","location":"港区","features":["財界・官庁エリアのハブ駅","日枝神社・山王パークタワーの拠点","ホテルオークラと隠れ家割烹"]},"東銀座_東京都":{"opened":"1963年","lines_count":2,"riders":"約8万人","location":"中央区","features":["歌舞伎座への玄関・伝統芸能の街","築地と銀座をつなぐグルメ街","晴海通りの劇場文化"]},"築地_東京都":{"opened":"1963年","lines_count":1,"riders":"約5万人","location":"中央区","features":["築地場外・寿司の聖地と海鮮丼","波除神社・築地本願寺のパワースポット","活気と老舗が生きる食の街"]},"人形町_東京都":{"opened":"1962年","lines_count":2,"riders":"約10万人","location":"中央区","features":["甘酒横丁の老舗・からくり時計","水天宮・末広神社の門前町","江戸情緒残る大人の下町"]},"茅場町_東京都":{"opened":"1963年","lines_count":2,"riders":"約9万人","location":"中央区","features":["日本のウォール街・東証の街","証券マンの聖地・サラリーマン酒場","日本橋兜町の金融文化"]},"門前仲町_東京都":{"opened":"1969年","lines_count":2,"riders":"約9万人","location":"江東区","features":["富岡八幡宮・深川不動の門前町","深川めしと辰巳新道の昭和酒場","清澄白河と並ぶ江東スイーツ天国"]},"木場_東京都":{"opened":"1967年","lines_count":1,"riders":"約6万人","location":"江東区","features":["江戸時代から続く材木の街","木場公園の桜と現代美術館","下町と文化の意外な融合"]},"清澄白河_東京都":{"opened":"2000年","lines_count":2,"riders":"約5万人","location":"江東区","features":["ブルーボトル発祥・サードウェーブ聖地","東京都現代美術館とギャラリー街","清澄庭園の池と倉庫リノベ"]},"麻布十番_東京都":{"opened":"2000年","lines_count":2,"riders":"約7万人","location":"港区","features":["芸能人御用達の隠れ家飲食街","たいやき浪花家・豆源の老舗","麻布十番納涼まつりの伝統"]},"広尾_東京都":{"opened":"1964年","lines_count":1,"riders":"約5万人","location":"渋谷区","features":["大使館街・国際色豊かなセレブタウン","ナショナル麻布と高級スーパー文化","聖心女子大・有栖川宮記念公園"]},"恵比寿_東京都":{"opened":"1901年","lines_count":3,"riders":"約25万人","location":"渋谷区","features":["恵比寿ガーデンプレイスのイルミ","エビスビール記念館発祥の地","横丁文化と山手線屈指のおしゃれ街"]},"中目黒_東京都":{"opened":"1927年","lines_count":2,"riders":"約20万人","location":"目黒区","features":["目黒川の桜並木は東京一の絶景","スターバックスリザーブの旗艦店","中目黒高架下のおしゃれ飲食店街"]},"代官山_東京都":{"opened":"1927年","lines_count":1,"riders":"約3万人","location":"渋谷区","features":["蔦屋書店T-SITEと旧山手通り","ヒルサイドテラスと建築の街","大人の隠れ家カフェ＆セレクトショップ"]},"自由が丘_東京都":{"opened":"1927年","lines_count":2,"riders":"約15万人","location":"目黒区","features":["住みたい街ランキング常連","スイーツの街・モンブラン発祥","九品仏川緑道と雑貨カフェ"]},"二子玉川_東京都":{"opened":"1907年","lines_count":2,"riders":"約16万人","location":"世田谷区","features":["ニコタマ・蔦屋家電と二子玉川ライズ","多摩川河川敷の絶景BBQ","楽天本社とセレブタウンの融合"]},"町田_東京都":{"opened":"1908年","lines_count":2,"riders":"約45万人","location":"町田市","features":["東京都南西部最大の商業圏","小田急と横浜線が交差する大ハブ","町田リス園と尾根緑道の桜"]},"錦糸町_東京都":{"opened":"1894年","lines_count":3,"riders":"約30万人","location":"墨田区","features":["東京スカイツリー至近の下町","北口アルカキット・南口テルミナの両翼","井戸の聖地・町中華と昭和酒場"]},"川崎_神奈川県":{"opened":"1872年","lines_count":5,"riders":"約76万人","location":"川崎市川崎区","features":["ラ チッタデッラ・アゼリアの大商圏","工業と商業の融合・ミューザ川崎","チネチッタ通りのライブ感"]},"武蔵小杉_神奈川県":{"opened":"1939年","lines_count":5,"riders":"約55万人","location":"川崎市中原区","features":["タワマン林立・人気急上昇のニュータウン","5路線交差・湘南新宿ラインで新宿14分","富士山ビューと多摩川の眺望"]},"溝の口_神奈川県":{"opened":"1927年","lines_count":2,"riders":"約25万人","location":"川崎市高津区","features":["田園都市線の中核駅","ノクティ＆マルイファミリーの大型商業","西口商店街の昭和ノスタルジー"]},"たまプラーザ_神奈川県":{"opened":"1966年","lines_count":1,"riders":"約10万人","location":"横浜市青葉区","features":["東急田園都市の代表的高級住宅街","美しが丘・新石川の落ち着いた街並み","たまプラーザテラスの上品な商業"]},"青葉台_神奈川県":{"opened":"1966年","lines_count":1,"riders":"約12万人","location":"横浜市青葉区","features":["横浜屈指の文教地区・教育熱心な街","東急スクエアと整然とした街並み","成瀬川の緑と落ち着きの住空間"]},"本厚木_神奈川県":{"opened":"1927年","lines_count":1,"riders":"約14万人","location":"厚木市","features":["神奈川県央の中核都市・厚木の顔","本厚木ミロード・小田急の大商業圏","飲み屋街と相模川の鮎料理"]},"巣鴨_東京都":{"opened":"1903年","lines_count":2,"riders":"約13万人","location":"豊島区","features":["おばあちゃんの原宿・地蔵通り商店街","とげぬき地蔵尊の御利益参道","赤パンツと甘味処の昭和ワールド"]},"駒込_東京都":{"opened":"1910年","lines_count":2,"riders":"約7万人","location":"豊島区","features":["六義園・旧古河庭園の都内屈指の名園","染井吉野桜の発祥地","文人ゆかりの落ち着いた住宅街"]},"田端_東京都":{"opened":"1896年","lines_count":2,"riders":"約5万人","location":"北区","features":["芥川龍之介・室生犀星の文士村","山手線唯一の北区駅・隠れ家タウン","田端文士村記念館の文学散歩"]},"日暮里_東京都":{"opened":"1905年","lines_count":4,"riders":"約22万人","location":"荒川区","features":["谷中銀座の夕焼けだんだんと猫の街","繊維街・西日暮里の問屋ストリート","京成スカイライナーで成田まで36分"]},"鶯谷_東京都":{"opened":"1912年","lines_count":1,"riders":"約3万人","location":"台東区","features":["寛永寺・上野桜木の隠れた風情","根岸正岡子規の文学さんぽ","昭和の風情残る駅前小路"]},"御徒町_東京都":{"opened":"1925年","lines_count":1,"riders":"約7万人","location":"台東区","features":["アメ横と御徒町の宝石・貴金属街","吉池・多慶屋の大型問屋","上野・秋葉原を結ぶ食通エリア"]},"田町_東京都":{"opened":"1909年","lines_count":2,"riders":"約16万人","location":"港区","features":["慶應義塾大学の三田キャンパス","芝浦工大と港区のビジネス街","札の辻のIT・スタートアップ集積"]},"浜松町_東京都":{"opened":"1909年","lines_count":2,"riders":"約15万人","location":"港区","features":["東京モノレールで羽田まで18分","貿易センター・芝大門の旧浅草寺","小便小僧像と旧芝離宮恩賜庭園"]},"目黒_東京都":{"opened":"1885年","lines_count":4,"riders":"約20万人","location":"品川区","features":["目黒川の桜並木は都内屈指","アトレ目黒と権之助坂の食通街","目黒寄席・雅叙園の伝統文化"]},"五反田_東京都":{"opened":"1911年","lines_count":3,"riders":"約21万人","location":"品川区","features":["IT企業集積のスタートアップ街","池上線起点・有隣堂と落ち着き","TOC・ゆうぽうとの跡地再開発"]},"大崎_東京都":{"opened":"1901年","lines_count":4,"riders":"約13万人","location":"品川区","features":["ゲートシティ大崎・ThinkParkの複合街","りんかい線で新木場・お台場直結","副都心線・湘南新宿ラインの要衝"]},"代々木_東京都":{"opened":"1906年","lines_count":3,"riders":"約7万人","location":"渋谷区","features":["ドコモタワーの摩天楼ランドマーク","代々木公園・明治神宮の都心オアシス","新宿と原宿の隙間に佇む隠れ駅"]},"新大久保_東京都":{"opened":"1914年","lines_count":1,"riders":"約4万人","location":"新宿区","features":["コリアタウン・K-POPと韓流カルチャー","チーズハットグ・タッカルビの食べ歩き","イスラム横丁とハラル食材店"]},"目白_東京都":{"opened":"1885年","lines_count":1,"riders":"約3万人","location":"豊島区","features":["学習院大学・上品な高級住宅街","目白庭園の和風名園","切手の博物館と落ち着いた山手線駅"]},"大塚_東京都":{"opened":"1903年","lines_count":2,"riders":"約4万人","location":"豊島区","features":["都電荒川線が交差するレトロ駅","飲兵衛の聖地・新大塚公園","池袋の隣の穴場・グルメ充実"]},"西日暮里_東京都":{"opened":"1971年","lines_count":3,"riders":"約20万人","location":"荒川区","features":["山手線最後の開業駅（1971年）","日暮里・舎人ライナーの起点","千代田線との接続駅・教育熱心エリア"]},"飯田橋_東京都":{"opened":"1928年","lines_count":5,"riders":"約24万人","location":"千代田区","features":["法政大学・神楽坂の坂と石畳","5路線交差・東京の文教ハブ","外濠公園と桜の隠れ名所"]},"市ヶ谷_東京都":{"opened":"1895年","lines_count":4,"riders":"約20万人","location":"千代田区","features":["防衛省・釣り堀外濠の都心癒し","日大法・大妻女子の学生街","靖国通りと九段下への橋渡し"]},"四ツ谷_東京都":{"opened":"1894年","lines_count":4,"riders":"約18万人","location":"新宿区","features":["上智大学とソフィア坂の文教地区","四ツ谷見附の江戸城外郭跡","迎賓館赤坂離宮の壮麗な建築"]},"神保町_東京都":{"opened":"1972年","lines_count":3,"riders":"約9万人","location":"千代田区","features":["世界最大級の古書店街・本の街","神保町カレーの聖地・キッチン南海","明治・専修・日大の学術ハブ"]},"九段下_東京都":{"opened":"1964年","lines_count":3,"riders":"約12万人","location":"千代田区","features":["靖国神社・千鳥ヶ淵の桜の名所","日本武道館の音楽イベント聖地","北の丸公園と科学技術館"]},"虎ノ門_東京都":{"opened":"1938年","lines_count":1,"riders":"約7万人","location":"港区","features":["虎ノ門ヒルズと再開発の最新拠点","官庁街と高層ビル群の融合","愛宕神社の出世の階段"]},"京橋_東京都":{"opened":"1932年","lines_count":1,"riders":"約3万人","location":"中央区","features":["銀座の隣の隠れ家・骨董画廊街","東京駅至近のビジネスエリア","明治屋・ブリヂストン美術館"]},"小川町_東京都":{"opened":"1980年","lines_count":3,"riders":"約7万人","location":"千代田区","features":["古書街と楽器店街・スポーツ用品の聖地","神保町と一体の文教エリア","学生街のリーズナブルランチ"]},"末広町_東京都":{"opened":"1925年","lines_count":1,"riders":"約2万人","location":"千代田区","features":["秋葉原の北側・電気街の延長","銀座線唯一の千代田区北端駅","神田明神への参道"]},"本郷三丁目_東京都":{"opened":"1954年","lines_count":2,"riders":"約7万人","location":"文京区","features":["東京大学・赤門の知の聖地","本郷キャンパス・三四郎池の風情","学生街の名物喫茶と古書店"]},"後楽園_東京都":{"opened":"1954年","lines_count":2,"riders":"約10万人","location":"文京区","features":["東京ドーム・ジャイアンツの本拠地","ラクーア・スパLaQuaの都心リゾート","小石川後楽園の池泉回遊式名園"]},"茗荷谷_東京都":{"opened":"1954年","lines_count":1,"riders":"約7万人","location":"文京区","features":["お茶の水女子・拓殖大の文教地区","播磨坂さくら並木の隠れた桜名所","教育の森公園と区立体育館"]},"汐留_東京都":{"opened":"2002年","lines_count":2,"riders":"約12万人","location":"港区","features":["日本テレビ・電通本社の高層ビル群","カレッタ汐留と地下街グルメ","浜離宮恩賜庭園の絶景借景"]},"学芸大学_東京都":{"opened":"1927年","lines_count":1,"riders":"約6万人","location":"目黒区","features":["東口・西口の活気ある商店街","住みたい街常連の落ち着いた住宅地","個人店と老舗の共存する東横線駅"]},"都立大学_東京都":{"opened":"1927年","lines_count":1,"riders":"約4万人","location":"目黒区","features":["碑文谷公園と高級住宅街","東横線屈指の閑静な街","東京カテドラル聖マリア聖堂"]},"神泉_東京都":{"opened":"1933年","lines_count":1,"riders":"約2万人","location":"渋谷区","features":["渋谷の裏路地・道玄坂上の隠れ家","ミニシアターとレトロ酒場","円山町の大人の夜街"]},"駒場東大前_東京都":{"opened":"1933年","lines_count":1,"riders":"約2万人","location":"目黒区","features":["東大駒場キャンパスと駒場野公園","日本民藝館の柳宗悦の世界","京王井の頭線の文教駅"]},"下北沢_東京都":{"opened":"1933年","lines_count":2,"riders":"約15万人","location":"世田谷区","features":["シモキタ・古着とライブハウスの聖地","本多劇場とザ・スズナリの小劇場文化","カレー激戦区とサブカル発信地"]},"明大前_東京都":{"opened":"1913年","lines_count":2,"riders":"約12万人","location":"世田谷区","features":["明治大学和泉キャンパスの学生街","京王と井の頭線の交差・乗換要衝","永福町・桜上水とのつながり"]},"高井戸_東京都":{"opened":"1933年","lines_count":1,"riders":"約4万人","location":"杉並区","features":["杉並区西部・井の頭線中間駅","住宅街の落ち着いた佇まい","高井戸第二小と地域コミュニティ"]},"王子_東京都":{"opened":"1883年","lines_count":3,"riders":"約15万人","location":"北区","features":["飛鳥山公園の桜の名所・北の上野","王子稲荷・狐の行列の伝統行事"]},"赤羽_東京都":{"opened":"1885年","lines_count":4,"riders":"約34万人","location":"北区","features":["「孤独のグルメ」聖地・昼飲みの街","イトーヨーカドー1号店と大商業圏"]},"十条_東京都":{"opened":"1910年","lines_count":1,"riders":"約4万人","location":"北区","features":["十条銀座商店街の昭和ノスタルジー","埼京線の隠れた住みやすい街"]},"板橋_東京都":{"opened":"1885年","lines_count":1,"riders":"約4万人","location":"板橋区","features":["中山道・第一の宿場町の歴史","板橋区役所の玄関と下町情緒"]},"練馬_東京都":{"opened":"1915年","lines_count":4,"riders":"約16万人","location":"練馬区","features":["アニメの街・ジャパンアニメーションの拠点","4路線ハブ・練馬区役所と石神井公園"]},"光が丘_東京都":{"opened":"1991年","lines_count":1,"riders":"約7万人","location":"練馬区","features":["IMA光が丘・大規模住宅地","光が丘公園の四季と都市計画の傑作"]},"荻窪_東京都":{"opened":"1891年","lines_count":2,"riders":"約16万人","location":"杉並区","features":["ラーメン激戦区・春木屋と丸長","大田黒公園と西郊ロッヂングの文化遺産"]},"高円寺_東京都":{"opened":"1922年","lines_count":1,"riders":"約11万人","location":"杉並区","features":["古着・ライブハウス・阿波踊りの街","中央線サブカル文化の聖地・純情商店街"]},"阿佐ヶ谷_東京都":{"opened":"1922年","lines_count":1,"riders":"約8万人","location":"杉並区","features":["七夕祭り・阿佐ヶ谷ジャズの伝統","すずらん通り・パールセンター商店街"]},"西荻窪_東京都":{"opened":"1922年","lines_count":1,"riders":"約7万人","location":"杉並区","features":["アンティーク・古道具店の街","隠れ家カフェと焼き鳥戎の名店"]},"三鷹_東京都":{"opened":"1930年","lines_count":1,"riders":"約9万人","location":"三鷹市","features":["ジブリ美術館・井の頭恩賜公園","太宰治・山本有三の文豪の街"]},"武蔵境_東京都":{"opened":"1889年","lines_count":2,"riders":"約10万人","location":"武蔵野市","features":["武蔵野プレイス・図書館文化拠点","西武多摩川線で多摩へ・桜並木"]},"国分寺_東京都":{"opened":"1889年","lines_count":3,"riders":"約25万人","location":"国分寺市","features":["お鷹の道・真姿の池の湧水","西武多摩湖線・国分寺線の起点"]},"立川_東京都":{"opened":"1889年","lines_count":4,"riders":"約34万人","location":"立川市","features":["多摩地域最大・IKEA／ららぽーと","昭和記念公園とグリーンスプリングス"]},"八王子_東京都":{"opened":"1889年","lines_count":2,"riders":"約16万人","location":"八王子市","features":["東京西部の中心都市・大学が多い学生街","高尾山・夕焼け小焼けの自然"]},"蒲田_東京都":{"opened":"1904年","lines_count":4,"riders":"約30万人","location":"大田区","features":["蒲田餃子と町工場の下町","蒲田行進曲・東口商店街の活気"]},"大森_東京都":{"opened":"1876年","lines_count":2,"riders":"約20万人","location":"大田区","features":["大森貝塚・日本考古学発祥の地","アトレ・大森貝塚遺跡庭園"]},"大井町_東京都":{"opened":"1901年","lines_count":3,"riders":"約30万人","location":"品川区","features":["アトレ大井町と東小路の昭和酒場","りんかい線でお台場・新木場直結"]},"北綾瀬_東京都":{"opened":"1979年","lines_count":1,"riders":"約3万人","location":"足立区","features":["千代田線の終点・足立区東部","メトロ車両基地とキッズ向けスポット"]},"綾瀬_東京都":{"opened":"1943年","lines_count":2,"riders":"約14万人","location":"足立区","features":["千代田線と常磐線の境界駅","東京武道館と東綾瀬公園の緑"]},"亀有_東京都":{"opened":"1897年","lines_count":1,"riders":"約8万人","location":"葛飾区","features":["こち亀・両津勘吉の銅像","アリオ亀有とリリオ亀有のショッピング"]},"金町_東京都":{"opened":"1897年","lines_count":1,"riders":"約11万人","location":"葛飾区","features":["東京理科大葛飾と新興学園街","水元公園・帝釈天への入口"]},"西船橋_千葉県":{"opened":"1958年","lines_count":4,"riders":"約25万人","location":"船橋市","features":["4路線交差・千葉県西部最大ハブ","東葉高速・東西線で大手町直結"]},"船橋_千葉県":{"opened":"1894年","lines_count":3,"riders":"約13万人","location":"船橋市","features":["東武・西武・京成3つの船橋駅","船橋大神宮と老舗居酒屋の街"]},"津田沼_千葉県":{"opened":"1895年","lines_count":2,"riders":"約10万人","location":"習志野市","features":["モリシア・パルコの大型商業","千葉工大と日大習志野の学生街"]},"柏_千葉県":{"opened":"1896年","lines_count":3,"riders":"約24万人","location":"柏市","features":["そごう・高島屋の県北西部商業中心","二番街商店街と柏ストリート文化"]},"松戸_千葉県":{"opened":"1896年","lines_count":3,"riders":"約20万人","location":"松戸市","features":["千葉県西部・常磐の玄関","本土寺の紫陽花・矢切の渡し"]},"舞浜_千葉県":{"opened":"1988年","lines_count":1,"riders":"約8万人","location":"浦安市","features":["東京ディズニーリゾートの夢の入口","イクスピアリと舞浜アンフィシアター"]},"海浜幕張_千葉県":{"opened":"1986年","lines_count":1,"riders":"約6万人","location":"千葉市美浜区","features":["幕張新都心・幕張メッセのイベント拠点","ZOZOマリン・三井アウトレット"]},"千葉_千葉県":{"opened":"1894年","lines_count":4,"riders":"約18万人","location":"千葉市中央区","features":["千葉県の県庁所在地・モノレール起点","そごう千葉とパルコ千葉本店"]},"本川越_埼玉県":{"opened":"1895年","lines_count":1,"riders":"約3万人","location":"川越市","features":["小江戸川越・蔵造りの町並み","時の鐘・菓子屋横丁の観光地"]},"川越_埼玉県":{"opened":"1940年","lines_count":2,"riders":"約9万人","location":"川越市","features":["川越市のJR玄関・クレアモール","喜多院と川越まつりの伝統"]},"所沢_埼玉県":{"opened":"1895年","lines_count":2,"riders":"約11万人","location":"所沢市","features":["西武鉄道本社所在地・西武園遊園地","埼玉県南西部最大の商業中心"]},"浦和_埼玉県":{"opened":"1883年","lines_count":3,"riders":"約9万人","location":"さいたま市浦和区","features":["浦和レッズ・サッカーの街","武蔵浦和の文教地区と県庁所在地"]},"川口_埼玉県":{"opened":"1910年","lines_count":1,"riders":"約8万人","location":"川口市","features":["キュポラのある街・鋳物の歴史","タワマン林立・人気急上昇エリア"]},"上大岡_神奈川県":{"opened":"1930年","lines_count":2,"riders":"約11万人","location":"横浜市港南区","features":["京急ウィング・ゆめおおおかオフィス","横浜南部の商業中心地"]},"関内_神奈川県":{"opened":"1872年","lines_count":2,"riders":"約8万人","location":"横浜市中区","features":["横浜中華街・横浜スタジアムの最寄り","関内駅周辺のジャズバーと老舗"]},"桜木町_神奈川県":{"opened":"1872年","lines_count":2,"riders":"約14万人","location":"横浜市中区","features":["みなとみらい21の玄関・ロープウェイ","野毛飲み屋街と横浜美術館"]},"みなとみらい_神奈川県":{"opened":"2004年","lines_count":1,"riders":"約12万人","location":"横浜市西区","features":["ランドマークタワーと赤レンガ倉庫","コスモワールドと汽車道のロマン"]},"元町・中華街_神奈川県":{"opened":"2004年","lines_count":1,"riders":"約8万人","location":"横浜市中区","features":["日本最大の横浜中華街・聘珍樓","元町ショッピングストリートと山手洋館"]},"新横浜_神奈川県":{"opened":"1964年","lines_count":4,"riders":"約23万人","location":"横浜市港北区","features":["東海道新幹線・横浜アリーナ","日産スタジアムとラーメン博物館"]},"東陽町_東京都":{"opened":"1967年","lines_count":1,"riders":"約10万人","location":"江東区","features":["都心まで一直線・大手町まで9分","江戸時代の洲崎・木場の歴史と運河の街"]},"洗足池_東京都":{"opened":"1927年","lines_count":1,"riders":"約2万人","location":"大田区","features":["西郷隆盛と勝海舟ゆかりの洗足池","池畔の散策路と桜の隠れ名所"]},"長原_東京都":{"opened":"1927年","lines_count":1,"riders":"約1万人","location":"大田区","features":["池上線の住宅街駅・閑静な雰囲気","旗の台と石川台に挟まれた穴場"]},"石川台_東京都":{"opened":"1927年","lines_count":1,"riders":"約1万人","location":"大田区","features":["池上線の生活駅・地元密着型","洗足池や立会川緑道の散歩道"]},"雪が谷大塚_東京都":{"opened":"1923年","lines_count":1,"riders":"約2万人","location":"大田区","features":["田園調布と並ぶ高級住宅街の入口","池上線屈指の落ち着いた街並み"]},"代田橋_東京都":{"opened":"1913年","lines_count":1,"riders":"約1.5万人","location":"世田谷区","features":["沖縄タウン代田橋の南国カルチャー"]},"上北沢_東京都":{"opened":"1913年","lines_count":1,"riders":"約1.6万人","location":"世田谷区","features":["桜並木の隠れスポット・上北沢小学校"]}};
 
 
 function openStationCard(data) {
   const card = document.getElementById('station-card');
   card.setAttribute('data-rank', data.rank);
   
-  // ランク文字（左上の大きい文字）
-  document.getElementById('sc-rank-letter').textContent = data.rank;
-  
   // 駅名
   document.getElementById('sc-station-name').textContent = data.name;
   
-  // 訪問回数ピル
-  let visitText = '初訪問';
-  if (!data.isFirstVisit) {
-    visitText = (data.visitCount && data.visitCount > 1) ? `${data.visitCount}回訪問` : '訪問済';
-  }
-  document.getElementById('sc-visit-pill').textContent = visitText;
+  // ランクバッジ
+  document.getElementById('sc-rank-badge').textContent = data.rank;
   
-  // チェックイン日付
+  // 訪問回数：「初訪問」or「N回訪問」
+  let visitText;
+  if (data.isFirstVisit || !data.visitCount || data.visitCount === 1) {
+    visitText = '初訪問';
+  } else {
+    visitText = `${data.visitCount}回訪問`;
+  }
+  document.getElementById('sc-visit-count').textContent = visitText;
+  
+  // チェックイン日時
   let dateStr;
   if (data.checkinDate) {
     const d = (data.checkinDate instanceof Date) ? data.checkinDate : new Date(data.checkinDate);
@@ -3418,16 +3433,9 @@ function openStationCard(data) {
     lineBar.innerHTML = colors.map(c => `<div style="background:${c}"></div>`).join('');
   }
   
-  // 路線名（短縮表記）
-  let lineDisplay;
-  if (lines.length === 0) {
-    lineDisplay = '-';
-  } else if (lines.length <= 3) {
-    lineDisplay = lines.map(l => l.replace(/^東京メトロ/,'').replace(/^都営/,'都営')).join(' / ');
-  } else {
-    lineDisplay = lines.slice(0, 2).map(l => l.replace(/^東京メトロ/,'').replace(/^都営/,'都営')).join(' / ') + ' ほか';
-  }
-  document.getElementById('sc-line-text').textContent = lineDisplay;
+  // 路線名（短縮）
+  const lineDisplay = lines.slice(0, 4).map(l => l.replace(/^東京メトロ/,'').replace(/線$/,'線')).join(' / ');
+  document.getElementById('sc-line-text').textContent = lineDisplay || '-';
   
   // スコア
   document.getElementById('sc-score-num').textContent = data.score;
@@ -3443,7 +3451,7 @@ function openStationCard(data) {
   document.getElementById('sc-ax-life').textContent = life;
   document.getElementById('sc-ax-med').textContent = med;
   
-  // 駅情報DB
+  // 駅情報 DB から取得
   const stKey = `${data.name}_${data.pref}`;
   const info = STATION_INFO[stKey];
   if (info) {
@@ -3452,32 +3460,38 @@ function openStationCard(data) {
     document.getElementById('sc-info-lines').textContent = info.lines_count ? info.lines_count + '路線' : '-';
     document.getElementById('sc-info-loc').textContent = info.location || '-';
   } else {
+    // 駅情報なしの場合は乗り入れ路線数だけ自動計算
     document.getElementById('sc-info-opened').textContent = '-';
     document.getElementById('sc-info-riders').textContent = '-';
     document.getElementById('sc-info-lines').textContent = lines.length + '路線';
     document.getElementById('sc-info-loc').textContent = data.pref;
   }
   
-  // 特徴コメント（ランク別）
+  // 特徴コメント（ランク別の数）
   const featuresContainer = document.getElementById('sc-features');
   let featureList = info && info.features ? info.features : [];
+  // ランクに応じてカウント調整: S=3, A=3, B=2, C=2, D=1, E=1
   const limitMap = { S:3, A:3, B:2, C:2, D:1, E:1 };
   const limit = limitMap[data.rank] || 0;
   featureList = featureList.slice(0, limit);
   
   if (featureList.length === 0) {
-    featuresContainer.innerHTML = '<div class="feature">街力データから抽出された駅</div>';
+    featuresContainer.innerHTML = '<div class="sc-feature">街力データから抽出された特徴駅</div>';
   } else {
-    featuresContainer.innerHTML = featureList.map(f => `<div class="feature">${f}</div>`).join('');
+    featuresContainer.innerHTML = featureList.map(f => `<div class="sc-feature">${f}</div>`).join('');
   }
   
-  // メモは空欄（3行のスペースは memo-line で確保済み）
-  // 編集機能は未実装
+  // メモは空欄（将来編集可）
+  document.getElementById('sc-memo-content').textContent = '';
   
   // 入場アニメ
   const wrap = document.getElementById('card-flip-wrap');
   wrap.style.animation = 'none';
   setTimeout(() => { wrap.style.animation = ''; }, 10);
+  // currentCardStation 保存・お気に入り状態反映
+  currentCardStation = data;
+  updateCardFavButton();
+  
   document.getElementById('card-modal-bg').classList.add('open');
 }
 
@@ -3487,17 +3501,12 @@ window.closeCardModal = function(e) {
   // 戻り先処理：マイページ or カード一覧 or マップ
   const ret = window.cardCloseReturn;
   window.cardCloseReturn = null;
-  // 開いている下層モーダルがあるかチェック
-  const mypageOpen = document.getElementById('mypage-bg').classList.contains('open');
-  const cardlistOpen = document.getElementById('cardlist-bg').classList.contains('open');
-  if (ret === 'cardlist' && cardlistOpen) {
-    // カード一覧が開いてればそれを残す
-  } else if (ret === 'mypage' && mypageOpen) {
-    // マイページが開いてればそれを残す
-  } else if (mypageOpen || cardlistOpen) {
-    // 戻り先指定がなくても、何かが開いていればbodyスクロール固定維持
+  if (ret === 'cardlist') {
+    // カード一覧は既に開いたままなので何もしない
+  } else if (ret === 'mypage') {
+    // マイページは既に開いたままなので何もしない
   } else {
-    // 何も開いてない → マップに戻る、bodyスクロール解除
+    // 通常（チェックイン成功からの新規カード）はマップに戻る
     document.body.style.overflow = '';
   }
 };
@@ -3524,6 +3533,77 @@ async function restorePendingCheckin() {
   }
 }
 
+
+
+
+
+window.openCardFromRanking = function(name, pref) {
+  if (window.openCardFromHistory) {
+    window.cardCloseReturn = null;
+    window.openCardFromHistory(name, pref);
+  }
+};
+
+// ─── チェックイン済み駅のカードリンク表示 ───
+window.updateCardLinkInPanel = function(st) {
+  const link = document.getElementById('ip-card-link');
+  if (!link) return;
+  const isCheckedIn = window.checkedInStations && window.checkedInStations.has(st.name+'_'+st.pref);
+  if (isCheckedIn && auth && auth.currentUser) {
+    link.style.display = 'flex';
+    link.textContent = `${st.name}駅のマイカードを見る`;
+    link.onclick = () => {
+      if (window.openCardFromHistory) {
+        window.cardCloseReturn = null; // マップに戻る
+        window.openCardFromHistory(st.name, st.pref);
+      }
+    };
+  } else {
+    link.style.display = 'none';
+  }
+};
+
+// ─── カード内アクション ───
+let currentCardStation = null;
+
+window.toggleCardFav = function() {
+  if (!currentCardStation) return;
+  const st = stationData.find(s => s.name === currentCardStation.name && s.pref === currentCardStation.pref);
+  if (st && window.toggleFav) {
+    window.toggleFav(st);
+    updateCardFavButton();
+  }
+};
+
+window.updateCardFavButton = function() {
+  if (!currentCardStation) return;
+  const st = stationData.find(s => s.name === currentCardStation.name && s.pref === currentCardStation.pref);
+  const btn = document.getElementById('sc-fav-btn');
+  if (!btn) return;
+  if (st && window.isFav && window.isFav(st)) {
+    btn.textContent = '♥';
+    btn.classList.add('active');
+  } else {
+    btn.textContent = '♡';
+    btn.classList.remove('active');
+  }
+};
+
+window.shareCard = async function() {
+  if (!currentCardStation) return;
+  const url = location.href.split('?')[0];
+  const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を制覇！\n街力 ${currentCardStation.score} (${currentCardStation.rank}ランク)\n${url}`;
+  if (navigator.share) {
+    try { await navigator.share({title:'街巡-まちめぐ-', text, url}); } catch(e) {}
+  } else {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('コピーしました！');
+    } catch(e) {
+      prompt('コピーしてXに投稿:', text);
+    }
+  }
+};
 
 // ステーションカードキャッシュ（訪問済み駅の判定用）
 window.checkedInStations = new Set();
@@ -3616,12 +3696,7 @@ window.openMypage = async () => {
 window.closeMypage = (e) => {
   if (e && e.target && e.target.id !== 'mypage-bg') return;
   document.getElementById('mypage-bg').classList.remove('open');
-  // ほかに開いてるモーダルがなければスクロール解除
-  const cardOpen = document.getElementById('card-modal-bg').classList.contains('open');
-  const cardlistOpen = document.getElementById('cardlist-bg').classList.contains('open');
-  if (!cardOpen && !cardlistOpen) {
-    document.body.style.overflow = '';
-  }
+  document.body.style.overflow = '';
 };
 
 window.signOutFromMypage = async () => {
