@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>街巡 管理者ダッシュボード</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,'Segoe UI','Noto Sans JP',sans-serif;
+  background:linear-gradient(180deg,#0a1428 0%,#0f1830 60%,#162038 100%);
+  color:#e8edf5;min-height:100vh;
+  padding:18px 14px 80px;
+}
+h1{
+  font-size:22px;font-weight:900;letter-spacing:1px;
+  margin-bottom:4px;color:#fff;
+}
+.subtitle{
+  font-size:11px;color:#7a96b6;margin-bottom:18px;letter-spacing:1px;
+}
+
+/* ─── ログイン画面 ─── */
+#login-screen{
+  display:none;text-align:center;padding:60px 20px;
+}
+#login-screen.show{display:block}
+#login-screen h2{font-size:18px;margin-bottom:16px;color:#fff}
+.login-btn{
+  background:#fff;color:#1a2030;border:none;
+  padding:12px 24px;border-radius:10px;font-size:15px;font-weight:700;
+  cursor:pointer;margin-top:12px;font-family:inherit;
+  display:inline-flex;align-items:center;gap:10px;
+}
+.login-btn:hover{background:#e8edf5}
+.login-error{
+  background:rgba(255,68,80,0.15);border:1px solid rgba(255,68,80,0.4);
+  color:#ff8090;border-radius:10px;padding:14px;margin-top:18px;
+  font-size:13px;line-height:1.6;text-align:left;
+}
+
+/* ─── メイン画面 ─── */
+#main-screen{display:none}
+#main-screen.show{display:block}
+
+.user-bar{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(120,150,210,0.2);
+  border-radius:10px;padding:10px 14px;margin-bottom:18px;
+}
+.user-bar .ub-email{flex:1;font-size:13px;color:#cfdaee;font-weight:600}
+.user-bar .ub-uid{font-size:10px;color:#7a96b6;font-family:monospace}
+.user-bar button{
+  background:rgba(255,68,80,0.15);border:1px solid rgba(255,68,80,0.35);
+  color:#ff8090;border-radius:7px;padding:6px 12px;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+
+/* ─── セクション ─── */
+.section{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(120,150,210,0.2);
+  border-radius:12px;padding:16px;margin-bottom:16px;
+}
+.section h2{
+  font-size:14px;font-weight:900;color:#a8c8f0;
+  letter-spacing:2px;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.section h2 .badge{
+  background:rgba(120,170,230,0.25);
+  border:1px solid rgba(160,200,240,0.4);
+  color:#fff;font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:5px;letter-spacing:0.5px;
+}
+
+/* ─── ステータスグリッド ─── */
+.status-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:10px;
+}
+.status-item{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(120,150,210,0.18);
+  border-radius:8px;padding:10px;
+}
+.status-item .label{font-size:10px;color:#7a96b6;letter-spacing:1.5px;margin-bottom:4px;font-weight:700}
+.status-item .value{font-size:18px;font-weight:900;color:#fff;letter-spacing:0.5px}
+.status-item .value.green{color:#4ade80}
+.status-item .value.yellow{color:#fbbf24}
+.status-item .value.red{color:#f87171}
+.status-item .sub{font-size:11px;color:#a8b8d0;margin-top:2px}
+
+/* ─── プログレスバー ─── */
+.progress-wrap{margin-top:12px}
+.progress-bar{
+  height:14px;background:rgba(255,255,255,0.08);border-radius:7px;
+  overflow:hidden;border:1px solid rgba(120,150,210,0.2);
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,#3a8ac4 0%,#58a8e0 100%);
+  transition:width 0.5s ease;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.progress-label{
+  font-size:11px;color:#a8b8d0;margin-top:6px;text-align:center;font-weight:600;
+}
+
+/* ─── ボタン ─── */
+.btn{
+  background:linear-gradient(135deg,#58a8e0,#3a8ac4);
+  color:#fff;border:none;padding:10px 18px;border-radius:8px;
+  font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+  letter-spacing:0.5px;transition:all 0.15s;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(88,168,224,0.3)}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn.warn{background:linear-gradient(135deg,#fbbf24,#d97706)}
+.btn.danger{background:linear-gradient(135deg,#f87171,#dc2626)}
+
+/* ─── 駅リスト ─── */
+.station-list{
+  display:flex;flex-direction:column;gap:6px;
+  max-height:420px;overflow-y:auto;
+}
+.station-item{
+  display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;
+  align-items:center;padding:8px 12px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(120,150,210,0.15);
+  border-radius:7px;
+}
+.station-item .rank-arrow{
+  display:flex;align-items:center;gap:3px;
+  font-size:14px;font-weight:900;
+}
+.station-item .rank-old{color:#7a96b6}
+.station-item .rank-new{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;
+  font-size:11px;font-weight:900;color:#fff;
+}
+.station-item .rank-new.S{background:#ff2244}
+.station-item .rank-new.A{background:#ff8800}
+.station-item .rank-new.B{background:#ffd700;color:#3a2800}
+.station-item .rank-new.C{background:#22c272}
+.station-item .rank-new.D{background:#3a8ac4}
+.station-item .info{
+  display:flex;flex-direction:column;gap:1px;min-width:0;
+}
+.station-item .sname{
+  font-size:14px;font-weight:800;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.station-item .smeta{font-size:10px;color:#a8b8d0}
+.station-item .scores{
+  font-size:11px;color:#cfdaee;font-family:monospace;text-align:right;
+}
+.station-item .scores .diff{font-weight:900;font-size:12px}
+.station-item .scores .diff.up{color:#4ade80}
+.station-item .scores .diff.down{color:#f87171}
+
+.empty{
+  text-align:center;padding:30px 20px;color:#7a96b6;font-size:13px;
+}
+
+/* ─── タブ ─── */
+.tabs{
+  display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid rgba(120,150,210,0.2);
+  flex-wrap:wrap;
+}
+.tab{
+  background:none;border:none;color:#7a96b6;
+  padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;
+  font-family:inherit;letter-spacing:0.5px;
+  border-bottom:2px solid transparent;
+}
+.tab.active{color:#fff;border-bottom-color:#58a8e0}
+.tab .cnt{
+  display:inline-block;background:rgba(120,170,230,0.2);
+  border-radius:9px;padding:1px 6px;font-size:10px;margin-left:4px;
+  color:#a8c8f0;
+}
+.tab.active .cnt{background:#58a8e0;color:#fff}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ─── X投稿テンプレ ─── */
+.x-post{
+  background:rgba(0,0,0,0.3);
+  border:1px solid rgba(120,150,210,0.3);
+  border-radius:10px;padding:14px;
+  font-family:monospace;font-size:13px;color:#e8edf5;
+  white-space:pre-wrap;word-break:break-word;line-height:1.6;
+  margin-bottom:10px;
+}
+.x-actions{display:flex;gap:8px;flex-wrap:wrap}
+.x-actions .btn{flex:1;min-width:120px}
+.copy-toast{
+  position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+  background:#22c272;color:#fff;padding:10px 20px;border-radius:8px;
+  font-size:13px;font-weight:700;
+  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+  opacity:0;transition:opacity 0.3s;pointer-events:none;
+  z-index:9999;
+}
+.copy-toast.show{opacity:1}
+
+/* ─── スマホ ─── */
+@media (max-width:520px){
+  .station-item{grid-template-columns:auto 1fr;gap:6px}
+  .station-item .scores,.station-item .rank-arrow{grid-column:1/-1;text-align:left;justify-self:start}
+}
+</style>
+</head>
+<body>
+
+<h1>街巡 管理者ダッシュボード</h1>
+<div class="subtitle">MACHIMEGU ADMIN CONSOLE</div>
+
+<!-- ═══ ログイン画面 ═══ -->
+<div id="login-screen">
+  <h2>管理者ログインが必要です</h2>
+  <p style="color:#a8b8d0;font-size:13px;line-height:1.6">登録された管理者アカウントでログインしてください</p>
+  <button class="login-btn" onclick="signInAdmin()">
+    <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.7 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2.1 1.4-4.6 2.3-7.2 2.3-5.2 0-9.7-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.2 5.2c-.4.4 6.6-4.8 6.6-14.7 0-1.3-.1-2.6-.4-3.9z"/></svg>
+    Googleでログイン
+  </button>
+  <div id="login-error" class="login-error" style="display:none"></div>
+</div>
+
+<!-- ═══ メイン画面 ═══ -->
+<div id="main-screen">
+
+  <div class="user-bar">
+    <div style="flex:1">
+      <div class="ub-email" id="ub-email">-</div>
+      <div class="ub-uid" id="ub-uid">-</div>
+    </div>
+    <button onclick="signOutAdmin()">ログアウト</button>
+  </div>
+
+  <!-- ステータス -->
+  <div class="section">
+    <h2>システムステータス <span class="badge" id="quarter-badge">-</span></h2>
+    <div class="status-grid" id="status-grid">
+      <div class="status-item"><div class="label">読込中...</div></div>
+    </div>
+    <div id="progress-section" class="progress-wrap" style="display:none">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">-</div>
+    </div>
+  </div>
+
+  <!-- 手動操作 -->
+  <div class="section">
+    <h2>運用操作</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="loadAll()">🔄 ステータス更新</button>
+      <button class="btn warn" id="rebuild-btn" onclick="triggerRebuild()">⚙️ 手動で再計算開始</button>
+    </div>
+    <div style="font-size:11px;color:#7a96b6;margin-top:8px;line-height:1.5">
+      ※ 再計算は2-4時間かかります。実行中も古いデータでサービス継続されます。
+    </div>
+  </div>
+
+  <!-- 差分レポート -->
+  <div class="section">
+    <h2>シーズン差分レポート <span class="badge" id="diff-badge">-</span></h2>
+    
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('rankUp')">📈 ランクUP <span class="cnt" id="cnt-rankUp">0</span></button>
+      <button class="tab" onclick="switchTab('rankDown')">📉 ランクDOWN <span class="cnt" id="cnt-rankDown">0</span></button>
+      <button class="tab" onclick="switchTab('scoreUp')">🔝 スコア上昇TOP <span class="cnt" id="cnt-scoreUp">0</span></button>
+      <button class="tab" onclick="switchTab('scoreDown')">🔻 スコア下降 <span class="cnt" id="cnt-scoreDown">0</span></button>
+    </div>
+    
+    <div class="tab-pane active" id="pane-rankUp"><div class="empty">読込中...</div></div>
+    <div class="tab-pane" id="pane-rankDown"><div class="empty">-</div></div>
+    <div class="tab-pane" id="pane-scoreUp"><div class="empty">-</div></div>
+    <div class="tab-pane" id="pane-scoreDown"><div class="empty">-</div></div>
+  </div>
+
+  <!-- X投稿テンプレ -->
+  <div class="section">
+    <h2>X投稿テンプレート</h2>
+    <div class="x-post" id="x-post-text">-</div>
+    <div class="x-actions">
+      <button class="btn" onclick="copyXPost()">📋 コピー</button>
+      <button class="btn" onclick="openXIntent()">𝕏 Xで投稿画面を開く</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="copy-toast" id="copy-toast">コピーしました！</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+
+// ★ 街巡本体と同じFirebase設定
+const firebaseConfig = {
+  apiKey: "AIzaSyB88IewpQSXzLeICeilSCwP5R6Q6vTlSDI",
+  authDomain: "machi-megu-project.firebaseapp.com",
+  projectId: "machi-megu-project",
+  storageBucket: "machi-megu-project.firebasestorage.app",
+  messagingSenderId: "851136375513",
+  appId: "1:851136375513:web:8aa9f969c5013506382cc8"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let currentToken = null;
+
+window.signInAdmin = async function() {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    currentUser = result.user;
+  } catch(e) {
+    showLoginError('ログイン失敗: ' + e.message);
+  }
+};
+
+window.signOutAdmin = async function() {
+  await signOut(auth);
+  currentUser = null;
+  currentToken = null;
+};
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideLoginError() {
+  document.getElementById('login-error').style.display = 'none';
+}
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    currentUser = user;
+    try {
+      currentToken = await user.getIdToken();
+      // 管理者チェック（/api/admin/me を叩く）
+      const res = await fetch('/api/admin/me', {
+        headers: { 'Authorization': 'Bearer ' + currentToken }
+      });
+      if (res.status === 403) {
+        showLoginError('このアカウントには管理者権限がありません。\nUID: ' + user.uid + '\n\n別のアカウントでログインしてください。');
+        await signOut(auth);
+        return;
+      }
+      if (!res.ok) {
+        const errData = await res.json().catch(()=>({}));
+        showLoginError('認証エラー: ' + (errData.error || res.status));
+        await signOut(auth);
+        return;
+      }
+      const data = await res.json();
+      // ログイン成功
+      hideLoginError();
+      document.getElementById('login-screen').classList.remove('show');
+      document.getElementById('main-screen').classList.add('show');
+      document.getElementById('ub-email').textContent = data.email || user.email || '-';
+      document.getElementById('ub-uid').textContent = data.uid;
+      
+      // データ読込
+      await loadAll();
+    } catch(e) {
+      showLoginError('認証エラー: ' + e.message);
+    }
+  } else {
+    currentUser = null;
+    currentToken = null;
+    document.getElementById('login-screen').classList.add('show');
+    document.getElementById('main-screen').classList.remove('show');
+  }
+});
+
+// ═══ APIフェッチ（認証付き） ═══
+async function authFetch(url, options = {}) {
+  if (!currentToken && currentUser) {
+    currentToken = await currentUser.getIdToken();
+  }
+  const headers = { ...(options.headers || {}), 'Authorization': 'Bearer ' + currentToken };
+  return fetch(url, { ...options, headers });
+}
+
+// ═══ ステータス読込 ═══
+window.loadAll = async function() {
+  try {
+    const [statusRes, diffRes] = await Promise.all([
+      fetch('/api/status'),  // 認証なし
+      authFetch('/api/admin/diff?radius=800')
+    ]);
+    const status = await statusRes.json();
+    const diff = await diffRes.json();
+    renderStatus(status);
+    renderDiff(diff);
+    renderXPost(diff);
+  } catch(e) {
+    console.error('loadAll error:', e);
+  }
+};
+
+function renderStatus(s) {
+  document.getElementById('quarter-badge').textContent = s.quarterVersion || '-';
+  
+  const builtAt = s.cacheBuiltAt > 0 
+    ? new Date(s.cacheBuiltAt).toLocaleString('ja-JP', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
+    : '未構築';
+  
+  const html = `
+    <div class="status-item">
+      <div class="label">CACHE STATUS</div>
+      <div class="value ${s.cacheStations >= s.stationsLoaded ? 'green' : 'yellow'}">${s.cacheStations}/${s.stationsLoaded}</div>
+      <div class="sub">${s.cacheStations >= s.stationsLoaded ? '✓ 全駅プリ計算済' : '計算中または未完了'}</div>
+    </div>
+    <div class="status-item">
+      <div class="label">VERSION</div>
+      <div class="value">${s.cacheVersion || '-'}</div>
+      <div class="sub">${builtAt}</div>
+    </div>
+    <div class="status-item">
+      <div class="label">BUILD STATE</div>
+      <div class="value ${s.running ? 'yellow' : 'green'}">${s.running ? '🔄 計算中' : '✓ 待機中'}</div>
+      <div class="sub">${s.running ? `${s.done}/${s.total} (${s.progress})` : 'アイドル'}</div>
+    </div>
+    <div class="status-item">
+      <div class="label">NEXT REBUILD</div>
+      <div class="value ${s.needsRebuild ? 'yellow' : 'green'}">${s.needsRebuild ? '⚠️ 必要' : '✓ OK'}</div>
+      <div class="sub">${s.needsRebuild ? '四半期超過' : '四半期内'}</div>
+    </div>
+  `;
+  document.getElementById('status-grid').innerHTML = html;
+  
+  // プログレス表示
+  if (s.running) {
+    document.getElementById('progress-section').style.display = 'block';
+    const pct = s.total > 0 ? (s.done / s.total * 100) : 0;
+    document.getElementById('progress-fill').style.width = pct.toFixed(1) + '%';
+    document.getElementById('progress-label').textContent = 
+      `${s.done}/${s.total}件 (${s.progress}) — 現在: ${s.currentStation || '-'}`;
+    document.getElementById('rebuild-btn').disabled = true;
+  } else {
+    document.getElementById('progress-section').style.display = 'none';
+    document.getElementById('rebuild-btn').disabled = false;
+  }
+}
+
+let currentDiff = null;
+function renderDiff(d) {
+  currentDiff = d;
+  
+  if (!d.hasDiff) {
+    document.getElementById('diff-badge').textContent = '前期データなし';
+    ['rankUp','rankDown','scoreUp','scoreDown'].forEach(k => {
+      document.getElementById('cnt-'+k).textContent = '0';
+      document.getElementById('pane-'+k).innerHTML = `<div class="empty">${d.message || '前期データがまだありません'}</div>`;
+    });
+    return;
+  }
+  
+  document.getElementById('diff-badge').textContent = `${d.previousVersion} → ${d.currentVersion}`;
+  
+  ['rankUp','rankDown','scoreUp','scoreDown'].forEach(key => {
+    document.getElementById('cnt-'+key).textContent = d.counts[key] || 0;
+    const items = d.stations[key] || [];
+    if (items.length === 0) {
+      document.getElementById('pane-'+key).innerHTML = `<div class="empty">該当駅なし</div>`;
+      return;
+    }
+    let html = '<div class="station-list">';
+    items.forEach(item => {
+      const lines = (item.lines || []).slice(0,2).join(' / ');
+      const diffClass = item.scoreDiff > 0 ? 'up' : 'down';
+      const sign = item.scoreDiff > 0 ? '+' : '';
+      html += `<div class="station-item">
+        <div class="rank-arrow">
+          <span class="rank-old">${item.oldRank}</span>
+          <span style="opacity:0.5">→</span>
+          <span class="rank-new ${item.newRank}">${item.newRank}</span>
+        </div>
+        <div class="info">
+          <div class="sname">${item.name}_${item.pref}</div>
+          <div class="smeta">${lines}</div>
+        </div>
+        <div class="scores">
+          ${item.oldScore} → ${item.newScore}<br>
+          <span class="diff ${diffClass}">${sign}${item.scoreDiff}pt</span>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    document.getElementById('pane-'+key).innerHTML = html;
+  });
+}
+
+window.switchTab = function(key) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  event.target.closest('.tab').classList.add('active');
+  document.getElementById('pane-'+key).classList.add('active');
+};
+
+// ═══ X投稿テンプレ生成 ═══
+function renderXPost(d) {
+  let text = '';
+  
+  if (!d || !d.hasDiff) {
+    text = `街巡-まちめぐ-、シーズン${d?.currentVersion || '？'}のデータ更新完了！\n\n全国1,276駅の街力スコアを最新版に更新しました🌆\n\nあなたの街は何ランク？\nmachimegu-production.up.railway.app\n\n#街巡 #まちめぐ`;
+  } else {
+    const top3 = (d.stations.rankUp || []).slice(0, 3);
+    if (top3.length === 0) {
+      text = `${d.currentVersion}のデータ更新完了！\n大きな変動はなく、街の力は安定してます🌆\n\n#街巡 #まちめぐ`;
+    } else {
+      const medals = ['🥇','🥈','🥉'];
+      const lines = top3.map((s, i) => `${medals[i]} ${s.name}（${s.oldRank}→${s.newRank}）+${s.scoreDiff}pt`).join('\n');
+      text = `シーズン${d.currentVersion}スタート！🎉\n今期のランクUP王者は\n\n${lines}\n\n詳しくは街巡で！\nmachimegu-production.up.railway.app\n\n#街巡 #まちめぐ`;
+    }
+  }
+  
+  document.getElementById('x-post-text').textContent = text;
+}
+
+window.copyXPost = function() {
+  const text = document.getElementById('x-post-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('copy-toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+};
+
+window.openXIntent = function() {
+  const text = document.getElementById('x-post-text').textContent;
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+};
+
+// ═══ 手動再計算 ═══
+window.triggerRebuild = async function() {
+  if (!confirm('再計算を開始しますか？\n2-4時間かかりますが、実行中も古いデータでサービス継続されます。')) return;
+  try {
+    const res = await authFetch('/api/admin/rebuild', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      alert('再計算開始しました');
+      setTimeout(loadAll, 1000);
+    } else {
+      alert('エラー: ' + (data.error || res.status));
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  }
+};
+
+// 30秒ごとに自動更新
+setInterval(() => {
+  if (currentUser && document.getElementById('main-screen').classList.contains('show')) {
+    loadAll();
+  }
+}, 30000);
+
+</script>
+
+</body>
+</html>
