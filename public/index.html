@@ -2098,25 +2098,31 @@ body.splashing #table-area{
 .mp-empty{font-size:13px !important;color:#a8b8d0 !important}
 
 
-/* ═══ Phase D-1.5: 細かい修正5点 ═══ */
+/* ═══ Phase D-1.5 v2: 細かい修正（index41で再調整） ═══ */
 
-/* 修正1: カードモーダル中央配置（PC） */
+/* 修正1: カードモーダル中央配置（PC）— grid化で確実中央 */
 #card-modal-bg{
   overflow-y:auto !important;
-  padding:24px 16px;
+}
+#card-modal-bg.open{
+  display:grid !important;
+  place-content:center !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:24px 16px !important;
 }
 #card-modal{
-  margin:auto !important;  /* 縦中央寄せ確実化 */
+  margin:auto !important;
 }
 @media (min-width:768px){
   #card-modal{
-    max-width:380px;  /* PCでカードサイズ統一 */
+    max-width:380px;
   }
 }
 
-/* 修正2: 街コメント（sc-feature）フォント +1 */
+/* 修正2: 街コメント（sc-feature）フォントもう一段上げる 12→13px */
 .sc-feature{
-  font-size:12px !important;
+  font-size:13px !important;
 }
 
 /* 修正3: チェックイン履歴の回数表示の余白 */
@@ -2125,18 +2131,22 @@ body.splashing #table-area{
   display:inline-block;
 }
 
-/* 修正5: gpsBtn の白抜き除去（透明背景＋大きめのピン） */
+/* 修正5: gpsBtn は index39の白丸スタイルに戻す */
 #gpsBtn{
-  background:transparent !important;
-  border:none !important;
-  box-shadow:none !important;
-  width:48px !important;
-  height:48px !important;
+  width:42px !important;
+  height:42px !important;
+  background:rgba(255,255,255,0.96) !important;
+  border:1px solid rgba(0,0,0,0.15) !important;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15) !important;
   padding:0 !important;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+  font-size:24px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  filter:none;
 }
 #gpsBtn .pin-icon{
-  font-size:38px !important;
+  font-size:24px !important;
   width:1em;height:1.25em;
 }
 
@@ -2792,42 +2802,52 @@ const LINE_ORDER=[
   // ── ① JR主要 ──
   '山手線','京浜東北線','中央線快速','中央・総武線各駅停車',
   '総武線快速','総武線','横須賀線','東海道線',
-  '常磐線','常磐線各駅停車','埼京線','京葉線',
+  '常磐線','常磐線各駅停車','埼京線',
+  '湘南新宿ライン',  // ← 京葉線の上に
+  '京葉線',
   // ── ② 東京メトロ各線 ──
   '東京メトロ銀座線','東京メトロ丸ノ内線','東京メトロ日比谷線','東京メトロ東西線',
   '東京メトロ千代田線','東京メトロ有楽町線','東京メトロ半蔵門線','東京メトロ南北線','東京メトロ副都心線',
   // ── ③ 都営地下鉄 ──
   '都営浅草線','都営三田線','都営新宿線','都営大江戸線',
-  // ── ④ 東急各線 ──
+  // ── ④ 東急各線（こどもの国・新横浜はマイナーへ） ──
   '東急東横線','東急目黒線','東急田園都市線','東急大井町線',
-  '東急池上線','東急多摩川線','東急世田谷線','東急こどもの国線','東急新横浜線',
+  '東急池上線','東急多摩川線','東急世田谷線',
   // ── ⑤ 小田急小田原線のみ ──
   '小田急小田原線',
   // ── ⑥ 京王線のみ ──
   '京王線',
-  // ── ⑦ 西武各線 ──
-  '西武池袋線','西武新宿線','西武有楽町線','西武多摩湖線','西武国分寺線',
-  '西武拝島線','西武多摩川線','西武豊島線','西武狭山線','西武園線','西武山口線',
-  // ── ⑧ 東武各線 ──
-  '東武東上線','東武スカイツリーライン','東武亀戸線','東武大師線','東武アーバンパークライン',
-  // ── ⑨ 京成各線 ──
-  '京成本線','京成押上線','京成金町線','京成千葉線','京成千原線','京成東成田線','成田スカイアクセス線',
+  // ── ⑦ 西武池袋線・新宿線のみ ──
+  '西武池袋線','西武新宿線',
+  // ── ⑧ 東武東上線・スカイツリーラインのみ ──
+  '東武東上線','東武スカイツリーライン',
+  // ── ⑨ 京成本線のみ ──
+  '京成本線',
   // ── ⑩ 京急本線のみ ──
   '京急本線',
   // ── ⑪ りんかい線・つくばエクスプレス ──
   'りんかい線','つくばエクスプレス',
-  // ── ⑫ 都電・舎人ライナー（つくばエクスプレス後に配置） ──
+  // ── ⑫ 都電・舎人ライナー ──
   '都電荒川線','日暮里舎人ライナー',
 
   // ─── ここからメジャー以下（会社まとめ） ───
   // JRその他
-  '湘南新宿ライン','上野東京ライン',
+  '上野東京ライン',
   '武蔵野線','南武線','横浜線','根岸線','相模線',
   '川越線','高崎線','宇都宮線','青梅線','五日市線','鶴見線',
+  // 東急その他
+  '東急こどもの国線','東急新横浜線',
   // 小田急その他
   '小田急多摩線','小田急江ノ島線',
   // 京王その他
   '京王新線','京王井の頭線','京王相模原線','京王高尾線',
+  // 西武その他
+  '西武有楽町線','西武多摩湖線','西武国分寺線','西武拝島線','西武多摩川線',
+  '西武豊島線','西武狭山線','西武園線','西武山口線',
+  // 東武その他
+  '東武亀戸線','東武大師線','東武アーバンパークライン',
+  // 京成その他
+  '京成押上線','京成金町線','京成千葉線','京成千原線','京成東成田線','成田スカイアクセス線',
   // 京急その他
   '京急空港線','京急大師線','京急逗子線','京急久里浜線',
   // 相鉄系
