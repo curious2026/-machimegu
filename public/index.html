@@ -1808,6 +1808,33 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   animation:splashFadeOut 0.3s ease-in 1.7s forwards;
 }
 
+/* ═══ Phase D-1: オレンジピン共通アイコン（ロゴ統一） ═══ */
+.pin-icon{
+  display:inline-block;
+  width:1em;height:1.25em;
+  vertical-align:-0.18em;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 30'%3E%3Cpath d='M12 1.6 C7 1.6 3 5.6 3 10.4 C3 17.5 12 28.4 12 28.4 C12 28.4 21 17.5 21 10.4 C21 5.6 17 1.6 12 1.6 Z' fill='%23ff7300'/%3E%3Ccircle cx='12' cy='10.6' r='3.4' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+}
+
+/* gpsBtnを少し大きく＋オレンジピン用の調整 */
+#gpsBtn{
+  width:42px !important;height:42px !important;
+  font-size:24px !important;
+  display:flex !important;align-items:center !important;justify-content:center !important;
+}
+#gpsBtn .pin-icon{font-size:24px}
+
+/* ═══ TOP画面 フワッと浮かび上がりフェード ═══ */
+body.splashing #topbar,
+body.splashing #content,
+body.splashing #table-area{
+  opacity:0;
+}
+#topbar,#content,#table-area{
+  transition:opacity 850ms cubic-bezier(0.22,0.61,0.36,1);
+}
+
 /* ═══ Phase D-1: バッジコレクション 棚案B（プレミアムガラスケース） ═══ */
 #badgepage-modal,
 #cardlist-modal{
@@ -2072,7 +2099,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 </style>
 </head>
-<body>
+<body class="splashing">
 <!-- ═══ 起動スプラッシュアニメーション ═══ -->
 <div id="splash-overlay" onclick="skipSplash()">
   <div class="splash" id="splash-content">
@@ -2231,7 +2258,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   <div id="content">
     <div id="map-area">
       <div id="leaflet-map"></div>
-      <button id="gpsBtn" onclick="gotoCurrentLocation()">📍</button>
+      <button id="gpsBtn" onclick="gotoCurrentLocation()" aria-label="現在地に戻る"><span class="pin-icon"></span></button>
       <div id="dev-badge">⚡ DEV MODE</div>
       <button id="legend-toggle" onclick="toggleLegend()">ランク表示</button>
       <div id="legend">
@@ -2586,12 +2613,12 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
     <div class="cl-body" id="bp-body">
       <div class="bp-section-title">今週のミッション</div>
       <div id="bp-mission"></div>
-      <div class="bp-section-title">路線制覇<span class="bp-section-count" id="bp-line-count">0 獲得</span></div>
-      <div class="bp-grid" id="bp-line"></div>
-      <div class="bp-section-title">ランク制覇<span class="bp-section-count" id="bp-rank-count">0 獲得</span></div>
-      <div class="bp-grid" id="bp-rank"></div>
       <div class="bp-section-title">チェックイン数<span class="bp-section-count" id="bp-checkin-count">0 獲得</span></div>
       <div class="bp-grid" id="bp-checkin"></div>
+      <div class="bp-section-title">ランク制覇<span class="bp-section-count" id="bp-rank-count">0 獲得</span></div>
+      <div class="bp-grid" id="bp-rank"></div>
+      <div class="bp-section-title">路線制覇<span class="bp-section-count" id="bp-line-count">0 獲得</span></div>
+      <div class="bp-grid" id="bp-line"></div>
       <div class="bp-section-title">エリア制覇<span class="bp-section-count" id="bp-area-count">0 獲得</span></div>
       <div class="bp-grid" id="bp-area"></div>
     </div>
@@ -2717,16 +2744,67 @@ function formatLinesDisplay(lines){
   return c.slice(0,3).join(' / ')+' ほか';
 }
 
+// Phase D-1: 路線並び順マスタ（将来編集はこの配列を入れ替えるだけでOK）
 const LINE_ORDER=[
-  '山手線','京浜東北線','中央線快速','中央・総武線各駅停車','中央線','総武線','総武線快速','横須賀線','東海道線','常磐線','常磐線各駅停車','埼京線','京葉線',
+  // ── ① JR主要 ──
+  '山手線','京浜東北線','中央線快速','中央・総武線各駅停車',
+  '総武線快速','総武線','横須賀線','東海道線',
+  '常磐線','常磐線各駅停車','埼京線','京葉線',
+  // ── ② 東京メトロ各線 ──
   '東京メトロ銀座線','東京メトロ丸ノ内線','東京メトロ日比谷線','東京メトロ東西線',
   '東京メトロ千代田線','東京メトロ有楽町線','東京メトロ半蔵門線','東京メトロ南北線','東京メトロ副都心線',
+  // ── ③ 都営地下鉄 ──
   '都営浅草線','都営三田線','都営新宿線','都営大江戸線',
-  '東急東横線','東急田園都市線','東急目黒線','東急大井町線',
-  '小田急小田原線','小田急江ノ島線','京王線','京王井の頭線',
-  '西武池袋線','西武新宿線','東武東上線','東武伊勢崎線',
-  '京成押上線','京成本線','京急本線','りんかい線',
-  'つくばエクスプレス','横浜市営ブルーライン','相鉄本線','ゆりかもめ','日暮里舎人ライナー'
+  // ── ④ 都営その他（路面・新交通） ──
+  '都電荒川線','日暮里舎人ライナー',
+  // ── ⑤ 東急各線 ──
+  '東急東横線','東急目黒線','東急田園都市線','東急大井町線',
+  '東急池上線','東急多摩川線','東急世田谷線','東急こどもの国線','東急新横浜線',
+  // ── ⑥ 小田急小田原線のみ ──
+  '小田急小田原線',
+  // ── ⑦ 京王線のみ ──
+  '京王線',
+  // ── ⑧ 西武各線 ──
+  '西武池袋線','西武新宿線','西武有楽町線','西武多摩湖線','西武国分寺線',
+  '西武拝島線','西武多摩川線','西武豊島線','西武狭山線','西武園線','西武山口線',
+  // ── ⑨ 東武各線 ──
+  '東武東上線','東武スカイツリーライン','東武亀戸線','東武大師線','東武アーバンパークライン',
+  // ── ⑩ 京成各線 ──
+  '京成本線','京成押上線','京成金町線','京成千葉線','京成千原線','京成東成田線','成田スカイアクセス線',
+  // ── ⑪ 京急本線のみ ──
+  '京急本線',
+  // ── ⑫ りんかい線・つくばエクスプレス ──
+  'りんかい線','つくばエクスプレス',
+
+  // ─── ここからメジャー以下（会社まとめ） ───
+  // JRその他
+  '湘南新宿ライン','上野東京ライン',
+  '武蔵野線','南武線','横浜線','根岸線','相模線',
+  '川越線','高崎線','宇都宮線','青梅線','五日市線','鶴見線',
+  // 小田急その他
+  '小田急多摩線','小田急江ノ島線',
+  // 京王その他
+  '京王新線','京王井の頭線','京王相模原線','京王高尾線',
+  // 京急その他
+  '京急空港線','京急大師線','京急逗子線','京急久里浜線',
+  // 相鉄系
+  '相鉄本線','相鉄いずみ野線','相鉄新横浜線',
+  // 横浜系
+  '横浜市営ブルーライン','横浜市営グリーンライン','みなとみらい線','金沢シーサイドライン',
+  // 千葉系
+  '北総線','新京成線','東葉高速線','ユーカリが丘線','千葉モノレール1号線','千葉モノレール2号線',
+  // 埼玉系
+  '埼玉高速鉄道線','ニューシャトル',
+  // 流山系
+  '流鉄流山線',
+  // 多摩・湘南モノレール
+  '多摩モノレール','湘南モノレール',
+  // 東京モノレール、ゆりかもめ
+  '東京モノレール','ゆりかもめ',
+  // 江ノ電
+  '江ノ電',
+  // ディズニー
+  'ディズニーリゾートライン'
 ];
 function sortedLineKeys(obj){
   return Object.keys(obj).sort((a,b)=>{
@@ -5502,7 +5580,6 @@ setTimeout(() => { if (typeof getRank === 'function') window.getRank = getRank; 
 // Phase D-1: window公開（モジュール内のバッジ判定処理用）
 window.LINE_ORDER = LINE_ORDER;
 if (typeof STATIONS_MAP !== 'undefined') window.STATIONS_MAP = STATIONS_MAP;
-// stationDataはloadAll後に再代入されるため、定期同期
 setInterval(() => {
   if (typeof stationData !== 'undefined') window.stationData = stationData;
 }, 1000);
@@ -5889,7 +5966,7 @@ async function checkAndAwardBadges(uid) {
     const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
       const total = userDoc.data().totalCheckins || 0;
-      const milestones = [10, 50, 100, 500, 1000];
+      const milestones = [10, 50, 100, 500, 1000, 5000];
       milestones.forEach(m => {
         if (total >= m) {
           const id = `checkin_${m}`;
@@ -6161,7 +6238,7 @@ function renderAreaBadges(userBadges) {
 function renderCheckinBadges(total, userBadges) {
   const el = document.getElementById('bp-checkin');
   if (!el) return;
-  const milestones = [10, 50, 100, 500, 1000];
+  const milestones = [10, 50, 100, 500, 1000, 5000];
   let html = '';
   let earnedCount = 0;
   milestones.forEach(m => {
@@ -6176,7 +6253,7 @@ function renderCheckinBadges(total, userBadges) {
       earnedCount++;
     } else {
       html += `<div class="bp-badge-locked">
-        <div class="bp-icon">📍</div>
+        <span class="pin-icon" style="font-size:30px;margin-bottom:4px;opacity:0.55"></span>
         <div class="bp-name">${m}回</div>
         <div class="bp-progress">${total}/${m}</div>
       </div>`;
@@ -6239,7 +6316,10 @@ if ('serviceWorker' in navigator) {
 (function(){
   const FIRST_LAUNCH_KEY = 'machimegu_splash_shown_v1';
   const overlay = document.getElementById('splash-overlay');
-  if (!overlay) return;
+  if (!overlay) {
+    document.body.classList.remove('splashing');
+    return;
+  }
   
   const isFirstLaunch = !localStorage.getItem(FIRST_LAUNCH_KEY);
   const duration = isFirstLaunch ? 6100 : 2000;
@@ -6248,8 +6328,9 @@ if ('serviceWorker' in navigator) {
   overlay.classList.add(isFirstLaunch ? 'first-launch' : 'normal-launch');
   overlay.classList.add('active');
   
-  // body スクロール防止
+  // body スクロール防止 & TOP画面フェード用クラス（HTMLで既に付与済みだが念のため）
   document.body.style.overflow = 'hidden';
+  document.body.classList.add('splashing');
   
   // 初回フラグ保存
   if (isFirstLaunch) {
@@ -6268,14 +6349,31 @@ if ('serviceWorker' in navigator) {
   function endSplash(){
     if (ended) return;
     ended = true;
+    // TOP画面のフェードイン開始（splashingクラス除去で850msかけてopacity 1へ）
+    document.body.classList.remove('splashing');
+    // スプラッシュ自身は600msかけてフェードアウト（クロスフェード）
+    overlay.style.transition = 'opacity 600ms ease-out';
     overlay.style.opacity = '0';
     overlay.style.pointerEvents = 'none';
     setTimeout(() => {
       overlay.classList.remove('active');
       document.body.style.overflow = '';
       overlay.style.display = 'none';
-    }, 400);
+    }, 650);
   }
+  // 安全装置：起動から8秒後にも強制終了（万一endSplashが呼ばれない事故対策）
+  setTimeout(() => {
+    if (!ended) {
+      console.warn('[splash] safety timeout');
+      document.body.classList.remove('splashing');
+      ended = true;
+      if (overlay) {
+        overlay.style.opacity = '0';
+        overlay.style.display = 'none';
+      }
+      document.body.style.overflow = '';
+    }
+  }, 8000);
   
   setTimeout(endSplash, duration);
   
