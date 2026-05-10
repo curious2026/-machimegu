@@ -1,14 +1,18 @@
 {
-  "name": "street-power",
+  "name": "machimegu",
   "version": "1.0.0",
+  "description": "街巡-まちめぐ- 街力を可視化するアプリ",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^4.21.0",
     "cors": "^2.8.5",
-    "duckdb": "^1.1.3",
-    "dotenv": "^16.0.0"
+    "duckdb": "^1.1.1",
+    "firebase-admin": "^12.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
