@@ -2217,6 +2217,275 @@ body.splashing #table-area{
   margin-bottom:0 !important;  /* チェックインヘッダ下も詰める */
 }
 
+
+/* ═══════════════════════════════════════════════════════════ */
+/* Phase D-2: index43 マイページ上部リデザイン + 推し街3枠      */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* mp-profile を左寄せの2カラム化 */
+.mp-profile{
+  text-align:left !important;
+  padding:18px 20px 16px !important;
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:16px;
+  align-items:start;
+}
+.mp-profile-left{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:6px;
+  min-width:0;
+}
+.mp-avatar-wrap{
+  margin:0 !important;
+  width:64px !important;height:64px !important;
+}
+.mp-handle{
+  font-size:18px !important;
+  margin-bottom:0 !important;
+  letter-spacing:0.5px !important;
+  word-break:break-word;
+  line-height:1.2;
+}
+.mp-meta{
+  font-size:12px !important;
+  word-break:break-word;
+}
+
+.mp-profile-right{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:0;
+}
+.mp-formula-link{
+  display:block;
+  background:linear-gradient(135deg,rgba(120,170,230,0.18) 0%,rgba(80,130,200,0.14) 100%);
+  border:1.5px solid rgba(160,200,240,0.4);
+  border-radius:10px;
+  padding:9px 12px;
+  color:#fff;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:0.3px;
+  cursor:pointer;
+  text-align:center;
+  transition:all 0.15s;
+  text-shadow:0 1px 2px rgba(0,0,0,0.3);
+  font-family:inherit;
+}
+.mp-formula-link:hover{
+  background:linear-gradient(135deg,rgba(140,190,250,0.25) 0%,rgba(100,150,220,0.20) 100%);
+  border-color:rgba(180,220,255,0.6);
+  transform:translateY(-1px);
+}
+
+/* 推し街エリア（右下） */
+.mp-fav-block{
+  background:linear-gradient(160deg,rgba(255,180,80,0.10) 0%,rgba(255,120,40,0.06) 100%);
+  border:1px solid rgba(255,180,80,0.3);
+  border-radius:10px;
+  padding:8px 10px;
+}
+.mp-fav-title{
+  font-size:11px;
+  font-weight:900;
+  color:#ffb070;
+  letter-spacing:1.5px;
+  margin-bottom:6px;
+  text-transform:uppercase;
+}
+.mp-fav-list{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.mp-fav-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(160,200,240,0.18);
+  border-radius:8px;
+  padding:5px 8px;
+  font-size:12px;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.12s;
+  min-height:28px;
+}
+.mp-fav-item:hover{
+  background:rgba(255,255,255,0.10);
+  border-color:rgba(255,180,80,0.5);
+}
+.mp-fav-item .mfi-rank{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;border-radius:50%;
+  font-size:10px;font-weight:900;color:#fff;
+  flex-shrink:0;
+  text-shadow:0 1px 2px rgba(0,0,0,0.3);
+}
+.mp-fav-item .mfi-rank.S{background:#ff2244}
+.mp-fav-item .mfi-rank.A{background:#ff8800}
+.mp-fav-item .mfi-rank.B{background:#ffd700;color:#3a2800;text-shadow:none}
+.mp-fav-item .mfi-rank.C{background:#22c272}
+.mp-fav-item .mfi-rank.D{background:#3a8ac4}
+.mp-fav-item .mfi-name{
+  flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mp-fav-item .mfi-pos{
+  font-size:10px;color:#ffb070;font-weight:900;
+  flex-shrink:0;
+}
+.mp-fav-empty{
+  font-size:11px;color:#a8b8d0;text-align:center;
+  padding:6px 4px;font-weight:600;
+}
+.mp-fav-add-btn{
+  background:rgba(255,180,80,0.12);
+  border:1px dashed rgba(255,180,80,0.45);
+  border-radius:8px;
+  padding:5px;
+  color:#ffb070;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+  font-family:inherit;
+  letter-spacing:0.5px;
+  margin-top:2px;
+  transition:all 0.12s;
+}
+.mp-fav-add-btn:hover{
+  background:rgba(255,180,80,0.20);
+  border-color:rgba(255,180,80,0.7);
+}
+
+/* スマホでは縦に */
+@media (max-width:520px){
+  .mp-profile{
+    grid-template-columns:1fr !important;
+    gap:12px;
+  }
+}
+
+/* ─── 推し街選択モーダル ─── */
+#fav-picker-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.92);z-index:8500;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);padding:20px;
+}
+#fav-picker-bg.open{display:flex}
+#fav-picker-modal{
+  background:linear-gradient(160deg,#162038 0%,#0f1830 60%,#0a1428 100%);
+  border:1px solid rgba(120,150,210,0.3);border-radius:16px;
+  padding:18px;max-width:380px;width:100%;
+  max-height:80vh;display:flex;flex-direction:column;
+}
+.fpk-header{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:12px;
+}
+.fpk-title{
+  font-size:16px;font-weight:900;color:#fff;
+  letter-spacing:1px;flex:1;
+}
+.fpk-close{
+  width:34px;height:34px;border:none;background:none;
+  color:#7080b8;font-size:22px;cursor:pointer;font-family:inherit;
+}
+.fpk-search{
+  width:100%;background:rgba(255,255,255,0.08);
+  border:1px solid rgba(120,150,210,0.3);border-radius:10px;
+  padding:8px 12px;color:#fff;font-size:14px;
+  font-family:inherit;outline:none;margin-bottom:10px;
+}
+.fpk-list{
+  flex:1;overflow-y:auto;
+  display:flex;flex-direction:column;gap:6px;
+  padding:2px;
+}
+.fpk-item{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(120,150,210,0.18);
+  border-radius:10px;padding:9px 12px;
+  cursor:pointer;transition:all 0.12s;
+  font-family:inherit;text-align:left;
+  width:100%;color:#fff;
+}
+.fpk-item:hover{
+  background:rgba(255,180,80,0.10);
+  border-color:rgba(255,180,80,0.5);
+}
+.fpk-item.added{
+  opacity:0.5;cursor:not-allowed;
+}
+.fpk-item .fpki-rank{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:50%;
+  font-size:12px;font-weight:900;color:#fff;flex-shrink:0;
+  text-shadow:0 1px 2px rgba(0,0,0,0.3);
+}
+.fpk-item .fpki-rank.S{background:#ff2244}
+.fpk-item .fpki-rank.A{background:#ff8800}
+.fpk-item .fpki-rank.B{background:#ffd700;color:#3a2800;text-shadow:none}
+.fpk-item .fpki-rank.C{background:#22c272}
+.fpk-item .fpki-rank.D{background:#3a8ac4}
+.fpk-item .fpki-info{
+  flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;
+}
+.fpk-item .fpki-name{
+  font-size:14px;font-weight:800;color:#fff;letter-spacing:0.3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.fpk-item .fpki-meta{
+  font-size:11px;color:#a8b8d0;font-weight:600;
+}
+.fpk-empty{
+  text-align:center;color:#a8b8d0;font-size:13px;
+  padding:30px 20px;line-height:1.6;
+}
+
+/* ─── 推し街編集ボタン（並び替え・削除） ─── */
+.mp-fav-item-actions{
+  display:flex;gap:3px;flex-shrink:0;
+}
+.mp-fav-item-act{
+  width:22px;height:22px;border:none;background:rgba(255,255,255,0.08);
+  color:#cfdaee;border-radius:5px;cursor:pointer;
+  font-size:11px;font-weight:900;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.12s;
+}
+.mp-fav-item-act:hover{background:rgba(255,180,80,0.25);color:#ffb070}
+.mp-fav-item-act:disabled{opacity:0.3;cursor:default}
+.mp-fav-item-act.del:hover{background:rgba(255,68,80,0.3);color:#ff6080}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* Phase D-2: チェックイン中表示の永続化＋距離                  */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* チェックインインジケーターに距離行を追加 */
+.ci-ind-dist{
+  font-size:12px;color:#ffb070;font-weight:800;
+  letter-spacing:0.3px;
+  flex-shrink:0;
+  margin-left:6px;
+  font-variant-numeric:tabular-nums;
+}
+.ci-ind-row{
+  flex-wrap:nowrap;
+}
+
+/* チェックイン中もインジケーターを保持する印 */
+body.checkin-active #checkin-indicator{
+  display:flex !important;
+}
+
 </style>
 </head>
 <body class="splashing">
@@ -2496,14 +2765,15 @@ body.splashing #table-area{
   </div>
 </div>
 
-<!-- チェックイン進行中インジケーター -->
+<!-- チェックイン進行中インジケーター（D-2: 距離表示追加） -->
 <div id="checkin-indicator" onclick="toggleCheckinCancelMenu(event)">
-  <div class="ci-ind-icon">📍</div>
+  <div class="ci-ind-icon">⏳</div>
   <div class="ci-ind-body">
     <div class="ci-ind-name" id="ci-ind-name"></div>
     <div class="ci-ind-row">
       <div class="ci-ind-bar"><div class="ci-ind-fill" id="ci-ind-fill" style="width:0%"></div></div>
       <span class="ci-ind-time" id="ci-ind-time">10:00</span>
+      <span class="ci-ind-dist" id="ci-ind-dist">📍--m</span>
     </div>
   </div>
 </div>
@@ -2597,13 +2867,26 @@ body.splashing #table-area{
       <div style="width:36px"></div>
     </div>
     
-    <!-- プロフィール -->
+    <!-- プロフィール（D-2：左右2カラム化） -->
     <div class="mp-profile">
-      <div class="mp-avatar-wrap">
-        <img id="mp-avatar" class="mp-avatar" src="" alt="">
+      <!-- 左：アカウント情報 -->
+      <div class="mp-profile-left">
+        <div class="mp-avatar-wrap">
+          <img id="mp-avatar" class="mp-avatar" src="" alt="">
+        </div>
+        <div class="mp-handle" id="mp-handle">-</div>
+        <div class="mp-meta" id="mp-meta">-</div>
       </div>
-      <div class="mp-handle" id="mp-handle">-</div>
-      <div class="mp-meta" id="mp-meta">-</div>
+      <!-- 右：街力の算出方法 + 推し街3枠 -->
+      <div class="mp-profile-right">
+        <button class="mp-formula-link" type="button" onclick="closeMypageForce();setTimeout(()=>{const m=document.getElementById('modal-bg');if(m)m.classList.add('open');document.body.style.overflow='hidden';},250)">街力の算出方法</button>
+        <div class="mp-fav-block">
+          <div class="mp-fav-title">★ 推し街</div>
+          <div class="mp-fav-list" id="mp-fav-list">
+            <div class="mp-fav-empty">読み込み中...</div>
+          </div>
+        </div>
+      </div>
     </div>
     
     <!-- 統計 -->
@@ -5488,6 +5771,10 @@ window.closeMypage = (e) => {
   document.getElementById('mypage-bg').classList.remove('open');
   document.body.style.overflow = '';
 };
+window.closeMypageForce = () => {
+  document.getElementById('mypage-bg').classList.remove('open');
+  document.body.style.overflow = '';
+};
 
 window.signOutFromMypage = async () => {
   if (!confirm('ログアウトしますか？')) return;
@@ -6579,6 +6866,279 @@ window.openBadgePage = async function() {
 };
 
 
+
+// ═══════════════════════════════════════════════════════════════
+// Phase D-2 (index43): 推し街システム
+// Firestore: users/{uid} に favStations: [{stationId,name,pref,rank,score}] (max 3)
+// ═══════════════════════════════════════════════════════════════
+
+// ─── 推し街取得 ───
+async function fetchFavStations(uid) {
+  try {
+    const snap = await getDoc(doc(db, 'users', uid));
+    if (!snap.exists()) return [];
+    const data = snap.data();
+    return Array.isArray(data.favStations) ? data.favStations : [];
+  } catch(e) {
+    console.error('推し街取得エラー:', e);
+    return [];
+  }
+}
+
+// ─── 推し街保存 ───
+async function saveFavStations(uid, favs) {
+  try {
+    await setDoc(doc(db, 'users', uid), { favStations: favs }, { merge: true });
+    return true;
+  } catch(e) {
+    console.error('推し街保存エラー:', e);
+    return false;
+  }
+}
+
+// ─── 推し街リスト描画（マイページ右上） ───
+async function renderFavStations() {
+  const el = document.getElementById('mp-fav-list');
+  if (!el) return;
+  const user = auth.currentUser;
+  if (!user) {
+    el.innerHTML = '<div class="mp-fav-empty">ログインで使えます</div>';
+    return;
+  }
+  
+  const favs = await fetchFavStations(user.uid);
+  let html = '';
+  
+  for (let i = 0; i < 3; i++) {
+    if (favs[i]) {
+      const f = favs[i];
+      const rank = f.rank || 'D';
+      html += `<div class="mp-fav-item" data-idx="${i}" onclick="openFavStation(${i})">
+        <span class="mfi-pos">${i+1}位</span>
+        <span class="mfi-rank ${rank}">${rank}</span>
+        <span class="mfi-name">${f.stationName || '-'}</span>
+        <div class="mp-fav-item-actions">
+          <button class="mp-fav-item-act" onclick="event.stopPropagation();moveFav(${i},-1)" ${i===0?'disabled':''} title="上へ">▲</button>
+          <button class="mp-fav-item-act" onclick="event.stopPropagation();moveFav(${i},1)" ${i===favs.length-1?'disabled':''} title="下へ">▼</button>
+          <button class="mp-fav-item-act del" onclick="event.stopPropagation();removeFav(${i})" title="削除">✕</button>
+        </div>
+      </div>`;
+    }
+  }
+  
+  if (favs.length < 3) {
+    html += `<button class="mp-fav-add-btn" onclick="openFavPicker()">+ 推し街を追加</button>`;
+  }
+  
+  if (favs.length === 0 && !html.includes('mp-fav-add-btn')) {
+    // 念のため
+    html = '<div class="mp-fav-empty">制覇した駅から3つまで選べます</div>' + html;
+  }
+  
+  el.innerHTML = html;
+}
+
+// ─── 推し街追加（チェックイン済み駅から選択） ───
+window.openFavPicker = async function() {
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  const bg = document.getElementById('fav-picker-bg');
+  const list = document.getElementById('fpk-list');
+  if (!bg || !list) return;
+  
+  bg.classList.add('open');
+  list.innerHTML = '<div class="fpk-empty">読み込み中...</div>';
+  
+  // 既獲得カード一覧を取得
+  const userCards = await fetchUserStationCards(user.uid);
+  const favs = await fetchFavStations(user.uid);
+  const favIds = new Set(favs.map(f => f.stationId));
+  
+  if (userCards.length === 0) {
+    list.innerHTML = '<div class="fpk-empty">まだ制覇した駅がありません。<br>チェックインして駅を制覇しよう！</div>';
+    return;
+  }
+  
+  // ランク順 → スコア順でソート
+  const rankOrder = { S:0, A:1, B:2, C:3, D:4 };
+  userCards.sort((a,b) => {
+    const ra = rankOrder[a.firstRank] !== undefined ? rankOrder[a.firstRank] : 5;
+    const rb = rankOrder[b.firstRank] !== undefined ? rankOrder[b.firstRank] : 5;
+    if (ra !== rb) return ra - rb;
+    return (b.firstScore||0) - (a.firstScore||0);
+  });
+  
+  let html = '';
+  userCards.forEach(c => {
+    const added = favIds.has(c.stationId);
+    const rank = c.firstRank || 'D';
+    const score = c.firstScore || '-';
+    const lines = (c.lines || []).slice(0,2).join(' / ');
+    html += `<button class="fpk-item${added?' added':''}" ${added?'disabled':''} onclick="addFav('${c.stationId.replace(/'/g, "\\'")}')">
+      <span class="fpki-rank ${rank}">${rank}</span>
+      <div class="fpki-info">
+        <span class="fpki-name">${c.stationName}${added?' ✓追加済':''}</span>
+        <span class="fpki-meta">${score}点 ${lines ? '・'+lines : ''}</span>
+      </div>
+    </button>`;
+  });
+  list.innerHTML = html;
+  
+  // 検索フィルター
+  const searchEl = document.getElementById('fpk-search');
+  if (searchEl) {
+    searchEl.value = '';
+    searchEl.oninput = function() {
+      const q = this.value.toLowerCase().trim();
+      list.querySelectorAll('.fpk-item').forEach(item => {
+        const nameEl = item.querySelector('.fpki-name');
+        const text = nameEl ? nameEl.textContent.toLowerCase() : '';
+        item.style.display = (q === '' || text.includes(q)) ? '' : 'none';
+      });
+    };
+  }
+};
+
+window.closeFavPicker = function() {
+  const bg = document.getElementById('fav-picker-bg');
+  if (bg) bg.classList.remove('open');
+};
+
+window.addFav = async function(stationId) {
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  const userCards = await fetchUserStationCards(user.uid);
+  const card = userCards.find(c => c.stationId === stationId);
+  if (!card) return;
+  
+  const favs = await fetchFavStations(user.uid);
+  if (favs.length >= 3) return;
+  if (favs.some(f => f.stationId === stationId)) return;
+  
+  favs.push({
+    stationId: card.stationId,
+    stationName: card.stationName,
+    stationPref: card.stationPref,
+    rank: card.firstRank,
+    score: card.firstScore || 0
+  });
+  
+  await saveFavStations(user.uid, favs);
+  closeFavPicker();
+  renderFavStations();
+};
+
+window.removeFav = async function(idx) {
+  const user = auth.currentUser;
+  if (!user) return;
+  if (!confirm('この推し街を削除しますか？')) return;
+  
+  const favs = await fetchFavStations(user.uid);
+  if (idx < 0 || idx >= favs.length) return;
+  favs.splice(idx, 1);
+  await saveFavStations(user.uid, favs);
+  renderFavStations();
+};
+
+window.moveFav = async function(idx, delta) {
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  const favs = await fetchFavStations(user.uid);
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= favs.length) return;
+  
+  [favs[idx], favs[newIdx]] = [favs[newIdx], favs[idx]];
+  await saveFavStations(user.uid, favs);
+  renderFavStations();
+};
+
+window.openFavStation = async function(idx) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const favs = await fetchFavStations(user.uid);
+  const f = favs[idx];
+  if (!f) return;
+  // 駅カードを開く
+  if (typeof window.openCardForStation === 'function') {
+    window.openCardForStation(f.stationName, f.stationPref);
+  } else if (typeof openCardFromRanking === 'function') {
+    openCardFromRanking(f.stationName, f.stationPref);
+  }
+};
+
+// マイページオープン時に推し街描画フック
+const _origUpdateMypage = window.updateMypage;
+if (typeof _origUpdateMypage === 'function') {
+  window.updateMypage = async function(...args) {
+    const result = await _origUpdateMypage.apply(this, args);
+    renderFavStations();
+    return result;
+  };
+} else {
+  // updateMypageが未定義の場合：openMypageから呼ばれるはず → 別フック
+  setTimeout(() => {
+    if (typeof window.openMypage === 'function') {
+      const _origOpen = window.openMypage;
+      window.openMypage = async function(...args) {
+        const result = await _origOpen.apply(this, args);
+        setTimeout(renderFavStations, 100);
+        return result;
+      };
+    }
+  }, 500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Phase D-2 (index43): チェックイン中表示の永続化
+// ═══════════════════════════════════════════════════════════════
+
+// マップ操作（movestart）でcloseInfoが呼ばれてもチェックイン中インジケーターは消さない
+// → checkin-indicator は元々独立してるので、closeInfoの中身を変える必要はない
+// → 距離表示のリアルタイム更新と、movestart時のフォルトトレラント挙動を追加
+
+// チェックイン中表示の距離を更新
+function updateCheckinDistance() {
+  if (!pendingCheckin) return;
+  const distEl = document.getElementById('ci-ind-dist');
+  if (!distEl) return;
+  
+  if (typeof currentLocation !== 'undefined' && currentLocation && currentLocation.lat) {
+    const lat = currentLocation.lat;
+    const lng = currentLocation.lng;
+    if (typeof getDistanceM === 'function') {
+      const dist = getDistanceM(lat, lng, pendingCheckin.stationLat, pendingCheckin.stationLng);
+      distEl.textContent = `📍${Math.round(dist)}m`;
+      distEl.style.color = dist <= 300 ? '#7dd3fc' : '#ffb070';
+    }
+  } else {
+    distEl.textContent = '📍--m';
+    distEl.style.color = '#a8b8d0';
+  }
+}
+
+// 既存のupdateCheckinIndicatorをラップして距離も更新
+const _origUpdateCI = (typeof updateCheckinIndicator === 'function') ? updateCheckinIndicator : null;
+if (_origUpdateCI) {
+  window.updateCheckinIndicator = function() {
+    _origUpdateCI();
+    updateCheckinDistance();
+  };
+}
+
+// 1秒ごとに距離を更新（watchPositionの更新間隔より細かく）
+setInterval(() => {
+  if (typeof pendingCheckin !== 'undefined' && pendingCheckin) {
+    document.body.classList.add('checkin-active');
+    updateCheckinDistance();
+  } else {
+    document.body.classList.remove('checkin-active');
+  }
+}, 1000);
+
+
 </script>
 <script>
 // Service Worker登録（PWA化）
@@ -6694,6 +7254,19 @@ if ('serviceWorker' in navigator) {
     <div class="bdm-name" id="bdm-name"></div>
     <div class="bdm-desc" id="bdm-desc"></div>
     <div class="bdm-earned" id="bdm-earned"></div>
+  </div>
+</div>
+
+
+<!-- Phase D-2: 推し街選択モーダル -->
+<div id="fav-picker-bg" onclick="if(event.target.id==='fav-picker-bg')closeFavPicker()">
+  <div id="fav-picker-modal">
+    <div class="fpk-header">
+      <div class="fpk-title">推し街を追加</div>
+      <button class="fpk-close" onclick="closeFavPicker()" type="button">×</button>
+    </div>
+    <input type="text" class="fpk-search" id="fpk-search" placeholder="🔍 駅名で検索">
+    <div class="fpk-list" id="fpk-list"></div>
   </div>
 </div>
 
