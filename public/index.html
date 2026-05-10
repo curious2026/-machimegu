@@ -2486,6 +2486,118 @@ body.checkin-active #checkin-indicator{
   display:flex !important;
 }
 
+
+/* ═══════════════════════════════════════════════════════════ */
+/* Phase D-2.1: index44 修正                                   */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* マイページ上部：520px以下でも横並びを維持（縦積みやめる） */
+.mp-profile{
+  grid-template-columns:auto 1fr !important;  /* 左=アバター幅, 右=残り */
+  gap:14px !important;
+  padding:14px 14px 12px !important;
+}
+@media (max-width:520px){
+  .mp-profile{
+    grid-template-columns:auto 1fr !important;  /* 横並び維持 */
+    gap:10px !important;
+  }
+}
+
+/* 左カラム：アバター・ハンドル・メタをコンパクトに */
+.mp-profile-left{
+  gap:4px !important;
+}
+.mp-avatar-wrap{
+  width:54px !important;height:54px !important;
+}
+.mp-handle{
+  font-size:15px !important;
+  letter-spacing:0.3px !important;
+}
+.mp-meta{
+  font-size:11px !important;
+}
+
+/* 右カラム：街力ボタン+推し街、コンパクト */
+.mp-profile-right{
+  gap:6px !important;
+  min-width:0;
+}
+
+/* 推し街フォント全体+2 */
+.mp-fav-block{
+  padding:8px 11px !important;
+}
+.mp-fav-title{
+  font-size:13px !important;
+  letter-spacing:1.5px !important;
+  margin-bottom:6px !important;
+  display:flex;align-items:center;gap:8px;
+}
+.mp-fav-title-text{flex:1}
+.mp-fav-edit-btn{
+  background:rgba(255,180,80,0.18);
+  border:1px solid rgba(255,180,80,0.4);
+  border-radius:7px;
+  padding:3px 9px;
+  color:#ffb070;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+  font-family:inherit;
+  letter-spacing:0.5px;
+  transition:all 0.12s;
+}
+.mp-fav-edit-btn:hover{
+  background:rgba(255,180,80,0.28);
+  border-color:rgba(255,180,80,0.6);
+}
+.mp-fav-edit-btn.active{
+  background:rgba(255,180,80,0.4);
+  color:#fff;
+  border-color:rgba(255,210,150,0.8);
+}
+
+.mp-fav-item{
+  font-size:14px !important;
+  padding:6px 10px !important;
+  min-height:32px !important;
+}
+.mp-fav-item .mfi-rank{
+  width:22px !important;height:22px !important;
+  font-size:12px !important;
+}
+.mp-fav-item .mfi-pos{
+  font-size:12px !important;
+}
+.mp-fav-empty{
+  font-size:13px !important;
+  padding:8px 4px !important;
+}
+.mp-fav-add-btn{
+  font-size:13px !important;
+  padding:6px !important;
+}
+
+/* 編集ボタン（▲▼✕）：通常時は非表示 */
+.mp-fav-item-actions{
+  display:none !important;
+}
+.mp-fav-block.editing .mp-fav-item-actions{
+  display:flex !important;
+}
+.mp-fav-item-act{
+  width:24px !important;height:24px !important;
+  font-size:12px !important;
+}
+
+/* 街力の算出方法ボタンもコンパクトに（推し街と並び立つ） */
+.mp-formula-link{
+  font-size:13px !important;
+  padding:7px 10px !important;
+}
+
 </style>
 </head>
 <body class="splashing">
@@ -2881,7 +2993,7 @@ body.checkin-active #checkin-indicator{
       <div class="mp-profile-right">
         <button class="mp-formula-link" type="button" onclick="closeMypageForce();setTimeout(()=>{const m=document.getElementById('modal-bg');if(m)m.classList.add('open');document.body.style.overflow='hidden';},250)">街力の算出方法</button>
         <div class="mp-fav-block">
-          <div class="mp-fav-title">★ 推し街</div>
+          <div class="mp-fav-title"><span class="mp-fav-title-text">★ 推し街</span><button class="mp-fav-edit-btn" id="mp-fav-edit-btn" type="button" onclick="toggleFavEdit()">編集</button></div>
           <div class="mp-fav-list" id="mp-fav-list">
             <div class="mp-fav-empty">読み込み中...</div>
           </div>
@@ -2936,7 +3048,7 @@ body.checkin-active #checkin-indicator{
         </div>
       </div>
       <div class="mp-badge-preview" id="mp-badge-preview">
-        <div class="mp-empty">バッジ機能は近日実装<br><span style="font-size:11px;color:#7a96b6;margin-top:8px;display:block">路線制覇・エリア制覇などのバッジを準備中</span></div>
+        <div class="mp-empty">読み込み中...</div>
       </div>
     </div>
     
@@ -5858,7 +5970,6 @@ async function loadMypageData(uid) {
           <div class="mc-visit-small">${visit}</div>
         `;
         div.onclick = () => {
-          // マイページから開いた時は、閉じたらマイページに戻る
           window.cardCloseReturn = 'mypage';
           if (window.openCardFromHistory) {
             window.openCardFromHistory(c.stationName, c.stationPref);
@@ -5867,6 +5978,9 @@ async function loadMypageData(uid) {
         grid.appendChild(div);
       });
     }
+    // Phase D-2.1: バッジプレビュー＋推し街描画
+    if (typeof renderMypageBadgePreview === 'function') renderMypageBadgePreview();
+    if (typeof renderFavStations === 'function') renderFavStations();
   } catch (e) {
     console.error('マイページデータ取得エラー:', e);
     grid.innerHTML = '<div class="mp-empty">読み込みエラー: ' + e.message + '</div>';
@@ -7137,6 +7251,90 @@ setInterval(() => {
     document.body.classList.remove('checkin-active');
   }
 }, 1000);
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// Phase D-2.1 (index44): マイページ内バッジプレビュー本実装
+// ═══════════════════════════════════════════════════════════════
+
+async function renderMypageBadgePreview() {
+  const el = document.getElementById('mp-badge-preview');
+  const cnt = document.getElementById('mp-badge-count');
+  if (!el) return;
+  
+  const user = auth.currentUser;
+  if (!user) {
+    el.innerHTML = '<div class="mp-empty">ログインで使えます</div>';
+    if (cnt) cnt.textContent = '0個';
+    return;
+  }
+  
+  try {
+    // 獲得済みバッジ取得
+    const userBadges = await fetchUserBadges(user.uid);
+    
+    if (userBadges.size === 0) {
+      el.innerHTML = '<div class="mp-empty">まだバッジを獲得していません<br><span style="font-size:11px;color:#7a96b6;margin-top:8px;display:block">チェックインを続けるとバッジがもらえます</span></div>';
+      if (cnt) cnt.textContent = '0個';
+      return;
+    }
+    
+    // 最新獲得順（earnedAt降順）でソートして上位8個
+    const arr = [...userBadges.values()].sort((a, b) => {
+      const ta = a.earnedAt && a.earnedAt.toMillis ? a.earnedAt.toMillis() : 
+                 (a.earnedAt && a.earnedAt.seconds ? a.earnedAt.seconds*1000 : 0);
+      const tb = b.earnedAt && b.earnedAt.toMillis ? b.earnedAt.toMillis() : 
+                 (b.earnedAt && b.earnedAt.seconds ? b.earnedAt.seconds*1000 : 0);
+      return tb - ta;
+    });
+    
+    if (cnt) cnt.textContent = `${arr.length}個`;
+    
+    const preview = arr.slice(0, 8);
+    let html = '';
+    preview.forEach(b => {
+      const inner = renderBadgeHTML(b);
+      const enc = encodeURIComponent(JSON.stringify(b));
+      // クリックで詳細表示
+      html += `<div onclick="showBadgeDetail('${enc}')" style="cursor:pointer">${inner}</div>`;
+    });
+    el.innerHTML = html;
+    
+  } catch (e) {
+    console.error('バッジプレビュー取得エラー:', e);
+    el.innerHTML = '<div class="mp-empty">読み込みエラー</div>';
+  }
+}
+
+// loadMypageData の後に呼ばれるように、setIntervalで監視（簡易フック）
+// より確実にするため：マイページopen時のフックを追加
+const _origOpenMypage_d21 = window.openMypage;
+if (typeof _origOpenMypage_d21 === 'function') {
+  window.openMypage = async function(...args) {
+    const result = await _origOpenMypage_d21.apply(this, args);
+    setTimeout(() => {
+      renderMypageBadgePreview();
+      renderFavStations();
+    }, 200);
+    return result;
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Phase D-2.1: 推し街 編集モード切替
+// ═══════════════════════════════════════════════════════════════
+window.toggleFavEdit = function() {
+  const block = document.querySelector('.mp-fav-block');
+  const btn = document.getElementById('mp-fav-edit-btn');
+  if (!block) return;
+  
+  const isEditing = block.classList.toggle('editing');
+  if (btn) {
+    btn.classList.toggle('active', isEditing);
+    btn.textContent = isEditing ? '完了' : '編集';
+  }
+};
 
 
 </script>
