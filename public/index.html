@@ -2150,6 +2150,73 @@ body.splashing #table-area{
   width:1em;height:1.25em;
 }
 
+
+/* ═══ Phase D-1.6: index42 細修正 ═══ */
+
+/* 修正1: マイページボタン「マイ」を左詰めに */
+.user-mypage-link{
+  text-align:left !important;
+}
+.user-mypage-link .ump-line{
+  text-align:left !important;
+}
+
+/* 修正2: トップ画面二段目フィルターをボタン化（押したくなるデザイン） */
+.fsel{
+  font-size:13px !important;
+  font-weight:700 !important;
+  color:#ffffff !important;
+  background:linear-gradient(135deg,rgba(120,170,230,0.28) 0%,rgba(80,130,200,0.22) 100%) !important;
+  border:1.5px solid rgba(160,200,240,0.55) !important;
+  padding:5px 10px !important;
+  border-radius:9px !important;
+  letter-spacing:0.4px !important;
+  cursor:pointer !important;
+  transition:all 0.15s !important;
+  box-shadow:0 1px 4px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,0.3) !important;
+}
+.fsel:hover{
+  background:linear-gradient(135deg,rgba(140,190,250,0.38) 0%,rgba(100,150,220,0.32) 100%) !important;
+  border-color:rgba(180,220,255,0.7) !important;
+  transform:translateY(-1px);
+  box-shadow:0 3px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2) !important;
+}
+.fsel:active{
+  transform:translateY(0);
+}
+@media (max-width:520px){
+  .fsel{
+    font-size:12px !important;
+    padding:4px 8px !important;
+  }
+}
+
+/* 修正3: 「街力ランク」見出し（leg-title）フォント+1、真っ白 */
+.leg-title{
+  font-size:13px !important;
+  color:#ffffff !important;
+  font-weight:900 !important;
+  letter-spacing:2px !important;
+}
+
+/* 修正4: カード上部詰め+訪問回数左詰め */
+.sc-checkin-info{
+  align-items:flex-start !important;
+  padding-top:0 !important;
+}
+.sc-visit-count{
+  align-self:flex-start !important;
+  margin-right:auto !important;
+  margin-bottom:0 !important;
+}
+.sc-station-name{
+  margin:2px 0 8px !important;  /* 上を10px→2pxに詰める */
+}
+.sc-top{
+  margin-bottom:0 !important;  /* チェックインヘッダ下も詰める */
+}
+
 </style>
 </head>
 <body class="splashing">
@@ -2377,7 +2444,7 @@ body.splashing #table-area{
 <div id="modal-bg" onclick="closeModal()">
   <div id="modal" onclick="event.stopPropagation()">
     <div class="modal-hdr"><div class="modal-title">街力（まちりょく）の算出方法</div><button class="modal-x" onclick="closeModal()">✕</button></div>
-    <div class="modal-desc">各駅から指定半径圏内の商業施設数をもとに<strong style="color:#e8f4ff">1000点満点</strong>で街力を数値化。<br><a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline;font-weight:700">対数スケール</a>採用により自然なランク分布になります。<br><br>データ：<strong style="color:#90b8ff">Overture Maps</strong>（Meta・Microsoft・Amazon等提供）</div>
+    <div class="modal-desc">各駅から指定半径圏内の商業施設数をもとに<strong style="color:#e8f4ff">1000点満点</strong>で街力を数値化。<br><a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline;font-weight:700">対数スケール</a>採用により自然なランク分布になります。<a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline;font-weight:700;margin-left:4px">（対数スケールとは？）</a><br><br>データ：<strong style="color:#90b8ff">Overture Maps</strong>（Meta・Microsoft・Amazon等提供）</div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#ff3355,#ff6080)">350</div><div><div class="modal-ax-name">飲食充実</div><div class="modal-ax-desc">飲食店・カフェ・バー・ファストフード等</div></div></div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#7b5fe8,#a080ff)">350</div><div><div class="modal-ax-name">商業・小売</div><div class="modal-ax-desc">百貨店・ショッピング・アパレル・娯楽施設等</div></div></div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#2a8fd4,#50b8ff)">200</div><div><div class="modal-ax-name">生活利便</div><div class="modal-ax-desc">コンビニ・スーパー・薬局・銀行・美容院等</div></div></div>
@@ -2394,37 +2461,38 @@ body.splashing #table-area{
 <!-- 対数スケール説明モーダル -->
 <div id="log-modal-bg" onclick="if(event.target===this)closeLogModal()">
   <div id="log-modal" onclick="event.stopPropagation()">
-    <div class="modal-hdr" style="margin-bottom:12px">
-      <div class="modal-title" style="font-size:17px">対数スケールって何？</div>
+    <div class="modal-hdr" style="margin-bottom:8px">
+      <div class="modal-title" style="font-size:19px">対数スケールって何？</div>
       <button class="modal-x" onclick="closeLogModal()">✕</button>
     </div>
-    <div style="font-size:13px;color:#b0c4e0;line-height:1.85">
-      <p style="margin-bottom:12px">飲食店の数で例えてみます。</p>
-      <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;font-family:monospace;color:#c0d8f0">
+    <div style="font-size:15px;color:#b0c4e0;line-height:1.55">
+      <p style="margin-bottom:6px">飲食店の数で例えてみます。</p>
+      <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:14px;font-family:monospace;color:#c0d8f0;line-height:1.5">
         新宿：2,000軒<br>
         池袋：1,000軒<br>
         吉祥寺：500軒
       </div>
-      <p style="margin-bottom:8px"><strong style="color:#ff9966">普通の計算（リニア）だと：</strong></p>
-      <div style="background:rgba(255,100,80,0.1);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:#ffb0a0">
+      <p style="margin-bottom:4px"><strong style="color:#ff9966">普通の計算（リニア）だと：</strong></p>
+      <div style="background:rgba(255,100,80,0.1);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:14px;color:#ffb0a0;line-height:1.5">
         新宿 = 350点（満点）<br>
         池袋 = 175点（新宿の半分）<br>
         吉祥寺 = 87点（新宿の1/4）
       </div>
-      <p style="margin-bottom:12px;color:#e0a0a0">→ 差がありすぎて、池袋も吉祥寺も「弱い街」に見えてしまう。</p>
-      <p style="margin-bottom:8px"><strong style="color:#88ccff">対数スケールを使うと：</strong></p>
-      <div style="background:rgba(80,150,255,0.1);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:#a8d8ff">
+      <p style="margin-bottom:8px;color:#e0a0a0">→ 差がありすぎて、池袋も吉祥寺も「弱い街」に見えてしまう。</p>
+      <p style="margin-bottom:4px"><strong style="color:#88ccff">対数スケールを使うと：</strong></p>
+      <div style="background:rgba(80,150,255,0.1);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:14px;color:#a8d8ff;line-height:1.5">
         新宿 = 350点（満点）<br>
         池袋 = 311点<br>
         吉祥寺 = 278点
       </div>
-      <p style="margin-bottom:14px;color:#a0d8a0">→ 人間の感覚に近い、自然な差になる！</p>
-      <div style="font-size:11px;color:#7090b0;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;line-height:1.8">
+      <p style="margin-bottom:6px;color:#a0d8a0">→ 新宿はすごいけど、池袋も吉祥寺もすごい！</p>
+      <p style="margin-bottom:8px;color:#a0d8a0">→ 人間の感覚に近い、自然な差になる！</p>
+      <div style="font-size:13px;color:#7090b0;border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;line-height:1.55">
         身近な例では、音の大きさ（デシベル）や地震の規模（マグニチュード）が同じ仕組みです。<br>
         「100倍の差」を「2倍ちょっとの差」に縮めて、大きな数を人間の感覚に合わせて比べやすくする方法です。
       </div>
     </div>
-    <button onclick="closeLogModal()" style="margin-top:16px;width:100%;padding:10px;background:rgba(80,120,255,0.15);border:1px solid rgba(100,150,255,0.3);border-radius:8px;color:#a0c0ff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit">とじる</button>
+    <button onclick="closeLogModal()" style="margin-top:10px;width:100%;padding:10px;background:rgba(80,120,255,0.15);border:1px solid rgba(100,150,255,0.3);border-radius:8px;color:#a0c0ff;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit">とじる</button>
   </div>
 </div>
 
@@ -3761,7 +3829,8 @@ function drawMarker(st){
   const shadowStyle = isCheckedIn ? `box-shadow:0 0 ${glowPx}px ${glow};` : '';
   // ★ チェックマーク（白＋太字、flex itemで上部配置）
   const checkSize = Math.round(sz*0.22);
-  const checkMark = isCheckedIn ? `<span style="font-weight:900;font-size:${checkSize}px;color:#fff;line-height:0.9;text-shadow:0 1px 3px rgba(0,0,0,0.7),0 0 4px rgba(0,0,0,0.5);margin-bottom:-2px;-webkit-text-stroke:0.5px #fff">✓</span>` : '';
+  // チェックマークの囲いをランク色に統一
+  const checkMark = isCheckedIn ? `<span style="font-weight:900;font-size:${checkSize}px;color:#fff;line-height:0.9;text-shadow:0 0 2px ${color},0 0 4px ${color},0 1px 3px ${color};margin-bottom:-2px;-webkit-text-stroke:1.2px ${color};paint-order:stroke fill">✓</span>` : '';
   const html=`<div style="display:flex;flex-direction:column;align-items:center;cursor:${DEV_MODE?'grab':'pointer'}">
     <div class="mk-inner" style="width:${sz}px;height:${sz}px;border-radius:50%;
       background:${bgColor};border:${DEV_MODE?'3px dashed':'2.5px solid'} ${color};
