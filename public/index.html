@@ -2677,6 +2677,60 @@ body.checkin-active #checkin-indicator{
   padding:10px 12px !important;
 }
 
+
+/* ═══ Phase D-2.3: 週間ミッションバッジ ═══ */
+
+/* 個別ミッションバッジ：六角形（縦長） */
+.bp-badge-mission{
+  clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:14px 8px;text-align:center;
+  box-shadow:inset 0 -8px 16px rgba(255,255,255,0.18),inset 0 4px 8px rgba(255,255,255,0.28);
+  position:relative;
+}
+.bp-badge-mission .bpm-icon{
+  font-size:22px;margin-bottom:4px;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+.bp-badge-mission .bp-name{
+  font-size:11px !important;font-weight:900;line-height:1.2;
+  letter-spacing:0.2px;
+  text-shadow:0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* マイルストーンバッジ：六角形＋金縁の特別仕様 */
+.bp-badge-mm{
+  clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  background:radial-gradient(circle at 35% 25%,#ffe890 0%,#fbd56a 35%,#d4a020 70%,#7a5520 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px;text-align:center;
+  box-shadow:inset 0 -10px 20px rgba(255,255,255,0.25),inset 0 5px 10px rgba(255,255,255,0.35),
+             0 0 16px rgba(251,213,106,0.5);
+  position:relative;
+  color:#3a2810;
+}
+.bp-badge-mm::before{
+  content:'★';
+  position:absolute;top:14%;font-size:11px;
+  color:rgba(255,255,255,0.6);
+}
+.bp-badge-mm .bpmm-num{
+  font-size:24px;font-weight:900;line-height:1;
+  letter-spacing:-0.5px;
+  text-shadow:0 1px 2px rgba(255,255,255,0.5);
+  margin-top:4px;
+}
+.bp-badge-mm .bpmm-label{
+  font-size:9px;font-weight:900;letter-spacing:1.5px;
+  margin-top:1px;opacity:0.85;
+}
+
+/* セクションタイトルに統計表示 */
+.bp-mission-total{
+  font-size:11px;font-weight:700;color:#a8b8d0;
+  margin-left:auto;letter-spacing:0.5px;
+}
+
 </style>
 </head>
 <body class="splashing">
@@ -3210,6 +3264,8 @@ body.checkin-active #checkin-indicator{
       <div id="bp-mission"></div>
       <div class="bp-section-title">チェックイン数<span class="bp-section-count" id="bp-checkin-count">0 獲得</span></div>
       <div class="bp-grid" id="bp-checkin"></div>
+      <div class="bp-section-title">週間ミッション達成<span class="bp-mission-total" id="bp-mission-total">累計 0回達成</span><span class="bp-section-count" id="bp-mission-count">0 獲得</span></div>
+      <div class="bp-grid" id="bp-mission-badges"></div>
       <div class="bp-section-title">ランク制覇<span class="bp-section-count" id="bp-rank-count">0 獲得</span></div>
       <div class="bp-grid" id="bp-rank"></div>
       <div class="bp-section-title">路線制覇<span class="bp-section-count" id="bp-line-count">0 獲得</span></div>
@@ -7413,6 +7469,217 @@ window.toggleFavEdit = function() {
     btn.classList.toggle('active', isEditing);
     btn.textContent = isEditing ? '完了' : '編集';
   }
+};
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// Phase D-2.3 (index47): 週間ミッション達成バッジシステム
+// ═══════════════════════════════════════════════════════════════
+
+// ─── ミッションバッジ名生成 ───
+function getMissionBadgeInfo(missionType) {
+  const map = {
+    'rank_above_b': { name:'Bランク開拓者', desc:'1週間でBランク以上の駅に5回チェックイン', icon:'★', color:'gold' },
+    'new_line':     { name:'未踏路線開拓',  desc:'1週間で未踏の路線にチェックイン',         icon:'🚃', color:'cyan' },
+    'new_area':     { name:'未踏エリア開拓', desc:'1週間で未踏の市区町村にチェックイン',   icon:'🛡', color:'green' },
+    'three_lines':  { name:'3路線探索',     desc:'1週間で3つの異なる路線にチェックイン',  icon:'⚡', color:'purple' },
+    'revisit_non_home': { name:'再訪の街',  desc:'1週間で最寄り駅以外を再訪',              icon:'♥', color:'pink' }
+  };
+  return map[missionType] || { name:'ミッション達成', desc:'週間ミッション達成', icon:'★', color:'gold' };
+}
+
+// ─── 週間ミッション達成判定＋バッジ付与 ───
+async function checkAndAwardMissionBadge(uid) {
+  if (!uid) return [];
+  
+  try {
+    const userDocSnap = await getDoc(doc(db, 'users', uid));
+    const userProfile = userDocSnap.exists() ? userDocSnap.data() : {};
+    
+    const mission = getThisWeekMission(uid);
+    const weekCheckins = await fetchUserCheckinsThisWeek(uid);
+    const userCards = await fetchUserStationCards(uid);
+    
+    const progress = calcMissionProgress(mission, weekCheckins, userCards, userProfile);
+    if (progress < mission.target) return [];
+    
+    // 既獲得チェック
+    const weekKey = mission.weekKey || getMondayKey();
+    const badgeId = `mission_${mission.id}_${weekKey}`;
+    const userBadges = await fetchUserBadges(uid);
+    if (userBadges.has(badgeId)) return [];
+    
+    const newlyEarned = [];
+    const info = getMissionBadgeInfo(mission.type);
+    
+    // 個別達成バッジ付与
+    const missionBadge = {
+      id: badgeId,
+      type: 'mission',
+      missionId: mission.id,
+      missionType: mission.type,
+      weekKey,
+      name: info.name,
+      desc: info.desc,
+      icon: info.icon,
+      color: info.color
+    };
+    await persistBadge(uid, badgeId, missionBadge);
+    userBadges.set(badgeId, missionBadge);
+    newlyEarned.push(missionBadge);
+    
+    // 累計カウント更新（同じ週は1回のみカウント）
+    const stats = userProfile.missionStats || { totalCompleted: 0, lastCompletedWeek: '' };
+    if (stats.lastCompletedWeek !== weekKey) {
+      stats.totalCompleted = (stats.totalCompleted || 0) + 1;
+      stats.lastCompletedWeek = weekKey;
+      await setDoc(doc(db, 'users', uid), { missionStats: stats }, { merge: true });
+      
+      // マイルストーン判定
+      const milestones = [5, 10, 25, 50, 100];
+      for (const m of milestones) {
+        if (stats.totalCompleted >= m) {
+          const mid = `mission_milestone_${m}`;
+          if (!userBadges.has(mid)) {
+            const milestoneBadge = {
+              id: mid,
+              type: 'mission_milestone',
+              count: m,
+              name: `ミッション${m}回達成`,
+              desc: `週間ミッション累計${m}回達成の証`
+            };
+            await persistBadge(uid, mid, milestoneBadge);
+            userBadges.set(mid, milestoneBadge);
+            newlyEarned.push(milestoneBadge);
+          }
+        }
+      }
+    }
+    
+    return newlyEarned;
+  } catch(e) {
+    console.error('ミッションバッジ判定エラー:', e);
+    return [];
+  }
+}
+
+// ─── checkAndAwardBadges にミッション判定を追加 ───
+const _origCheckAndAward_mission = checkAndAwardBadges;
+checkAndAwardBadges = async function(uid) {
+  const newlyEarned = await _origCheckAndAward_mission(uid);
+  // ミッションバッジも判定
+  const missionBadges = await checkAndAwardMissionBadge(uid);
+  return [...newlyEarned, ...missionBadges];
+};
+
+// ─── renderBadgeHTML を拡張（mission / mission_milestone 対応） ───
+const _origRenderBadgeHTML = renderBadgeHTML;
+renderBadgeHTML = function(b, big) {
+  if (b.type === 'mission') {
+    const colorMap = {
+      'gold':   'linear-gradient(135deg,#fbd56a 0%,#d4a020 60%,#9a6f10 100%)',
+      'cyan':   'linear-gradient(135deg,#7dd3fc 0%,#0ea5e9 60%,#075985 100%)',
+      'green':  'linear-gradient(135deg,#86efac 0%,#22c55e 60%,#15803d 100%)',
+      'purple': 'linear-gradient(135deg,#d8b4fe 0%,#a855f7 60%,#6b21a8 100%)',
+      'pink':   'linear-gradient(135deg,#fda4af 0%,#f43f5e 60%,#9f1239 100%)'
+    };
+    const bg = colorMap[b.color] || colorMap['gold'];
+    const textColor = b.color === 'gold' ? '#3a2810' : '#fff';
+    return `<div class="bp-badge bp-badge-mission" style="background:${bg};color:${textColor}">
+      <div class="bpm-icon">${b.icon || '★'}</div>
+      <div class="bp-name">${b.name}</div>
+    </div>`;
+  }
+  if (b.type === 'mission_milestone') {
+    return `<div class="bp-badge bp-badge-mm">
+      <div class="bpmm-num">${b.count}</div>
+      <div class="bpmm-label">MISSION</div>
+    </div>`;
+  }
+  return _origRenderBadgeHTML(b, big);
+};
+
+// ─── 週間ミッションバッジセクション描画 ───
+async function renderMissionBadges(userBadges, userProfile) {
+  const el = document.getElementById('bp-mission-badges');
+  if (!el) return;
+  
+  // mission または mission_milestone タイプのバッジを抽出
+  const missionBadges = [...userBadges.values()]
+    .filter(b => b.type === 'mission' || b.type === 'mission_milestone');
+  
+  // 累計達成数表示
+  const statsEl = document.getElementById('bp-mission-total');
+  if (statsEl) {
+    const total = (userProfile && userProfile.missionStats && userProfile.missionStats.totalCompleted) || 0;
+    statsEl.textContent = `累計 ${total}回達成`;
+  }
+  
+  if (missionBadges.length === 0) {
+    el.innerHTML = `
+      <div class="bp-badge-locked">
+        <div class="bp-icon">★</div>
+        <div class="bp-name">未達成</div>
+        <div class="bp-progress">挑戦中</div>
+      </div>
+    `;
+    const counter = document.getElementById('bp-mission-count');
+    if (counter) counter.textContent = '0 獲得';
+    return;
+  }
+  
+  // milestone を先に、次に獲得日新しい順
+  missionBadges.sort((a, b) => {
+    if (a.type !== b.type) {
+      return a.type === 'mission_milestone' ? -1 : 1;
+    }
+    if (a.type === 'mission_milestone') {
+      return (b.count || 0) - (a.count || 0);
+    }
+    const ta = a.earnedAt && a.earnedAt.toMillis ? a.earnedAt.toMillis() : 
+               (a.earnedAt && a.earnedAt.seconds ? a.earnedAt.seconds*1000 : 0);
+    const tb = b.earnedAt && b.earnedAt.toMillis ? b.earnedAt.toMillis() : 
+               (b.earnedAt && b.earnedAt.seconds ? b.earnedAt.seconds*1000 : 0);
+    return tb - ta;
+  });
+  
+  let html = '';
+  missionBadges.forEach(b => {
+    const enc = encodeURIComponent(JSON.stringify(b));
+    html += `<div onclick="showBadgeDetail('${enc}')" style="cursor:pointer">${renderBadgeHTML(b)}</div>`;
+  });
+  el.innerHTML = html;
+  
+  const counter = document.getElementById('bp-mission-count');
+  if (counter) counter.textContent = `${missionBadges.length} 獲得`;
+}
+
+// ─── 週間ミッションUI更新時にバッジ付与判定 ───
+const _origRenderWeeklyMission = renderWeeklyMission;
+renderWeeklyMission = async function(uid, userCards, userProfile) {
+  await _origRenderWeeklyMission(uid, userCards, userProfile);
+  // 達成してたらバッジ付与＋セレブ表示
+  const newBadges = await checkAndAwardMissionBadge(uid);
+  if (newBadges.length > 0) {
+    setTimeout(() => showBadgeEarnedQueue(newBadges), 500);
+  }
+};
+
+// ─── openBadgePage にミッションバッジ描画を追加 ───
+const _origOpenBadgePage_mission = window.openBadgePage;
+window.openBadgePage = async function() {
+  await _origOpenBadgePage_mission();
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const [userBadges, userDocSnap] = await Promise.all([
+      fetchUserBadges(user.uid),
+      getDoc(doc(db, 'users', user.uid))
+    ]);
+    const userProfile = userDocSnap.exists() ? userDocSnap.data() : {};
+    await renderMissionBadges(userBadges, userProfile);
+  } catch(e) { console.error('ミッションバッジ描画エラー:', e); }
 };
 
 
