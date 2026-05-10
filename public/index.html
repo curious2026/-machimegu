@@ -1807,6 +1807,269 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 #splash-overlay.normal-launch.playing{
   animation:splashFadeOut 0.3s ease-in 1.7s forwards;
 }
+
+/* ═══ Phase D-1: バッジコレクション 棚案B（プレミアムガラスケース） ═══ */
+#badgepage-modal,
+#cardlist-modal{
+  background:linear-gradient(180deg,#1a2848 0%,#142038 40%,#0e1828 100%) !important;
+  position:relative;
+}
+#badgepage-modal::before,
+#cardlist-modal::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.06) 0%,transparent 100%);
+  pointer-events:none;border-radius:inherit;z-index:1;
+}
+#badgepage-modal > *,
+#cardlist-modal > *{position:relative;z-index:2}
+
+.cl-title{font-size:18px !important;letter-spacing:1.5px}
+.cl-hint{font-size:14px !important}
+.cl-back{width:42px !important;height:42px !important;font-size:20px !important}
+
+.bp-section-title{
+  font-size:16px !important;font-weight:900;color:#fff !important;
+  letter-spacing:2.5px;margin:22px 0 14px;
+  display:flex;align-items:center;gap:10px;
+  text-shadow:0 1px 2px rgba(0,0,0,0.4);
+}
+.bp-section-title::before{
+  content:'';width:4px;height:18px;border-radius:2px;
+  background:linear-gradient(180deg,#fbd56a,#d4a020);
+  box-shadow:0 0 8px rgba(251,213,106,0.5);
+}
+.bp-section-title .bp-section-count{
+  font-size:13px;font-weight:700;color:#cfdaee;letter-spacing:1px;margin-left:auto;
+}
+
+.bp-grid{
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill,minmax(110px,1fr)) !important;
+  gap:12px !important;
+}
+@media (max-width:520px){
+  .bp-grid{grid-template-columns:repeat(3,1fr) !important;gap:10px !important}
+}
+
+/* バッジ共通：未獲得 */
+.bp-badge-locked{
+  aspect-ratio:1;border-radius:14px;
+  background:rgba(255,255,255,0.04) !important;
+  border:1px dashed rgba(168,224,255,0.25) !important;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:8px;
+  position:relative;
+}
+.bp-badge-locked .bp-icon{font-size:28px !important;opacity:0.35;margin-bottom:6px}
+.bp-badge-locked .bp-name{
+  font-size:12px !important;color:#a8b8d0 !important;
+  line-height:1.3;letter-spacing:0.5px;font-weight:700;
+}
+.bp-badge-locked .bp-progress{
+  font-size:11px;color:#7a96b6;margin-top:4px;font-weight:700;
+}
+
+/* バッジ共通：獲得済み */
+.bp-badge{
+  aspect-ratio:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:10px 6px;
+  position:relative;cursor:pointer;
+  transition:transform 0.18s;
+}
+.bp-badge:hover{transform:scale(1.06)}
+.bp-badge .bp-name{
+  font-size:13px !important;font-weight:900;line-height:1.25;
+  letter-spacing:0.3px;text-shadow:0 1px 2px rgba(0,0,0,0.5);
+}
+.bp-badge .bp-sub{
+  font-size:11px;font-weight:700;margin-top:2px;letter-spacing:0.5px;
+}
+
+/* 路線制覇：六角形 */
+.bp-badge-line{
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  box-shadow:inset 0 -8px 16px rgba(255,255,255,0.18),inset 0 4px 8px rgba(255,255,255,0.28);
+}
+.bp-badge-line.gold{
+  background:linear-gradient(135deg,#fbd56a 0%,#d4a020 60%,#9a6f10 100%);
+  color:#3a2810;
+}
+.bp-badge-line.silver{
+  background:linear-gradient(135deg,#e8eef4 0%,#a8b0b8 60%,#686e74 100%);
+  color:#1a2028;
+}
+.bp-badge-line.bronze{
+  background:linear-gradient(135deg,#e09848 0%,#a8682a 60%,#7a4818 100%);
+  color:#2a1408;
+}
+
+/* ランク制覇：円形 */
+.bp-badge-rank{
+  border-radius:50%;
+  box-shadow:inset 0 -6px 14px rgba(255,255,255,0.18),inset 0 3px 8px rgba(255,255,255,0.28),
+    0 0 16px rgba(0,0,0,0.4);
+}
+.bp-badge-rank.S{background:radial-gradient(circle at 35% 30%,#ff7088 0%,#ff2244 50%,#a01428 100%);color:#fff}
+.bp-badge-rank.A{background:radial-gradient(circle at 35% 30%,#ffb060 0%,#ff8800 50%,#a85800 100%);color:#fff}
+.bp-badge-rank.B{background:radial-gradient(circle at 35% 30%,#ffe890 0%,#ffd700 50%,#a08000 100%);color:#3a2800}
+.bp-badge-rank.C{background:radial-gradient(circle at 35% 30%,#80e0a8 0%,#44cc88 50%,#207040 100%);color:#fff}
+.bp-badge-rank.D{background:radial-gradient(circle at 35% 30%,#88c8ff 0%,#44aaff 50%,#1860a8 100%);color:#fff}
+
+/* エリア制覇：シールド形 */
+.bp-badge-area{
+  clip-path:polygon(50% 0,100% 12%,100% 65%,50% 100%,0 65%,0 12%);
+  background:linear-gradient(180deg,#7d8fae 0%,#4a5878 50%,#2a3450 100%);
+  color:#e8f0fa;
+  box-shadow:inset 0 -8px 16px rgba(0,0,0,0.25),inset 0 4px 8px rgba(255,255,255,0.18);
+}
+.bp-badge-area .bp-shield-mark{
+  font-size:18px;margin-bottom:2px;color:#fbd56a;
+  text-shadow:0 0 6px rgba(251,213,106,0.6);
+}
+
+/* チェックイン数：スクエア */
+.bp-badge-checkin{
+  border-radius:12px;
+  background:linear-gradient(135deg,#22d3ee 0%,#3a8ac4 60%,#1e4a78 100%);
+  color:#fff;
+  box-shadow:inset 0 -6px 14px rgba(255,255,255,0.18),inset 0 3px 8px rgba(255,255,255,0.25);
+  border:2px solid rgba(255,255,255,0.18);
+}
+.bp-badge-checkin .bp-num{
+  font-size:22px !important;font-weight:900;letter-spacing:0.5px;
+  text-shadow:0 2px 4px rgba(0,0,0,0.4);
+}
+.bp-badge-checkin .bp-num-label{
+  font-size:11px;font-weight:700;margin-top:2px;letter-spacing:1px;opacity:0.9;
+}
+
+/* 週間ミッション：六角形（縦長） */
+.bp-mission-card{
+  background:linear-gradient(160deg,rgba(34,211,238,0.12) 0%,rgba(125,211,252,0.08) 50%,rgba(255,176,112,0.10) 100%);
+  border:1.5px solid rgba(125,211,252,0.4);
+  border-radius:16px;padding:16px 18px;
+  position:relative;overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.bp-mission-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(255,176,112,0.7),rgba(125,211,252,0.7),transparent);
+}
+.bp-mission-label{
+  font-size:11px;font-weight:900;color:#ffb070;letter-spacing:2px;margin-bottom:8px;
+}
+.bp-mission-title{
+  font-size:15px;font-weight:900;color:#fff;line-height:1.4;margin-bottom:10px;
+}
+.bp-mission-progress-track{
+  height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;
+  margin-top:10px;
+}
+.bp-mission-progress-fill{
+  height:100%;background:linear-gradient(90deg,#22d3ee 0%,#ffb070 100%);
+  border-radius:4px;transition:width 0.5s;
+}
+.bp-mission-status{
+  display:flex;justify-content:space-between;align-items:center;margin-top:8px;
+  font-size:12px;font-weight:700;
+}
+.bp-mission-status .bp-mission-count{color:#fff}
+.bp-mission-status .bp-mission-deadline{color:#a8b8d0}
+.bp-mission-card.done{
+  background:linear-gradient(160deg,rgba(255,215,0,0.16) 0%,rgba(251,213,106,0.10) 100%);
+  border-color:rgba(251,213,106,0.6);
+}
+.bp-mission-card.done .bp-mission-label{color:#fbd56a}
+
+/* バッジ獲得モーダル */
+#badge-earn-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:9000;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);padding:20px;
+}
+#badge-earn-bg.open{display:flex}
+#badge-earn-modal{
+  background:linear-gradient(160deg,#1a2848 0%,#142038 50%,#0e1828 100%);
+  border:1px solid rgba(251,213,106,0.5);border-radius:18px;
+  padding:32px 24px 24px;max-width:340px;width:100%;text-align:center;
+  position:relative;overflow:hidden;
+  box-shadow:0 0 50px rgba(251,213,106,0.3);
+}
+#badge-earn-modal::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,transparent,#fbd56a,transparent);
+}
+.bem-label{
+  font-size:13px;font-weight:900;color:#fbd56a;letter-spacing:3px;margin-bottom:16px;
+  animation:bem-pulse 1.5s ease-in-out infinite;
+}
+@keyframes bem-pulse{
+  0%,100%{opacity:0.7}
+  50%{opacity:1;text-shadow:0 0 12px rgba(251,213,106,0.8)}
+}
+.bem-badge-wrap{
+  width:140px;height:140px;margin:0 auto 18px;
+  display:flex;align-items:center;justify-content:center;
+  animation:bem-bounce 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes bem-bounce{
+  0%{transform:scale(0) rotate(-180deg);opacity:0}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+.bem-badge-wrap .bp-badge{
+  width:100%;height:100%;
+  box-shadow:0 0 30px rgba(251,213,106,0.6);
+}
+.bem-name{
+  font-size:18px;font-weight:900;color:#fff;margin-bottom:6px;line-height:1.3;
+}
+.bem-desc{
+  font-size:13px;color:#cfdaee;margin-bottom:20px;line-height:1.5;
+}
+.bem-counter{
+  font-size:12px;color:#7a96b6;margin-bottom:14px;font-weight:700;
+}
+.bem-close{
+  width:100%;background:linear-gradient(135deg,#22d3ee 0%,#38bdf8 60%,#2563eb 100%);
+  border:none;color:#fff;padding:13px;border-radius:12px;
+  font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;
+  letter-spacing:1px;
+}
+.bem-close:hover{filter:brightness(1.1)}
+
+/* バッジ詳細モーダル */
+#badge-detail-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.92);z-index:8500;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);padding:20px;
+}
+#badge-detail-bg.open{display:flex}
+#badge-detail-modal{
+  background:linear-gradient(160deg,#1a2848 0%,#142038 50%,#0e1828 100%);
+  border:1px solid rgba(120,150,210,0.3);border-radius:18px;
+  padding:24px;max-width:340px;width:100%;text-align:center;
+  position:relative;
+}
+.bdm-close{
+  position:absolute;top:10px;right:14px;background:none;border:none;
+  color:#7080b8;font-size:24px;cursor:pointer;font-family:inherit;
+  width:32px;height:32px;
+}
+.bdm-badge-wrap{
+  width:120px;height:120px;margin:8px auto 16px;
+  display:flex;align-items:center;justify-content:center;
+}
+.bdm-badge-wrap .bp-badge{width:100%;height:100%}
+.bdm-name{font-size:17px;font-weight:900;color:#fff;margin-bottom:8px;line-height:1.3}
+.bdm-desc{font-size:13px;color:#cfdaee;line-height:1.5;margin-bottom:14px}
+.bdm-earned{font-size:12px;color:#7a96b6;font-weight:700}
+
+/* マイページ プレビューエリアもフォント大きく */
+.mp-section-title{font-size:14px !important;letter-spacing:1.5px}
+.mp-link{font-size:13px !important;font-weight:700}
+.mp-empty{font-size:13px !important;color:#a8b8d0 !important}
+
 </style>
 </head>
 <body>
@@ -2321,11 +2584,15 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
       <div style="width:36px"></div>
     </div>
     <div class="cl-body" id="bp-body">
-      <div class="bp-section-title">路線制覇</div>
+      <div class="bp-section-title">今週のミッション</div>
+      <div id="bp-mission"></div>
+      <div class="bp-section-title">路線制覇<span class="bp-section-count" id="bp-line-count">0 獲得</span></div>
       <div class="bp-grid" id="bp-line"></div>
-      <div class="bp-section-title">ランク制覇</div>
+      <div class="bp-section-title">ランク制覇<span class="bp-section-count" id="bp-rank-count">0 獲得</span></div>
       <div class="bp-grid" id="bp-rank"></div>
-      <div class="bp-section-title">エリア制覇</div>
+      <div class="bp-section-title">チェックイン数<span class="bp-section-count" id="bp-checkin-count">0 獲得</span></div>
+      <div class="bp-grid" id="bp-checkin"></div>
+      <div class="bp-section-title">エリア制覇<span class="bp-section-count" id="bp-area-count">0 獲得</span></div>
       <div class="bp-grid" id="bp-area"></div>
     </div>
   </div>
@@ -4313,6 +4580,10 @@ async function tryCompleteCheckin() {
     clearPending();
     hideCheckinIndicator();
     if (window.currentStation) window.renderCheckinSection(window.currentStation);
+    // Phase D-1: バッジ判定を実行
+    if (typeof runBadgeCheckAfterCheckin === 'function') {
+      runBadgeCheckAfterCheckin();
+    }
   } catch (e) {
     console.error('チェックイン保存エラー:', e);
     alert('チェックインの保存に失敗しました: ' + e.message);
@@ -5228,6 +5499,15 @@ window.markCheckedIn = function(name, pref) {
 // 既存の getRank をモジュール側からも使える形で公開
 setTimeout(() => { if (typeof getRank === 'function') window.getRank = getRank; }, 100);
 
+// Phase D-1: window公開（モジュール内のバッジ判定処理用）
+window.LINE_ORDER = LINE_ORDER;
+if (typeof STATIONS_MAP !== 'undefined') window.STATIONS_MAP = STATIONS_MAP;
+// stationDataはloadAll後に再代入されるため、定期同期
+setInterval(() => {
+  if (typeof stationData !== 'undefined') window.stationData = stationData;
+}, 1000);
+window.stationData = stationData;
+
 // ─── ログイン状態の監視 ───
 onAuthStateChanged(auth, async (user) => {
   const loginBtn = document.getElementById('loginBtn');
@@ -5291,6 +5571,641 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 console.log('Firebase Auth + Firestore 初期化完了 (Phase 1+2+3)');
+
+// ═══════════════════════════════════════════════════════════════
+// Phase D-1: バッジコレクション判定エンジン
+// ═══════════════════════════════════════════════════════════════
+
+// ─── 路線→駅IDセット マスタ生成（クライアント側集計） ───
+function buildLineMaster() {
+  const master = {};
+  if (!window.stationData || !Array.isArray(window.stationData)) return master;
+  window.stationData.forEach(st => {
+    (st.lines || []).forEach(line => {
+      if (!master[line]) master[line] = new Set();
+      master[line].add(`${st.name}_${st.pref}`);
+    });
+  });
+  return master;
+}
+
+// ─── ランク別 駅数集計 ───
+function buildRankTotals() {
+  const totals = { S:0, A:0, B:0, C:0, D:0 };
+  if (!window.stationData || !window.getRank) return totals;
+  window.stationData.forEach(st => {
+    if (st.score && st.score > 0) {
+      const r = window.getRank(st.score).rank;
+      if (totals[r] !== undefined) totals[r]++;
+    }
+  });
+  return totals;
+}
+
+// ─── ランク別 閾値生成（実在数に応じて可変） ───
+function getRankThresholds(rank, total) {
+  let base;
+  if (rank === 'S') base = [5, 10, 25];
+  else base = [10, 25, 50, 100, 150];
+  const arr = base.filter(n => n < total);
+  arr.push(total); // 「全部」
+  return [...new Set(arr)].sort((a,b)=>a-b);
+}
+
+// ─── ユーザーのstationCards取得 ───
+async function fetchUserStationCards(uid) {
+  try {
+    const cardsRef = collection(db, 'users', uid, 'stationCards');
+    const snap = await getDocs(cardsRef);
+    return snap.docs.map(d => d.data());
+  } catch(e) {
+    console.error('stationCards取得エラー:', e);
+    return [];
+  }
+}
+
+// ─── ユーザーのcheckins取得（週間ミッション判定用） ───
+async function fetchUserCheckinsThisWeek(uid) {
+  try {
+    const ckRef = collection(db, 'users', uid, 'checkins');
+    const snap = await getDocs(ckRef);
+    const monday = getMondayMidnight();
+    return snap.docs
+      .map(d => d.data())
+      .filter(c => {
+        if (!c.checkedInAt) return false;
+        const t = c.checkedInAt.toMillis ? c.checkedInAt.toMillis() : c.checkedInAt.seconds * 1000;
+        return t >= monday;
+      });
+  } catch(e) {
+    console.error('週間チェックイン取得エラー:', e);
+    return [];
+  }
+}
+
+// ─── ユーザーの獲得済みバッジ取得 ───
+async function fetchUserBadges(uid) {
+  try {
+    const badgesRef = collection(db, 'users', uid, 'badges');
+    const snap = await getDocs(badgesRef);
+    const map = new Map();
+    snap.docs.forEach(d => map.set(d.id, d.data()));
+    return map;
+  } catch(e) {
+    console.error('badges取得エラー:', e);
+    return new Map();
+  }
+}
+
+// ─── 路線制覇判定 ───
+function calcLineConquest(lineMaster, userCards) {
+  const userIds = new Set(userCards.map(c => c.stationId));
+  const result = [];
+  Object.entries(lineMaster).forEach(([line, stations]) => {
+    const total = stations.size;
+    if (total === 0) return;
+    const conquered = [...stations].filter(id => userIds.has(id)).length;
+    const ratio = conquered / total;
+    let tier = null;
+    if (ratio >= 1.0) tier = 'gold';
+    else if (ratio >= 0.6) tier = 'silver';
+    else if (ratio >= 0.3) tier = 'bronze';
+    result.push({ line, conquered, total, ratio, tier });
+  });
+  // LINE_ORDERでソート、その中で達成率順
+  if (window.LINE_ORDER) {
+    result.sort((a,b) => {
+      const ai = window.LINE_ORDER.indexOf(a.line);
+      const bi = window.LINE_ORDER.indexOf(b.line);
+      if (ai === -1 && bi === -1) return a.line.localeCompare(b.line, 'ja');
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }
+  return result;
+}
+
+// ─── ランク制覇判定 ───
+function calcRankConquest(userCards, rankTotals) {
+  const userRanks = { S:0, A:0, B:0, C:0, D:0 };
+  userCards.forEach(c => {
+    if (userRanks[c.firstRank] !== undefined) userRanks[c.firstRank]++;
+  });
+  return ['S','A','B','C','D'].map(rank => {
+    const total = rankTotals[rank] || 0;
+    const conquered = userRanks[rank];
+    const thresholds = getRankThresholds(rank, total);
+    return { rank, conquered, total, thresholds };
+  });
+}
+
+// ─── 週間ミッション定義 ───
+const WEEKLY_MISSIONS = [
+  { id:'A', title:'Bランク以上の駅に5回チェックイン', target:5, type:'rank_above_b' },
+  { id:'B', title:'今週、まだ訪れていない路線でチェックイン', target:1, type:'new_line' },
+  { id:'C', title:'今週、まだ訪れていない市区町村でチェックイン', target:1, type:'new_area' },
+  { id:'D', title:'3つの異なる路線でチェックイン', target:3, type:'three_lines' },
+  { id:'E', title:'最寄り駅以外の駅に再訪する', target:1, type:'revisit_non_home' }
+];
+
+// ─── 週始め月曜0時のミリ秒取得 ───
+function getMondayMidnight() {
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  const day = d.getDay() || 7; // 0(日)→7
+  if (day !== 1) d.setDate(d.getDate() - (day - 1));
+  return d.getTime();
+}
+function getMondayKey() {
+  const d = new Date(getMondayMidnight());
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getNextSundayMidnight() {
+  return getMondayMidnight() + 7 * 24 * 60 * 60 * 1000;
+}
+function formatDeadline() {
+  const ms = getNextSundayMidnight() - Date.now();
+  const d = Math.floor(ms / (24*60*60*1000));
+  const h = Math.floor((ms % (24*60*60*1000)) / (60*60*1000));
+  if (d > 0) return `あと${d}日${h}時間`;
+  return `あと${h}時間`;
+}
+
+// ─── 今週のミッション取得（無ければランダム選出して保存） ───
+function getThisWeekMission(uid) {
+  const key = `mm_weekly_${uid}_${getMondayKey()}`;
+  let saved = null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) saved = JSON.parse(raw);
+  } catch(e) {}
+  if (saved) return saved;
+  const mission = WEEKLY_MISSIONS[Math.floor(Math.random() * WEEKLY_MISSIONS.length)];
+  const data = { ...mission, weekKey: getMondayKey(), uid };
+  try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
+  return data;
+}
+
+// ─── 週間ミッション進捗算出 ───
+function calcMissionProgress(mission, weekCheckins, allUserCards, userProfile) {
+  if (!mission) return 0;
+  const homeStation = userProfile && userProfile.nearestStation ? userProfile.nearestStation : '';
+  
+  switch (mission.type) {
+    case 'rank_above_b':
+      return weekCheckins.filter(c => ['S','A','B'].includes(c.rank)).length;
+    case 'new_line': {
+      // 既訪問路線（今週以外でチェックイン済み）
+      const oldStationIds = new Set(allUserCards
+        .filter(c => {
+          const t = c.firstVisitAt && c.firstVisitAt.toMillis ? c.firstVisitAt.toMillis() : 
+                    (c.firstVisitAt && c.firstVisitAt.seconds ? c.firstVisitAt.seconds*1000 : 0);
+          return t < getMondayMidnight();
+        })
+        .map(c => c.stationId));
+      const oldLines = new Set();
+      allUserCards.forEach(c => {
+        if (oldStationIds.has(c.stationId) && c.lines) {
+          c.lines.forEach(l => oldLines.add(l));
+        }
+      });
+      // 今週、新路線にチェックインしたか
+      const newLineHit = weekCheckins.some(c => {
+        const st = (window.stationData||[]).find(s => s.name === c.stationName && s.pref === c.stationPref);
+        if (!st || !st.lines) return false;
+        return st.lines.some(l => !oldLines.has(l));
+      });
+      return newLineHit ? 1 : 0;
+    }
+    case 'new_area': {
+      // 既訪問市区町村（今週以外）→ stationCards.cityがあれば使う、無ければprefで代用
+      // 市区町村データはPhase D-2で実装、今は path区切りで簡易
+      const oldCities = new Set(allUserCards
+        .filter(c => {
+          const t = c.firstVisitAt && c.firstVisitAt.toMillis ? c.firstVisitAt.toMillis() : 
+                    (c.firstVisitAt && c.firstVisitAt.seconds ? c.firstVisitAt.seconds*1000 : 0);
+          return t < getMondayMidnight();
+        })
+        .map(c => c.city || c.stationPref));
+      const newAreaHit = weekCheckins.some(c => {
+        const city = c.city || c.stationPref;
+        return !oldCities.has(city);
+      });
+      return newAreaHit ? 1 : 0;
+    }
+    case 'three_lines': {
+      const lineSet = new Set();
+      weekCheckins.forEach(c => {
+        const st = (window.stationData||[]).find(s => s.name === c.stationName && s.pref === c.stationPref);
+        if (st && st.lines) st.lines.forEach(l => lineSet.add(l));
+      });
+      return Math.min(lineSet.size, 3);
+    }
+    case 'revisit_non_home': {
+      // 最寄り駅以外で、過去に訪問済みの駅にチェックインしたか
+      const oldCardIds = new Set(allUserCards
+        .filter(c => {
+          const t = c.firstVisitAt && c.firstVisitAt.toMillis ? c.firstVisitAt.toMillis() : 
+                    (c.firstVisitAt && c.firstVisitAt.seconds ? c.firstVisitAt.seconds*1000 : 0);
+          return t < getMondayMidnight();
+        })
+        .map(c => c.stationId));
+      const hit = weekCheckins.some(c => {
+        if (c.stationName === homeStation) return false; // 最寄り駅除外
+        return oldCardIds.has(c.stationId); // 過去に訪問済み
+      });
+      return hit ? 1 : 0;
+    }
+  }
+  return 0;
+}
+
+// ─── バッジFirestore保存 ───
+async function persistBadge(uid, badgeId, data) {
+  try {
+    await setDoc(doc(db, 'users', uid, 'badges', badgeId), {
+      ...data,
+      earnedAt: serverTimestamp()
+    });
+  } catch(e) {
+    console.error('バッジ保存エラー:', badgeId, e);
+  }
+}
+
+// ─── チェックイン後のバッジ判定（新規獲得分のみ抽出して保存） ───
+async function checkAndAwardBadges(uid) {
+  const [userCards, userBadges] = await Promise.all([
+    fetchUserStationCards(uid),
+    fetchUserBadges(uid)
+  ]);
+  const lineMaster = buildLineMaster();
+  const rankTotals = buildRankTotals();
+  const newlyEarned = [];
+  
+  // 路線制覇
+  calcLineConquest(lineMaster, userCards).forEach(({line, tier, conquered, total}) => {
+    if (!tier) return;
+    const tiers = ['bronze','silver','gold'];
+    const idx = tiers.indexOf(tier);
+    for (let i = 0; i <= idx; i++) {
+      const id = `line_${line}_${tiers[i]}`;
+      if (!userBadges.has(id)) {
+        const badge = {
+          id, type:'line', line, tier:tiers[i],
+          conquered, total,
+          name: `${line} ${tierJa(tiers[i])}`,
+          desc: `${line}の駅を${Math.round(thresholdPct(tiers[i])*100)}%以上制覇`
+        };
+        persistBadge(uid, id, badge);
+        userBadges.set(id, badge);
+        newlyEarned.push(badge);
+      }
+    }
+  });
+  
+  // ランク制覇
+  calcRankConquest(userCards, rankTotals).forEach(({rank, conquered, total, thresholds}) => {
+    thresholds.forEach(th => {
+      if (conquered >= th) {
+        const id = `rank_${rank}_${th}`;
+        if (!userBadges.has(id)) {
+          const isAll = th === total;
+          const badge = {
+            id, type:'rank', rank, threshold:th, conquered, total,
+            name: isAll ? `${rank}駅 完全制覇` : `${rank}駅 ${th}駅制覇`,
+            desc: `${rank}ランクの駅を${th}駅制覇`
+          };
+          persistBadge(uid, id, badge);
+          userBadges.set(id, badge);
+          newlyEarned.push(badge);
+        }
+      }
+    });
+  });
+  
+  // チェックイン数
+  try {
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    if (userDoc.exists()) {
+      const total = userDoc.data().totalCheckins || 0;
+      const milestones = [10, 50, 100, 500, 1000];
+      milestones.forEach(m => {
+        if (total >= m) {
+          const id = `checkin_${m}`;
+          if (!userBadges.has(id)) {
+            const badge = {
+              id, type:'checkin', count:m,
+              name:`累計${m}チェックイン`,
+              desc:`累計${m}回のチェックインを達成`
+            };
+            persistBadge(uid, id, badge);
+            userBadges.set(id, badge);
+            newlyEarned.push(badge);
+          }
+        }
+      });
+    }
+  } catch(e) { console.error(e); }
+  
+  return newlyEarned;
+}
+
+function tierJa(t) { return t==='gold'?'制覇':t==='silver'?'銀':'銅'; }
+function thresholdPct(t) { return t==='gold'?1.0:t==='silver'?0.6:0.3; }
+
+// ─── バッジ獲得モーダル（複数バッジを順番に表示） ───
+async function showBadgeEarnedQueue(badges) {
+  if (!badges || badges.length === 0) return;
+  for (let i = 0; i < badges.length; i++) {
+    await showBadgeEarnedOne(badges[i], i+1, badges.length);
+  }
+}
+
+function showBadgeEarnedOne(badge, idx, total) {
+  return new Promise(resolve => {
+    const wrap = document.getElementById('bem-badge-wrap');
+    const nameEl = document.getElementById('bem-name');
+    const descEl = document.getElementById('bem-desc');
+    const counterEl = document.getElementById('bem-counter');
+    if (!wrap || !nameEl) { resolve(); return; }
+    
+    wrap.innerHTML = renderBadgeHTML(badge, true);
+    nameEl.textContent = badge.name;
+    descEl.textContent = badge.desc || '';
+    counterEl.textContent = total > 1 ? `${idx} / ${total}` : '';
+    counterEl.style.display = total > 1 ? 'block' : 'none';
+    
+    document.getElementById('badge-earn-bg').classList.add('open');
+    
+    const closeBtn = document.getElementById('bem-close-btn');
+    const handler = () => {
+      document.getElementById('badge-earn-bg').classList.remove('open');
+      closeBtn.removeEventListener('click', handler);
+      setTimeout(resolve, 200);
+    };
+    closeBtn.addEventListener('click', handler);
+  });
+}
+
+// ─── バッジHTML生成（共通レンダラー） ───
+function renderBadgeHTML(b, big) {
+  if (b.type === 'line') {
+    const lineShort = b.line.replace('東京メトロ','メトロ').replace(/^都営/,'都営');
+    return `<div class="bp-badge bp-badge-line ${b.tier}">
+      <div class="bp-name">${lineShort}</div>
+      <div class="bp-sub">${tierJa(b.tier)}</div>
+    </div>`;
+  }
+  if (b.type === 'rank') {
+    const isAll = b.threshold === b.total;
+    return `<div class="bp-badge bp-badge-rank ${b.rank}">
+      <div class="bp-name">${b.rank}駅</div>
+      <div class="bp-sub">${isAll ? '完全制覇' : b.threshold + '駅'}</div>
+    </div>`;
+  }
+  if (b.type === 'area') {
+    return `<div class="bp-badge bp-badge-area">
+      <div class="bp-shield-mark">⌘</div>
+      <div class="bp-name">${b.city}</div>
+      <div class="bp-sub">制覇</div>
+    </div>`;
+  }
+  if (b.type === 'checkin') {
+    return `<div class="bp-badge bp-badge-checkin">
+      <div class="bp-num">${b.count}</div>
+      <div class="bp-num-label">CHECKINS</div>
+    </div>`;
+  }
+  return '';
+}
+
+// ─── バッジ詳細モーダル ───
+window.showBadgeDetail = (badgeJson) => {
+  let b;
+  try { b = JSON.parse(decodeURIComponent(badgeJson)); } catch(e) { return; }
+  document.getElementById('bdm-badge-wrap').innerHTML = renderBadgeHTML(b);
+  document.getElementById('bdm-name').textContent = b.name || '';
+  document.getElementById('bdm-desc').textContent = b.desc || '';
+  let earnedStr = '';
+  if (b.earnedAt) {
+    try {
+      const t = b.earnedAt.toMillis ? b.earnedAt.toMillis() : b.earnedAt.seconds*1000;
+      const d = new Date(t);
+      earnedStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 獲得`;
+    } catch(e) {}
+  }
+  document.getElementById('bdm-earned').textContent = earnedStr;
+  document.getElementById('badge-detail-bg').classList.add('open');
+};
+window.closeBadgeDetail = () => {
+  document.getElementById('badge-detail-bg').classList.remove('open');
+};
+
+// ─── バッジページ完全置換版 ───
+window.openBadgePage = async () => {
+  document.getElementById('badgepage-bg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  
+  const user = auth.currentUser;
+  
+  // ローディング状態
+  ['bp-mission','bp-line','bp-rank','bp-area','bp-checkin'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<div style="grid-column:1/-1;padding:20px 12px;text-align:center;color:#a8b8d0;font-size:13px">読み込み中...</div>';
+  });
+  
+  if (!user) {
+    document.getElementById('bp-body').innerHTML = '<div style="padding:40px 20px;text-align:center;color:#a8b8d0;font-size:14px;line-height:1.7">バッジを集めるにはログインが必要です。</div>';
+    return;
+  }
+  
+  // 並行取得
+  const [userCards, userBadges, userDocSnap] = await Promise.all([
+    fetchUserStationCards(user.uid),
+    fetchUserBadges(user.uid),
+    getDoc(doc(db, 'users', user.uid))
+  ]);
+  const userProfile = userDocSnap.exists() ? userDocSnap.data() : null;
+  const totalCheckins = userProfile ? (userProfile.totalCheckins || 0) : 0;
+  
+  // 週間ミッション
+  await renderWeeklyMission(user.uid, userCards, userProfile);
+  
+  // 路線制覇
+  const lineMaster = buildLineMaster();
+  const lineResults = calcLineConquest(lineMaster, userCards);
+  renderLineBadges(lineResults, userBadges);
+  
+  // ランク制覇
+  const rankTotals = buildRankTotals();
+  const rankResults = calcRankConquest(userCards, rankTotals);
+  renderRankBadges(rankResults, userBadges);
+  
+  // エリア制覇（Phase D-2予定、プレースホルダー）
+  renderAreaBadges(userBadges);
+  
+  // チェックイン数
+  renderCheckinBadges(totalCheckins, userBadges);
+};
+
+async function renderWeeklyMission(uid, userCards, userProfile) {
+  const el = document.getElementById('bp-mission');
+  if (!el) return;
+  const mission = getThisWeekMission(uid);
+  const weekCheckins = await fetchUserCheckinsThisWeek(uid);
+  const progress = calcMissionProgress(mission, weekCheckins, userCards, userProfile);
+  const done = progress >= mission.target;
+  const pct = Math.min(100, (progress / mission.target) * 100);
+  
+  el.innerHTML = `
+    <div class="bp-mission-card${done ? ' done' : ''}">
+      <div class="bp-mission-label">${done ? '達成！' : '今週のミッション'}</div>
+      <div class="bp-mission-title">${mission.title}</div>
+      <div class="bp-mission-progress-track">
+        <div class="bp-mission-progress-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="bp-mission-status">
+        <span class="bp-mission-count">${progress} / ${mission.target}</span>
+        <span class="bp-mission-deadline">${formatDeadline()}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderLineBadges(lineResults, userBadges) {
+  const el = document.getElementById('bp-line');
+  if (!el) return;
+  let html = '';
+  let earnedCount = 0;
+  lineResults.forEach(r => {
+    const lineShort = r.line.replace('東京メトロ','メトロ').replace(/^都営/,'都営');
+    if (r.tier) {
+      const id = `line_${r.line}_${r.tier}`;
+      const badgeData = userBadges.get(id) || { id, type:'line', line:r.line, tier:r.tier, conquered:r.conquered, total:r.total, name:`${r.line} ${tierJa(r.tier)}`, desc:`${r.line}の駅を制覇` };
+      const enc = encodeURIComponent(JSON.stringify(badgeData));
+      html += `<div class="bp-badge bp-badge-line ${r.tier}" onclick="showBadgeDetail('${enc}')">
+        <div class="bp-name">${lineShort}</div>
+        <div class="bp-sub">${tierJa(r.tier)}</div>
+      </div>`;
+      earnedCount++;
+    } else {
+      html += `<div class="bp-badge-locked">
+        <div class="bp-icon">🚃</div>
+        <div class="bp-name">${lineShort}</div>
+        <div class="bp-progress">${r.conquered}/${r.total}駅</div>
+      </div>`;
+    }
+  });
+  el.innerHTML = html || '<div style="grid-column:1/-1;padding:20px;text-align:center;color:#a8b8d0;font-size:13px">路線データがありません</div>';
+  
+  const counter = document.getElementById('bp-line-count');
+  if (counter) counter.textContent = `${earnedCount} 獲得`;
+}
+
+function renderRankBadges(rankResults, userBadges) {
+  const el = document.getElementById('bp-rank');
+  if (!el) return;
+  let html = '';
+  let earnedCount = 0;
+  rankResults.forEach(r => {
+    if (r.total === 0) return;
+    r.thresholds.forEach(th => {
+      const isAll = th === r.total;
+      const id = `rank_${r.rank}_${th}`;
+      if (r.conquered >= th) {
+        const badgeData = userBadges.get(id) || { id, type:'rank', rank:r.rank, threshold:th, conquered:r.conquered, total:r.total, name: isAll ? `${r.rank}駅 完全制覇` : `${r.rank}駅 ${th}駅制覇`, desc:`${r.rank}ランクの駅を${th}駅制覇` };
+        const enc = encodeURIComponent(JSON.stringify(badgeData));
+        html += `<div class="bp-badge bp-badge-rank ${r.rank}" onclick="showBadgeDetail('${enc}')">
+          <div class="bp-name">${r.rank}駅</div>
+          <div class="bp-sub">${isAll ? '完全制覇' : th + '駅'}</div>
+        </div>`;
+        earnedCount++;
+      } else {
+        html += `<div class="bp-badge-locked">
+          <div class="bp-icon">🏆</div>
+          <div class="bp-name">${r.rank}駅 ${isAll ? '完全' : th+'駅'}</div>
+          <div class="bp-progress">${r.conquered}/${th}</div>
+        </div>`;
+      }
+    });
+  });
+  el.innerHTML = html || '<div style="grid-column:1/-1;padding:20px;text-align:center;color:#a8b8d0;font-size:13px">スコアデータ読込中...</div>';
+  
+  const counter = document.getElementById('bp-rank-count');
+  if (counter) counter.textContent = `${earnedCount} 獲得`;
+}
+
+function renderAreaBadges(userBadges) {
+  const el = document.getElementById('bp-area');
+  if (!el) return;
+  // Phase D-2で本実装予定。今はプレースホルダー（一都三県の主要区市町村）
+  const placeholders = [
+    '千代田区','中央区','港区','新宿区','渋谷区','豊島区','江東区','品川区',
+    '目黒区','世田谷区','杉並区','練馬区','足立区','葛飾区','江戸川区','大田区',
+    '北区','板橋区','文京区','台東区','墨田区','中野区','荒川区',
+    '横浜市','川崎市','さいたま市','千葉市'
+  ];
+  el.innerHTML = placeholders.map(area => `
+    <div class="bp-badge-locked">
+      <div class="bp-icon">🛡️</div>
+      <div class="bp-name">${area}</div>
+      <div class="bp-progress">準備中</div>
+    </div>
+  `).join('');
+  
+  const counter = document.getElementById('bp-area-count');
+  if (counter) counter.textContent = '0 獲得';
+}
+
+function renderCheckinBadges(total, userBadges) {
+  const el = document.getElementById('bp-checkin');
+  if (!el) return;
+  const milestones = [10, 50, 100, 500, 1000];
+  let html = '';
+  let earnedCount = 0;
+  milestones.forEach(m => {
+    const id = `checkin_${m}`;
+    if (total >= m) {
+      const badgeData = userBadges.get(id) || { id, type:'checkin', count:m, name:`累計${m}チェックイン`, desc:`累計${m}回のチェックインを達成` };
+      const enc = encodeURIComponent(JSON.stringify(badgeData));
+      html += `<div class="bp-badge bp-badge-checkin" onclick="showBadgeDetail('${enc}')">
+        <div class="bp-num">${m}</div>
+        <div class="bp-num-label">CHECKINS</div>
+      </div>`;
+      earnedCount++;
+    } else {
+      html += `<div class="bp-badge-locked">
+        <div class="bp-icon">📍</div>
+        <div class="bp-name">${m}回</div>
+        <div class="bp-progress">${total}/${m}</div>
+      </div>`;
+    }
+  });
+  el.innerHTML = html;
+  
+  const counter = document.getElementById('bp-checkin-count');
+  if (counter) counter.textContent = `${earnedCount} 獲得`;
+}
+
+// グローバル参照（通常script側で window.stationData / window.LINE_ORDER を公開済み）
+// moduleブロックではこれらを直接参照できないため、windowオブジェクト経由で利用する
+
+// チェックイン成功時のバッジ判定フック
+window._origShowCheckinSuccess = window.showCheckinSuccess;
+window.runBadgeCheckAfterCheckin = async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const newBadges = await checkAndAwardBadges(user.uid);
+    if (newBadges.length > 0) {
+      // チェックイン成功表示が閉じてからバッジ表示
+      setTimeout(() => showBadgeEarnedQueue(newBadges), 2200);
+    }
+  } catch(e) { console.error('バッジ判定エラー:', e); }
+};
+
+
 </script>
 <script>
 // Service Worker登録（PWA化）
@@ -5370,5 +6285,29 @@ if ('serviceWorker' in navigator) {
   };
 })();
 </script>
+
+<!-- Phase D-1: バッジ獲得モーダル -->
+<div id="badge-earn-bg">
+  <div id="badge-earn-modal">
+    <div class="bem-label">バッジ獲得！</div>
+    <div class="bem-badge-wrap" id="bem-badge-wrap"></div>
+    <div class="bem-name" id="bem-name"></div>
+    <div class="bem-desc" id="bem-desc"></div>
+    <div class="bem-counter" id="bem-counter"></div>
+    <button class="bem-close" id="bem-close-btn" type="button">確認</button>
+  </div>
+</div>
+
+<!-- Phase D-1: バッジ詳細モーダル -->
+<div id="badge-detail-bg" onclick="if(event.target.id==='badge-detail-bg')closeBadgeDetail()">
+  <div id="badge-detail-modal">
+    <button class="bdm-close" onclick="closeBadgeDetail()" type="button">×</button>
+    <div class="bdm-badge-wrap" id="bdm-badge-wrap"></div>
+    <div class="bdm-name" id="bdm-name"></div>
+    <div class="bdm-desc" id="bdm-desc"></div>
+    <div class="bdm-earned" id="bdm-earned"></div>
+  </div>
+</div>
+
 </body>
 </html>
