@@ -1,6 +1,55 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script>
+// ═══ 起動安定化: window.onerror 早期セット（D-3 index45） ═══
+(function(){
+  // 致命的なエラーが起きても画面が真っ白にならないよう保険
+  let errorCount = 0;
+  window.addEventListener('error', function(e){
+    errorCount++;
+    console.error('[早期キャッチ]', e.message, e.filename + ':' + e.lineno);
+    // body要素がまだ無い場合はDOMContentLoaded時に処理
+    if (!document.body) {
+      document.addEventListener('DOMContentLoaded', function(){
+        document.body.classList.remove('splashing');
+      });
+    } else {
+      document.body.classList.remove('splashing');
+    }
+    // 連続エラー（3回以上）なら警告
+    if (errorCount === 3) {
+      console.warn('[早期キャッチ] 連続エラー、SWキャッシュクリアを試行');
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.controller && 
+          navigator.serviceWorker.controller.postMessage('CLEAR_CACHE');
+      }
+    }
+  });
+  // 未処理のPromise rejectionも捕捉
+  window.addEventListener('unhandledrejection', function(e){
+    console.error('[Promise reject]', e.reason);
+    if (document.body) {
+      document.body.classList.remove('splashing');
+    }
+  });
+  // DOMContentLoaded で確実に表示（最終保険、起動安定化C-3）
+  document.addEventListener('DOMContentLoaded', function(){
+    // スプラッシュロジックが正常に動けば後で再付与される
+    // ロジック自体が動かなかった場合の最終保険
+    setTimeout(function(){
+      if (document.body && document.body.classList.contains('splashing')) {
+        // スプラッシュ要素がそもそも無い、またはJSが死んでる場合
+        const splash = document.getElementById('splash-overlay');
+        if (!splash || splash.style.display === 'none' || !splash.classList.contains('active')) {
+          console.warn('[起動保険] splash未起動、強制表示');
+          document.body.classList.remove('splashing');
+        }
+      }
+    }, 1500);  // 1.5秒待っても何も起きない場合は強制表示
+  });
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -7339,29 +7388,48 @@ window.toggleFavEdit = function() {
 
 </script>
 <script>
-// Service Worker登録（PWA化）
+// ═══ 起動安定化A (index45): Service Worker 登録＋更新管理 ═══
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => console.log('[SW] 登録成功:', reg.scope))
+      .then(reg => {
+        console.log('[SW] 登録成功:', reg.scope);
+        
+        // 起動時に必ず更新チェック
+        reg.update().catch(()=>{});
+        
+        // 新しいSWが見つかったら通知
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          console.log('[SW] 新版を検出、インストール開始');
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              // 既存SWがある＆新SWがインストール完了 = 古いHTMLが動いてる可能性
+              console.log('[SW] 新版インストール完了、SKIP_WAITINGを送信');
+              nw.postMessage('SKIP_WAITING');
+            }
+          });
+        });
+      })
       .catch(err => console.warn('[SW] 登録失敗:', err));
-  });
-}
-</script>
-
-<script>
-// Service Worker 強制更新（古いHTMLキャッシュを破棄）
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => {
-      r.update();
-      // 旧版が動いている場合は強制リロード（1日1回まで）
-      const lastReload = sessionStorage.getItem('sw_force_reload');
-      if (!lastReload) {
-        sessionStorage.setItem('sw_force_reload', Date.now());
-      }
+    
+    // SWが切り替わったら一度だけリロード（無限リロード防止）
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      console.log('[SW] コントローラー変更、リロード');
+      window.location.reload();
     });
   });
+  
+  // 6時間ごとに更新チェック（長時間開きっぱなしのタブ対策）
+  setInterval(() => {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg) reg.update().catch(()=>{});
+    });
+  }, 6 * 60 * 60 * 1000);
 }
 </script>
 
@@ -7413,15 +7481,26 @@ if ('serviceWorker' in navigator) {
       overlay.style.display = 'none';
     }, 650);
   }
+  // 起動安定化B (index45): 8秒→3秒に短縮（万一の白画面を最小化）
   setTimeout(() => {
     if (!ended) {
-      console.warn('[splash] safety timeout');
+      console.warn('[splash] safety timeout 3s');
       document.body.classList.remove('splashing');
       ended = true;
       if (overlay) { overlay.style.opacity = '0'; overlay.style.display = 'none'; }
       document.body.style.overflow = '';
     }
-  }, 8000);
+  }, 3000);
+  // 二段保険：5秒経っても残ってたら DOM 全体をリセット
+  setTimeout(() => {
+    if (document.body && document.body.classList.contains('splashing')) {
+      console.warn('[splash] hard fallback 5s');
+      document.body.classList.remove('splashing');
+      document.body.style.overflow = '';
+      const sp = document.getElementById('splash-overlay');
+      if (sp) { sp.style.opacity = '0'; sp.style.display = 'none'; }
+    }
+  }, 5000);
   
   setTimeout(endSplash, duration);
   
