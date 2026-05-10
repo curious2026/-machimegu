@@ -4170,6 +4170,8 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:19
 }).addTo(lmap);
 
+// Phase E: STATIONSにidを追加（サーバstations.jsonと同じ形式）
+STATIONS.forEach(s=>{ if(!s.id) s.id = s.name+'_'+s.pref; });
 let stationData=STATIONS.map(s=>({...s})),markers=[];
 let selectedMarkerInner=null;
 
@@ -4200,93 +4202,154 @@ function closeInfo(){
   window.currentStation=null;
 }
 
+// Phase E: 個別取得（フォールバック用、新規駅・エラー時のみ）
 async function fetchOne(st){
   try{
     const res=await fetch('/api/score?ll='+st.lat+','+st.lng+'&radius='+getRadius());
     if(!res.ok)throw new Error();
     return await res.json();
-  }catch(e){return null;} // エラー時はnullを返す（0キャッシュしない）
+  }catch(e){return null;}
 }
 
-// ★ キャッシュ即表示→バックグラウンド更新→都度render()
+// Phase E: 一括取得（メインルート）
+async function fetchAllScores(radius){
+  try{
+    const res=await fetch('/api/all-scores?radius='+radius);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return await res.json();
+  }catch(e){
+    console.warn('[fetchAllScores] failed:',e.message);
+    return null;
+  }
+}
+
+// Phase E: 一括取得対応 loadAll
+// 流れ：
+//   1. localStorage に半径別キャッシュがあれば即表示
+//   2. /api/all-scores で最新を取得（バージョンチェック）
+//   3. バージョン不一致 or キャッシュなし → 新版で全更新
+//   4. バージョン一致 → 何もしない（通信ゼロ）
 async function loadAll(){
   const r=getRadius();
-  const cached=loadLocal();
-
-  if(cached&&cached.data){
-    // ★ lat/lngはSTATIONS（COORDS由来）を使用、scoreのみキャッシュから
+  const cacheKey='mm_scores_v2_r'+r;  // 半径別キャッシュ
+  const versionKey='mm_scores_version_r'+r;
+  
+  // Step 1: localStorage キャッシュ即表示
+  let localData=null;
+  let localVersion='';
+  try{
+    const raw=localStorage.getItem(cacheKey);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      localData=parsed.stations;
+      localVersion=parsed.version||'';
+    }
+  }catch(e){}
+  
+  if(localData){
+    // 即時表示
     stationData=STATIONS.map(st=>{
-      const f=cached.data.find(c=>c.name===st.name&&c.pref===st.pref);
-      return f&&f.score?{...st,score:f.score,details:f.details}:{...st,score:null,details:{}};
+      const data=localData[st.id||(st.name+'_'+st.pref)];
+      if(data && data.score !== undefined){
+        return {...st, score:data.score, details:data.details||{}};
+      }
+      return {...st, score:null, details:{}};
     });
     document.getElementById('loading').classList.remove('show');
-    render(); // ★ キャッシュデータで即表示
-
-    // 座標が変わった駅を優先再取得
-    const movedStations=STATIONS.filter(st=>{
-      const f=cached.data.find(c=>c.name===st.name&&c.pref===st.pref);
-      if(!f)return true;
-      return Math.abs((f.lat||0)-st.lat)>0.0001||Math.abs((f.lng||0)-st.lng)>0.0001;
-    });
-    if(movedStations.length>0){
-      setStatus('座標更新中 '+movedStations.length+'駅...',true);
-      for(let i=0;i<movedStations.length;i+=5){
-        await Promise.all(movedStations.slice(i,i+5).map(async st=>{
-          const d=await fetchOne(st);
-          if(!d)return;
-          const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
-          if(idx>=0)stationData[idx]={...stationData[idx],score:d.score,details:d.details};
-        }));
-        render(); // ★ 取得完了分から随時更新
-      }
-      saveLocal(stationData);
-    }
-
-    const age=Date.now()-(cached.ts||0);
-    if(age<CACHE_TTL){
-      setStatus(stationData.filter(s=>s.score).length+'駅表示中',false);
-      return;
-    }
-
-    // 6時間超：全駅バックグラウンド更新
-    setStatus('バックグラウンド更新中...',true);
-    let n=0;
-    for(let i=0;i<STATIONS.length;i+=5){
-      await Promise.all(STATIONS.slice(i,i+5).map(async st=>{
-        const d=await fetchOne(st);
-        if(!d)return;
-        const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
-        if(idx>=0){stationData[idx]={...stationData[idx],score:d.score,details:d.details};n++;}
-      }));
-      render(); // ★ 5駅ごとに随時画面更新
-      setStatus(n+'/'+STATIONS.length+' 更新中...',true);
-    }
-    saveLocal(stationData);
     render();
-    setStatus(stationData.filter(s=>s.score>0).length+'駅表示中',false);
-
+    const cnt=stationData.filter(s=>s.score>0).length;
+    setStatus(cnt+'駅表示中',false);
   } else {
-    // 初回取得
     stationData=STATIONS.map(s=>({...s,score:null,details:{}}));
     document.getElementById('loading').classList.add('show');
-    setStatus('初回取得中...',true);
-    let done=0;
-    for(let i=0;i<STATIONS.length;i+=5){
-      await Promise.all(STATIONS.slice(i,i+5).map(async st=>{
-        const d=await fetchOne(st);
-        if(!d){done++;return;}
-        const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
-        if(idx>=0)stationData[idx]={...stationData[idx],score:d.score,details:d.details};
-        done++;
-      }));
-      if(done>=10)document.getElementById('loading').classList.remove('show');
-      render(); // ★ 5駅ごとに随時更新
-      setStatus(done+'/'+STATIONS.length+' 取得中...',true);
+    setStatus('読み込み中...',true);
+  }
+  
+  // Step 2: 最新を取得
+  const fresh=await fetchAllScores(r);
+  if(!fresh || !fresh.stations){
+    // フォールバック：個別取得
+    if(!localData){
+      console.warn('[loadAll] all-scores失敗、個別取得にフォールバック');
+      await fallbackIndividualFetch(r);
     }
-    saveLocal(stationData);
-    render();
+    document.getElementById('loading').classList.remove('show');
+    return;
+  }
+  
+  // Step 3: バージョンチェック
+  if(fresh.version === localVersion && localData){
+    // バージョン一致 → 何もしない（通信したけど更新不要）
+    document.getElementById('loading').classList.remove('show');
+    if(fresh.builtAt){
+      const d=new Date(fresh.builtAt);
+      const ymd=d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+      setStatus(stationData.filter(s=>s.score>0).length+'駅 (更新:'+ymd+')',false);
+    }
+    return;
+  }
+  
+  // Step 4: バージョン更新 → 全更新
+  console.log('[loadAll] バージョン更新:', localVersion, '→', fresh.version);
+  stationData=STATIONS.map(st=>{
+    const sid=st.id||(st.name+'_'+st.pref);
+    const data=fresh.stations[sid];
+    if(data && data.score !== undefined){
+      return {...st, score:data.score, details:data.details||{}};
+    }
+    return {...st, score:null, details:{}};
+  });
+  
+  // localStorageに保存
+  try{
+    localStorage.setItem(cacheKey, JSON.stringify({
+      version: fresh.version,
+      builtAt: fresh.builtAt,
+      stations: fresh.stations
+    }));
+  }catch(e){
+    // 容量オーバー時は古いキャッシュを削除して再試行
+    console.warn('[loadAll] localStorage保存失敗、古いキャッシュ削除');
+    try{
+      Object.keys(localStorage).filter(k=>k.startsWith('mm_scores_v')).forEach(k=>{
+        if(k!==cacheKey)localStorage.removeItem(k);
+      });
+      localStorage.setItem(cacheKey, JSON.stringify({
+        version: fresh.version,
+        builtAt: fresh.builtAt,
+        stations: fresh.stations
+      }));
+    }catch(e2){console.error('[loadAll] 再保存も失敗',e2);}
+  }
+  
+  document.getElementById('loading').classList.remove('show');
+  render();
+  
+  if(fresh.builtAt){
+    const d=new Date(fresh.builtAt);
+    const ymd=d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+    setStatus(stationData.filter(s=>s.score>0).length+'駅 (更新:'+ymd+')',false);
+  } else {
     setStatus(stationData.filter(s=>s.score>0).length+'駅表示中',false);
   }
+}
+
+// フォールバック：従来の個別取得（all-scoresが死んだ時のみ）
+async function fallbackIndividualFetch(r){
+  setStatus('個別取得中（フォールバック）...',true);
+  let done=0;
+  for(let i=0;i<STATIONS.length;i+=5){
+    await Promise.all(STATIONS.slice(i,i+5).map(async st=>{
+      const d=await fetchOne(st);
+      if(!d){done++;return;}
+      const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
+      if(idx>=0)stationData[idx]={...stationData[idx],score:d.score,details:d.details};
+      done++;
+    }));
+    render();
+    setStatus(done+'/'+STATIONS.length+' 取得中...',true);
+  }
+  setStatus(stationData.filter(s=>s.score>0).length+'駅表示中',false);
 }
 
 function getFiltered(){
