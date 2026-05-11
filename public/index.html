@@ -2734,26 +2734,28 @@ body.checkin-active #checkin-indicator{
 
 /* ═══ index49 段階1: シンプル修正 ═══ */
 
-/* 3. 推し街の順位色＆フォントサイズ */
-.mp-fav-rank{
+/* 3. 推し街の順位色＆フォントサイズ（正しいクラス名 .mfi-pos） */
+.mp-fav-item .mfi-pos{
   color:#5db8ec !important;  /* 水色 */
-}
-.mp-fav-item:nth-child(1) .mp-fav-rank{
-  font-size:17px !important;  /* +2 (基本13→15→17) */
   font-weight:900 !important;
 }
-.mp-fav-item:nth-child(2) .mp-fav-rank{
-  font-size:16px !important;  /* +1 (基本13→15→16) */
-  font-weight:800 !important;
+.mp-fav-item:nth-child(1) .mfi-pos{
+  font-size:12px !important;  /* 元10 → +2 */
 }
-.mp-fav-item:nth-child(3) .mp-fav-rank{
-  font-size:15px !important;  /* 通常サイズ */
+.mp-fav-item:nth-child(2) .mfi-pos{
+  font-size:11px !important;  /* 元10 → +1 */
+}
+.mp-fav-item:nth-child(3) .mfi-pos{
+  font-size:10px !important;
+}
+/* 「推し街」タイトルの★も水色に */
+.mp-fav-title-text{
+  color:#5db8ec !important;
 }
 
 /* 4. ユーザーアバター5mm左へ */
 .mp-avatar-wrap{
-  margin-left:-5mm !important;
-  /* 補正：右側のspaceを確保 */
+  margin-left:-2.5mm !important;
 }
 
 /* 6. ランキング画面のカードアイコン改善 */
@@ -2793,6 +2795,37 @@ body.checkin-active #checkin-indicator{
   letter-spacing:1.5px !important;
 }
 
+
+/* エリア制覇「その他」展開ボタン */
+.bp-area-more-btn{
+  background:rgba(91,168,236,0.15);
+  border:1.5px dashed rgba(91,168,236,0.45);
+  border-radius:10px;
+  padding:8px 4px;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.15s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;
+}
+.bp-area-more-btn:hover{
+  background:rgba(91,168,236,0.25);
+  transform:translateY(-1px);
+}
+.bp-area-more-btn .bp-icon{
+  font-size:18px !important;
+  color:#5db8ec;
+}
+.bp-area-more-btn .bp-name{
+  font-size:11px !important;
+  font-weight:900;
+  color:#5db8ec;
+}
+.bp-area-more-btn .bp-sub{
+  font-size:9px;
+  color:#a8b8d0;
+  font-weight:700;
+}
 </style>
 </head>
 <body class="splashing">
@@ -7048,7 +7081,8 @@ function calcAreaConquest(areaMaster, userCards) {
   });
 }
 
-// ─── エリアバッジ描画（renderAreaBadges 完全置換） ───
+// ─── エリアバッジ描画（折りたたみ対応版） ───
+window._areaShowMore = false;  // 「その他」展開状態
 window._renderAreaBadgesV2 = function(userCards, userBadges) {
   const el = document.getElementById('bp-area');
   if (!el) return;
@@ -7060,19 +7094,47 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
     return;
   }
   
-  const areaMaster = buildAreaMaster();
-  const areaResults = calcAreaConquest(areaMaster, userCards);
+  // デフォルト表示エリア：東京23区 + 主要4都市
+  const TOKYO_23WARDS = new Set([
+    '千代田区','中央区','港区','新宿区','文京区','台東区','墨田区','江東区',
+    '品川区','目黒区','大田区','世田谷区','渋谷区','中野区','杉並区','豊島区',
+    '北区','荒川区','板橋区','練馬区','足立区','葛飾区','江戸川区'
+  ]);
+  const MAJOR_CITIES = new Set(['横浜市','川崎市','さいたま市','千葉市']);
+  function isDefaultArea(city){
+    return TOKYO_23WARDS.has(city) || MAJOR_CITIES.has(city);
+  }
   
-  // ソート：制覇率の高い順、同率なら駅数の多い順
-  areaResults.sort((a,b) => {
-    if (Math.abs(a.ratio - b.ratio) > 0.001) return b.ratio - a.ratio;
-    return b.total - a.total;
+  const areaMaster = buildAreaMaster();
+  const areaResults = calcAreaConquest(areaMaster, userCards).filter(r => r.total > 0);
+  
+  // 仕分け
+  // - defaultAreas: 23区＋4大都市（常に表示）
+  // - promotedAreas: その他のうち、制覇率>0で「その他」から昇格したエリア
+  // - otherAreas: その他で制覇率0のエリア（「その他」展開時のみ表示）
+  const defaultAreas = [];
+  const promotedAreas = [];
+  const otherAreas = [];
+  areaResults.forEach(r => {
+    if (isDefaultArea(r.city)) {
+      defaultAreas.push(r);
+    } else if (r.conquered > 0) {
+      promotedAreas.push(r);
+    } else {
+      otherAreas.push(r);
+    }
   });
   
-  let html = '';
-  let earnedCount = 0;
-  areaResults.forEach(r => {
-    if (r.total === 0) return;
+  // ソート：制覇率高い順、同率なら駅数多い順
+  const sortFn = (a,b) => {
+    if (Math.abs(a.ratio - b.ratio) > 0.001) return b.ratio - a.ratio;
+    return b.total - a.total;
+  };
+  defaultAreas.sort(sortFn);
+  promotedAreas.sort(sortFn);
+  otherAreas.sort(sortFn);
+  
+  function renderItem(r){
     if (r.ratio >= 1.0) {
       const id = `area_${r.city}`;
       const badgeData = userBadges.get(id) || {
@@ -7082,20 +7144,54 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
         desc:`${r.city}の全${r.total}駅を制覇`
       };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      html += `<div class="bp-badge bp-badge-area" onclick="showBadgeDetail('${enc}')">
+      return `<div class="bp-badge bp-badge-area" onclick="showBadgeDetail('${enc}')">
         <div class="bp-shield-mark">⌘</div>
         <div class="bp-name">${r.city}</div>
         <div class="bp-sub">制覇</div>
       </div>`;
-      earnedCount++;
     } else {
-      html += `<div class="bp-badge-locked">
+      return `<div class="bp-badge-locked">
         <div class="bp-icon">🛡️</div>
         <div class="bp-name">${r.city}</div>
         <div class="bp-progress">${r.conquered}/${r.total}駅</div>
       </div>`;
     }
+  }
+  
+  let html = '';
+  let earnedCount = 0;
+  
+  // ① デフォルト（23区＋4大都市）
+  defaultAreas.forEach(r => {
+    html += renderItem(r);
+    if (r.ratio >= 1.0) earnedCount++;
   });
+  
+  // ② 昇格エリア（その他で1駅以上制覇）
+  promotedAreas.forEach(r => {
+    html += renderItem(r);
+    if (r.ratio >= 1.0) earnedCount++;
+  });
+  
+  // ③ 「その他」展開ボタン＋展開エリア
+  if (otherAreas.length > 0) {
+    const isOpen = window._areaShowMore;
+    html += `<div class="bp-area-more-btn" onclick="window._areaShowMore=!window._areaShowMore;_renderAreaBadgesV2(window._lastUserCards,window._lastUserBadges)">
+      <div class="bp-icon" style="font-size:18px">${isOpen ? '▲' : '▼'}</div>
+      <div class="bp-name">${isOpen ? '閉じる' : 'その他'}</div>
+      <div class="bp-sub">${otherAreas.length}エリア</div>
+    </div>`;
+    if (isOpen) {
+      otherAreas.forEach(r => {
+        html += renderItem(r);
+        if (r.ratio >= 1.0) earnedCount++;
+      });
+    }
+  }
+  
+  // データキャッシュ（再描画用）
+  window._lastUserCards = userCards;
+  window._lastUserBadges = userBadges;
   
   el.innerHTML = html || '<div style="grid-column:1/-1;padding:20px;text-align:center;color:#a8b8d0;font-size:13px">エリアデータがありません</div>';
   
