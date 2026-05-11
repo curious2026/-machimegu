@@ -16,6 +16,63 @@ const cors    = require('cors');
 const path    = require('path');
 const fs      = require('fs');
 const duckdb  = require('duckdb');
+const jose    = require('jose');
+
+// ═══════════════════════════════════════════════════════════════
+// Firebase ID Token 軽量検証（管理者ダッシュボード認証用）
+// jose で Google の公開鍵を取得して JWT 検証
+// ═══════════════════════════════════════════════════════════════
+const ADMIN_UIDS = ['JpHzl9PQf1MNHwXovfvDhKHU57z1'];  // ともきのUID
+const FIREBASE_PROJECT_ID = 'machi-megu-project';
+
+// Google のJWKエンドポイント（Firebaseが使う公開鍵）
+const FIREBASE_JWKS = jose.createRemoteJWKSet(
+  new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'),
+  {
+    timeoutDuration: 5000,
+    cacheMaxAge: 60 * 60 * 1000  // 1時間キャッシュ
+  }
+);
+
+async function verifyFirebaseIdToken(token) {
+  // Firebase ID TokenはJWT形式、joseで検証
+  const { payload } = await jose.jwtVerify(token, FIREBASE_JWKS, {
+    issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
+    audience: FIREBASE_PROJECT_ID
+  });
+  // payload.sub または payload.user_id が UID
+  return {
+    uid: payload.sub || payload.user_id,
+    email: payload.email || '',
+    emailVerified: payload.email_verified || false,
+    name: payload.name || ''
+  };
+}
+
+// 認証ミドルウェア
+async function requireAdmin(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (!token) {
+    return res.status(401).json({error: 'No token'});
+  }
+  try {
+    const decoded = await verifyFirebaseIdToken(token);
+    if (!ADMIN_UIDS.includes(decoded.uid)) {
+      console.warn(`[admin] 不正アクセス試行: uid=${decoded.uid}`);
+      return res.status(403).json({error: '管理者権限がありません'});
+    }
+    req.adminUid = decoded.uid;
+    req.adminEmail = decoded.email;
+    next();
+  } catch(e) {
+    console.warn('[admin] トークン検証失敗:', e.message);
+    return res.status(401).json({error: 'Invalid token: ' + e.message});
+  }
+}
+
+console.log('[起動] 管理者認証: jose方式 (軽量版)');
+console.log('[起動] Admin UIDs:', ADMIN_UIDS);
 
 const app = express();
 app.use(cors());
@@ -40,6 +97,7 @@ const CONCURRENCY = 3;  // 同時計算数（Railwayへの負荷考慮）
 const STATIONS_FILE = path.join(__dirname, 'stations.json');
 const SCORES_CACHE_FILE = path.join(__dirname, 'scores_cache.json');
 const SCORES_CACHE_TMP = path.join(__dirname, 'scores_cache.tmp.json');
+const SCORES_CACHE_PREV_FILE = path.join(__dirname, 'scores_cache_previous.json');  // 前期版（差分用）
 
 // ═══ 駅マスタ読込 ═══
 let STATIONS = [];
@@ -316,6 +374,17 @@ async function rebuildAllScores() {
   
   // Phase 4: 完成データを atomic swap でスイッチ
   buildState.tempData.builtAt = Date.now();
+  
+  // ★ 前期版を別ファイルに保存（差分計算用）
+  if (scoresCache.builtAt > 0 && Object.keys(scoresCache.stations || {}).length > 0) {
+    try {
+      fs.writeFileSync(SCORES_CACHE_PREV_FILE, JSON.stringify(scoresCache));
+      console.log(`[rebuild] 前期版を保存: v${scoresCache.version}`);
+    } catch(e) {
+      console.warn('[rebuild] 前期版保存失敗:', e.message);
+    }
+  }
+  
   scoresCache = buildState.tempData;
   saveScoresCache(scoresCache);
   
@@ -414,7 +483,7 @@ app.get('/api/score', async (req, res) => {
   }
 });
 
-// 状態取得（管理者用、後で認証追加）
+// 状態取得（認証なし版：プリ計算進捗の確認用、誰でも見れる）
 app.get('/api/status', (req, res) => {
   res.json({
     ...getBuildStatus(),
@@ -426,15 +495,125 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-// 手動再計算トリガー（管理者用、後で認証追加）
-app.post('/api/rebuild', (req, res) => {
+// ═══════════════════════════════════════════════════════════════
+// 管理者専用エンドポイント（Firebase認証必須）
+// ═══════════════════════════════════════════════════════════════
+
+// 管理者ダッシュボード本体（HTML配信）
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// 管理者プロフィール確認
+app.get('/api/admin/me', requireAdmin, (req, res) => {
+  res.json({ uid: req.adminUid, email: req.adminEmail });
+});
+
+// 手動再計算トリガー
+app.post('/api/admin/rebuild', requireAdmin, (req, res) => {
   if (buildState.running) {
     return res.status(409).json({ error: '既に実行中', status: getBuildStatus() });
   }
-  // 非同期で開始（即レスポンス）
   rebuildAllScores().catch(e => console.error('rebuild failed:', e));
   res.json({ ok: true, message: '再計算開始', status: getBuildStatus() });
 });
+
+// 差分レポート（前期版 vs 今期版）
+app.get('/api/admin/diff', requireAdmin, (req, res) => {
+  const radius = parseInt(req.query.radius) || 800;
+  const rKey = `r${radius}`;
+  
+  // 前期版を読込
+  let previousCache = null;
+  try {
+    if (fs.existsSync(SCORES_CACHE_PREV_FILE)) {
+      previousCache = JSON.parse(fs.readFileSync(SCORES_CACHE_PREV_FILE, 'utf8'));
+    }
+  } catch(e) {
+    console.warn('[diff] 前期版読込失敗:', e.message);
+  }
+  
+  if (!previousCache || !previousCache.stations) {
+    return res.json({
+      ok: true,
+      hasDiff: false,
+      message: '前期版データがありません（次回更新後から差分が見れます）',
+      currentVersion: scoresCache.version,
+      currentBuiltAt: scoresCache.builtAt,
+      stations: { rankUp: [], rankDown: [], scoreUp: [], scoreDown: [] }
+    });
+  }
+  
+  // 駅マスタで駅名を引けるように
+  const stationsMap = {};
+  STATIONS.forEach(s => { stationsMap[s.id] = s; });
+  
+  const rankUp = [];
+  const rankDown = [];
+  const scoreUp = [];
+  const scoreDown = [];
+  const rankOrder = { S:0, A:1, B:2, C:3, D:4 };
+  
+  Object.keys(scoresCache.stations || {}).forEach(sid => {
+    const cur = scoresCache.stations[sid][rKey];
+    const prev = previousCache.stations[sid] && previousCache.stations[sid][rKey];
+    if (!cur || !prev) return;
+    
+    const stMeta = stationsMap[sid] || { name: sid.split('_')[0], pref: sid.split('_')[1] };
+    const scoreDiff = cur.score - prev.score;
+    const item = {
+      stationId: sid,
+      name: stMeta.name,
+      pref: stMeta.pref,
+      lines: stMeta.lines || [],
+      oldScore: prev.score,
+      newScore: cur.score,
+      oldRank: prev.rank,
+      newRank: cur.rank,
+      scoreDiff
+    };
+    
+    if (cur.rank !== prev.rank) {
+      const oldOrder = rankOrder[prev.rank] !== undefined ? rankOrder[prev.rank] : 5;
+      const newOrder = rankOrder[cur.rank] !== undefined ? rankOrder[cur.rank] : 5;
+      if (newOrder < oldOrder) rankUp.push(item);
+      else rankDown.push(item);
+    }
+    if (scoreDiff >= 5) scoreUp.push(item);
+    else if (scoreDiff <= -5) scoreDown.push(item);
+  });
+  
+  // ソート
+  rankUp.sort((a,b) => b.scoreDiff - a.scoreDiff);
+  rankDown.sort((a,b) => a.scoreDiff - b.scoreDiff);
+  scoreUp.sort((a,b) => b.scoreDiff - a.scoreDiff);
+  scoreDown.sort((a,b) => a.scoreDiff - b.scoreDiff);
+  
+  res.json({
+    ok: true,
+    hasDiff: true,
+    currentVersion: scoresCache.version,
+    previousVersion: previousCache.version,
+    currentBuiltAt: scoresCache.builtAt,
+    previousBuiltAt: previousCache.builtAt,
+    radius,
+    counts: {
+      rankUp: rankUp.length,
+      rankDown: rankDown.length,
+      scoreUp: scoreUp.length,
+      scoreDown: scoreDown.length
+    },
+    stations: {
+      rankUp: rankUp.slice(0, 50),     // 最大50件まで
+      rankDown: rankDown.slice(0, 30),
+      scoreUp: scoreUp.slice(0, 30),
+      scoreDown: scoreDown.slice(0, 30)
+    }
+  });
+});
+
+// 旧 /api/rebuild（後方互換、認証なしのまま）→ 削除して認証必須に統一
+// app.post('/api/rebuild') は requireAdmin に移行
 
 // テスト
 app.get('/api/test', async (req, res) => {
