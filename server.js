@@ -268,6 +268,7 @@ function getRawCounts(lat, lng, radius) {
 // ═══ プリ計算進捗管理 ═══
 let buildState = {
   running: false,
+  mode: null,  // 'full' | 'incremental'
   startedAt: 0,
   total: 0,
   done: 0,
@@ -280,6 +281,7 @@ let buildState = {
 function getBuildStatus() {
   return {
     running: buildState.running,
+    mode: buildState.mode,
     startedAt: buildState.startedAt,
     total: buildState.total,
     done: buildState.done,
@@ -294,7 +296,82 @@ function getBuildStatus() {
 }
 
 // ═══ プリ計算メインループ ═══
-async function rebuildAllScores() {
+
+// ━━━ ヘルパー1: 駅リストの生counts取得（並列） ━━━
+async function computeRawCountsForStations(stations, intoData) {
+  const queue = [];
+  for (const st of stations) {
+    for (const r of RADII) {
+      queue.push({ st, r });
+    }
+  }
+  buildState.total = queue.length;
+  buildState.done = 0;
+  
+  async function worker() {
+    while (queue.length > 0) {
+      const job = queue.shift();
+      if (!job) break;
+      const { st, r } = job;
+      const sid = st.id || `${st.name}_${st.pref}`;
+      buildState.currentStation = `${st.name}_${st.pref} (r=${r})`;
+      try {
+        const counts = await getRawCounts(st.lat, st.lng, r);
+        if (!intoData[sid]) intoData[sid] = {};
+        intoData[sid][`r${r}_raw`] = counts;
+      } catch(e) {
+        buildState.errors++;
+        console.warn(`[rebuild] エラー ${sid} r=${r}:`, e.message);
+      }
+      buildState.done++;
+      if (buildState.done % 100 === 0) {
+        const pct = (buildState.done / buildState.total * 100).toFixed(1);
+        const elapsed = ((Date.now() - buildState.startedAt) / 1000).toFixed(0);
+        console.log(`[rebuild] ${buildState.done}/${buildState.total} (${pct}%) 経過${elapsed}秒`);
+      }
+    }
+  }
+  const workers = [];
+  for (let i = 0; i < CONCURRENCY; i++) workers.push(worker());
+  await Promise.all(workers);
+}
+
+// ━━━ ヘルパー2: 全駅の生countsから globalMax を再計算 ━━━
+function recalcGlobalMax(stationsData) {
+  for (const r of RADII) {
+    const newMax = {'飲食':0, '商業':0, '生活':0, '医療':0};
+    Object.values(stationsData).forEach(stData => {
+      const counts = stData[`r${r}_raw`];
+      if (!counts) return;
+      AXES.forEach(axis => {
+        if (counts[axis] > newMax[axis]) newMax[axis] = counts[axis];
+      });
+    });
+    // 既存駅で生countsを持ってないやつがあると max が低めに出るので、最低でも前のmaxは維持
+    AXES.forEach(axis => {
+      const prev = (globalMaxByRadius[String(r)] || {})[axis] || 0;
+      if (prev > newMax[axis]) newMax[axis] = prev;
+    });
+    globalMaxByRadius[String(r)] = newMax;
+    console.log(`[rebuild] r=${r} globalMax:`, newMax);
+  }
+}
+
+// ━━━ ヘルパー3: 駅データのスコア再計算（生countsから、DuckDB不要） ━━━
+function recomputeScoresForStations(stationsData, targetIds = null) {
+  Object.entries(stationsData).forEach(([sid, stData]) => {
+    if (targetIds && !targetIds.has(sid)) return;
+    for (const r of RADII) {
+      const counts = stData[`r${r}_raw`];
+      if (counts) {
+        stData[`r${r}`] = calcScore(counts, r);
+      }
+    }
+  });
+}
+
+// ━━━ メインエントリポイント：フル / 差分 両対応 ━━━
+async function rebuildScores({ mode = 'full', stations = null } = {}) {
   if (buildState.running) {
     console.log('[rebuild] 既に実行中、スキップ');
     return;
@@ -305,110 +382,126 @@ async function rebuildAllScores() {
   }
   
   buildState.running = true;
+  buildState.mode = mode;
   buildState.startedAt = Date.now();
-  buildState.total = STATIONS.length * RADII.length;
-  buildState.done = 0;
   buildState.errors = 0;
-  buildState.tempData = { 
-    version: getCurrentQuarterVersion(),
-    builtAt: 0,
-    stations: {}
-  };
   
-  console.log(`[rebuild] 開始: ${STATIONS.length}駅 × ${RADII.length}半径 = ${buildState.total}計算`);
-  
-  // Phase 1: 全駅×全半径の生カウント取得
-  // 並列度CONCURRENCYで処理
-  const queue = [];
-  for (const st of STATIONS) {
-    for (const r of RADII) {
-      queue.push({ st, r });
-    }
-  }
-  
-  // 並列ワーカー
-  async function worker() {
-    while (queue.length > 0) {
-      const job = queue.shift();
-      if (!job) break;
-      const { st, r } = job;
-      buildState.currentStation = `${st.name}_${st.pref} (r=${r})`;
-      try {
-        const counts = await getRawCounts(st.lat, st.lng, r);
-        if (!buildState.tempData.stations[st.id]) {
-          buildState.tempData.stations[st.id] = {};
-        }
-        // raw counts を一時保存（後でglobalMax確定後にスコア化）
-        buildState.tempData.stations[st.id][`r${r}_raw`] = counts;
-      } catch(e) {
-        buildState.errors++;
-        console.warn(`[rebuild] エラー ${st.name}_${st.pref} r=${r}:`, e.message);
-      }
-      buildState.done++;
+  try {
+    if (mode === 'full') {
+      // ─── フル再計算 ─────────────────────────────
+      console.log(`[rebuild] FULL モード開始: ${STATIONS.length}駅 × ${RADII.length}半径`);
       
-      // 進捗ログ（100件ごと）
-      if (buildState.done % 100 === 0) {
-        const pct = (buildState.done / buildState.total * 100).toFixed(1);
-        const elapsed = ((Date.now() - buildState.startedAt) / 1000).toFixed(0);
-        console.log(`[rebuild] ${buildState.done}/${buildState.total} (${pct}%) 経過${elapsed}秒`);
+      const newData = {
+        version: getCurrentQuarterVersion(),
+        builtAt: 0,
+        stations: {}
+      };
+      
+      // Phase 1: 全駅の生counts取得
+      await computeRawCountsForStations(STATIONS, newData.stations);
+      
+      // Phase 2: globalMax 確定
+      console.log('[rebuild] Phase 2: globalMax確定');
+      // フル時は前のmaxに引きずられないようリセット
+      globalMaxByRadius = {'500':{'飲食':0,'商業':0,'生活':0,'医療':0},'800':{'飲食':0,'商業':0,'生活':0,'医療':0},'1200':{'飲食':0,'商業':0,'生活':0,'医療':0}};
+      recalcGlobalMax(newData.stations);
+      
+      // Phase 3: 全駅スコア計算
+      console.log('[rebuild] Phase 3: 全駅スコア計算');
+      recomputeScoresForStations(newData.stations);
+      
+      // Phase 4: atomic swap
+      newData.builtAt = Date.now();
+      
+      // 前期版保存
+      if (scoresCache.builtAt > 0 && Object.keys(scoresCache.stations || {}).length > 0) {
+        try {
+          fs.writeFileSync(SCORES_CACHE_PREV_FILE, JSON.stringify(scoresCache));
+          console.log(`[rebuild] 前期版を保存: v${scoresCache.version}`);
+        } catch(e) {
+          console.warn('[rebuild] 前期版保存失敗:', e.message);
+        }
       }
-    }
-  }
-  
-  const workers = [];
-  for (let i = 0; i < CONCURRENCY; i++) {
-    workers.push(worker());
-  }
-  await Promise.all(workers);
-  
-  // Phase 2: 各半径ごとに globalMax を確定
-  console.log('[rebuild] Phase 2: globalMax確定');
-  for (const r of RADII) {
-    const newMax = {'飲食':0, '商業':0, '生活':0, '医療':0};
-    Object.values(buildState.tempData.stations).forEach(stData => {
-      const counts = stData[`r${r}_raw`];
-      if (!counts) return;
-      AXES.forEach(axis => {
-        if (counts[axis] > newMax[axis]) newMax[axis] = counts[axis];
-      });
-    });
-    globalMaxByRadius[String(r)] = newMax;
-    console.log(`[rebuild] r=${r} globalMax:`, newMax);
-  }
-  
-  // Phase 3: 全駅×全半径のスコア計算
-  console.log('[rebuild] Phase 3: スコア計算');
-  Object.entries(buildState.tempData.stations).forEach(([sid, stData]) => {
-    for (const r of RADII) {
-      const counts = stData[`r${r}_raw`];
-      if (counts) {
-        stData[`r${r}`] = calcScore(counts, r);
-        delete stData[`r${r}_raw`];  // raw は捨てる（容量削減）
+      
+      scoresCache = newData;
+      saveScoresCache(scoresCache);
+      
+    } else if (mode === 'incremental') {
+      // ─── 差分計算（新規駅のみ）─────────────────
+      const newStations = stations || [];
+      if (newStations.length === 0) {
+        console.log('[rebuild] incremental: 対象駅なし、スキップ');
+        return;
       }
+      console.log(`[rebuild] INCREMENTAL モード開始: ${newStations.length}駅追加`);
+      
+      // 既存scoresCacheを起点にマージしていく（生countsも保持されてる前提）
+      const mergedData = {
+        version: scoresCache.version || getCurrentQuarterVersion(),
+        builtAt: scoresCache.builtAt,
+        stations: JSON.parse(JSON.stringify(scoresCache.stations || {}))
+      };
+      
+      // Phase 1: 新規駅の生counts取得
+      await computeRawCountsForStations(newStations, mergedData.stations);
+      
+      // Phase 2: globalMax 更新判定
+      const oldMaxJson = JSON.stringify(globalMaxByRadius);
+      recalcGlobalMax(mergedData.stations);
+      const newMaxJson = JSON.stringify(globalMaxByRadius);
+      const maxChanged = oldMaxJson !== newMaxJson;
+      
+      if (maxChanged) {
+        // 既存駅の中で生countsを持ってるやつは再計算可能
+        // 持ってないやつ（旧データ）はスコアそのまま（次のフルで補正される）
+        console.log('[rebuild] globalMax 更新検出 → 生counts持ちの既存駅も再計算');
+        let recomputedCount = 0, skippedCount = 0;
+        Object.entries(mergedData.stations).forEach(([sid, stData]) => {
+          let hasRaw = false;
+          for (const r of RADII) {
+            if (stData[`r${r}_raw`]) hasRaw = true;
+          }
+          if (hasRaw) {
+            for (const r of RADII) {
+              if (stData[`r${r}_raw`]) {
+                stData[`r${r}`] = calcScore(stData[`r${r}_raw`], r);
+              }
+            }
+            recomputedCount++;
+          } else {
+            skippedCount++;
+          }
+        });
+        console.log(`[rebuild] スコア再計算: ${recomputedCount}駅, スキップ(生counts無): ${skippedCount}駅`);
+      } else {
+        // globalMax 不変 → 新規駅のみスコア計算
+        console.log('[rebuild] globalMax 維持 → 新規駅のみスコア計算');
+        const newIds = new Set(newStations.map(st => st.id || `${st.name}_${st.pref}`));
+        recomputeScoresForStations(mergedData.stations, newIds);
+      }
+      
+      mergedData.builtAt = Date.now();
+      mergedData.version = getCurrentQuarterVersion();
+      
+      // atomic swap
+      scoresCache = mergedData;
+      saveScoresCache(scoresCache);
     }
-  });
-  
-  // Phase 4: 完成データを atomic swap でスイッチ
-  buildState.tempData.builtAt = Date.now();
-  
-  // ★ 前期版を別ファイルに保存（差分計算用）
-  if (scoresCache.builtAt > 0 && Object.keys(scoresCache.stations || {}).length > 0) {
-    try {
-      fs.writeFileSync(SCORES_CACHE_PREV_FILE, JSON.stringify(scoresCache));
-      console.log(`[rebuild] 前期版を保存: v${scoresCache.version}`);
-    } catch(e) {
-      console.warn('[rebuild] 前期版保存失敗:', e.message);
-    }
+    
+    const elapsed = ((Date.now() - buildState.startedAt) / 1000).toFixed(0);
+    console.log(`[rebuild] 完了: mode=${mode}, ${elapsed}秒, ${Object.keys(scoresCache.stations).length}駅, errors=${buildState.errors}`);
+  } catch(e) {
+    console.error('[rebuild] エラー:', e);
+  } finally {
+    buildState.running = false;
+    buildState.tempData = null;
+    buildState.mode = null;
   }
-  
-  scoresCache = buildState.tempData;
-  saveScoresCache(scoresCache);
-  
-  const elapsed = ((Date.now() - buildState.startedAt) / 1000).toFixed(0);
-  console.log(`[rebuild] 完了: ${elapsed}秒, ${Object.keys(scoresCache.stations).length}駅, errors=${buildState.errors}`);
-  
-  buildState.running = false;
-  buildState.tempData = null;
+}
+
+// 後方互換のラッパー（旧コードからの呼び出し用）
+async function rebuildAllScores() {
+  return rebuildScores({ mode: 'full' });
 }
 
 // 現在の四半期バージョン文字列
@@ -418,13 +511,38 @@ function getCurrentQuarterVersion() {
   return `${d.getFullYear()}-Q${q}`;
 }
 
-// 再計算が必要か判定
+// 再計算モード判定（none / incremental / full）
+function checkRebuildMode() {
+  const cacheStations = scoresCache.stations || {};
+  const cacheIds = new Set(Object.keys(cacheStations));
+  
+  // 空キャッシュ → フル
+  if (cacheIds.size === 0) {
+    return { mode: 'full', reason: 'empty cache' };
+  }
+  
+  // 四半期超過 → フル
+  if (Date.now() - (scoresCache.builtAt || 0) > QUARTER_MS) {
+    return { mode: 'full', reason: 'quarter expired' };
+  }
+  
+  // 新規駅検出
+  const newStations = STATIONS.filter(st => {
+    const sid = st.id || `${st.name}_${st.pref}`;
+    return !cacheIds.has(sid);
+  });
+  
+  if (newStations.length > 0) {
+    return { mode: 'incremental', stations: newStations, reason: `${newStations.length}駅追加検出` };
+  }
+  
+  return { mode: 'none', reason: 'up-to-date' };
+}
+
+// 旧API（後方互換）
 function needsRebuild() {
-  if (Object.keys(scoresCache.stations || {}).length === 0) return true;
-  if (Date.now() - (scoresCache.builtAt || 0) > QUARTER_MS) return true;
-  // 駅マスタが増えてたら再計算
-  if (Object.keys(scoresCache.stations || {}).length < STATIONS.length) return true;
-  return false;
+  const r = checkRebuildMode();
+  return r.mode !== 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -436,23 +554,49 @@ app.get('/api/all-scores', (req, res) => {
   const radius = parseInt(req.query.radius) || 800;
   const rKey = `r${radius}`;
   
-  // 30日キャッシュ（ブラウザ＆CDN）
-  res.setHeader('Cache-Control', 'public, max-age=2592000');
+  const cacheStations = scoresCache.stations || {};
+  const stationCount = Object.keys(cacheStations).length;
+  
+  // ─── 空キャッシュ → 503 でクライアントにフォールバック誘導 ───
+  if (stationCount === 0) {
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(503).json({
+      error: 'building',
+      message: 'スコアキャッシュを構築中です',
+      buildState: {
+        running: buildState.running,
+        mode: buildState.mode,
+        progress: buildState.total > 0 ? (buildState.done / buildState.total * 100).toFixed(1) + '%' : '0%',
+        done: buildState.done,
+        total: buildState.total
+      }
+    });
+    return;
+  }
+  
+  // ─── Cache-Control：計算中は no-store、安定時は5分 ───
+  if (buildState.running) {
+    res.setHeader('Cache-Control', 'no-store');
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=300');  // 5分（旧30日→大幅短縮）
+  }
   
   const result = {
     version: scoresCache.version,
     builtAt: scoresCache.builtAt,
     radius,
+    building: buildState.running,
     stations: {}
   };
   
-  Object.entries(scoresCache.stations || {}).forEach(([sid, data]) => {
+  // 該当半径のスコアがある駅だけ返す（生countsは送らない）
+  Object.entries(cacheStations).forEach(([sid, data]) => {
     if (data[rKey]) {
       result.stations[sid] = data[rKey];
     }
   });
   
-  console.log(`[/api/all-scores] r=${radius} ${Object.keys(result.stations).length}駅返却`);
+  console.log(`[/api/all-scores] r=${radius} ${Object.keys(result.stations).length}駅返却 ${buildState.running ? '(計算中)' : ''}`);
   res.json(result);
 });
 
@@ -483,7 +627,7 @@ app.get('/api/score', async (req, res) => {
     }
     
     if (foundData) {
-      res.setHeader('Cache-Control', 'public, max-age=2592000');
+      res.setHeader('Cache-Control', 'public, max-age=300');
       return res.json({ ...foundData, cached: true, source: 'precomputed' });
     }
     
@@ -525,13 +669,30 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
   res.json({ uid: req.adminUid, email: req.adminEmail });
 });
 
-// 手動再計算トリガー
+// 手動再計算トリガー（クエリ ?mode=full|incremental|auto、デフォルトauto）
 app.post('/api/admin/rebuild', requireAdmin, (req, res) => {
   if (buildState.running) {
     return res.status(409).json({ error: '既に実行中', status: getBuildStatus() });
   }
-  rebuildAllScores().catch(e => console.error('rebuild failed:', e));
-  res.json({ ok: true, message: '再計算開始', status: getBuildStatus() });
+  const requestedMode = req.query.mode || 'auto';
+  
+  if (requestedMode === 'full') {
+    rebuildScores({ mode: 'full' }).catch(e => console.error('rebuild failed:', e));
+    return res.json({ ok: true, message: 'フル再計算開始', status: getBuildStatus() });
+  }
+  
+  // auto / incremental → checkRebuildMode で判定
+  const check = checkRebuildMode();
+  if (check.mode === 'none') {
+    return res.json({ ok: true, message: '再計算不要（最新）', status: getBuildStatus() });
+  } else if (check.mode === 'incremental') {
+    rebuildScores({ mode: 'incremental', stations: check.stations })
+      .catch(e => console.error('rebuild failed:', e));
+    return res.json({ ok: true, message: `差分計算開始（${check.stations.length}駅）`, status: getBuildStatus() });
+  } else {
+    rebuildScores({ mode: 'full' }).catch(e => console.error('rebuild failed:', e));
+    return res.json({ ok: true, message: `フル再計算開始（${check.reason}）`, status: getBuildStatus() });
+  }
 });
 
 // 差分レポート（前期版 vs 今期版）
@@ -672,12 +833,20 @@ loadScoresCache();
 initDB().then(() => {
   console.log('[起動] DuckDB初期化完了');
   
-  if (needsRebuild()) {
-    console.log('[起動] 再計算が必要、バックグラウンドで開始');
-    // 30秒待ってから開始（起動直後の負荷分散）
+  const rebuildCheck = checkRebuildMode();
+  console.log(`[起動] rebuild判定:`, rebuildCheck.mode, '/', rebuildCheck.reason);
+  
+  if (rebuildCheck.mode === 'full') {
+    console.log('[起動] フル再計算が必要、30秒後にバックグラウンドで開始');
     setTimeout(() => {
-      rebuildAllScores().catch(e => console.error('[起動] rebuild failed:', e));
+      rebuildScores({ mode: 'full' }).catch(e => console.error('[起動] rebuild failed:', e));
     }, 30000);
+  } else if (rebuildCheck.mode === 'incremental') {
+    console.log(`[起動] 差分計算が必要（${rebuildCheck.stations.length}駅追加）、10秒後にバックグラウンドで開始`);
+    setTimeout(() => {
+      rebuildScores({ mode: 'incremental', stations: rebuildCheck.stations })
+        .catch(e => console.error('[起動] rebuild failed:', e));
+    }, 10000);
   } else {
     const ageDays = Math.floor((Date.now() - scoresCache.builtAt) / (24*60*60*1000));
     console.log(`[起動] キャッシュ有効（${ageDays}日前構築）、再計算スキップ`);
