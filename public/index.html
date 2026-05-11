@@ -2937,6 +2937,151 @@ body.checkin-active #checkin-indicator{
 }
 #card-flip-wrap.swipe-in-left { animation: swipeLeftIn 0.25s ease-out; }
 #card-flip-wrap.swipe-in-right { animation: swipeRightIn 0.25s ease-out; }
+
+/* ─── トリセツボタン（街力の算出方法と並ぶ） ─── */
+.mp-torisetsu-link{
+  margin-top:6px !important;
+  background:linear-gradient(135deg, rgba(80,180,140,0.18), rgba(120,200,180,0.10)) !important;
+  border-color:rgba(120,200,180,0.40) !important;
+  color:#a8e0c8 !important;
+}
+.mp-torisetsu-link:hover{
+  background:linear-gradient(135deg, rgba(80,180,140,0.28), rgba(120,200,180,0.18)) !important;
+}
+
+/* ─── トリセツモーダル ─── */
+#torisetsu-modal-bg{
+  position:fixed;inset:0;background:rgba(6,12,22,0.94);z-index:8200;
+  display:none;align-items:center;justify-content:center;padding:24px 14px;
+  overflow-y:auto;
+}
+#torisetsu-modal-bg.open{display:flex}
+#torisetsu-modal{
+  background:linear-gradient(180deg, #15233a 0%, #0c1424 100%);
+  border:1px solid rgba(120,200,180,0.25);
+  border-radius:16px;
+  max-width:520px;width:100%;
+  max-height:88vh;overflow-y:auto;
+  padding:20px 18px 24px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  color:#e0e8f0;
+}
+.tori-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;padding-bottom:12px;
+  border-bottom:1px solid rgba(120,200,180,0.18);
+}
+.tori-title{
+  font-size:20px;font-weight:900;
+  background:linear-gradient(135deg, #a8e0c8 0%, #8ad0c0 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  letter-spacing:1px;
+}
+.tori-x{
+  background:none;border:none;color:#a8e0c8;font-size:24px;
+  cursor:pointer;padding:4px 8px;line-height:1;
+}
+.tori-beta{
+  background:rgba(255,180,80,0.12);
+  border:1px solid rgba(255,180,80,0.30);
+  border-radius:10px;padding:10px 12px;margin-bottom:16px;
+  font-size:13px;color:#ffd9a0;line-height:1.6;
+}
+.tori-beta-label{
+  display:inline-block;background:rgba(255,180,80,0.30);
+  color:#fff5e0;font-size:11px;font-weight:800;
+  padding:2px 8px;border-radius:5px;margin-right:6px;
+  letter-spacing:1px;
+}
+.tori-section{
+  margin-bottom:18px;
+}
+.tori-h{
+  font-size:16px;font-weight:800;color:#a8e0c8;
+  margin-bottom:8px;padding-left:8px;
+  border-left:3px solid #8ad0c0;
+  line-height:1.4;
+}
+.tori-p{
+  font-size:14px;color:#c8d4e4;line-height:1.75;
+  margin-bottom:8px;
+}
+.tori-steps{
+  background:rgba(120,200,180,0.06);
+  border-radius:10px;padding:12px 14px;margin:8px 0;
+}
+.tori-step{
+  display:flex;align-items:flex-start;gap:10px;
+  margin-bottom:8px;font-size:14px;color:#d0dce8;line-height:1.6;
+}
+.tori-step:last-child{margin-bottom:0}
+.tori-step-num{
+  flex-shrink:0;width:22px;height:22px;border-radius:50%;
+  background:linear-gradient(135deg, #4a9080, #6ab0a0);
+  color:#fff;font-weight:800;font-size:12px;
+  display:flex;align-items:center;justify-content:center;
+}
+.tori-ranks{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:6px;
+  margin:8px 0;
+}
+.tori-rank-row{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;color:#c8d4e4;line-height:1.4;
+  padding:6px 8px;border-radius:6px;
+  background:rgba(255,255,255,0.03);
+}
+.tori-rank-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;
+  font-weight:900;font-size:14px;color:#fff;
+  flex-shrink:0;
+}
+.tori-faq-q{
+  font-size:14px;font-weight:700;color:#f0d8a0;
+  margin-top:10px;margin-bottom:4px;line-height:1.5;
+}
+.tori-faq-a{
+  font-size:13.5px;color:#c0ccdc;line-height:1.7;
+  padding-left:14px;border-left:2px solid rgba(240,216,160,0.30);
+  margin-bottom:6px;
+}
+.tori-notes{
+  background:rgba(255,255,255,0.04);
+  border-radius:10px;padding:12px 14px;
+  font-size:12.5px;color:#a0b0c4;line-height:1.75;
+}
+.tori-notes-item{
+  margin-bottom:5px;padding-left:14px;position:relative;
+}
+.tori-notes-item::before{
+  content:'•';position:absolute;left:4px;color:#8ad0c0;
+}
+.tori-notes-item:last-child{margin-bottom:0}
+.tori-end{
+  margin-top:18px;padding:14px 12px;
+  background:linear-gradient(135deg, rgba(120,200,180,0.10), rgba(80,150,200,0.08));
+  border:1px solid rgba(120,200,180,0.25);
+  border-radius:12px;
+  font-size:13.5px;color:#c8d4e4;line-height:1.75;
+  text-align:center;
+}
+.tori-end-sig{
+  margin-top:8px;font-size:12px;color:#7a96b6;
+}
+.tori-close-btn{
+  width:100%;margin-top:16px;padding:12px;
+  background:linear-gradient(135deg, rgba(120,200,180,0.18), rgba(80,150,200,0.12));
+  border:1px solid rgba(120,200,180,0.35);
+  border-radius:10px;
+  color:#c8e8d8;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+}
+.tori-close-btn:active{
+  background:linear-gradient(135deg, rgba(120,200,180,0.28), rgba(80,150,200,0.20));
+}
+
 </style>
 </head>
 <body class="splashing">
@@ -3216,6 +3361,132 @@ body.checkin-active #checkin-indicator{
   </div>
 </div>
 
+<!-- トリセツモーダル -->
+<div id="torisetsu-modal-bg" onclick="if(event.target===this)closeTorisetsuModal()">
+  <div id="torisetsu-modal" onclick="event.stopPropagation()">
+    <div class="tori-hdr">
+      <div class="tori-title">🗺️ 街巡 トリセツ</div>
+      <button class="tori-x" onclick="closeTorisetsuModal()">✕</button>
+    </div>
+    
+    <div class="tori-beta">
+      <span class="tori-beta-label">BETA</span>
+      ようこそ！今は身近な人にテストしてもらってる<strong style="color:#fff">ベータ版</strong>です。<br>
+      バグや「ここわかりにくい」があったら、遠慮なくともきまで。
+    </div>
+
+    <div class="tori-section">
+      <div class="tori-h">1. 街巡って何？</div>
+      <div class="tori-p">
+        駅から半径500m〜1.2kmの<strong style="color:#a8e0c8">"商業の濃さ"</strong>をスコア化して、街歩きを楽しくするアプリ。<br>
+        新宿が高得点なのはもちろん、近所の駅も意外と高くて、新しい発見があるよ。
+      </div>
+    </div>
+
+    <div class="tori-section">
+      <div class="tori-h">2. 使い方（3ステップ）</div>
+      <div class="tori-steps">
+        <div class="tori-step">
+          <div class="tori-step-num">1</div>
+          <div>地図で駅を探してタップ → 駅情報が出る</div>
+        </div>
+        <div class="tori-step">
+          <div class="tori-step-num">2</div>
+          <div>駅から半径500m以内に<strong style="color:#a8e0c8">10分滞在</strong>でチェックイン完了</div>
+        </div>
+        <div class="tori-step">
+          <div class="tori-step-num">3</div>
+          <div>ステーションカード獲得！コレクションに追加</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tori-section">
+      <div class="tori-h">3. スコアとランク</div>
+      <div class="tori-p">
+        1000点満点を、S〜Dの5ランクに分類してます。
+      </div>
+      <div class="tori-ranks">
+        <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#ff3355,#ff6080)">S</span><span>800点〜（新宿・渋谷級）</span></div>
+        <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#ff8c00,#ffb040)">A</span><span>600〜799点（吉祥寺級）</span></div>
+        <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#d4af37,#f0d058)">B</span><span>400〜599点</span></div>
+        <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#3a9b4a,#5cc070)">C</span><span>200〜399点</span></div>
+        <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#3a7bd5,#5a9bff)">D</span><span>200点未満</span></div>
+        <div class="tori-rank-row" style="opacity:0.5"><span style="font-size:11px;color:#7a96b6">※ 計算は「街力の算出方法」を見てね</span></div>
+      </div>
+    </div>
+
+    <div class="tori-section">
+      <div class="tori-h">4. チェックインのコツ</div>
+      <div class="tori-notes">
+        <div class="tori-notes-item">駅から<strong style="color:#a8e0c8">500m以内＋10分滞在</strong>で完成</div>
+        <div class="tori-notes-item">途中で離れても、戻ればまた再開できる</div>
+        <div class="tori-notes-item">同じ駅は<strong style="color:#a8e0c8">1日1回まで</strong>（24時間じゃなく日本時間0:00リセット）</div>
+        <div class="tori-notes-item">途中キャンセルも自由</div>
+      </div>
+    </div>
+
+    <div class="tori-section">
+      <div class="tori-h">5. カードコレクション</div>
+      <div class="tori-p">
+        チェックインすると、ランク色のステーションカードがもらえる。<br>
+        <strong style="color:#a8e0c8">初訪問時のスコア・ランクが永遠に記録</strong>される、思い出のカード。
+      </div>
+      <div class="tori-notes" style="margin-top:6px">
+        <div class="tori-notes-item">スコア・ランクは初訪問時のまま固定</div>
+        <div class="tori-notes-item">街コメントは後から更新されることがあるよ（街の進化を反映）</div>
+        <div class="tori-notes-item">訪問回数はカウントアップされる</div>
+      </div>
+    </div>
+
+    <div class="tori-section">
+      <div class="tori-h">6. バッジ&推し街</div>
+      <div class="tori-p">
+        <strong style="color:#a8e0c8">バッジ</strong>：路線制覇・エリア制覇・ランク制覇を達成すると獲得<br>
+        <strong style="color:#a8e0c8">推し街</strong>：お気に入りの駅を3つまで登録できる
+      </div>
+    </div>
+
+    <div class="tori-section">
+      <div class="tori-h">7. よくある質問</div>
+      
+      <div class="tori-faq-q">Q. 位置情報って誰かに見られる？</div>
+      <div class="tori-faq-a">いいえ。チェックイン処理のために端末内で使うだけで、外部にも他のユーザーにも公開されません。</div>
+      
+      <div class="tori-faq-q">Q. スコアが変わった！</div>
+      <div class="tori-faq-a">街は生き物。お店の開店・閉店でデータも動きます。でも<strong style="color:#fff">カードに記録された初回スコアは永遠保存</strong>。</div>
+      
+      <div class="tori-faq-q">Q. コメントが「街力データから抽出された〜」になってる</div>
+      <div class="tori-faq-a">順次マニア向けに書き換え中！しばし待たれよ🙏</div>
+      
+      <div class="tori-faq-q">Q. 自分の家の最寄り駅がない！</div>
+      <div class="tori-faq-a">ともきまで連絡を。追加リクエスト受付中。今は1都3県中心ですが、PMF見えたら全国展開予定。</div>
+      
+      <div class="tori-faq-q">Q. スコアと実感がズレる</div>
+      <div class="tori-faq-a">「商業活力」だけで見てるので、神社仏閣・大学・住宅街の魅力は反映されません。コメントで補ってます！</div>
+    </div>
+
+    <div class="tori-section">
+      <div class="tori-h">8. 注意事項</div>
+      <div class="tori-notes">
+        <div class="tori-notes-item">スコアは商業活力の指標。居住快適度や治安は別物</div>
+        <div class="tori-notes-item">データはOverture Maps（Meta・Microsoft等提供のオープンデータ）</div>
+        <div class="tori-notes-item">ベータ期間中はバグあるかも。発見次第ともきにフィードバックお願い</div>
+        <div class="tori-notes-item">商用・不動産・街選びの参考情報としてどうぞ</div>
+      </div>
+    </div>
+
+    <div class="tori-end">
+      <strong style="color:#fff;font-size:14.5px">街巡は、「ふと知らない街に行きたくなる」きっかけを作るアプリ。</strong><br>
+      スコアだけ見るんじゃなく、コメントも読んで街の個性を感じてほしい。<br>
+      楽しんで！
+      <div class="tori-end-sig">作：ともき（個人開発）　/　技術ガイド：クロ（AI）</div>
+    </div>
+
+    <button class="tori-close-btn" onclick="closeTorisetsuModal()">とじる</button>
+  </div>
+</div>
+
 <!-- チェックイン進行中インジケーター（D-2: 距離表示追加） -->
 <div id="checkin-indicator" onclick="toggleCheckinCancelMenu(event)">
   <div class="ci-ind-icon">⏳</div>
@@ -3328,6 +3599,7 @@ body.checkin-active #checkin-indicator{
         <div class="mp-handle" id="mp-handle">-</div>
         <div class="mp-meta" id="mp-meta">-</div>
         <button class="mp-formula-link" type="button" onclick="closeMypageForce();setTimeout(()=>{const m=document.getElementById('modal-bg');if(m)m.classList.add('open');document.body.style.overflow='hidden';},250)">街力の<br>算出方法</button>
+        <button class="mp-formula-link mp-torisetsu-link" type="button" onclick="openTorisetsuModal()">トリセツ</button>
       </div>
       <!-- 右：推し街3枠（カラム全体を使う） -->
       <div class="mp-profile-right">
@@ -3778,6 +4050,28 @@ function onRadiusChange(){loadAll();}
 // ═══ モーダル ═══
 function openModal(){document.getElementById('modal-bg').classList.add('open');}
 function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
+function openTorisetsuModal(){
+  // マイページから呼ばれる場合は閉じる
+  const mypage = document.getElementById('mypage-bg');
+  if (mypage && mypage.classList.contains('open')) {
+    if (window.closeMypageForce) window.closeMypageForce();
+  }
+  setTimeout(() => {
+    const m = document.getElementById('torisetsu-modal-bg');
+    if (m) {
+      m.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+  }, 200);
+}
+function closeTorisetsuModal(){
+  const m = document.getElementById('torisetsu-modal-bg');
+  if (m) m.classList.remove('open');
+  document.body.style.overflow = '';
+}
+window.openTorisetsuModal = openTorisetsuModal;
+window.closeTorisetsuModal = closeTorisetsuModal;
+
 function openLogModal(){closeModal();document.getElementById('log-modal-bg').classList.add('open');}
 function closeLogModal(){document.getElementById('log-modal-bg').classList.remove('open');}
 
