@@ -94,10 +94,26 @@ const QUARTER_MS = 90 * 24 * 60 * 60 * 1000;  // 四半期 = 90日
 const CONCURRENCY = 3;  // 同時計算数（Railwayへの負荷考慮）
 
 // ═══ ファイルパス ═══
-const STATIONS_FILE = path.join(__dirname, 'stations.json');
-const SCORES_CACHE_FILE = path.join(__dirname, 'scores_cache.json');
-const SCORES_CACHE_TMP = path.join(__dirname, 'scores_cache.tmp.json');
-const SCORES_CACHE_PREV_FILE = path.join(__dirname, 'scores_cache_previous.json');  // 前期版（差分用）
+// CACHE_DIR 環境変数があればそちらに保存（Railway Volume mount用）
+// なければ __dirname に保存（ローカル開発用）
+const CACHE_DIR = process.env.CACHE_DIR || __dirname;
+
+// CACHE_DIR が存在しなければ作成（初回マウント時用）
+try {
+  if (!fs.existsSync(CACHE_DIR)) {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    console.log('CACHE_DIR を作成:', CACHE_DIR);
+  } else {
+    console.log('CACHE_DIR 使用:', CACHE_DIR);
+  }
+} catch(e) {
+  console.error('CACHE_DIR 作成失敗:', e.message, '→ __dirname にフォールバック');
+}
+
+const STATIONS_FILE = path.join(__dirname, 'stations.json');  // 読取専用、デプロイ時に同梱
+const SCORES_CACHE_FILE = path.join(CACHE_DIR, 'scores_cache.json');
+const SCORES_CACHE_TMP = path.join(CACHE_DIR, 'scores_cache.tmp.json');
+const SCORES_CACHE_PREV_FILE = path.join(CACHE_DIR, 'scores_cache_previous.json');  // 前期版（差分用）
 
 // ═══ 駅マスタ読込 ═══
 let STATIONS = [];
