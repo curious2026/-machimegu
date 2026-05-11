@@ -2159,9 +2159,32 @@ body.splashing #table-area{
   align-items:center !important;
   justify-content:center !important;
   padding:24px 16px !important;
+  /* GPU レイヤー化でカクつき改善 */
+  will-change:opacity;
+  animation:cardBgIn 0.18s ease-out;
+}
+@keyframes cardBgIn{
+  from{opacity:0}
+  to{opacity:1}
 }
 #card-modal{
   margin:auto !important;
+  /* カード出現アニメ：transform+opacity でGPU使用、カクつきなし */
+  will-change:transform, opacity;
+  animation:cardIn 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  transform:translateZ(0);
+}
+@keyframes cardIn{
+  0%{
+    opacity:0;
+    transform:translateZ(0) translateY(20px) scale(0.92);
+  }
+  100%{
+    opacity:1;
+    transform:translateZ(0) translateY(0) scale(1);
+  }
 }
 @media (min-width:768px){
   #card-modal{
@@ -2782,11 +2805,16 @@ body.checkin-active #checkin-indicator{
   padding-left:8px !important;
 }
 .mp-avatar-wrap{
-  cursor:pointer !important;  /* タップ可能を示す */
+  cursor:pointer !important;
   transition:transform 0.15s;
+  touch-action:manipulation;  /* iOS Safari の300msタップ遅延を除去 */
+  -webkit-tap-highlight-color:transparent;
 }
 .mp-avatar-wrap:active{
   transform:scale(0.95);
+}
+.mp-avatar-wrap .mp-avatar{
+  pointer-events:none;  /* imgが先にイベント取らない、親に伝える */
 }
 /* アバター右上に小さな鉛筆アイコン */
 .mp-avatar-wrap::after{
@@ -3305,7 +3333,7 @@ body.checkin-active #checkin-indicator{
     <div class="mp-profile">
       <!-- 左：アカウント情報＋街力の算出方法 -->
       <div class="mp-profile-left">
-        <div class="mp-avatar-wrap" onclick="openProfileEditModal()">
+        <div class="mp-avatar-wrap" id="mp-avatar-wrap-btn">
           <img id="mp-avatar" class="mp-avatar" src="" alt="">
         </div>
         <div class="mp-handle" id="mp-handle">-</div>
@@ -5069,6 +5097,40 @@ window.saveProfile = async () => {
   }
 };
 
+// ─── アバターボタン確実バインド（DOMロード後＆マイページ表示時） ───
+window._bindAvatarButton = function() {
+  const btn = document.getElementById('mp-avatar-wrap-btn');
+  if (!btn || btn._mmBound) return;
+  btn._mmBound = true;
+  
+  let touched = false;  // touchendとclick両方発火時の重複防止
+  
+  function handler(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    // setTimeout(0) でイベントスタックの干渉を回避
+    setTimeout(() => {
+      if (window.openProfileEditModal) window.openProfileEditModal();
+    }, 0);
+  }
+  
+  // touchend を優先（iOSで確実、300ms遅延なし）
+  btn.addEventListener('touchend', function(e) {
+    touched = true;
+    handler(e);
+    setTimeout(() => { touched = false; }, 500);
+  }, { passive: false });
+  
+  // click はフォールバック（PC・touchend失敗時）
+  btn.addEventListener('click', function(e) {
+    if (touched) return;  // touchend が既に処理済み
+    handler(e);
+  });
+};
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => window._bindAvatarButton(), 100);
+});
+
 // ─── プロフィール編集モーダル（先にモーダル開いて、データは後で反映） ───
 window.openProfileEditModal = async function() {
   const user = auth.currentUser;
@@ -5646,6 +5708,33 @@ async function tryCompleteCheckin() {
   // Firestore書き込み
   try {
     const stationId = `${pendingCheckin.stationName}_${pendingCheckin.stationPref}`;
+    
+    // ★ 同一駅 1日1回制限（日本時間 0:00リセット）
+    // 日本時間の今日0:00を計算（UTC基準で-9時間ずれを補正）
+    const now = new Date();
+    const jstNow = new Date(now.getTime() + 9*60*60*1000);  // JSTに変換
+    const jstTodayStart = new Date(jstNow.getFullYear(), jstNow.getMonth(), jstNow.getDate());
+    const todayStartUTC = new Date(jstTodayStart.getTime() - 9*60*60*1000);  // UTCに戻す
+    
+    try {
+      const checkinsRef = collection(db, 'users', user.uid, 'checkins');
+      const q = query(checkinsRef, 
+        where('stationId', '==', stationId),
+        where('checkedInAt', '>=', todayStartUTC)
+      );
+      const dupSnap = await getDocs(q);
+      if (!dupSnap.empty) {
+        alert(`本日は既に「${pendingCheckin.stationName}駅」にチェックイン済みです。\n同じ駅は1日1回までです。`);
+        clearPending();
+        hideCheckinIndicator();
+        if (window.currentStation) window.renderCheckinSection(window.currentStation);
+        return;
+      }
+    } catch(dupErr) {
+      console.warn('重複チェック失敗（続行）:', dupErr.message);
+      // チェック失敗時は続行（厳格すぎてUX損なわないため）
+    }
+    
     // 駅情報を取得
     const st = stationData.find(s => s.name === pendingCheckin.stationName && s.pref === pendingCheckin.stationPref);
     const score = st && st.score ? st.score : 0;
@@ -6404,7 +6493,9 @@ window._initCardSwipe = function() {
   const getWrap = () => document.getElementById('card-flip-wrap');
   
   modal.addEventListener('touchstart', function(e) {
-    if (!window.cardCloseReturn || window.cardCloseReturn !== 'cardlist') return;
+    // スワイプ可能：カードリスト or マイページ起源
+    const swipeable = window.cardCloseReturn === 'cardlist' || window.cardCloseReturn === 'mypage';
+    if (!swipeable) return;
     if (e.touches.length !== 1) return;
     window._swipeStartX = e.touches[0].clientX;
     window._swipeStartY = e.touches[0].clientY;
@@ -6416,24 +6507,33 @@ window._initCardSwipe = function() {
   
   modal.addEventListener('touchmove', function(e) {
     if (window._swipeStartX === null) return;
-    if (window.cardCloseReturn !== 'cardlist') return;
+    const swipeable = window.cardCloseReturn === 'cardlist' || window.cardCloseReturn === 'mypage';
+    if (!swipeable) return;
     const dx = e.touches[0].clientX - window._swipeStartX;
     const dy = e.touches[0].clientY - window._swipeStartY;
-    // 横方向の動きが縦より明確に大きい時だけスワイプとして扱う
     if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5) {
       window._swipeActive = true;
-      const wrap = getWrap();
-      if (wrap) {
-        // 指の動きに合わせてカード移動（粘性あり：端で抵抗）
-        wrap.style.transform = `translateX(${dx}px) rotate(${dx * 0.04}deg)`;
-        wrap.style.opacity = `${Math.max(0.4, 1 - Math.abs(dx) / 350)}`;
+      window._lastDx = dx;
+      // requestAnimationFrame でフレーム同期、ヌルヌル感UP
+      if (!window._swipeRafPending) {
+        window._swipeRafPending = true;
+        requestAnimationFrame(() => {
+          window._swipeRafPending = false;
+          const wrap = getWrap();
+          if (wrap && window._lastDx !== undefined) {
+            const d = window._lastDx;
+            wrap.style.transform = `translate3d(${d}px, 0, 0) rotate(${d * 0.035}deg)`;
+            wrap.style.opacity = `${Math.max(0.45, 1 - Math.abs(d) / 380)}`;
+          }
+        });
       }
     }
   }, { passive: true });
   
   modal.addEventListener('touchend', function(e) {
     if (window._swipeStartX === null) return;
-    if (window.cardCloseReturn !== 'cardlist') {
+    const swipeable = window.cardCloseReturn === 'cardlist' || window.cardCloseReturn === 'mypage';
+    if (!swipeable) {
       window._swipeStartX = null; window._swipeStartY = null;
       return;
     }
@@ -6458,11 +6558,13 @@ window._initCardSwipe = function() {
     // スワイプ閾値：80px以上または速い動き
     const THRESHOLD = 80;
     if (Math.abs(dx) < THRESHOLD || Math.abs(dy) > Math.abs(dx)) {
-      // 戻す
+      // 戻す（spring風カーブ）
       if (wrap) {
-        wrap.style.transition = 'transform 0.25s cubic-bezier(0.2,0.8,0.4,1), opacity 0.25s ease';
+        wrap.style.transition = 'transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease';
         wrap.style.transform = '';
         wrap.style.opacity = '';
+        // クリーンアップ
+        setTimeout(() => { if(wrap) wrap.style.transition = ''; }, 350);
       }
       return;
     }
@@ -6489,7 +6591,8 @@ window._initCardSwipe = function() {
     if (e.isComposing || e.keyCode === 229) return;  // IME入力中
     const bg = document.getElementById('card-modal-bg');
     if (!bg || !bg.classList.contains('open')) return;
-    if (window.cardCloseReturn !== 'cardlist') return;
+    const swipeable = window.cardCloseReturn === 'cardlist' || window.cardCloseReturn === 'mypage';
+    if (!swipeable) return;
     // テキスト入力中はナビしない
     const ae = document.activeElement;
     if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;
@@ -6583,6 +6686,9 @@ window.signOutFromMypage = async () => {
 };
 
 async function loadMypageData(uid) {
+  // アバターボタン再バインド（マイページ表示時に確実に）
+  if (window._bindAvatarButton) setTimeout(() => window._bindAvatarButton(), 50);
+  
   const grid = document.getElementById('mp-card-grid');
   const empty = document.getElementById('mp-empty');
   
@@ -6643,8 +6749,9 @@ async function loadMypageData(uid) {
         return tb - ta;
       });
       
-      // マイページでは最新6枚のみプレビュー
-      cards.slice(0, 6).forEach(c => {
+      // マイページでは最新6枚のみプレビュー（スワイプも全カードで可能）
+      const previewCards = cards.slice(0, 6);
+      previewCards.forEach((c, idx) => {
         const div = document.createElement('div');
         div.className = 'mp-mini-card';
         const rank = c.firstRank || 'E';
@@ -6658,6 +6765,9 @@ async function loadMypageData(uid) {
         `;
         div.onclick = () => {
           window.cardCloseReturn = 'mypage';
+          // ★ スワイプ用に全カード（最新順）を渡す。表示中のidxからスタート
+          window._sortedCardList = cards;  // 6枚じゃなく全カード
+          window._currentCardIndex = idx;
           if (window.openCardFromHistory) {
             window.openCardFromHistory(c.stationName, c.stationPref);
           }
