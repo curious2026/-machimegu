@@ -4051,6 +4051,8 @@ function onRadiusChange(){loadAll();}
 function openModal(){document.getElementById('modal-bg').classList.add('open');}
 function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
 function openTorisetsuModal(){
+  // Analytics: トリセツ開く
+  if (window.safeLogEvent) window.safeLogEvent('torisetsu_open', {});
   // マイページから呼ばれる場合は閉じる
   const mypage = document.getElementById('mypage-bg');
   if (mypage && mypage.classList.contains('open')) {
@@ -5207,6 +5209,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, query, where, getDocs, serverTimestamp, increment, Timestamp }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getAnalytics, logEvent, setAnalyticsCollectionEnabled }
+  from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB88IewpQSXzLeICeilSCwP5R6Q6vTlSDI",
@@ -5214,13 +5218,70 @@ const firebaseConfig = {
   projectId: "machi-megu-project",
   storageBucket: "machi-megu-project.firebasestorage.app",
   messagingSenderId: "851136375513",
-  appId: "1:851136375513:web:8aa9f969c5013506382cc8"
+  appId: "1:851136375513:web:8aa9f969c5013506382cc8",
+  measurementId: "G-D1S7PHS6VE"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
+
+// ════════════════════════════════════════════════════════════════
+// Firebase Analytics 初期化 + ともき除外（3層防御）
+// ════════════════════════════════════════════════════════════════
+let analytics = null;
+try {
+  analytics = getAnalytics(app);
+} catch(e) {
+  console.warn('[Analytics] 初期化失敗（無視して続行）:', e.message);
+}
+
+// ともき本人のUID（ログイン後に Authentication → Users から取得して書き換え）
+const TOMOKI_UIDS = [
+  'TOMOKI_UID_PLACEHOLDER'  // ← ここをともきのUIDに置き換える
+];
+
+// 除外判定（3層）
+function isAnalyticsDisabled() {
+  try {
+    // ① localStorage で除外設定（ともきが自分のブラウザで設定）
+    if (localStorage.getItem('mm_analytics_disabled') === '1') return true;
+    // ② URLパラメータで除外（テスト用）
+    if (new URLSearchParams(location.search).get('noanalytics') === '1') return true;
+    // ③ ともき本人のUIDを検出（ログイン状態で）
+    const u = auth && auth.currentUser;
+    if (u && TOMOKI_UIDS.includes(u.uid)) return true;
+  } catch(e) {}
+  return false;
+}
+
+// 安全なイベント送信（失敗してもアプリは落とさない）
+function safeLogEvent(name, params) {
+  if (!analytics) return;
+  if (isAnalyticsDisabled()) return;
+  try {
+    logEvent(analytics, name, params || {});
+  } catch(e) {
+    // 静かに無視（Analyticsエラーでアプリを止めない）
+  }
+}
+
+// 他のscriptブロックから使えるよう公開
+window.safeLogEvent = safeLogEvent;
+window.isAnalyticsDisabled = isAnalyticsDisabled;
+
+// ともき向けユーティリティ：ブラウザコンソールから打つだけで自分を除外可能
+//   除外ON  : mmDisableAnalytics()
+//   除外OFF : mmEnableAnalytics()
+window.mmDisableAnalytics = () => {
+  localStorage.setItem('mm_analytics_disabled', '1');
+  console.log('[Analytics] このブラウザの計測をOFFにしました');
+};
+window.mmEnableAnalytics = () => {
+  localStorage.removeItem('mm_analytics_disabled');
+  console.log('[Analytics] このブラウザの計測をONにしました');
+};
 
 // 47都道府県リスト
 const PREFECTURES = [
@@ -5268,6 +5329,7 @@ function buildProfileSelects() {
 window.signInWithGoogle = async () => {
   try {
     await signInWithPopup(auth, provider);
+    safeLogEvent('login', { method: 'Google' });
   } catch (e) {
     console.error('ログインエラー:', e);
     if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
@@ -6109,6 +6171,13 @@ async function tryCompleteCheckin() {
 
 // 成功ミニ通知 → 閉じるとカードを開く（初訪問）or そのまま終了（再訪問）
 function showCheckinSuccess(data) {
+  // Analytics: チェックイン成功
+  if (window.safeLogEvent) window.safeLogEvent('check_in_success', {
+    station_name: data.name || '',
+    rank: data.rank || '',
+    is_first_visit: !!data.isFirstVisit,
+    visit_count: data.visitCount || 1
+  });
   document.getElementById('csm-station').textContent = data.name + '駅';
   const badge = document.getElementById('csm-badge');
   if (data.isFirstVisit) {
@@ -6926,6 +6995,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── マイページ ───
 window.openMypage = async () => {
+  // Analytics: 画面表示
+  if (window.safeLogEvent) window.safeLogEvent('screen_view', { screen_name: 'mypage' });
   const user = auth.currentUser;
   if (!user) { alert('ログインしてください'); return; }
   
@@ -7070,6 +7141,8 @@ async function loadMypageData(uid) {
 
 // ─── カード一覧専用ページ ───
 window.openCardListPage = async () => {
+  // Analytics: 画面表示
+  if (window.safeLogEvent) window.safeLogEvent('screen_view', { screen_name: 'card_collection' });
   const user = auth.currentUser;
   if (!user) { alert('ログインしてください'); return; }
   
@@ -7620,6 +7693,12 @@ async function showBadgeEarnedQueue(badges) {
 }
 
 function showBadgeEarnedOne(badge, idx, total) {
+  // Analytics: バッジ獲得
+  if (window.safeLogEvent) window.safeLogEvent('badge_unlock', {
+    badge_type: badge.type || '',
+    badge_id: badge.id || badge.name || '',
+    badge_name: badge.name || ''
+  });
   return new Promise(resolve => {
     const wrap = document.getElementById('bem-badge-wrap');
     const nameEl = document.getElementById('bem-name');
@@ -8747,6 +8826,8 @@ renderWeeklyMission = async function(uid, userCards, userProfile) {
 // ─── openBadgePage にミッションバッジ描画を追加 ───
 const _origOpenBadgePage_mission = window.openBadgePage;
 window.openBadgePage = async function() {
+  // Analytics: 画面表示
+  if (window.safeLogEvent) window.safeLogEvent('screen_view', { screen_name: 'badge_collection' });
   await _origOpenBadgePage_mission();
   const user = auth.currentUser;
   if (!user) return;
