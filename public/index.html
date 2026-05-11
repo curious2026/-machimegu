@@ -4741,6 +4741,13 @@ async function fetchOne(st){
 async function fetchAllScores(radius){
   try{
     const res=await fetch('/api/all-scores?radius='+radius);
+    // 503 = サーバ準備中（プリ計算中で空）
+    if(res.status === 503){
+      let info = null;
+      try { info = await res.json(); } catch(e){}
+      console.warn('[fetchAllScores] サーバ準備中:', info);
+      return { building: true, progress: info && info.buildState ? info.buildState.progress : null, stations: {} };
+    }
     if(!res.ok)throw new Error('HTTP '+res.status);
     return await res.json();
   }catch(e){
@@ -4830,6 +4837,19 @@ async function loadAll(){
   
   // Step 2: サーバから最新を一括取得
   const fresh=await fetchAllScores(r);
+  
+  // ★ サーバ準備中（503）の場合：30秒後に自動リトライ
+  if(fresh && fresh.building){
+    if(!localData){
+      const prog = fresh.progress || '0%';
+      setStatus('サーバ準備中 '+prog+'（30秒後に再試行）',true);
+      document.getElementById('loading').classList.add('show');
+    } else {
+      setStatus(stationData.filter(s=>s.score>0).length+'駅表示中（サーバ準備中）',false);
+    }
+    setTimeout(()=>loadAll(), 30000);
+    return;
+  }
   
   if(!fresh || !fresh.stations || Object.keys(fresh.stations).length===0){
     // サーバ取得失敗
