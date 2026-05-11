@@ -2755,36 +2755,40 @@ body.checkin-active #checkin-indicator{
 
 /* 4. ユーザーアバター5mm左へ */
 .mp-avatar-wrap{
-  margin-left:-2.5mm !important;
+  margin-left:-1mm !important;
 }
 
-/* 6. ランキング画面のカードアイコン改善 */
+/* 6. カードマーク：ホログラム風（縦長） */
 .rcardico{
-  background:linear-gradient(135deg,#fbd56a 0%,#d4a020 100%) !important;
+  background:linear-gradient(135deg,#b454dc 0%,#ff80b4 35%,#ffa040 70%,#ffd450 100%) !important;
   border:1.5px solid #fff !important;
   border-radius:3px !important;
-  width:16px !important;
-  height:11px !important;
+  width:11px !important;
+  height:16px !important;
   display:none;
   align-items:center;justify-content:center;
-  box-shadow:0 1px 3px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.5) !important;
+  box-shadow:0 1px 3px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.5),0 0 4px rgba(255,128,180,0.4) !important;
   position:relative;
+  overflow:hidden;
 }
 .rcardico::before{
+  /* キラキラ1（左上） */
   content:'';
   position:absolute;
-  top:1.5px;left:1.5px;right:1.5px;
-  height:2px;
-  background:rgba(255,255,255,0.6);
-  border-radius:1px;
+  top:3px;left:2px;
+  width:2px;height:2px;
+  background:rgba(255,255,255,0.85);
+  border-radius:50%;
+  box-shadow:3px 5px 0 -0.5px rgba(255,255,255,0.7),0 8px 0 -0.5px rgba(255,255,255,0.6);
 }
 .rcardico::after{
+  /* 斜めの光沢ライン */
   content:'';
   position:absolute;
-  bottom:1.5px;left:2.5px;
-  width:4px;height:2px;
-  background:rgba(0,0,0,0.25);
-  border-radius:1px;
+  top:-50%;left:-50%;
+  width:200%;height:30%;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.45) 50%,transparent 100%);
+  transform:rotate(-25deg);
 }
 .rank-row.checked-in .rcardico{display:inline-flex !important}
 
@@ -2826,6 +2830,49 @@ body.checkin-active #checkin-indicator{
   color:#a8b8d0;
   font-weight:700;
 }
+
+/* 路線制覇「その他」展開ボタン（エリアと同じスタイル） */
+.bp-line-more-btn{
+  background:rgba(91,168,236,0.15);
+  border:1.5px dashed rgba(91,168,236,0.45);
+  border-radius:10px;
+  padding:8px 4px;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.15s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;
+}
+.bp-line-more-btn:hover{
+  background:rgba(91,168,236,0.25);
+  transform:translateY(-1px);
+}
+.bp-line-more-btn .bp-icon{
+  font-size:18px !important;
+  color:#5db8ec;
+}
+.bp-line-more-btn .bp-name{
+  font-size:11px !important;
+  font-weight:900;
+  color:#5db8ec;
+}
+.bp-line-more-btn .bp-sub{
+  font-size:9px;
+  color:#a8b8d0;
+  font-weight:700;
+}
+
+/* カードスワイプアニメ */
+@keyframes swipeLeftIn {
+  from { transform: translateX(40px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes swipeRightIn {
+  from { transform: translateX(-40px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+#card-flip-wrap.swipe-in-left { animation: swipeLeftIn 0.25s ease-out; }
+#card-flip-wrap.swipe-in-right { animation: swipeRightIn 0.25s ease-out; }
 </style>
 </head>
 <body class="splashing">
@@ -6074,12 +6121,96 @@ window.renderCardListSorted = () => {
     div.onclick = () => {
       if (window.openCardFromHistory) {
         window.cardCloseReturn = 'cardlist';
+        // スワイプ用: 現在のソート済みリストとindexを保存
+        window._sortedCardList = cards;
+        window._currentCardIndex = cards.findIndex(card => 
+          card.stationName === c.stationName && card.stationPref === c.stationPref);
         window.openCardFromHistory(c.stationName, c.stationPref);
       }
     };
     grid.appendChild(div);
   });
 };
+
+// ─── カードモーダル：スワイプで前後カード移動 ───
+window._swipeStartX = null;
+window._swipeStartY = null;
+window._initCardSwipe = function() {
+  const modal = document.getElementById('card-modal');
+  if (!modal || modal._swipeInited) return;
+  modal._swipeInited = true;
+  
+  modal.addEventListener('touchstart', function(e) {
+    if (!window.cardCloseReturn || window.cardCloseReturn !== 'cardlist') return;
+    window._swipeStartX = e.touches[0].clientX;
+    window._swipeStartY = e.touches[0].clientY;
+  }, { passive: true });
+  
+  modal.addEventListener('touchend', function(e) {
+    if (window._swipeStartX === null) return;
+    if (!window.cardCloseReturn || window.cardCloseReturn !== 'cardlist') {
+      window._swipeStartX = null; window._swipeStartY = null;
+      return;
+    }
+    const dx = e.changedTouches[0].clientX - window._swipeStartX;
+    const dy = e.changedTouches[0].clientY - window._swipeStartY;
+    window._swipeStartX = null;
+    window._swipeStartY = null;
+    // 横方向の動きが縦方向より大きく、50px以上スワイプ
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+    if (dx < 0) window._navCard(1);   // 左スワイプ → 次へ
+    else window._navCard(-1);          // 右スワイプ → 前へ
+  }, { passive: true });
+  
+  // キーボード（PC用）：矢印キーでも移動
+  document.addEventListener('keydown', function(e) {
+    const bg = document.getElementById('card-modal-bg');
+    if (!bg || !bg.classList.contains('open')) return;
+    if (window.cardCloseReturn !== 'cardlist') return;
+    if (e.key === 'ArrowLeft') window._navCard(-1);
+    else if (e.key === 'ArrowRight') window._navCard(1);
+  });
+};
+
+window._navCard = function(direction) {
+  const list = window._sortedCardList;
+  if (!list || list.length === 0) return;
+  const newIndex = window._currentCardIndex + direction;
+  if (newIndex < 0 || newIndex >= list.length) {
+    // 端：シェイクアニメ
+    const wrap = document.getElementById('card-flip-wrap');
+    if (wrap) {
+      wrap.style.animation = 'none';
+      void wrap.offsetWidth;
+      wrap.style.animation = 'shake 0.3s';
+    }
+    return;
+  }
+  window._currentCardIndex = newIndex;
+  const c = list[newIndex];
+  // スワイプアニメ
+  const wrap = document.getElementById('card-flip-wrap');
+  if (wrap) {
+    wrap.classList.remove('swipe-in-left', 'swipe-in-right');
+    void wrap.offsetWidth;
+    wrap.classList.add(direction > 0 ? 'swipe-in-left' : 'swipe-in-right');
+  }
+  if (window.openCardFromHistory) {
+    window.openCardFromHistory(c.stationName, c.stationPref);
+  }
+};
+
+// shake CSS追加（既存shakeがなければ）
+(function(){
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }`;
+  document.head.appendChild(styleEl);
+})();
+
+// モーダル準備時にスワイプを有効化
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => window._initCardSwipe(), 500);
+});
 
 // ─── マイページ ───
 window.openMypage = async () => {
@@ -6920,31 +7051,86 @@ async function renderWeeklyMission(uid, userCards, userProfile) {
   `;
 }
 
+window._lineShowMore = false;
+window._lastLineResults = null;
+window._lastLineBadges = null;
 function renderLineBadges(lineResults, userBadges) {
   const el = document.getElementById('bp-line');
   if (!el) return;
-  let html = '';
-  let earnedCount = 0;
+  
+  // デフォルト表示：LINE_ORDERの先頭〜「つくばエクスプレス」まで
+  const txIndex = LINE_ORDER.indexOf('つくばエクスプレス');
+  const DEFAULT_LINES_SET = new Set(LINE_ORDER.slice(0, txIndex + 1));
+  
+  // 仕分け
+  const defaultLines = [];
+  const promotedLines = [];
+  const otherLines = [];
   lineResults.forEach(r => {
+    if (DEFAULT_LINES_SET.has(r.line)) {
+      defaultLines.push(r);
+    } else if (r.conquered > 0) {
+      promotedLines.push(r);  // チェックインあり → 昇格
+    } else {
+      otherLines.push(r);
+    }
+  });
+  
+  function renderItem(r){
     const lineShort = r.line.replace('東京メトロ','メトロ').replace(/^都営/,'都営');
     if (r.tier) {
       const id = `line_${r.line}_${r.tier}`;
       const badgeData = userBadges.get(id) || { id, type:'line', line:r.line, tier:r.tier, conquered:r.conquered, total:r.total, name:`${r.line} ${tierJa(r.tier)}`, desc:`${r.line}の駅を制覇` };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      html += `<div class="bp-badge bp-badge-line ${r.tier}" onclick="showBadgeDetail('${enc}')">
+      return `<div class="bp-badge bp-badge-line ${r.tier}" onclick="showBadgeDetail('${enc}')">
         <div class="bp-name">${lineShort}</div>
         <div class="bp-sub">${tierJa(r.tier)}</div>
       </div>`;
-      earnedCount++;
     } else {
-      html += `<div class="bp-badge-locked">
+      return `<div class="bp-badge-locked">
         <div class="bp-icon">🚃</div>
         <div class="bp-name">${lineShort}</div>
         <div class="bp-progress">${r.conquered}/${r.total}駅</div>
       </div>`;
     }
+  }
+  
+  let outHtml = '';
+  let earnedCount = 0;
+  
+  // ① デフォルト路線（つくばエクスプレスまで）
+  defaultLines.forEach(r => {
+    outHtml += renderItem(r);
+    if (r.tier) earnedCount++;
   });
-  el.innerHTML = html || '<div style="grid-column:1/-1;padding:20px;text-align:center;color:#a8b8d0;font-size:13px">路線データがありません</div>';
+  
+  // ② 昇格路線（その他で1駅以上制覇）
+  promotedLines.forEach(r => {
+    outHtml += renderItem(r);
+    if (r.tier) earnedCount++;
+  });
+  
+  // ③ 「その他」展開ボタン＋展開エリア
+  if (otherLines.length > 0) {
+    const isOpen = window._lineShowMore;
+    outHtml += `<div class="bp-line-more-btn" onclick="window._lineShowMore=!window._lineShowMore;renderLineBadges(window._lastLineResults,window._lastLineBadges)">
+      <div class="bp-icon" style="font-size:18px">${isOpen ? '▲' : '▼'}</div>
+      <div class="bp-name">${isOpen ? '閉じる' : 'その他'}</div>
+      <div class="bp-sub">${otherLines.length}路線</div>
+    </div>`;
+    if (isOpen) {
+      otherLines.forEach(r => {
+        outHtml += renderItem(r);
+        if (r.tier) earnedCount++;
+      });
+    }
+  }
+  
+  // データキャッシュ
+  window._lastLineResults = lineResults;
+  window._lastLineBadges = userBadges;
+  
+  el.innerHTML = outHtml || '<div style="grid-column:1/-1;padding:20px;text-align:center;color:#a8b8d0;font-size:13px">路線データがありません</div>';
   
   const counter = document.getElementById('bp-line-count');
   if (counter) counter.textContent = `${earnedCount} 獲得`;
