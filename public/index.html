@@ -2754,8 +2754,31 @@ body.checkin-active #checkin-indicator{
 }
 
 /* 4. ユーザーアバター5mm左へ */
+.mp-profile-left{
+  padding-left:8px !important;
+}
 .mp-avatar-wrap{
-  transform:translateX(-6px) !important;
+  cursor:pointer !important;  /* タップ可能を示す */
+  transition:transform 0.15s;
+}
+.mp-avatar-wrap:active{
+  transform:scale(0.95);
+}
+/* アバター右上に小さな鉛筆アイコン */
+.mp-avatar-wrap::after{
+  content:'✎';
+  position:absolute;
+  bottom:-2px;right:-2px;
+  width:18px;height:18px;
+  background:linear-gradient(135deg,#5db8ec,#3a8ac4);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:10px;font-weight:900;
+  border:2px solid #0a1428;
+  pointer-events:none;
+}
+.mp-avatar-wrap{
+  position:relative;
 }
 
 /* 6. カードマーク：ホログラム風（縦長） */
@@ -3258,7 +3281,7 @@ body.checkin-active #checkin-indicator{
     <div class="mp-profile">
       <!-- 左：アカウント情報＋街力の算出方法 -->
       <div class="mp-profile-left">
-        <div class="mp-avatar-wrap">
+        <div class="mp-avatar-wrap" onclick="openProfileEditModal()">
           <img id="mp-avatar" class="mp-avatar" src="" alt="">
         </div>
         <div class="mp-handle" id="mp-handle">-</div>
@@ -4953,7 +4976,8 @@ window.saveProfile = async () => {
   saveBtn.textContent = '保存中...';
 
   try {
-    await setDoc(doc(db, 'users', user.uid), {
+    // 編集モード判定：既存値を保持
+    const payload = {
       uid: user.uid,
       email: user.email,
       photoURL: user.photoURL || '',
@@ -4964,14 +4988,30 @@ window.saveProfile = async () => {
       gender: selectedGender,
       birthYear: parseInt(birthYear),
       birthMonth: parseInt(birthMonth),
-      createdAt: serverTimestamp(),
-      lastLoginAt: serverTimestamp(),
-      totalCheckins: 0,
-      uniqueStations: 0
-    });
+      lastLoginAt: serverTimestamp()
+    };
+    // 新規登録時のみ createdAt と統計を初期化
+    if (!window._editProfileMode) {
+      payload.createdAt = serverTimestamp();
+      payload.totalCheckins = 0;
+      payload.uniqueStations = 0;
+    }
+    // 編集モードは merge:true で既存値を維持
+    await setDoc(doc(db, 'users', user.uid), payload, {merge: !!window._editProfileMode});
 
     document.getElementById('profile-modal-bg').classList.remove('open');
-    document.getElementById('userName').textContent = handleName;
+    const unEl = document.getElementById('userName');
+    if (unEl) unEl.textContent = handleName;
+    // マイページ表示中ならマイページの表示も更新
+    const mphEl = document.getElementById('mp-handle');
+    if (mphEl) mphEl.textContent = handleName;
+    const mpmEl = document.getElementById('mp-meta');
+    if (mpmEl) {
+      const meta = [];
+      if (nearestStation) meta.push(nearestStation + '駅');
+      if (prefecture) meta.push(prefecture);
+      mpmEl.textContent = meta.join(' · ') || '-';
+    }
     console.log('プロフィール保存完了:', handleName);
   } catch (e) {
     console.error('プロフィール保存エラー:', e);
@@ -4981,8 +5021,56 @@ window.saveProfile = async () => {
   }
 };
 
+// ─── プロフィール編集モーダル（既存値を読み込んで開く） ───
+window.openProfileEditModal = async function() {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    const data = userDoc.exists() ? userDoc.data() : {};
+    
+    // モーダル要素準備
+    buildProfileSelects();
+    
+    // タイトルを「編集」に変更
+    const welcomeEl = document.getElementById('pmd-welcome');
+    if (welcomeEl) welcomeEl.textContent = 'プロフィール編集';
+    const saveBtn = document.getElementById('pmd-save-btn');
+    if (saveBtn) saveBtn.textContent = '保存';
+    
+    // 既存値を入力欄に反映
+    document.getElementById('pf-handle').value = data.handleName || '';
+    if (document.getElementById('pf-pref') && data.prefecture) {
+      document.getElementById('pf-pref').value = data.prefecture;
+    }
+    document.getElementById('pf-station').value = data.nearestStation || '';
+    if (document.getElementById('pf-byear') && data.birthYear) {
+      document.getElementById('pf-byear').value = data.birthYear;
+    }
+    if (document.getElementById('pf-bmonth') && data.birthMonth) {
+      document.getElementById('pf-bmonth').value = data.birthMonth;
+    }
+    
+    // 性別反映
+    selectedGender = data.gender || '';
+    document.querySelectorAll('.pmd-gender-btn').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.gender === selectedGender);
+    });
+    
+    // 編集モードフラグ
+    window._editProfileMode = true;
+    
+    // モーダル表示
+    document.getElementById('profile-modal-bg').classList.add('open');
+  } catch(e) {
+    console.error('プロフィール読込エラー:', e);
+    alert('プロフィールの読込に失敗しました');
+  }
+};
+
 // プロフィール設定モーダル表示
 function showProfileSetupModal(user) {
+  window._editProfileMode = false;
   buildProfileSelects();
   document.getElementById('pmd-welcome').textContent =
     `${user.displayName || 'ユーザー'}さん`;
