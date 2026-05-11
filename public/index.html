@@ -3309,7 +3309,7 @@ body.checkin-active #checkin-indicator{
 <div id="modal-bg" onclick="closeModal()">
   <div id="modal" onclick="event.stopPropagation()">
     <div class="modal-hdr"><div class="modal-title">街力（まちりょく）の算出方法</div><button class="modal-x" onclick="closeModal()">✕</button></div>
-    <div class="modal-desc">各駅から指定半径圏内の商業施設数をもとに<strong style="color:#e8f4ff">1000点満点</strong>で街力を数値化。<br><a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline;font-weight:700">対数スケール</a>採用により自然なランク分布になります。<a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline;font-weight:700;margin-left:4px">（対数スケールとは？）</a><br><br>データ：<strong style="color:#90b8ff">Overture Maps</strong>（Meta・Microsoft・Amazon等提供）</div>
+    <div class="modal-desc">各駅から指定半径圏内の商業施設数をもとに、商業地としての駅の規模（にぎやかさ）を<strong style="color:#e8f4ff">1000点満点</strong>で数値化、「街力」としています。<br><a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline;font-weight:700">対数スケール</a>採用により自然なランク分布になります。<a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline;font-weight:700;margin-left:4px">（対数スケールとは？）</a><br><br>データ：<strong style="color:#90b8ff">Overture Maps</strong>（Meta・Microsoft・Amazon等提供）</div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#ff3355,#ff6080)">350</div><div><div class="modal-ax-name">飲食充実</div><div class="modal-ax-desc">飲食店・カフェ・バー・ファストフード等</div></div></div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#7b5fe8,#a080ff)">350</div><div><div class="modal-ax-name">商業・小売</div><div class="modal-ax-desc">百貨店・ショッピング・アパレル・娯楽施設等</div></div></div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#2a8fd4,#50b8ff)">200</div><div><div class="modal-ax-name">生活利便</div><div class="modal-ax-desc">コンビニ・スーパー・薬局・銀行・美容院等</div></div></div>
@@ -3372,7 +3372,7 @@ body.checkin-active #checkin-indicator{
     <div class="tori-beta">
       <span class="tori-beta-label">BETA</span>
       ようこそ！今は身近な人にテストしてもらってる<strong style="color:#fff">ベータ版</strong>です。<br>
-      バグや「ここわかりにくい」があったら、遠慮なくともきまで。
+      バグや「ここわかりにくい」があったら、遠慮なく<a href="mailto:machimegu2026@gmail.com" style="color:#a8e0c8;text-decoration:underline;font-weight:700">ともき</a>まで。
     </div>
 
     <div class="tori-section">
@@ -3392,7 +3392,7 @@ body.checkin-active #checkin-indicator{
         </div>
         <div class="tori-step">
           <div class="tori-step-num">2</div>
-          <div>駅から半径500m以内に<strong style="color:#a8e0c8">10分滞在</strong>でチェックイン完了</div>
+          <div>駅から半径500m以内に<strong style="color:#a8e0c8">5分滞在</strong>でチェックイン完了</div>
         </div>
         <div class="tori-step">
           <div class="tori-step-num">3</div>
@@ -3408,7 +3408,7 @@ body.checkin-active #checkin-indicator{
       </div>
       <div class="tori-ranks">
         <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#ff3355,#ff6080)">S</span><span>800点〜（新宿・渋谷級）</span></div>
-        <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#ff8c00,#ffb040)">A</span><span>600〜799点（吉祥寺級）</span></div>
+        <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#ff8c00,#ffb040)">A</span><span>600〜799点（品川・高田馬場級）</span></div>
         <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#d4af37,#f0d058)">B</span><span>400〜599点</span></div>
         <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#3a9b4a,#5cc070)">C</span><span>200〜399点</span></div>
         <div class="tori-rank-row"><span class="tori-rank-badge" style="background:linear-gradient(135deg,#3a7bd5,#5a9bff)">D</span><span>200点未満</span></div>
@@ -3419,7 +3419,7 @@ body.checkin-active #checkin-indicator{
     <div class="tori-section">
       <div class="tori-h">4. チェックインのコツ</div>
       <div class="tori-notes">
-        <div class="tori-notes-item">駅から<strong style="color:#a8e0c8">500m以内＋10分滞在</strong>で完成</div>
+        <div class="tori-notes-item">駅から<strong style="color:#a8e0c8">500m以内＋5分滞在</strong>で完成</div>
         <div class="tori-notes-item">途中で離れても、戻ればまた再開できる</div>
         <div class="tori-notes-item">同じ駅は<strong style="color:#a8e0c8">1日1回まで</strong>（24時間じゃなく日本時間0:00リセット）</div>
         <div class="tori-notes-item">途中キャンセルも自由</div>
@@ -3477,8 +3477,8 @@ body.checkin-active #checkin-indicator{
     </div>
 
     <div class="tori-end">
-      <strong style="color:#fff;font-size:14.5px">街巡は、「ふと知らない街に行きたくなる」きっかけを作るアプリ。</strong><br>
-      スコアだけ見るんじゃなく、コメントも読んで街の個性を感じてほしい。<br>
+      <strong style="color:#fff;font-size:14.5px">街巡-まちめぐ-は、「ふと知らない街に行きたくなる」きっかけを作るアプリ。</strong><br>
+      スコアだけ見るんじゃなく、コメントも読んで街の個性を感じてほしいです。<br>
       楽しんで！
       <div class="tori-end-sig">作：ともき（個人開発）　/　技術ガイド：クロ（AI）</div>
     </div>
