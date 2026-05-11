@@ -2236,9 +2236,33 @@ body.splashing #table-area{
 }
 @media (max-width:520px){
   .fsel{
-    font-size:12px !important;
-    padding:4px 8px !important;
+    font-size:11px !important;
+    padding:4px 5px !important;
+    letter-spacing:0 !important;
+    min-width:0 !important;
+    flex-shrink:1 !important;
+    text-overflow:ellipsis;
+    overflow:hidden;
   }
+  #filters{
+    gap:2px !important;
+    padding:3px 3px !important;
+    flex-wrap:nowrap !important;
+    overflow:visible !important;
+  }
+  #favFilter{
+    padding:3px 6px !important;
+    font-size:13px !important;
+    flex-shrink:0 !important;
+  }
+  #statusbar{
+    display:none !important;
+  }
+}
+/* PCでも path-radius が見切れないよう詰める */
+@media (min-width:521px){
+  .fsel{padding:5px 8px !important;}
+  #filters{gap:4px !important;}
 }
 
 /* 修正3: 「街力ランク」見出し（leg-title）フォント+1、真っ白 */
@@ -3033,23 +3057,23 @@ body.checkin-active #checkin-indicator{
 
   <div id="filters">
     <select class="fsel" id="prefSelect" onchange="onPrefChange()">
-      <option value="">全エリア</option>
+      <option value="">エリア</option>
       <option value="東京都">東京都</option>
       <option value="神奈川県">神奈川県</option>
       <option value="埼玉県">埼玉県</option>
       <option value="千葉県">千葉県</option>
     </select>
-    <select class="fsel" id="lineSelect" onchange="render()"><option value="">全路線</option></select>
+    <select class="fsel" id="lineSelect" onchange="render()"><option value="">路線</option></select>
     <select class="fsel" id="rankFilter" onchange="render()">
-      <option value="">全ランク</option>
+      <option value="">ランク</option>
       <option value="S">S</option><option value="A">A</option>
       <option value="B">B</option><option value="C">C</option><option value="D">D</option>
     </select>
     <button id="favFilter" onclick="toggleFavFilter()">♥</button>
     <select class="fsel" id="radiusSelect" onchange="onRadiusChange()">
-      <option value="500" selected>半径500m</option>
-      <option value="800">半径800m</option>
-      <option value="1200">半径1.2km</option>
+      <option value="500" selected>500m</option>
+      <option value="800">800m</option>
+      <option value="1200">1.2km</option>
     </select>
     <span id="statusbar"></span>
   </div>
@@ -3561,6 +3585,47 @@ function formatLinesDisplay(lines){
 }
 
 // Phase D-1: 路線並び順マスタ（将来編集はこの配列を入れ替えるだけでOK）
+// 路線名の表示用短縮マップ（valueは正式名のまま、表示テキストだけ短く）
+const LINE_SHORT_MAP = {
+  '中央・総武線各駅停車':'中央・総武各停',
+  '常磐線各駅停車':'常磐線各停',
+  '湘南新宿ライン':'湘南新宿L',
+  '東京メトロ銀座線':'メトロ銀座',
+  '東京メトロ丸ノ内線':'メトロ丸ノ内',
+  '東京メトロ日比谷線':'メトロ日比谷',
+  '東京メトロ東西線':'メトロ東西',
+  '東京メトロ千代田線':'メトロ千代田',
+  '東京メトロ有楽町線':'メトロ有楽町',
+  '東京メトロ半蔵門線':'メトロ半蔵門',
+  '東京メトロ南北線':'メトロ南北',
+  '東京メトロ副都心線':'メトロ副都心',
+  '都営浅草線':'都営浅草',
+  '都営三田線':'都営三田',
+  '都営新宿線':'都営新宿',
+  '都営大江戸線':'都営大江戸',
+  '東急田園都市線':'東急田園都市',
+  '東急東横線':'東急東横',
+  '東急目黒線':'東急目黒',
+  '東急大井町線':'東急大井町',
+  '東急池上線':'東急池上',
+  '東急多摩川線':'東急多摩川',
+  '東急世田谷線':'東急世田谷',
+  '小田急小田原線':'小田急小田原',
+  '西武池袋線':'西武池袋',
+  '西武新宿線':'西武新宿',
+  '東武東上線':'東武東上',
+  '東武スカイツリーライン':'東武スカイツリー',
+  '京成本線':'京成本',
+  '京急本線':'京急本',
+  '京成押上線':'京成押上',
+  '日暮里舎人ライナー':'舎人ライナー',
+  'つくばエクスプレス':'TX',
+  'ゆりかもめ':'ゆりかもめ',
+  '都電荒川線':'都電荒川',
+  'りんかい線':'りんかい',
+};
+function shortLineName(line){ return LINE_SHORT_MAP[line] || line; }
+
 const LINE_ORDER=[
   // ── ① JR主要 ──
   '山手線','京浜東北線','中央線快速','中央・総武線各駅停車',
@@ -4790,18 +4855,18 @@ function onTableClick(name,pref){
 
 function initLineSelect(){
   const ls=document.getElementById('lineSelect');
-  ls.innerHTML='<option value="">全路線</option>';
+  ls.innerHTML='<option value="">路線</option>';
   sortedLineKeys(ALL_LINES).forEach(line=>{
-    const o=document.createElement('option');o.value=line;o.textContent=line;ls.appendChild(o);
+    const o=document.createElement('option');o.value=line;o.textContent=shortLineName(line);ls.appendChild(o);
   });
 }
 function onPrefChange(){
   const pref=document.getElementById('prefSelect').value;
   const ls=document.getElementById('lineSelect');
-  ls.innerHTML='<option value="">全路線</option>';
+  ls.innerHTML='<option value="">路線</option>';
   const src=pref?LINE_DATA[pref]:ALL_LINES;
   sortedLineKeys(src||{}).forEach(line=>{
-    const o=document.createElement('option');o.value=line;o.textContent=line;ls.appendChild(o);
+    const o=document.createElement('option');o.value=line;o.textContent=shortLineName(line);ls.appendChild(o);
   });
   render();
 }
