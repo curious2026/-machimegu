@@ -3587,42 +3587,21 @@ function formatLinesDisplay(lines){
 // Phase D-1: 路線並び順マスタ（将来編集はこの配列を入れ替えるだけでOK）
 // 路線名の表示用短縮マップ（valueは正式名のまま、表示テキストだけ短く）
 const LINE_SHORT_MAP = {
+  // 長い特例だけ短縮、それ以外は「東京メトロ」プレフィックスだけ落として「線」は残す
   '中央・総武線各駅停車':'中央・総武各停',
   '常磐線各駅停車':'常磐線各停',
-  '湘南新宿ライン':'湘南新宿L',
-  '東京メトロ銀座線':'メトロ銀座',
-  '東京メトロ丸ノ内線':'メトロ丸ノ内',
-  '東京メトロ日比谷線':'メトロ日比谷',
-  '東京メトロ東西線':'メトロ東西',
-  '東京メトロ千代田線':'メトロ千代田',
-  '東京メトロ有楽町線':'メトロ有楽町',
-  '東京メトロ半蔵門線':'メトロ半蔵門',
-  '東京メトロ南北線':'メトロ南北',
-  '東京メトロ副都心線':'メトロ副都心',
-  '都営浅草線':'都営浅草',
-  '都営三田線':'都営三田',
-  '都営新宿線':'都営新宿',
-  '都営大江戸線':'都営大江戸',
-  '東急田園都市線':'東急田園都市',
-  '東急東横線':'東急東横',
-  '東急目黒線':'東急目黒',
-  '東急大井町線':'東急大井町',
-  '東急池上線':'東急池上',
-  '東急多摩川線':'東急多摩川',
-  '東急世田谷線':'東急世田谷',
-  '小田急小田原線':'小田急小田原',
-  '西武池袋線':'西武池袋',
-  '西武新宿線':'西武新宿',
-  '東武東上線':'東武東上',
-  '東武スカイツリーライン':'東武スカイツリー',
-  '京成本線':'京成本',
-  '京急本線':'京急本',
-  '京成押上線':'京成押上',
+  '東京メトロ銀座線':'メトロ銀座線',
+  '東京メトロ丸ノ内線':'メトロ丸ノ内線',
+  '東京メトロ日比谷線':'メトロ日比谷線',
+  '東京メトロ東西線':'メトロ東西線',
+  '東京メトロ千代田線':'メトロ千代田線',
+  '東京メトロ有楽町線':'メトロ有楽町線',
+  '東京メトロ半蔵門線':'メトロ半蔵門線',
+  '東京メトロ南北線':'メトロ南北線',
+  '東京メトロ副都心線':'メトロ副都心線',
+  '東武スカイツリーライン':'東武スカイツリーL',
   '日暮里舎人ライナー':'舎人ライナー',
   'つくばエクスプレス':'TX',
-  'ゆりかもめ':'ゆりかもめ',
-  '都電荒川線':'都電荒川',
-  'りんかい線':'りんかい',
 };
 function shortLineName(line){ return LINE_SHORT_MAP[line] || line; }
 
@@ -5032,10 +5011,14 @@ window.saveProfile = async () => {
   // バリデーション
   if (!handleName) { showError('ハンドルネームを入力してください'); return; }
   if (handleName.length > 20) { showError('ハンドルネームは20文字以内で入力してください'); return; }
-  if (!prefecture) { showError('都道府県を選択してください'); return; }
   if (!nearestStation) { showError('最寄り駅を入力してください'); return; }
-  if (!selectedGender) { showError('性別を選択してください'); return; }
-  if (!birthYear || !birthMonth) { showError('生年月を選択してください'); return; }
+  
+  // 編集モードでは性別・生年月日・都道府県は任意（既存値があれば維持）
+  if (!window._editProfileMode) {
+    if (!prefecture) { showError('都道府県を選択してください'); return; }
+    if (!selectedGender) { showError('性別を選択してください'); return; }
+    if (!birthYear || !birthMonth) { showError('生年月を選択してください'); return; }
+  }
 
   saveBtn.disabled = true;
   saveBtn.textContent = '保存中...';
@@ -5086,50 +5069,61 @@ window.saveProfile = async () => {
   }
 };
 
-// ─── プロフィール編集モーダル（既存値を読み込んで開く） ───
+// ─── プロフィール編集モーダル（先にモーダル開いて、データは後で反映） ───
 window.openProfileEditModal = async function() {
   const user = auth.currentUser;
   if (!user) return;
+  
+  // ★ Step 1: モーダル要素を準備して即座に開く（待たない）
+  buildProfileSelects();
+  
+  const welcomeEl = document.getElementById('pmd-welcome');
+  if (welcomeEl) welcomeEl.textContent = 'プロフィール編集';
+  
+  const saveBtn = document.getElementById('pmd-save-btn');
+  if (saveBtn) {
+    saveBtn.textContent = '保存';
+    saveBtn.disabled = false;  // 必ず押せる状態に
+  }
+  
+  // エラー表示クリア
+  const errorEl = document.getElementById('pmd-error');
+  if (errorEl) errorEl.classList.remove('show');
+  
+  // 入力欄をいったんクリア（古い値が残らないように）
+  const hEl = document.getElementById('pf-handle'); if (hEl) hEl.value = '';
+  const sEl = document.getElementById('pf-station'); if (sEl) sEl.value = '';
+  
+  // 編集モードフラグを立てる
+  window._editProfileMode = true;
+  
+  // モーダル即座表示
+  document.getElementById('profile-modal-bg').classList.add('open');
+  
+  // ★ Step 2: 後からデータを取得して入力欄に反映（非同期、UIをブロックしない）
   try {
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const data = userDoc.exists() ? userDoc.data() : {};
     
-    // モーダル要素準備
-    buildProfileSelects();
+    if (hEl) hEl.value = data.handleName || '';
+    if (sEl) sEl.value = data.nearestStation || '';
     
-    // タイトルを「編集」に変更
-    const welcomeEl = document.getElementById('pmd-welcome');
-    if (welcomeEl) welcomeEl.textContent = 'プロフィール編集';
-    const saveBtn = document.getElementById('pmd-save-btn');
-    if (saveBtn) saveBtn.textContent = '保存';
+    const pEl = document.getElementById('pf-pref');
+    if (pEl && data.prefecture) pEl.value = data.prefecture;
     
-    // 既存値を入力欄に反映
-    document.getElementById('pf-handle').value = data.handleName || '';
-    if (document.getElementById('pf-pref') && data.prefecture) {
-      document.getElementById('pf-pref').value = data.prefecture;
-    }
-    document.getElementById('pf-station').value = data.nearestStation || '';
-    if (document.getElementById('pf-byear') && data.birthYear) {
-      document.getElementById('pf-byear').value = data.birthYear;
-    }
-    if (document.getElementById('pf-bmonth') && data.birthMonth) {
-      document.getElementById('pf-bmonth').value = data.birthMonth;
-    }
+    const byEl = document.getElementById('pf-byear');
+    if (byEl && data.birthYear) byEl.value = data.birthYear;
     
-    // 性別反映
+    const bmEl = document.getElementById('pf-bmonth');
+    if (bmEl && data.birthMonth) bmEl.value = data.birthMonth;
+    
     selectedGender = data.gender || '';
     document.querySelectorAll('.pmd-gender-btn').forEach(btn => {
       btn.classList.toggle('selected', btn.dataset.gender === selectedGender);
     });
-    
-    // 編集モードフラグ
-    window._editProfileMode = true;
-    
-    // モーダル表示
-    document.getElementById('profile-modal-bg').classList.add('open');
   } catch(e) {
     console.error('プロフィール読込エラー:', e);
-    alert('プロフィールの読込に失敗しました');
+    // モーダルは開いたままにする（ユーザーが新規入力できる）
   }
 };
 
