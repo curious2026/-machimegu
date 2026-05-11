@@ -2755,7 +2755,7 @@ body.checkin-active #checkin-indicator{
 
 /* 4. ユーザーアバター5mm左へ */
 .mp-avatar-wrap{
-  margin-left:-1mm !important;
+  transform:translateX(-6px) !important;
 }
 
 /* 6. カードマーク：ホログラム風（縦長） */
@@ -4350,85 +4350,197 @@ async function fetchOne(st){
   }catch(e){return null;} // エラー時はnullを返す（0キャッシュしない）
 }
 
-// ★ キャッシュ即表示→バックグラウンド更新→都度render()
+// ═══════════════════════════════════════════════════════════════
+// Phase E前半: 一括取得＋localStorage バージョン管理
+//   通常: /api/all-scores 一発でサーバキャッシュ取得
+//   バージョン一致時は通信ゼロ
+//   失敗時は個別取得にフォールバック
+// ═══════════════════════════════════════════════════════════════
+
+// 一括取得API
+async function fetchAllScores(radius){
+  try{
+    const res=await fetch('/api/all-scores?radius='+radius);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return await res.json();
+  }catch(e){
+    console.warn('[fetchAllScores] failed:',e.message);
+    return null;
+  }
+}
+
+// 旧キャッシュ（spc_stable_v3_*）から新キャッシュ（mm_scores_v2_r*）への移行
+function migrateOldCache(){
+  try{
+    const oldKeys=Object.keys(localStorage).filter(k=>k.startsWith('spc_stable_v'));
+    if(oldKeys.length===0)return null;
+    // 古いキャッシュがあったら一旦読んで返す（即表示用）、後で新形式に置換
+    const r=getRadius();
+    const oldKey='spc_stable_v3_'+r;
+    const raw=localStorage.getItem(oldKey);
+    if(!raw)return null;
+    const parsed=JSON.parse(raw);
+    const data=Array.isArray(parsed)?parsed:parsed.data;
+    if(!Array.isArray(data))return null;
+    // 旧形式: [{name,pref,score,details,lat,lng},...]
+    // 新形式: {stations:{stationId:{score,details}},version,builtAt}
+    const stationsMap={};
+    data.forEach(d=>{
+      if(d.score!==undefined){
+        const sid=d.name+'_'+d.pref;
+        stationsMap[sid]={score:d.score,details:d.details||{}};
+      }
+    });
+    return {stations:stationsMap, version:'migrated', builtAt:0};
+  }catch(e){
+    return null;
+  }
+}
+
 async function loadAll(){
   const r=getRadius();
-  const cached=loadLocal();
-
-  if(cached&&cached.data){
-    // ★ lat/lngはSTATIONS（COORDS由来）を使用、scoreのみキャッシュから
+  const cacheKey='mm_scores_v2_r'+r;
+  
+  // Step 1: localStorageキャッシュ即表示
+  let localData=null;
+  let localVersion='';
+  try{
+    const raw=localStorage.getItem(cacheKey);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      localData=parsed.stations;
+      localVersion=parsed.version||'';
+    }
+  }catch(e){}
+  
+  // 新キャッシュなければ旧キャッシュ移行を試す
+  if(!localData){
+    const migrated=migrateOldCache();
+    if(migrated){
+      localData=migrated.stations;
+      localVersion=migrated.version;
+      // 旧→新形式で保存
+      try{
+        localStorage.setItem(cacheKey,JSON.stringify({
+          version:localVersion,builtAt:0,stations:localData
+        }));
+      }catch(e){}
+    }
+  }
+  
+  if(localData){
+    // 即時表示
     stationData=STATIONS.map(st=>{
-      const f=cached.data.find(c=>c.name===st.name&&c.pref===st.pref);
-      return f&&f.score?{...st,score:f.score,details:f.details}:{...st,score:null,details:{}};
+      const sid=st.id||(st.name+'_'+st.pref);
+      const data=localData[sid];
+      if(data && data.score !== undefined){
+        return {...st, score:data.score, details:data.details||{}};
+      }
+      return {...st, score:null, details:{}};
     });
     document.getElementById('loading').classList.remove('show');
-    render(); // ★ キャッシュデータで即表示
-
-    // 座標が変わった駅を優先再取得
-    const movedStations=STATIONS.filter(st=>{
-      const f=cached.data.find(c=>c.name===st.name&&c.pref===st.pref);
-      if(!f)return true;
-      return Math.abs((f.lat||0)-st.lat)>0.0001||Math.abs((f.lng||0)-st.lng)>0.0001;
-    });
-    if(movedStations.length>0){
-      setStatus('座標更新中 '+movedStations.length+'駅...',true);
-      for(let i=0;i<movedStations.length;i+=5){
-        await Promise.all(movedStations.slice(i,i+5).map(async st=>{
-          const d=await fetchOne(st);
-          if(!d)return;
-          const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
-          if(idx>=0)stationData[idx]={...stationData[idx],score:d.score,details:d.details};
-        }));
-        render(); // ★ 取得完了分から随時更新
-      }
-      saveLocal(stationData);
-    }
-
-    const age=Date.now()-(cached.ts||0);
-    if(age<CACHE_TTL){
-      setStatus(stationData.filter(s=>s.score).length+'駅表示中',false);
-      return;
-    }
-
-    // 6時間超：全駅バックグラウンド更新
-    setStatus('バックグラウンド更新中...',true);
-    let n=0;
-    for(let i=0;i<STATIONS.length;i+=5){
-      await Promise.all(STATIONS.slice(i,i+5).map(async st=>{
-        const d=await fetchOne(st);
-        if(!d)return;
-        const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
-        if(idx>=0){stationData[idx]={...stationData[idx],score:d.score,details:d.details};n++;}
-      }));
-      render(); // ★ 5駅ごとに随時画面更新
-      setStatus(n+'/'+STATIONS.length+' 更新中...',true);
-    }
-    saveLocal(stationData);
     render();
-    setStatus(stationData.filter(s=>s.score>0).length+'駅表示中',false);
-
+    const cnt=stationData.filter(s=>s.score>0).length;
+    setStatus(cnt+'駅表示中',false);
   } else {
-    // 初回取得
     stationData=STATIONS.map(s=>({...s,score:null,details:{}}));
     document.getElementById('loading').classList.add('show');
-    setStatus('初回取得中...',true);
-    let done=0;
-    for(let i=0;i<STATIONS.length;i+=5){
-      await Promise.all(STATIONS.slice(i,i+5).map(async st=>{
-        const d=await fetchOne(st);
-        if(!d){done++;return;}
-        const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
-        if(idx>=0)stationData[idx]={...stationData[idx],score:d.score,details:d.details};
-        done++;
-      }));
-      if(done>=10)document.getElementById('loading').classList.remove('show');
-      render(); // ★ 5駅ごとに随時更新
-      setStatus(done+'/'+STATIONS.length+' 取得中...',true);
+    setStatus('読み込み中...',true);
+  }
+  
+  // Step 2: サーバから最新を一括取得
+  const fresh=await fetchAllScores(r);
+  
+  if(!fresh || !fresh.stations || Object.keys(fresh.stations).length===0){
+    // サーバ取得失敗
+    if(!localData){
+      // キャッシュもない → 個別取得にフォールバック
+      console.warn('[loadAll] all-scores失敗、個別取得にフォールバック');
+      await fallbackIndividualFetch(r);
+    } else {
+      // キャッシュあり → そのまま継続表示
+      document.getElementById('loading').classList.remove('show');
+      setStatus(stationData.filter(s=>s.score>0).length+'駅表示中（オフライン）',false);
     }
-    saveLocal(stationData);
-    render();
+    return;
+  }
+  
+  // Step 3: バージョン一致なら更新不要
+  if(fresh.version === localVersion && localVersion && localData){
+    document.getElementById('loading').classList.remove('show');
+    if(fresh.builtAt){
+      const d=new Date(fresh.builtAt);
+      const ymd=d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+      setStatus(stationData.filter(s=>s.score>0).length+'駅 (更新:'+ymd+')',false);
+    }
+    return;
+  }
+  
+  // Step 4: バージョン更新 or キャッシュなし → 新版で更新
+  console.log('[loadAll] バージョン更新:', localVersion||'(なし)', '→', fresh.version);
+  stationData=STATIONS.map(st=>{
+    const sid=st.id||(st.name+'_'+st.pref);
+    const data=fresh.stations[sid];
+    if(data && data.score !== undefined){
+      return {...st, score:data.score, details:data.details||{}};
+    }
+    return {...st, score:null, details:{}};
+  });
+  
+  // localStorageに保存
+  try{
+    localStorage.setItem(cacheKey, JSON.stringify({
+      version: fresh.version,
+      builtAt: fresh.builtAt,
+      stations: fresh.stations
+    }));
+  }catch(e){
+    // 容量オーバー時は古いキャッシュを削除して再試行
+    console.warn('[loadAll] localStorage保存失敗、古いキャッシュ削除');
+    try{
+      Object.keys(localStorage).filter(k=>k.startsWith('mm_scores_v')||k.startsWith('spc_stable_v')).forEach(k=>{
+        if(k!==cacheKey)localStorage.removeItem(k);
+      });
+      localStorage.setItem(cacheKey, JSON.stringify({
+        version: fresh.version,
+        builtAt: fresh.builtAt,
+        stations: fresh.stations
+      }));
+    }catch(e2){console.error('[loadAll] 再保存も失敗',e2);}
+  }
+  
+  document.getElementById('loading').classList.remove('show');
+  render();
+  
+  if(fresh.builtAt){
+    const d=new Date(fresh.builtAt);
+    const ymd=d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+    setStatus(stationData.filter(s=>s.score>0).length+'駅 (更新:'+ymd+')',false);
+  } else {
     setStatus(stationData.filter(s=>s.score>0).length+'駅表示中',false);
   }
+}
+
+// フォールバック：個別取得（all-scoresが死んだ時のみ）
+async function fallbackIndividualFetch(r){
+  setStatus('個別取得中...',true);
+  let done=0;
+  for(let i=0;i<STATIONS.length;i+=5){
+    await Promise.all(STATIONS.slice(i,i+5).map(async st=>{
+      const d=await fetchOne(st);
+      if(!d){done++;return;}
+      const idx=stationData.findIndex(s=>s.name===st.name&&s.pref===st.pref);
+      if(idx>=0)stationData[idx]={...stationData[idx],score:d.score,details:d.details};
+      done++;
+    }));
+    if(done>=10)document.getElementById('loading').classList.remove('show');
+    render();
+    setStatus(done+'/'+STATIONS.length+' 取得中...',true);
+  }
+  // 旧キャッシュにも保存
+  saveLocal(stationData);
+  render();
+  setStatus(stationData.filter(s=>s.score>0).length+'駅表示中',false);
 }
 
 function getFiltered(){
@@ -5640,6 +5752,7 @@ function openStationCard(data) {
   updateCardFavButton();
   
   document.getElementById('card-modal-bg').classList.add('open');
+  if (window._initCardSwipe) window._initCardSwipe();
 }
 
 window.closeCardModal = function(e) {
@@ -6132,23 +6245,48 @@ window.renderCardListSorted = () => {
   });
 };
 
-// ─── カードモーダル：スワイプで前後カード移動 ───
+// ─── カードモーダル：スワイプで前後カード移動（iPhone写真風滑らか追従） ───
 window._swipeStartX = null;
 window._swipeStartY = null;
+window._swipeActive = false;  // 横スワイプ中フラグ
 window._initCardSwipe = function() {
   const modal = document.getElementById('card-modal');
   if (!modal || modal._swipeInited) return;
   modal._swipeInited = true;
   
+  const getWrap = () => document.getElementById('card-flip-wrap');
+  
   modal.addEventListener('touchstart', function(e) {
     if (!window.cardCloseReturn || window.cardCloseReturn !== 'cardlist') return;
+    if (e.touches.length !== 1) return;
     window._swipeStartX = e.touches[0].clientX;
     window._swipeStartY = e.touches[0].clientY;
+    window._swipeActive = false;
+    // アニメーション一時停止（追従用）
+    const wrap = getWrap();
+    if (wrap) wrap.style.transition = 'none';
+  }, { passive: true });
+  
+  modal.addEventListener('touchmove', function(e) {
+    if (window._swipeStartX === null) return;
+    if (window.cardCloseReturn !== 'cardlist') return;
+    const dx = e.touches[0].clientX - window._swipeStartX;
+    const dy = e.touches[0].clientY - window._swipeStartY;
+    // 横方向の動きが縦より明確に大きい時だけスワイプとして扱う
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      window._swipeActive = true;
+      const wrap = getWrap();
+      if (wrap) {
+        // 指の動きに合わせてカード移動（粘性あり：端で抵抗）
+        wrap.style.transform = `translateX(${dx}px) rotate(${dx * 0.04}deg)`;
+        wrap.style.opacity = `${Math.max(0.4, 1 - Math.abs(dx) / 350)}`;
+      }
+    }
   }, { passive: true });
   
   modal.addEventListener('touchend', function(e) {
     if (window._swipeStartX === null) return;
-    if (!window.cardCloseReturn || window.cardCloseReturn !== 'cardlist') {
+    if (window.cardCloseReturn !== 'cardlist') {
       window._swipeStartX = null; window._swipeStartY = null;
       return;
     }
@@ -6156,17 +6294,58 @@ window._initCardSwipe = function() {
     const dy = e.changedTouches[0].clientY - window._swipeStartY;
     window._swipeStartX = null;
     window._swipeStartY = null;
-    // 横方向の動きが縦方向より大きく、50px以上スワイプ
-    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
-    if (dx < 0) window._navCard(1);   // 左スワイプ → 次へ
-    else window._navCard(-1);          // 右スワイプ → 前へ
+    const wasActive = window._swipeActive;
+    window._swipeActive = false;
+    
+    const wrap = getWrap();
+    if (!wasActive) {
+      // スワイプじゃない（タップなど）→ 戻すだけ
+      if (wrap) {
+        wrap.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+        wrap.style.transform = '';
+        wrap.style.opacity = '';
+      }
+      return;
+    }
+    
+    // スワイプ閾値：80px以上または速い動き
+    const THRESHOLD = 80;
+    if (Math.abs(dx) < THRESHOLD || Math.abs(dy) > Math.abs(dx)) {
+      // 戻す
+      if (wrap) {
+        wrap.style.transition = 'transform 0.25s cubic-bezier(0.2,0.8,0.4,1), opacity 0.25s ease';
+        wrap.style.transform = '';
+        wrap.style.opacity = '';
+      }
+      return;
+    }
+    
+    // ナビゲート前に飛び去るアニメ
+    if (wrap) {
+      wrap.style.transition = 'transform 0.18s ease-out, opacity 0.18s ease-out';
+      wrap.style.transform = `translateX(${dx > 0 ? 400 : -400}px) rotate(${dx > 0 ? 15 : -15}deg)`;
+      wrap.style.opacity = '0';
+    }
+    setTimeout(() => {
+      if (wrap) {
+        wrap.style.transition = 'none';
+        wrap.style.transform = '';
+        wrap.style.opacity = '';
+      }
+      if (dx < 0) window._navCard(1);
+      else window._navCard(-1);
+    }, 160);
   }, { passive: true });
   
-  // キーボード（PC用）：矢印キーでも移動
+  // キーボード（PC用）：IME入力中はスキップ
   document.addEventListener('keydown', function(e) {
+    if (e.isComposing || e.keyCode === 229) return;  // IME入力中
     const bg = document.getElementById('card-modal-bg');
     if (!bg || !bg.classList.contains('open')) return;
     if (window.cardCloseReturn !== 'cardlist') return;
+    // テキスト入力中はナビしない
+    const ae = document.activeElement;
+    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;
     if (e.key === 'ArrowLeft') window._navCard(-1);
     else if (e.key === 'ArrowRight') window._navCard(1);
   });
@@ -7054,23 +7233,37 @@ async function renderWeeklyMission(uid, userCards, userProfile) {
 window._lineShowMore = false;
 window._lastLineResults = null;
 window._lastLineBadges = null;
+
+// グローバルなトグル関数（onclickハンドラから確実に呼べる）
+window.toggleLineMore = function() {
+  window._lineShowMore = !window._lineShowMore;
+  if (window._lastLineResults && window._lastLineBadges) {
+    renderLineBadges(window._lastLineResults, window._lastLineBadges);
+  }
+};
+
 function renderLineBadges(lineResults, userBadges) {
   const el = document.getElementById('bp-line');
   if (!el) return;
+  
+  // データキャッシュを最初に保存（onclickハンドラより前）
+  window._lastLineResults = lineResults;
+  window._lastLineBadges = userBadges;
   
   // デフォルト表示：LINE_ORDERの先頭〜「つくばエクスプレス」まで
   const txIndex = LINE_ORDER.indexOf('つくばエクスプレス');
   const DEFAULT_LINES_SET = new Set(LINE_ORDER.slice(0, txIndex + 1));
   
-  // 仕分け
+  // 仕分け（total>0のみ）
   const defaultLines = [];
   const promotedLines = [];
   const otherLines = [];
   lineResults.forEach(r => {
+    if (!r || r.total === 0) return;
     if (DEFAULT_LINES_SET.has(r.line)) {
       defaultLines.push(r);
     } else if (r.conquered > 0) {
-      promotedLines.push(r);  // チェックインあり → 昇格
+      promotedLines.push(r);
     } else {
       otherLines.push(r);
     }
@@ -7098,22 +7291,19 @@ function renderLineBadges(lineResults, userBadges) {
   let outHtml = '';
   let earnedCount = 0;
   
-  // ① デフォルト路線（つくばエクスプレスまで）
   defaultLines.forEach(r => {
     outHtml += renderItem(r);
     if (r.tier) earnedCount++;
   });
   
-  // ② 昇格路線（その他で1駅以上制覇）
   promotedLines.forEach(r => {
     outHtml += renderItem(r);
     if (r.tier) earnedCount++;
   });
   
-  // ③ 「その他」展開ボタン＋展開エリア
   if (otherLines.length > 0) {
     const isOpen = window._lineShowMore;
-    outHtml += `<div class="bp-line-more-btn" onclick="window._lineShowMore=!window._lineShowMore;renderLineBadges(window._lastLineResults,window._lastLineBadges)">
+    outHtml += `<div class="bp-line-more-btn" onclick="window.toggleLineMore()">
       <div class="bp-icon" style="font-size:18px">${isOpen ? '▲' : '▼'}</div>
       <div class="bp-name">${isOpen ? '閉じる' : 'その他'}</div>
       <div class="bp-sub">${otherLines.length}路線</div>
@@ -7125,10 +7315,6 @@ function renderLineBadges(lineResults, userBadges) {
       });
     }
   }
-  
-  // データキャッシュ
-  window._lastLineResults = lineResults;
-  window._lastLineBadges = userBadges;
   
   el.innerHTML = outHtml || '<div style="grid-column:1/-1;padding:20px;text-align:center;color:#a8b8d0;font-size:13px">路線データがありません</div>';
   
@@ -7267,11 +7453,22 @@ function calcAreaConquest(areaMaster, userCards) {
   });
 }
 
+window.toggleAreaMore = function() {
+  window._areaShowMore = !window._areaShowMore;
+  if (window._lastUserCards && window._lastUserBadges) {
+    _renderAreaBadgesV2(window._lastUserCards, window._lastUserBadges);
+  }
+};
+
 // ─── エリアバッジ描画（折りたたみ対応版） ───
 window._areaShowMore = false;  // 「その他」展開状態
 window._renderAreaBadgesV2 = function(userCards, userBadges) {
   const el = document.getElementById('bp-area');
   if (!el) return;
+  
+  // データキャッシュを最初に保存
+  window._lastUserCards = userCards;
+  window._lastUserBadges = userBadges;
   
   if (!window.STATION_CITIES) {
     el.innerHTML = '<div style="grid-column:1/-1;padding:20px;text-align:center;color:#a8b8d0;font-size:13px">市区町村データを準備中...</div>';
@@ -7362,7 +7559,7 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
   // ③ 「その他」展開ボタン＋展開エリア
   if (otherAreas.length > 0) {
     const isOpen = window._areaShowMore;
-    html += `<div class="bp-area-more-btn" onclick="window._areaShowMore=!window._areaShowMore;_renderAreaBadgesV2(window._lastUserCards,window._lastUserBadges)">
+    html += `<div class="bp-area-more-btn" onclick="window.toggleAreaMore()">
       <div class="bp-icon" style="font-size:18px">${isOpen ? '▲' : '▼'}</div>
       <div class="bp-name">${isOpen ? '閉じる' : 'その他'}</div>
       <div class="bp-sub">${otherAreas.length}エリア</div>
@@ -7374,10 +7571,6 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
       });
     }
   }
-  
-  // データキャッシュ（再描画用）
-  window._lastUserCards = userCards;
-  window._lastUserBadges = userBadges;
   
   el.innerHTML = html || '<div style="grid-column:1/-1;padding:20px;text-align:center;color:#a8b8d0;font-size:13px">エリアデータがありません</div>';
   
