@@ -200,22 +200,23 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .vtab:hover:not(.active){background:rgba(88,168,224,0.10);border-color:rgba(88,168,224,0.35);color:#cfdaee}
 
 @media(max-width:767px){
-  /* Android含む狭幅端末：ロゴ縮小可能化 + 子要素オーバーフロー禁止 */
-  .logo-wrap{flex-shrink:1!important;min-width:0!important;padding:3px 7px!important;gap:5px!important}
-  .logo-icon{width:38px!important;height:38px!important;flex-shrink:0}
+  /* ロゴはほぼ元のサイズに戻す（45px/19px）、視認性最優先 */
+  .logo-wrap{flex-shrink:0!important;min-width:auto!important;padding:3px 8px!important;gap:6px!important}
+  .logo-icon{width:45px!important;height:45px!important;flex-shrink:0}
   .logo-text-block{min-width:0;overflow:hidden}
-  .logo-main{font-size:16px!important;letter-spacing:0.5px!important;overflow:hidden;text-overflow:ellipsis}
-  .logo-megu{font-size:11px!important;letter-spacing:0.3px!important}
-  .logo-sub-en{font-size:8px!important;letter-spacing:1.5px!important}
+  .logo-main{font-size:19px!important;letter-spacing:1px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .logo-megu{font-size:13px!important;letter-spacing:0.5px!important}
+  .logo-sub-en{font-size:9px!important;letter-spacing:2px!important}
   .fsel{font-size:14px!important}
 }
 @media(max-width:767px){
+  /* タブとボタン側を縮小して、ロゴ大きくしても画面内に収まるように */
   .view-tabs{display:flex;gap:2px!important;flex-shrink:0}
   #header{height:64px;padding:0 6px 0 4px!important;gap:4px!important}
   #header{padding-left:max(4px,env(safe-area-inset-left))!important;padding-right:max(6px,env(safe-area-inset-right))!important}
-  .vtab{padding:5px 7px!important;min-width:38px!important;border-radius:10px!important;flex-shrink:0}
-  .vtab-label{font-size:12px!important;letter-spacing:0.5px!important}
-  #header-right{flex-direction:column!important;gap:3px!important;flex-shrink:0}
+  .vtab{padding:4px 5px!important;min-width:34px!important;border-radius:8px!important}
+  .vtab-label{font-size:11px!important;letter-spacing:0.3px!important}
+  #header-right{flex-direction:column!important;gap:2px!important;flex-shrink:0}
   .info-btn{font-size:9px!important;padding:2px 5px!important}
   .user-avatar{width:26px!important;height:26px!important}
 }
@@ -2243,7 +2244,9 @@ body.splashing #table-area{
 
 /* ═══ Phase D-1.5 v2: 細かい修正（index41で再調整） ═══ */
 
-/* 修正1: カードモーダル一画面固定（コンテンツ量で位置がブレないように） */
+/* 修正1: カードモーダル
+   - スマホ：上端固定（コンテンツ量で位置がブレないように）
+   - PC：中央配置 */
 #card-modal-bg{
   overflow:hidden !important;
   overscroll-behavior:contain !important;
@@ -2251,13 +2254,21 @@ body.splashing #table-area{
 }
 #card-modal-bg.open{
   display:flex !important;
+  /* スマホはデフォルトで上端固定 */
   align-items:flex-start !important;
   justify-content:center !important;
   padding:14px 12px !important;
 }
+/* PCサイズは中央寄せに切り替え */
+@media (min-width:768px){
+  #card-modal-bg.open{
+    align-items:center !important;
+    padding:24px 16px !important;
+  }
+}
 #card-modal{
   margin:0 auto !important;
-  /* デフォルト：スクロール禁止＝完全固定。JSでscrollable判定時のみ解除 */
+  /* デフォルト：スクロール禁止＝完全固定 */
   max-height:calc(100vh - 28px) !important;
   max-height:calc(100dvh - 28px) !important;
   overflow:hidden !important;
@@ -2266,11 +2277,6 @@ body.splashing #table-area{
   -webkit-overflow-scrolling:touch;
   /* シンプルな出現アニメ：opacity + scale だけ、過剰最適化なし */
   animation:cardSimpleIn 0.25s ease-out;
-}
-/* 内容が画面より大きい時だけ JS でこのクラスを付与 → スクロール許可 */
-#card-modal.scrollable{
-  overflow-y:auto !important;
-  touch-action:pan-y !important;
 }
 @keyframes cardSimpleIn{
   0%{
@@ -2286,6 +2292,23 @@ body.splashing #table-area{
   #card-modal{
     max-width:380px;
   }
+}
+
+/* スマホ時のカード内部圧縮（S/Aランク3コメント+メモでも収まるように） */
+@media (max-width:767px){
+  .sc-content{padding:14px 16px 18px !important}
+  .sc-station-name{font-size:36px !important;margin:6px 0 6px !important;letter-spacing:3px !important}
+  .sc-line-text{margin-bottom:8px !important;font-size:10.5px !important}
+  .sc-line-bar{margin-bottom:6px !important}
+  .sc-score-row{margin-bottom:8px !important}
+  .sc-score-num{font-size:54px !important}
+  .sc-axes{gap:6px !important;margin-bottom:10px !important}
+  .sc-ax{width:56px !important;height:56px !important}
+  .sc-info-grid{padding-top:8px !important;margin-bottom:8px !important;gap:4px 8px !important}
+  .sc-features{gap:4px !important;margin-bottom:8px !important}
+  .sc-feature{padding:5px 10px !important;font-size:12px !important}
+  .sc-memo-section{margin-top:8px !important}
+  .sc-memo-input{min-height:50px !important;padding:8px !important;font-size:12px !important}
 }
 
 /* 修正2: 街コメント（sc-feature）フォントもう一段上げる 12→13px */
@@ -6574,16 +6597,11 @@ function openStationCard(data) {
   
   document.getElementById('card-modal-bg').classList.add('open');
   if (window._initCardSwipe) window._initCardSwipe();
-  // 内容が画面より大きい場合のみスクロール許可
+  // カードは常に完全固定（スクロール禁止）
+  // 内容が大きい場合の対策はCSS側で内部圧縮済み
   setTimeout(() => {
     const card = document.getElementById('card-modal');
-    if (!card) return;
-    // 初期は固定状態（既にCSSでhidden）
-    card.classList.remove('scrollable');
-    // 内容の実際の高さと枠の高さを比較
-    if (card.scrollHeight > card.clientHeight + 2) {
-      card.classList.add('scrollable');
-    }
+    if (card) card.classList.remove('scrollable');
   }, 50);
 }
 
