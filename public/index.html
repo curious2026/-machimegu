@@ -50,6 +50,75 @@
   });
 })();
 </script>
+<!-- ═══ Sentry エラー監視 ═══ -->
+<script
+  src="https://js.sentry-cdn.com/6fd4e6d2fd1031e86e3c1acac510e894.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+// Sentry初期化（onLoadで遅延、エラー時もアプリは動く）
+if (typeof Sentry !== 'undefined' && Sentry.onLoad) {
+  Sentry.onLoad(function(){
+    try {
+      Sentry.init({
+        // beforeSend: 送信前にフィルタリング
+        beforeSend: function(event, hint) {
+          // ─── ① ともき本人除外（localStorageフラグ or URLパラメータ or UID）───
+          try {
+            if (localStorage.getItem('mm_sentry_disabled') === '1') return null;
+            if (new URLSearchParams(location.search).get('nosentry') === '1') return null;
+            // UID除外（auth がロード済みの場合のみ）
+            if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+              const uid = window.firebaseAuth.currentUser.uid;
+              if (window.TOMOKI_UIDS && window.TOMOKI_UIDS.includes(uid)) return null;
+            }
+          } catch(e) {}
+          // ─── ② ブラウザ拡張機能由来のノイズエラーは除外 ───
+          if (event.exception && event.exception.values && event.exception.values[0]) {
+            const ex = event.exception.values[0];
+            if (ex.stacktrace && ex.stacktrace.frames) {
+              for (const f of ex.stacktrace.frames) {
+                if (f.filename && (
+                  f.filename.indexOf('chrome-extension://') >= 0 ||
+                  f.filename.indexOf('moz-extension://') >= 0 ||
+                  f.filename.indexOf('safari-extension://') >= 0 ||
+                  f.filename.indexOf('safari-web-extension://') >= 0
+                )) {
+                  return null;
+                }
+              }
+            }
+          }
+          return event;
+        },
+        // ノイズメッセージのフィルタ
+        ignoreErrors: [
+          'ResizeObserver loop limit exceeded',
+          'ResizeObserver loop completed with undelivered notifications',
+          'Non-Error promise rejection captured',
+          'Script error.',
+          'Network request failed',
+          // Firebase関連のよくあるノイズ
+          'auth/network-request-failed',
+          'auth/cancelled-popup-request',
+          'auth/popup-closed-by-user'
+        ]
+      });
+    } catch(e) {
+      console.warn('[Sentry] init failed:', e);
+    }
+  });
+}
+// ─── ともき向けユーティリティ（ブラウザコンソールから操作可） ───
+window.mmDisableSentry = function(){
+  localStorage.setItem('mm_sentry_disabled', '1');
+  console.log('[Sentry] このブラウザのエラー監視をOFFにしました');
+};
+window.mmEnableSentry = function(){
+  localStorage.removeItem('mm_sentry_disabled');
+  console.log('[Sentry] このブラウザのエラー監視をONにしました');
+};
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -269,9 +338,16 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 #loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
   background:rgba(15,24,48,0.78);z-index:3000;backdrop-filter:blur(4px)}
 #loading.show{display:flex}
+.ld-content{text-align:center;padding:20px;max-width:280px}
 .ld-ring{width:36px;height:36px;border:2px solid rgba(255,255,255,0.07);border-top-color:#5a88ff;
   border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
-.ld-txt{font-size:12px;color:#7080b8;font-weight:600;text-align:center}
+.ld-txt{font-size:13px;color:#b0c0e0;font-weight:600;text-align:center;line-height:1.5}
+.ld-detail{font-size:11.5px;color:#7080b0;margin-top:10px;line-height:1.6;display:none}
+.ld-actions{display:none;flex-direction:column;gap:8px;margin-top:16px;align-items:center}
+.ld-retry{background:linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%);color:#fff;border:none;
+  border-radius:10px;padding:10px 24px;font-size:13px;font-weight:800;cursor:pointer;
+  font-family:inherit;box-shadow:0 4px 16px rgba(56,189,248,0.35);min-width:120px}
+.ld-retry:active{transform:scale(0.97)}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes selPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
 
@@ -3282,7 +3358,7 @@ body.checkin-active #checkin-indicator{
         <div class="ip-axes-grid" id="ip-axes"></div>
         <div class="ip-checkin" id="ip-checkin" style="display:none"></div>
       </div>
-      <div id="loading"><div><div class="ld-ring"></div><div class="ld-txt">データ取得中...</div></div></div>
+      <div id="loading"><div class="ld-content"><div class="ld-ring"></div><div class="ld-txt" id="ld-txt">データ取得中...</div><div class="ld-detail" id="ld-detail"></div><div class="ld-actions" id="ld-actions"><button class="ld-retry" onclick="window.retryLoad && window.retryLoad()">🔄 リトライ</button></div></div></div>
     </div>
     <div id="table-area">
       <div id="rank-tabs">
@@ -4793,6 +4869,71 @@ function migrateOldCache(){
     return null;
   }
 }
+
+// ─── ローディング画面の長時間化対策（タイムアウト＆リトライUI） ───
+let loadingTimers = [];
+let lastRadius = null;
+function cancelLoadingTimers() {
+  loadingTimers.forEach(t => clearTimeout(t));
+  loadingTimers = [];
+  const txt = document.getElementById('ld-txt');
+  const detail = document.getElementById('ld-detail');
+  const actions = document.getElementById('ld-actions');
+  if (txt) txt.textContent = 'データ取得中...';
+  if (detail) { detail.style.display = 'none'; detail.textContent = ''; }
+  if (actions) actions.style.display = 'none';
+}
+function startLoadingTimers() {
+  cancelLoadingTimers();
+  const txt = document.getElementById('ld-txt');
+  const detail = document.getElementById('ld-detail');
+  const actions = document.getElementById('ld-actions');
+  // 5秒：「もう少しお待ちください」
+  loadingTimers.push(setTimeout(() => {
+    if (txt) txt.textContent = 'もう少しお待ちください...';
+  }, 5000));
+  // 15秒：詳細表示
+  loadingTimers.push(setTimeout(() => {
+    if (txt) txt.textContent = '読み込みに時間がかかっています';
+    if (detail) {
+      detail.style.display = 'block';
+      detail.textContent = 'ネットワーク状況をご確認ください';
+    }
+  }, 15000));
+  // 30秒：リトライボタン
+  loadingTimers.push(setTimeout(() => {
+    if (txt) txt.textContent = '読み込みが完了しません';
+    if (detail) {
+      detail.style.display = 'block';
+      detail.textContent = '通信環境を確認してリトライしてください';
+    }
+    if (actions) actions.style.display = 'flex';
+  }, 30000));
+}
+// #loading の表示変化を監視してタイマー連動
+(function setupLoadingObserver(){
+  const ld = document.getElementById('loading');
+  if (!ld) return;
+  const observer = new MutationObserver(() => {
+    if (ld.classList.contains('show')) {
+      startLoadingTimers();
+    } else {
+      cancelLoadingTimers();
+    }
+  });
+  observer.observe(ld, { attributes: true, attributeFilter: ['class'] });
+})();
+// リトライボタンから呼ばれる
+window.retryLoad = function() {
+  console.log('[retryLoad] ユーザーリトライ要求');
+  cancelLoadingTimers();
+  // loadAllを再起動
+  if (typeof loadAll === 'function') {
+    loadAll().catch(e => console.warn('[retryLoad] failed:', e));
+  } else {
+    location.reload();
+  }
+};
 
 async function loadAll(){
   const r=getRadius();
@@ -8912,6 +9053,50 @@ window.openBadgePage = async function() {
 <script>
 // ═══ 起動安定化A (index45): Service Worker 登録＋更新管理 ═══
 if ('serviceWorker' in navigator) {
+  // ─── 更新通知バナーを表示する関数 ───
+  function showUpdateBanner(newWorker) {
+    // 既にバナーが出てる場合は無視
+    if (document.getElementById('sw-update-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'sw-update-banner';
+    banner.style.cssText = `
+      position:fixed;left:50%;top:14px;transform:translateX(-50%);
+      background:linear-gradient(135deg,#22d3ee 0%,#3b82f6 60%,#2563eb 100%);
+      color:#fff;padding:12px 18px;border-radius:14px;z-index:10000;
+      box-shadow:0 8px 28px rgba(56,189,248,0.5),0 2px 8px rgba(0,0,0,0.3);
+      font-size:13px;font-weight:700;font-family:inherit;
+      display:flex;align-items:center;gap:12px;max-width:92vw;
+      animation:swBannerSlide 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    `;
+    banner.innerHTML = `
+      <span>🆕 新しいバージョンが利用可能</span>
+      <button id="sw-update-btn" style="background:rgba(255,255,255,0.25);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:0.3px">更新</button>
+      <button id="sw-update-later" style="background:transparent;color:rgba(255,255,255,0.85);border:none;padding:7px 4px;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">後で</button>
+    `;
+    document.body.appendChild(banner);
+    // アニメーションのkeyframesを動的追加
+    if (!document.getElementById('sw-banner-style')) {
+      const s = document.createElement('style');
+      s.id = 'sw-banner-style';
+      s.textContent = '@keyframes swBannerSlide{from{opacity:0;transform:translate(-50%,-30px)}to{opacity:1;transform:translate(-50%,0)}}';
+      document.head.appendChild(s);
+    }
+    document.getElementById('sw-update-btn').onclick = () => {
+      newWorker.postMessage('SKIP_WAITING');
+      banner.innerHTML = '<span>🔄 更新中...</span>';
+    };
+    document.getElementById('sw-update-later').onclick = () => {
+      banner.remove();
+    };
+    // 60秒経過しても操作されなければ自動で更新
+    setTimeout(() => {
+      if (document.getElementById('sw-update-banner')) {
+        console.log('[SW] 60秒経過、自動更新');
+        newWorker.postMessage('SKIP_WAITING');
+      }
+    }, 60000);
+  }
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then(reg => {
@@ -8920,16 +9105,16 @@ if ('serviceWorker' in navigator) {
         // 起動時に必ず更新チェック
         reg.update().catch(()=>{});
         
-        // 新しいSWが見つかったら通知
+        // 新しいSWが見つかったら通知バナー表示
         reg.addEventListener('updatefound', () => {
           const nw = reg.installing;
           if (!nw) return;
           console.log('[SW] 新版を検出、インストール開始');
           nw.addEventListener('statechange', () => {
             if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-              // 既存SWがある＆新SWがインストール完了 = 古いHTMLが動いてる可能性
-              console.log('[SW] 新版インストール完了、SKIP_WAITINGを送信');
-              nw.postMessage('SKIP_WAITING');
+              // 既存SWがある＆新SWがインストール完了 = 更新可能
+              console.log('[SW] 新版インストール完了、通知バナー表示');
+              showUpdateBanner(nw);
             }
           });
         });
