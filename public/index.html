@@ -1969,14 +1969,17 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 #gpsBtn .pin-icon{font-size:24px}
 
-/* ═══ TOP画面 フワッと浮かび上がりフェード ═══ */
-body.splashing #topbar,
-body.splashing #content,
-body.splashing #table-area{
-  opacity:0;
-}
+/* ═══ TOP画面 フワッと浮かび上がりフェード ═══
+   起動時にマップが一瞬見える問題を防ぐため、
+   #topbar #content #table-area は初期非表示で、splashing解除時にfade-in */
 #topbar,#content,#table-area{
+  opacity:0;
   transition:opacity 850ms cubic-bezier(0.22,0.61,0.36,1);
+}
+body:not(.splashing) #topbar,
+body:not(.splashing) #content,
+body:not(.splashing) #table-area{
+  opacity:1;
 }
 
 /* ═══ Phase D-1: バッジコレクション 棚案B（プレミアムガラスケース） ═══ */
@@ -2114,6 +2117,42 @@ body.splashing #table-area{
 .bp-badge-checkin .bp-num-label{
   font-size:11px;font-weight:700;margin-top:2px;letter-spacing:1px;opacity:0.9;
 }
+
+/* 同駅リピート称号バッジ：角丸スクエア＋tier別配色 */
+.bp-badge-repeat{
+  border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px 6px;color:#fff;
+  border:2px solid rgba(255,255,255,0.22);
+  box-shadow:inset 0 -8px 16px rgba(0,0,0,0.18),inset 0 3px 8px rgba(255,255,255,0.22);
+  cursor:pointer;
+  transition:transform 0.2s;
+}
+.bp-badge-repeat:active{transform:scale(0.96)}
+.bp-repeat-emoji{
+  font-size:28px;line-height:1;margin-bottom:4px;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+.bp-badge-repeat .bp-name{
+  font-size:12px;font-weight:900;line-height:1.15;
+  text-align:center;color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,0.45);
+  word-break:keep-all;overflow-wrap:anywhere;max-width:100%;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.bp-badge-repeat .bp-sub{
+  font-size:10px;font-weight:800;margin-top:3px;letter-spacing:1px;opacity:0.95;
+  text-shadow:0 1px 2px rgba(0,0,0,0.45);
+}
+/* tier別カラー */
+.bp-repeat-jouren{    background:linear-gradient(135deg,#92733a 0%,#6a5230 60%,#4a3820 100%); }
+.bp-repeat-mania{     background:linear-gradient(135deg,#e84d3c 0%,#c0341e 60%,#902614 100%); }
+.bp-repeat-ikijibiki{ background:linear-gradient(135deg,#4a90c8 0%,#2e6ba0 60%,#1e4a78 100%); }
+.bp-repeat-kami{      background:linear-gradient(135deg,#fbd56a 0%,#e0b04a 50%,#a8821e 100%);
+  border-color:rgba(255,255,255,0.5);
+  box-shadow:inset 0 -8px 16px rgba(255,255,255,0.18),inset 0 4px 10px rgba(255,255,255,0.45),0 0 16px rgba(251,213,106,0.3);
+}
+.bp-repeat-kami .bp-name,.bp-repeat-kami .bp-sub{color:#3a2a08;text-shadow:0 1px 2px rgba(255,255,255,0.4)}
 
 /* 週間ミッション：六角形（縦長） */
 .bp-mission-card{
@@ -2275,8 +2314,23 @@ body.splashing #table-area{
   overscroll-behavior:contain !important;
   touch-action:none !important;
   -webkit-overflow-scrolling:touch;
-  /* シンプルな出現アニメ：opacity + scale だけ、過剰最適化なし */
+  width:100%;
+  /* シンプルな出現アニメ */
   animation:cardSimpleIn 0.25s ease-out;
+}
+/* スマホ時：カードを画面いっぱい使う */
+@media (max-width:767px){
+  #card-modal{
+    height:calc(100vh - 28px) !important;
+    height:calc(100dvh - 28px) !important;
+    display:flex !important;
+    flex-direction:column !important;
+  }
+  #card-modal #station-card{
+    flex:1 1 auto !important;
+    display:flex !important;
+    flex-direction:column !important;
+  }
 }
 @keyframes cardSimpleIn{
   0%{
@@ -2294,21 +2348,35 @@ body.splashing #table-area{
   }
 }
 
-/* スマホ時のカード内部圧縮（S/Aランク3コメント+メモでも収まるように） */
+/* スマホ時のカード内部
+   - フル装飾でも画面に収まる範囲で、できるだけ自然な大きさを維持
+   - メモ欄を flex で残り領域埋める → 画面下端まで使い切る */
 @media (max-width:767px){
-  .sc-content{padding:14px 16px 18px !important}
-  .sc-station-name{font-size:36px !important;margin:6px 0 6px !important;letter-spacing:3px !important}
-  .sc-line-text{margin-bottom:8px !important;font-size:10.5px !important}
-  .sc-line-bar{margin-bottom:6px !important}
-  .sc-score-row{margin-bottom:8px !important}
-  .sc-score-num{font-size:54px !important}
-  .sc-axes{gap:6px !important;margin-bottom:10px !important}
-  .sc-ax{width:56px !important;height:56px !important}
-  .sc-info-grid{padding-top:8px !important;margin-bottom:8px !important;gap:4px 8px !important}
-  .sc-features{gap:4px !important;margin-bottom:8px !important}
-  .sc-feature{padding:5px 10px !important;font-size:12px !important}
-  .sc-memo-section{margin-top:8px !important}
-  .sc-memo-input{min-height:50px !important;padding:8px !important;font-size:12px !important}
+  /* カード全体を flex column にして、メモ欄を伸縮させる */
+  #station-card{display:flex !important;flex-direction:column !important;height:auto !important}
+  .sc-content{
+    padding:16px 18px 20px !important;
+    display:flex !important;flex-direction:column !important;
+    height:auto !important;
+  }
+  .sc-station-name{font-size:40px !important;margin:8px 0 8px !important;letter-spacing:4px !important}
+  .sc-line-text{margin-bottom:10px !important;font-size:11px !important}
+  .sc-line-bar{margin-bottom:8px !important}
+  .sc-score-row{margin-bottom:12px !important}
+  .sc-score-num{font-size:60px !important}
+  .sc-axes{gap:8px !important;margin-bottom:14px !important}
+  .sc-ax{width:60px !important;height:60px !important}
+  .sc-info-grid{padding-top:10px !important;margin-bottom:10px !important;gap:5px 8px !important}
+  .sc-features{gap:5px !important;margin-bottom:10px !important}
+  .sc-feature{padding:6px 11px !important;font-size:12.5px !important}
+  /* メモ欄は残り領域を埋めて画面下端まで広がる */
+  .sc-memo{margin-top:auto !important;display:flex !important;flex-direction:column !important}
+  .sc-memo-content{
+    min-height:60px !important;
+    flex:1 1 auto !important;
+    padding:10px !important;
+    font-size:13px !important;
+  }
 }
 
 /* 修正2: 街コメント（sc-feature）フォントもう一段上げる 12→13px */
@@ -3361,12 +3429,12 @@ body.checkin-active #checkin-indicator{
       <option value="S">S</option><option value="A">A</option>
       <option value="B">B</option><option value="C">C</option><option value="D">D</option>
     </select>
-    <button id="favFilter" onclick="toggleFavFilter()">♥</button>
     <select class="fsel" id="radiusSelect" onchange="onRadiusChange()">
       <option value="500" selected>500m</option>
       <option value="800">800m</option>
       <option value="1200">1.2km</option>
     </select>
+    <button id="favFilter" onclick="toggleFavFilter()">♥</button>
     <span id="statusbar"></span>
   </div>
 
@@ -3872,6 +3940,8 @@ body.checkin-active #checkin-indicator{
       <div id="bp-mission"></div>
       <div class="bp-section-title">チェックイン数<span class="bp-section-count" id="bp-checkin-count">0 獲得</span></div>
       <div class="bp-grid" id="bp-checkin"></div>
+      <div class="bp-section-title">同じ街の称号<span class="bp-section-count" id="bp-repeat-count">0 獲得</span></div>
+      <div class="bp-grid" id="bp-repeat"></div>
       <div class="bp-section-title">週間ミッション達成<span class="bp-mission-total" id="bp-mission-total">累計 0回達成</span><span class="bp-section-count" id="bp-mission-count">0 獲得</span></div>
       <div class="bp-grid" id="bp-mission-badges"></div>
       <div class="bp-section-title">ランク制覇<span class="bp-section-count" id="bp-rank-count">0 獲得</span></div>
@@ -5203,8 +5273,8 @@ function getVisible(){
 function drawMarker(st){
   const{rank,color,glow}=getRank(st.score);
   const sz=Math.max(44,Math.round(32+(st.score/1000)*54));
-  // ★ フォントサイズUP: 数字+1, ランク+2
-  const sf=Math.round(sz*0.30)+1,rf=Math.round(sz*0.21)+2,nf=Math.max(10,Math.round(sz*0.155)+1);
+  // ★ フォントサイズUP: 数字+2, ランク+3, 駅名+2 (前回からさらに+1)
+  const sf=Math.round(sz*0.30)+2,rf=Math.round(sz*0.21)+3,nf=Math.max(11,Math.round(sz*0.155)+2);
   const glowPx=Math.round(sz*0.52);
   // ★ チェックイン済み判定
   const isCheckedIn = window.checkedInStations && window.checkedInStations.has(st.name+'_'+st.pref);
@@ -6705,7 +6775,7 @@ window.updateCardFavButton = function() {
 window.shareCard = async function() {
   if (!currentCardStation) return;
   const url = location.href.split('?')[0];
-  const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を制覇！\n街力 ${currentCardStation.score} (${currentCardStation.rank}ランク)\n${url}`;
+  const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を訪問！\n街力 ${currentCardStation.score} (${currentCardStation.rank}ランク)\n${url}`;
   if (navigator.share) {
     try { await navigator.share({title:'街巡-まちめぐ-', text, url}); } catch(e) {}
   } else {
@@ -7959,6 +8029,40 @@ async function checkAndAwardBadges(uid) {
     }
   } catch(e) { console.error(e); }
   
+  // ─── 同駅リピート称号バッジ（10/30/60/100回）───
+  // 「○○の常連」「○○マニア」「○○の生き字引」「○○の神」
+  const REPEAT_TIERS = [
+    { count: 10,  suffix: 'の常連',     id: 'jouren' },
+    { count: 30,  suffix: 'マニア',     id: 'mania' },
+    { count: 60,  suffix: 'の生き字引', id: 'ikijibiki' },
+    { count: 100, suffix: 'の神',       id: 'kami' }
+  ];
+  userCards.forEach(card => {
+    const vc = card.visitCount || 1;
+    const stationName = card.name || (card.stationId ? card.stationId.split('_')[0] : '');
+    if (!stationName) return;
+    REPEAT_TIERS.forEach(tier => {
+      if (vc >= tier.count) {
+        const badgeId = `repeat_${tier.id}_${card.stationId}`;
+        if (!userBadges.has(badgeId)) {
+          const badge = {
+            id: badgeId,
+            type: 'repeat',
+            tier: tier.id,
+            count: tier.count,
+            stationId: card.stationId,
+            stationName: stationName,
+            name: `${stationName}${tier.suffix}`,
+            desc: `同じ駅に${tier.count}回チェックインの証`
+          };
+          persistBadge(uid, badgeId, badge);
+          userBadges.set(badgeId, badge);
+          newlyEarned.push(badge);
+        }
+      }
+    });
+  });
+  
   return newlyEarned;
 }
 
@@ -8034,6 +8138,20 @@ function renderBadgeHTML(b, big) {
       <div class="bp-num-label">CHECKINS</div>
     </div>`;
   }
+  if (b.type === 'repeat') {
+    const tierMap = {
+      jouren:    { label: '常連',     emoji: '☕' },
+      mania:     { label: 'マニア',    emoji: '🔥' },
+      ikijibiki: { label: '生き字引', emoji: '📚' },
+      kami:      { label: '神',       emoji: '⛩' }
+    };
+    const t = tierMap[b.tier] || { label: '?', emoji: '★' };
+    return `<div class="bp-badge bp-badge-repeat bp-repeat-${b.tier}">
+      <div class="bp-repeat-emoji">${t.emoji}</div>
+      <div class="bp-name">${b.stationName || b.name || ''}</div>
+      <div class="bp-sub">${t.label}</div>
+    </div>`;
+  }
   return '';
 }
 
@@ -8067,7 +8185,7 @@ window.openBadgePage = async () => {
   const user = auth.currentUser;
   
   // ローディング状態
-  ['bp-mission','bp-line','bp-rank','bp-area','bp-checkin'].forEach(id => {
+  ['bp-mission','bp-line','bp-rank','bp-area','bp-checkin','bp-repeat'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '<div style="grid-column:1/-1;padding:20px 12px;text-align:center;color:#a8b8d0;font-size:13px">読み込み中...</div>';
   });
@@ -8104,7 +8222,66 @@ window.openBadgePage = async () => {
   
   // チェックイン数
   renderCheckinBadges(totalCheckins, userBadges);
+  
+  // 同駅リピート称号バッジ
+  renderRepeatBadges(userCards, userBadges);
 };
+
+// ─── 同駅リピート称号バッジ描画 ───
+function renderRepeatBadges(userCards, userBadges) {
+  const el = document.getElementById('bp-repeat');
+  if (!el) return;
+  const REPEAT_TIERS = [
+    { count: 10,  suffix: 'の常連',     id: 'jouren',    label: '常連',     emoji: '☕' },
+    { count: 30,  suffix: 'マニア',     id: 'mania',     label: 'マニア',    emoji: '🔥' },
+    { count: 60,  suffix: 'の生き字引', id: 'ikijibiki', label: '生き字引', emoji: '📚' },
+    { count: 100, suffix: 'の神',       id: 'kami',      label: '神',       emoji: '⛩' }
+  ];
+  
+  // 各駅×各tierで達成してるバッジを集計
+  const earnedBadges = [];
+  userCards.forEach(card => {
+    const vc = card.visitCount || 1;
+    const stationName = card.name || (card.stationId ? card.stationId.split('_')[0] : '');
+    if (!stationName) return;
+    REPEAT_TIERS.forEach(tier => {
+      if (vc >= tier.count) {
+        const badgeId = `repeat_${tier.id}_${card.stationId}`;
+        const badgeData = userBadges.get(badgeId) || {
+          id: badgeId, type: 'repeat', tier: tier.id, count: tier.count,
+          stationId: card.stationId, stationName: stationName,
+          name: `${stationName}${tier.suffix}`,
+          desc: `同じ駅に${tier.count}回チェックインの証`
+        };
+        earnedBadges.push({ ...badgeData, label: tier.label, emoji: tier.emoji });
+      }
+    });
+  });
+  
+  // 並び順：count降順（神 → 生き字引 → マニア → 常連）→ stationName
+  earnedBadges.sort((a,b) => (b.count - a.count) || a.stationName.localeCompare(b.stationName));
+  
+  // カウンター更新
+  const counter = document.getElementById('bp-repeat-count');
+  if (counter) counter.textContent = `${earnedBadges.length} 獲得`;
+  
+  if (earnedBadges.length === 0) {
+    el.innerHTML = `<div style="grid-column:1/-1;padding:18px 12px;text-align:center;color:#a8b8d0;font-size:12px;line-height:1.6">
+      同じ駅に10回チェックインで「常連」獲得！<br>
+      <span style="font-size:11px;color:#7a96b6">30回マニア / 60回生き字引 / 100回神</span>
+    </div>`;
+    return;
+  }
+  
+  el.innerHTML = earnedBadges.map(b => {
+    const enc = encodeURIComponent(JSON.stringify(b));
+    return `<div class="bp-badge bp-badge-repeat bp-repeat-${b.tier}" onclick="showBadgeDetail('${enc}')">
+      <div class="bp-repeat-emoji">${b.emoji}</div>
+      <div class="bp-name">${b.stationName}</div>
+      <div class="bp-sub">${b.label}</div>
+    </div>`;
+  }).join('');
+}
 
 async function renderWeeklyMission(uid, userCards, userProfile) {
   const el = document.getElementById('bp-mission');
