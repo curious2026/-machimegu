@@ -197,7 +197,16 @@ const AXIS_MAP = {
   dentist:'医療', doctors:'医療', nursing_home:'医療'
 };
 const AXES    = ['飲食','商業','生活','医療'];
-const MAX_PTS = {'飲食':350, '商業':350, '生活':200, '医療':100};
+const MAX_PTS = {'飲食':300, '商業':300, '生活':200, '医療':100};
+const BONUS_MAX_PTS = 100;
+const BONUS_RADIUS_M = 800;
+
+// ═══ ボーナス対象施設マスター（手動キュレーション、332件）═══
+// 配点：大学(本部)15、サテライト5、大学病院15、大規模病院8、
+//      大規模公園10/中規模5、著名寺社10/地域有力5、ミュージアム5-8、ランドマーク5-10
+// 商業施設は除外（既存4軸でカウント済み）
+// 別ファイル bonus_facilities_data.js から読み込み
+const { BONUS_FACILITIES, CAT_LABEL } = require('./bonus_facilities_data.js');
 
 // ═══ globalMax（プリ計算で動的決定） ═══
 // 各半径ごとに、全駅で最大の生カウントをmax基準とする
@@ -206,6 +215,42 @@ let globalMaxByRadius = {
   '800':  {'飲食':2459, '商業':500, '生活':600, '医療':200},
   '1200': {'飲食':3500, '商業':720, '生活':850, '医療':280}
 };
+
+// ═══ 距離計算（Haversine、ボーナス用） ═══
+function distM(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const rad1 = lat1 * Math.PI / 180;
+  const rad2 = lat2 * Math.PI / 180;
+  const dlat = (lat2 - lat1) * Math.PI / 180;
+  const dlng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dlat/2) ** 2 + Math.cos(rad1) * Math.cos(rad2) * Math.sin(dlng/2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ═══ ボーナス計算（駅座標 → ボーナス点 + 内訳） ═══
+// 戻り値: { pts: number(0-100), capped: bool, items: [{cat, name, pts, dist}] }
+function calcBonus(stLat, stLng) {
+  const items = [];
+  let raw = 0;
+  for (const [cat, list] of Object.entries(BONUS_FACILITIES)) {
+    for (const f of list) {
+      const d = distM(stLat, stLng, f.lat, f.lng);
+      if (d <= BONUS_RADIUS_M) {
+        items.push({ cat, name: f.name, pts: f.pts, dist: Math.round(d) });
+        raw += f.pts;
+      }
+    }
+  }
+  // 点数降順、同点は距離昇順
+  items.sort((a, b) => (b.pts - a.pts) || (a.dist - b.dist));
+  const capped = raw > BONUS_MAX_PTS;
+  return {
+    pts: Math.min(BONUS_MAX_PTS, raw),
+    raw: raw,
+    capped: capped,
+    items: items
+  };
+}
 
 // ランク判定
 function calcRank(score) {
@@ -223,7 +268,9 @@ function logScore(count, maxCount, maxPts) {
   return Math.min(maxPts, Math.round(ratio * maxPts));
 }
 
-function calcScore(counts, radius) {
+// 街力スコア計算（4軸＋ボーナス＝1000点満点）
+// bonusObj は { pts, items, raw, capped } 形式（calcBonus()の戻り値）
+function calcScore(counts, radius, bonusObj) {
   const gMax = globalMaxByRadius[String(radius)] || globalMaxByRadius['800'];
   const details = {};
   let total = 0;
@@ -232,6 +279,17 @@ function calcScore(counts, radius) {
     details[axis] = { count: counts[axis], pts, max: MAX_PTS[axis] };
     total += pts;
   });
+  // ボーナス軸を追加
+  const bonusPts = (bonusObj && typeof bonusObj.pts === 'number') ? bonusObj.pts : 0;
+  details['ボーナス'] = {
+    count: (bonusObj && bonusObj.items) ? bonusObj.items.length : 0,
+    pts: bonusPts,
+    max: BONUS_MAX_PTS,
+    raw: (bonusObj && bonusObj.raw) || 0,
+    capped: !!(bonusObj && bonusObj.capped),
+    items: (bonusObj && bonusObj.items) || []
+  };
+  total += bonusPts;
   const score = Math.min(1000, total);
   return { score, details, rank: calcRank(score) };
 }
@@ -319,6 +377,11 @@ async function computeRawCountsForStations(stations, intoData) {
         const counts = await getRawCounts(st.lat, st.lng, r);
         if (!intoData[sid]) intoData[sid] = {};
         intoData[sid][`r${r}_raw`] = counts;
+        // 座標と名前情報を保存（ボーナス計算用）
+        intoData[sid].lat = st.lat;
+        intoData[sid].lng = st.lng;
+        intoData[sid].name = st.name;
+        intoData[sid].pref = st.pref;
       } catch(e) {
         buildState.errors++;
         console.warn(`[rebuild] エラー ${sid} r=${r}:`, e.message);
@@ -361,10 +424,16 @@ function recalcGlobalMax(stationsData) {
 function recomputeScoresForStations(stationsData, targetIds = null) {
   Object.entries(stationsData).forEach(([sid, stData]) => {
     if (targetIds && !targetIds.has(sid)) return;
+    // ボーナスは座標から計算（保存済みなら再利用）
+    let bonusObj = stData.bonus;
+    if (!bonusObj && stData.lat && stData.lng) {
+      bonusObj = calcBonus(stData.lat, stData.lng);
+      stData.bonus = bonusObj;
+    }
     for (const r of RADII) {
       const counts = stData[`r${r}_raw`];
       if (counts) {
-        stData[`r${r}`] = calcScore(counts, r);
+        stData[`r${r}`] = calcScore(counts, r, bonusObj);
       }
     }
   });
@@ -462,9 +531,15 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
             if (stData[`r${r}_raw`]) hasRaw = true;
           }
           if (hasRaw) {
+            // ボーナス（座標から計算、保存済みなら再利用）
+            let bonusObj = stData.bonus;
+            if (!bonusObj && stData.lat && stData.lng) {
+              bonusObj = calcBonus(stData.lat, stData.lng);
+              stData.bonus = bonusObj;
+            }
             for (const r of RADII) {
               if (stData[`r${r}_raw`]) {
-                stData[`r${r}`] = calcScore(stData[`r${r}_raw`], r);
+                stData[`r${r}`] = calcScore(stData[`r${r}_raw`], r, bonusObj);
               }
             }
             recomputedCount++;
@@ -634,7 +709,8 @@ app.get('/api/score', async (req, res) => {
     // プリ計算にない（新規駅など）→ 動的計算
     console.log(`[/api/score] cache miss: ${llStr} r=${r}`);
     const counts = await getRawCounts(lat, lng, r);
-    const result = calcScore(counts, r);
+    const bonusObj = calcBonus(lat, lng);
+    const result = calcScore(counts, r, bonusObj);
     res.json({ ...result, cached: false });
     
   } catch(e) {
@@ -797,7 +873,8 @@ app.get('/api/test', async (req, res) => {
   try {
     const r = parseInt(req.query.radius) || 800;
     const counts = await getRawCounts(35.6896, 139.7006, r);
-    const result = calcScore(counts, r);
+    const bonusObj = calcBonus(35.6896, 139.7006);
+    const result = calcScore(counts, r, bonusObj);
     res.json({ 
       ok: true, 
       source: 'Overture Maps 2026-04-15', 
