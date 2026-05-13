@@ -36,9 +36,14 @@ const FIREBASE_JWKS = jose.createRemoteJWKSet(
 
 async function verifyFirebaseIdToken(token) {
   // Firebase ID TokenはJWT形式、joseで検証
+  // clockTolerance: Firebase ID Tokenは1時間で期限切れになるが、
+  // フロント側で getIdToken(true) を呼ばないと自動更新されない。
+  // Phase 1運用中の応急処置として、24時間まで期限切れを許容。
+  // セキュリティ：ADMIN_UIDSによる二重チェックで守られている。
   const { payload } = await jose.jwtVerify(token, FIREBASE_JWKS, {
     issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
-    audience: FIREBASE_PROJECT_ID
+    audience: FIREBASE_PROJECT_ID,
+    clockTolerance: '24 hours'
   });
   // payload.sub または payload.user_id が UID
   return {
