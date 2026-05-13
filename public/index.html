@@ -10176,13 +10176,16 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <!-- ============================================================ -->
-<!-- 街力カード 季節・時刻・天気判定（index78追加 / 既存JS不変） -->
+<!-- 街力カード 季節・時刻・天気判定 v2（案A駅座標+過去カードランダム） -->
 <!-- ============================================================ -->
 <script>
 (function(){
   'use strict';
 
-  /* ----- 季節判定（春3-5、夏6-8、秋9-11、冬12-2） ----- */
+  const MM_RECORDS_KEY = 'mm_weather_records';
+  const MM_CACHE_MIN = 10; // 天気API キャッシュ分
+
+  /* ---------- ユーティリティ ---------- */
   function mmGetSeason(){
     const m = new Date().getMonth() + 1;
     if(m >= 3 && m <= 5) return 'spring';
@@ -10190,8 +10193,6 @@ if ('serviceWorker' in navigator) {
     if(m >= 9 && m <= 11) return 'autumn';
     return 'winter';
   }
-
-  /* ----- 時刻判定（朝5-9、昼10-15、夕16-18、夜19-4） ----- */
   function mmGetTime(){
     const h = new Date().getHours();
     if(h >= 5 && h < 10) return 'morning';
@@ -10199,17 +10200,70 @@ if ('serviceWorker' in navigator) {
     if(h >= 16 && h < 19) return 'evening';
     return 'night';
   }
+  function mmStationKey(station){
+    if(!station) return '';
+    return (station.name || '') + '_' + (station.pref || '');
+  }
+  function mmHash(str){
+    let h = 0;
+    for(let i = 0; i < str.length; i++){
+      h = ((h << 5) - h) + str.charCodeAt(i);
+      h |= 0;
+    }
+    return Math.abs(h);
+  }
+  function mmRand(stationKey, salt){
+    return mmHash(stationKey + ':' + salt);
+  }
 
-  /* ----- 天気判定（Open-Meteo API、10分キャッシュ） ----- */
-  let mmCachedWeather = null;
-  let mmWeatherFetchTime = 0;
-  async function mmGetWeather(){
-    const now = Date.now();
-    if(mmCachedWeather && (now - mmWeatherFetchTime) < 10 * 60 * 1000){
-      return mmCachedWeather;
+  /* ---------- 駅IDから決定論的ランダム（過去カード用） ---------- */
+  const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
+  const TIMES = ['morning', 'noon', 'evening', 'night'];
+  function mmRandomSeason(stationKey){
+    return SEASONS[mmRand(stationKey, 'season') % 4];
+  }
+  function mmRandomTime(stationKey){
+    return TIMES[mmRand(stationKey, 'time') % 4];
+  }
+  function mmRandomWeather(stationKey){
+    // 重み付け：晴 40%、曇 30%、雨 20%、雪 10%
+    const r = mmRand(stationKey, 'weather') % 100;
+    if(r < 40) return 'sunny';
+    if(r < 70) return 'cloudy';
+    if(r < 90) return 'rainy';
+    return 'snowy';
+  }
+
+  /* ---------- localStorage 管理 ---------- */
+  function mmGetRecord(stationKey){
+    try {
+      const data = JSON.parse(localStorage.getItem(MM_RECORDS_KEY) || '{}');
+      return data[stationKey] || null;
+    } catch(e){ return null; }
+  }
+  function mmSetRecord(stationKey, record){
+    try {
+      const data = JSON.parse(localStorage.getItem(MM_RECORDS_KEY) || '{}');
+      data[stationKey] = record;
+      localStorage.setItem(MM_RECORDS_KEY, JSON.stringify(data));
+    } catch(e){}
+  }
+
+  /* ---------- 案A：駅座標で天気取得（座標ベースキャッシュ） ---------- */
+  const mmWeatherCache = {};
+  async function mmGetWeather(lat, lng){
+    if(typeof lat !== 'number' || typeof lng !== 'number'){
+      // 座標がなければ東京中心
+      lat = 35.69; lng = 139.69;
+    }
+    const cacheKey = lat.toFixed(2) + ',' + lng.toFixed(2);
+    const cached = mmWeatherCache[cacheKey];
+    if(cached && (Date.now() - cached.time) < MM_CACHE_MIN * 60 * 1000){
+      return cached.weather;
     }
     try {
-      const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.69&longitude=139.69&current=weather_code&timezone=auto');
+      const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lng + '&current=weather_code&timezone=auto';
+      const res = await fetch(url);
       if(!res.ok) throw new Error('weather api');
       const data = await res.json();
       const code = (data && data.current && data.current.weather_code) || 0;
@@ -10219,31 +10273,66 @@ if ('serviceWorker' in navigator) {
       else if(code === 45 || code === 48) w = 'cloudy';
       else if((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) w = 'snowy';
       else if((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95) w = 'rainy';
-      mmCachedWeather = w;
-      mmWeatherFetchTime = now;
+      mmWeatherCache[cacheKey] = { weather: w, time: Date.now() };
       return w;
     } catch(e){
-      return 'sunny'; // フォールバック
+      return 'sunny';
     }
   }
 
-  /* ----- 雪の結晶SVG（白い六角結晶） ----- */
+  /* ---------- 雪結晶SVG ---------- */
   const MM_SNOWFLAKE_SVG = '<svg viewBox="0 0 20 20" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><g stroke="white" stroke-width="1.4" fill="none" stroke-linecap="round"><line x1="10" y1="2" x2="10" y2="18"/><line x1="2" y1="10" x2="18" y2="10"/><line x1="4.3" y1="4.3" x2="15.7" y2="15.7"/><line x1="4.3" y1="15.7" x2="15.7" y2="4.3"/><line x1="10" y1="3" x2="8.5" y2="5"/><line x1="10" y1="3" x2="11.5" y2="5"/><line x1="10" y1="17" x2="8.5" y2="15"/><line x1="10" y1="17" x2="11.5" y2="15"/></g></svg>';
 
-  /* ----- カード適用 ----- */
+  /* ---------- メイン：カード適用 ---------- */
   async function mmApplyWeather(){
     const card = document.getElementById('station-card');
     if(!card) return;
+    const station = window.currentStation;
+    if(!station){
+      // 駅情報がない時は何もしない
+      return;
+    }
 
-    const season = mmGetSeason();
-    const time = mmGetTime();
-    const weather = await mmGetWeather();
+    const stationKey = mmStationKey(station);
+    if(!stationKey){ return; }
 
-    card.setAttribute('data-mm-season', season);
-    card.setAttribute('data-mm-time', time);
+    let record = mmGetRecord(stationKey);
+
+    // 記録なしの場合：新規チェックインか過去カードか判別
+    if(!record){
+      // チェックイン成功モーダルが open かチェック
+      const successBg = document.getElementById('checkin-success-bg');
+      const isJustCheckedIn = successBg && (successBg.classList.contains('open') || getComputedStyle(successBg).display !== 'none');
+
+      if(isJustCheckedIn && typeof station.lat === 'number' && typeof station.lng === 'number'){
+        // 新規チェックイン：駅座標で現在の天気取得
+        const weather = await mmGetWeather(station.lat, station.lng);
+        record = {
+          season: mmGetSeason(),
+          time: mmGetTime(),
+          weather: weather,
+          type: 'fresh',
+          savedAt: Date.now()
+        };
+      } else {
+        // 過去カード：駅IDから決定論的ランダム
+        record = {
+          season: mmRandomSeason(stationKey),
+          time: mmRandomTime(stationKey),
+          weather: mmRandomWeather(stationKey),
+          type: 'random',
+          savedAt: Date.now()
+        };
+      }
+      mmSetRecord(stationKey, record);
+    }
+
+    /* ---- カードに適用 ---- */
+    card.setAttribute('data-mm-season', record.season);
+    card.setAttribute('data-mm-time', record.time);
     card.setAttribute('data-mm-active', 'true');
 
-    // スコア取得（透かし用）
+    // スコア透かし
     const scoreEl = card.querySelector('.sc-score-num, #sc-score-num');
     const scoreText = scoreEl ? scoreEl.textContent.trim().replace(/[^0-9]/g, '') : '';
     card.setAttribute('data-mm-score', scoreText);
@@ -10252,12 +10341,11 @@ if ('serviceWorker' in navigator) {
     const oldOverlay = card.querySelector('.mm-weather-overlay');
     if(oldOverlay) oldOverlay.remove();
 
-    // 新オーバーレイ挿入（最初の子要素として）
+    // 新オーバーレイ挿入
     const overlay = document.createElement('div');
-    overlay.className = 'mm-weather-overlay ' + weather;
+    overlay.className = 'mm-weather-overlay ' + record.weather;
 
-    // 曇のとき：雲塊3つ
-    if(weather === 'cloudy'){
+    if(record.weather === 'cloudy'){
       const positions = [
         { top: '6%',  left: '-15%', width: '60%', height: '30%' },
         { top: '14%', left: '35%',  width: '55%', height: '22%' },
@@ -10271,16 +10359,19 @@ if ('serviceWorker' in navigator) {
       });
     }
 
-    // 雪のとき：結晶12粒（ランダム配置）
-    if(weather === 'snowy'){
+    if(record.weather === 'snowy'){
+      // 駅IDから seed で配置（同じ駅は同じ結晶配置）
+      const seed = mmHash(stationKey);
       for(let i = 0; i < 12; i++){
         const flake = document.createElement('div');
         flake.className = 'mm-snowflake';
-        const size = 11 + Math.random() * 9;
-        flake.style.top = (Math.random() * 92) + '%';
-        flake.style.left = (Math.random() * 88) + '%';
-        flake.style.width = size + 'px';
-        flake.style.height = size + 'px';
+        const sx = ((seed * (i + 7)) % 88) + (i * 2 % 5);
+        const sy = ((seed * (i + 11)) % 92) + (i * 3 % 4);
+        const ss = 11 + ((seed * (i + 13)) % 9);
+        flake.style.top = sy + '%';
+        flake.style.left = sx + '%';
+        flake.style.width = ss + 'px';
+        flake.style.height = ss + 'px';
         flake.innerHTML = MM_SNOWFLAKE_SVG;
         overlay.appendChild(flake);
       }
@@ -10289,12 +10380,11 @@ if ('serviceWorker' in navigator) {
     card.insertBefore(overlay, card.firstChild);
   }
 
-  /* ----- MutationObserver：data-rank 変化を監視（既存JS不変） ----- */
+  /* ---------- MutationObserver で data-rank 変化を監視 ---------- */
   function mmSetupObserver(){
     const card = document.getElementById('station-card');
     if(!card){ setTimeout(mmSetupObserver, 500); return; }
 
-    // 初回（既にカード表示中の場合）
     if(card.getAttribute('data-rank')){
       mmApplyWeather();
     }
@@ -10317,13 +10407,42 @@ if ('serviceWorker' in navigator) {
     document.addEventListener('DOMContentLoaded', mmSetupObserver);
   }
 
-  // デバッグ用グローバル（コンソールから手動切り替え可能）
+  /* ---------- デバッグ用グローバル ---------- */
   window.mmDebugWeather = function(w){
-    mmCachedWeather = w;
-    mmWeatherFetchTime = Date.now();
+    // 現在の駅の記録を上書きして再描画
+    const station = window.currentStation;
+    if(!station) return console.warn('no current station');
+    const key = mmStationKey(station);
+    const old = mmGetRecord(key) || {};
+    mmSetRecord(key, {
+      season: old.season || mmGetSeason(),
+      time: old.time || mmGetTime(),
+      weather: w,
+      type: 'debug',
+      savedAt: Date.now()
+    });
     mmApplyWeather();
   };
   window.mmDebugReapply = mmApplyWeather;
+  window.mmDebugClearAll = function(){
+    localStorage.removeItem(MM_RECORDS_KEY);
+    console.log('全カード記録を削除しました（次回開く時にランダム生成されます）');
+  };
+  window.mmDebugClearOne = function(stationName, pref){
+    const key = stationName + '_' + (pref || '');
+    try {
+      const data = JSON.parse(localStorage.getItem(MM_RECORDS_KEY) || '{}');
+      delete data[key];
+      localStorage.setItem(MM_RECORDS_KEY, JSON.stringify(data));
+      console.log(stationName + 'の記録を削除しました');
+    } catch(e){}
+  };
+  window.mmDebugShowAll = function(){
+    try {
+      const data = JSON.parse(localStorage.getItem(MM_RECORDS_KEY) || '{}');
+      console.table(data);
+    } catch(e){}
+  };
 })();
 </script>
 
