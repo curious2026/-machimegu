@@ -205,8 +205,8 @@ const AXIS_MAP = {
   dentist:'医療', doctors:'医療', nursing_home:'医療'
 };
 const AXES    = ['飲食','商業','生活','医療'];
-const MAX_PTS = {'飲食':300, '商業':300, '生活':200, '医療':100};
-const BONUS_MAX_PTS = 100;
+const MAX_PTS = {'飲食':350, '商業':350, '生活':150, '医療':100};
+const BONUS_MAX_PTS = 50;
 const BONUS_RADIUS_M = 800;
 
 // ═══ ボーナス対象施設マスター（手動キュレーション、332件）═══
