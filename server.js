@@ -96,7 +96,10 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // ═══ 設定 ═══
 const RADII = [500, 800, 1200];
 const QUARTER_MS = 90 * 24 * 60 * 60 * 1000;  // 四半期 = 90日
-const CONCURRENCY = 3;  // 同時計算数（Railwayへの負荷考慮）
+// ★ Railway Hobbyプラン（8GB RAM）対応：並列度3で1時間で完走
+// メモリ不足によるOOM killのリスクなし
+// （Trialプラン時代はCONCURRENCY=1にしていたが、Hobbyで余裕あり）
+const CONCURRENCY = 3;  // 同時計算数
 
 // ═══ ファイルパス ═══
 // CACHE_DIR 環境変数があればそちらに保存（Railway Volume mount用）
@@ -378,6 +381,13 @@ async function computeRawCountsForStations(stations, intoData) {
       const { st, r } = job;
       const sid = st.id || `${st.name}_${st.pref}`;
       buildState.currentStation = `${st.name}_${st.pref} (r=${r})`;
+      
+      // ★★ 既に計算済みならスキップ（再起動からの再開対応）
+      if (intoData[sid] && intoData[sid][`r${r}_raw`]) {
+        buildState.done++;
+        continue;
+      }
+      
       try {
         const counts = await getRawCounts(st.lat, st.lng, r);
         if (!intoData[sid]) intoData[sid] = {};
@@ -396,6 +406,23 @@ async function computeRawCountsForStations(stations, intoData) {
         const pct = (buildState.done / buildState.total * 100).toFixed(1);
         const elapsed = ((Date.now() - buildState.startedAt) / 1000).toFixed(0);
         console.log(`[rebuild] ${buildState.done}/${buildState.total} (${pct}%) 経過${elapsed}秒`);
+      }
+      
+      // ★★ 200駅ごとに進捗をディスクに保存（再起動時の復旧用）
+      // 全部終わってからの保存だと再起動で全消失するため、こまめに保存
+      if (buildState.done % 200 === 0) {
+        try {
+          const partialData = {
+            version: getCurrentQuarterVersion(),
+            builtAt: 0,  // 0 = まだ完成してない印
+            partial: true,
+            stations: intoData
+          };
+          fs.writeFileSync(SCORES_CACHE_FILE + '.partial', JSON.stringify(partialData));
+          console.log(`[rebuild] 途中保存: ${buildState.done}/${buildState.total}`);
+        } catch(e) {
+          console.warn('[rebuild] 途中保存失敗:', e.message);
+        }
       }
     }
   }
@@ -471,7 +498,22 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
         stations: {}
       };
       
-      // Phase 1: 全駅の生counts取得
+      // ★★ .partial ファイルから再開（前回rebuildが途中で止まった場合）
+      try {
+        const partialFile = SCORES_CACHE_FILE + '.partial';
+        if (fs.existsSync(partialFile)) {
+          const partial = JSON.parse(fs.readFileSync(partialFile, 'utf8'));
+          if (partial.stations && Object.keys(partial.stations).length > 0) {
+            newData.stations = partial.stations;
+            const resumedCount = Object.keys(partial.stations).length;
+            console.log(`[rebuild] 前回の途中保存から再開: ${resumedCount}駅分すでに計算済み`);
+          }
+        }
+      } catch(e) {
+        console.warn('[rebuild] .partial読込失敗、フル再計算開始:', e.message);
+      }
+      
+      // Phase 1: 全駅の生counts取得（既に取得済みのデータはスキップされる）
       await computeRawCountsForStations(STATIONS, newData.stations);
       
       // Phase 2: globalMax 確定
@@ -499,6 +541,15 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
       
       scoresCache = newData;
       saveScoresCache(scoresCache);
+      
+      // ★★ 完了したので .partial を削除
+      try {
+        const partialFile = SCORES_CACHE_FILE + '.partial';
+        if (fs.existsSync(partialFile)) {
+          fs.unlinkSync(partialFile);
+          console.log('[rebuild] .partialファイル削除完了');
+        }
+      } catch(e) { console.warn('[rebuild] .partial削除失敗:', e.message); }
       
     } else if (mode === 'incremental') {
       // ─── 差分計算（新規駅のみ）─────────────────
