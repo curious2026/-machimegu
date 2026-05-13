@@ -96,6 +96,40 @@ h1{font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:4px;color:#ff
 .copy-toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#22c272;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,0.4);opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:9999}
 .copy-toast.show{opacity:1}
 
+/* === 確認モーダル（confirm()の代替） === */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.85);
+  z-index:9000;display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);padding:20px;
+}
+.modal-bg.show{display:flex}
+.modal{
+  background:linear-gradient(180deg,#1a2438 0%,#0f1830 100%);
+  border:1px solid rgba(120,170,230,0.4);
+  border-radius:12px;padding:22px;max-width:380px;width:100%;
+  box-shadow:0 16px 48px rgba(0,0,0,0.5);
+}
+.modal h3{font-size:16px;font-weight:900;color:#fff;margin-bottom:10px}
+.modal p{font-size:13px;color:#cfdaee;line-height:1.6;margin-bottom:16px;white-space:pre-line}
+.modal-buttons{display:flex;gap:8px;justify-content:flex-end}
+.modal-buttons button{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:none}
+.modal-buttons .cancel{background:rgba(120,150,210,0.2);color:#cfdaee;border:1px solid rgba(120,170,230,0.3)}
+.modal-buttons .confirm{background:linear-gradient(135deg,#fbbf24,#d97706);color:#fff}
+
+/* === ステータスメッセージバー === */
+.status-msg{
+  position:fixed;top:14px;left:50%;transform:translateX(-50%);
+  z-index:8000;padding:12px 20px;border-radius:10px;
+  font-size:13px;font-weight:700;
+  display:none;align-items:center;gap:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  max-width:90vw;
+}
+.status-msg.show{display:flex}
+.status-msg.info{background:linear-gradient(135deg,#58a8e0,#3a8ac4);color:#fff}
+.status-msg.success{background:linear-gradient(135deg,#22c272,#15a05c);color:#fff}
+.status-msg.error{background:linear-gradient(135deg,#ff4458,#d02030);color:#fff}
+
 @media (max-width:520px){
   .station-item{grid-template-columns:auto 1fr;gap:6px}
   .station-item .scores,.station-item .rank-arrow{grid-column:1/-1;text-align:left;justify-self:start}
@@ -106,6 +140,21 @@ h1{font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:4px;color:#ff
 
 <h1>街巡 管理者ダッシュボード</h1>
 <div class="subtitle">MACHIMEGU ADMIN CONSOLE</div>
+
+<!-- ステータスメッセージ表示エリア -->
+<div class="status-msg" id="status-msg"></div>
+
+<!-- 確認モーダル -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <h3 id="confirm-title">確認</h3>
+    <p id="confirm-text">-</p>
+    <div class="modal-buttons">
+      <button class="cancel" onclick="closeConfirm(false)">キャンセル</button>
+      <button class="confirm" onclick="closeConfirm(true)">実行</button>
+    </div>
+  </div>
+</div>
 
 <div id="login-screen">
   <h2>管理者ログインが必要です</h2>
@@ -141,7 +190,7 @@ h1{font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:4px;color:#ff
       <button class="btn" onclick="loadAll()">🔄 ステータス更新</button>
       <button class="btn warn" id="rebuild-btn" onclick="triggerRebuild()">⚙️ 手動で再計算開始</button>
     </div>
-    <div style="font-size:11px;color:#7a96b6;margin-top:8px;line-height:1.5">※ 再計算は2-4時間かかります。実行中も古いデータでサービス継続されます。</div>
+    <div style="font-size:11px;color:#7a96b6;margin-top:8px;line-height:1.5">※ 再計算は30分〜1時間程度かかります。実行中も古いデータでサービス継続されます。</div>
   </div>
 
   <div class="section">
@@ -189,7 +238,34 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 let currentUser = null;
-let currentToken = null;
+
+// ═══ ステータスメッセージ表示（toast的）═══
+window.showMsg = function(text, type = 'info', duration = 3500) {
+  const el = document.getElementById('status-msg');
+  el.textContent = text;
+  el.className = 'status-msg show ' + type;
+  if (duration > 0) {
+    setTimeout(() => el.classList.remove('show'), duration);
+  }
+};
+
+// ═══ カスタム確認モーダル（confirm()の代替） ═══
+let _confirmResolver = null;
+window.askConfirm = function(title, text) {
+  return new Promise(resolve => {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-text').textContent = text;
+    document.getElementById('confirm-modal').classList.add('show');
+    _confirmResolver = resolve;
+  });
+};
+window.closeConfirm = function(result) {
+  document.getElementById('confirm-modal').classList.remove('show');
+  if (_confirmResolver) {
+    _confirmResolver(result);
+    _confirmResolver = null;
+  }
+};
 
 window.signInAdmin = async function() {
   try {
@@ -201,7 +277,6 @@ window.signInAdmin = async function() {
 window.signOutAdmin = async function() {
   await signOut(auth);
   currentUser = null;
-  currentToken = null;
 };
 
 function showLoginError(msg) {
@@ -213,13 +288,30 @@ function hideLoginError() {
   document.getElementById('login-error').style.display = 'none';
 }
 
+// ═══ 認証付きfetch：毎回トークンを強制リフレッシュ ═══
+// ★これが重要修正点：Firebase ID Tokenは1時間で期限切れになるため、
+//   毎回 getIdToken(true) で強制更新する
+async function authFetch(url, options = {}) {
+  if (!currentUser) {
+    throw new Error('未ログイン');
+  }
+  // ★毎回新しいトークンを取得（強制リフレッシュ）
+  const token = await currentUser.getIdToken(true);
+  const headers = { 
+    ...(options.headers || {}), 
+    'Authorization': 'Bearer ' + token 
+  };
+  return fetch(url, { ...options, headers });
+}
+
 onAuthStateChanged(auth, async user => {
   if (user) {
     currentUser = user;
     try {
-      currentToken = await user.getIdToken();
+      // ログイン直後も強制リフレッシュトークン
+      const token = await user.getIdToken(true);
       const res = await fetch('/api/admin/me', {
-        headers: { 'Authorization': 'Bearer ' + currentToken }
+        headers: { 'Authorization': 'Bearer ' + token }
       });
       if (res.status === 403) {
         showLoginError('このアカウントには管理者権限がありません。\nUID: ' + user.uid + '\n\n別のアカウントでログインしてください。');
@@ -242,19 +334,10 @@ onAuthStateChanged(auth, async user => {
     } catch(e) { showLoginError('認証エラー: ' + e.message); }
   } else {
     currentUser = null;
-    currentToken = null;
     document.getElementById('login-screen').classList.add('show');
     document.getElementById('main-screen').classList.remove('show');
   }
 });
-
-async function authFetch(url, options = {}) {
-  if (!currentToken && currentUser) {
-    currentToken = await currentUser.getIdToken();
-  }
-  const headers = { ...(options.headers || {}), 'Authorization': 'Bearer ' + currentToken };
-  return fetch(url, { ...options, headers });
-}
 
 window.loadAll = async function() {
   try {
@@ -267,7 +350,10 @@ window.loadAll = async function() {
     renderStatus(status);
     renderDiff(diff);
     renderXPost(diff);
-  } catch(e) { console.error('loadAll error:', e); }
+  } catch(e) { 
+    console.error('loadAll error:', e); 
+    showMsg('ステータス読込エラー: ' + e.message, 'error', 4000);
+  }
 };
 
 function renderStatus(s) {
@@ -365,18 +451,47 @@ window.openXIntent = function() {
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
 };
 
+// ═══ 再計算トリガー ═══
+// ★修正点：confirm()の代わりにカスタム確認モーダル使用、
+//          トークンは authFetch 内で毎回強制リフレッシュ
 window.triggerRebuild = async function() {
-  if (!confirm('再計算を開始しますか？\n2-4時間かかりますが、実行中も古いデータでサービス継続されます。')) return;
+  // 即時フィードバック：ボタンクリックを確実に視認できるように
+  showMsg('🔥 再計算リクエスト準備中...', 'info', 2000);
+  
+  // カスタム確認モーダル（ブラウザconfirm()がブロックされても動く）
+  const confirmed = await askConfirm(
+    '🔥 再計算を開始しますか？',
+    '街力スコアを全駅・全半径で再計算します。\n所要時間：30分〜1時間\n実行中も古いデータでサービス継続されます。'
+  );
+  if (!confirmed) {
+    showMsg('キャンセルしました', 'info', 2000);
+    return;
+  }
+  
+  const btn = document.getElementById('rebuild-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ リクエスト送信中...';
+  
   try {
-    const res = await authFetch('/api/admin/rebuild', { method: 'POST' });
+    showMsg('📡 サーバーへリクエスト送信中...', 'info', 0);
+    const res = await authFetch('/api/admin/rebuild?mode=full', { method: 'POST' });
     const data = await res.json();
     if (res.ok) {
-      alert('再計算開始しました');
+      showMsg('✅ 再計算が開始されました！30分〜1時間お待ちください', 'success', 8000);
       setTimeout(loadAll, 1000);
-    } else { alert('エラー: ' + (data.error || res.status)); }
-  } catch(e) { alert('エラー: ' + e.message); }
+    } else { 
+      showMsg('❌ エラー: ' + (data.error || ('HTTP ' + res.status)), 'error', 6000);
+      btn.disabled = false;
+      btn.textContent = '⚙️ 手動で再計算開始';
+    }
+  } catch(e) { 
+    showMsg('❌ 通信エラー: ' + e.message, 'error', 6000);
+    btn.disabled = false;
+    btn.textContent = '⚙️ 手動で再計算開始';
+  }
 };
 
+// 定期更新
 setInterval(() => {
   if (currentUser && document.getElementById('main-screen').classList.contains('show')) loadAll();
 }, 30000);
