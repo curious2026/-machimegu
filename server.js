@@ -755,25 +755,29 @@ app.post('/api/admin/rebuild', requireAdmin, (req, res) => {
   if (buildState.running) {
     return res.status(409).json({ error: '既に実行中', status: getBuildStatus() });
   }
-  const requestedMode = req.query.mode || 'auto';
+  // ★★ 重要修正：手動rebuildは常にフルモードで実行 ★★
+  // 旧仕様: autoモード時、checkRebuildMode が「up-to-date」判定するとスキップされていた
+  //        （四半期内＆キャッシュ存在＆新規駅なしで「再計算不要」とみなされる）
+  // 新仕様: 管理者が明示的にボタンを押した場合は必ず全駅再計算する
+  //        スコア計算ロジック変更後（配点変更、ボーナス追加等）でも確実にキャッシュ更新できる
+  const requestedMode = req.query.mode || 'full';  // デフォルトをfullに変更
   
-  if (requestedMode === 'full') {
-    rebuildScores({ mode: 'full' }).catch(e => console.error('rebuild failed:', e));
-    return res.json({ ok: true, message: 'フル再計算開始', status: getBuildStatus() });
+  if (requestedMode === 'incremental') {
+    // 明示的にincremental指定された場合のみ差分計算
+    const check = checkRebuildMode();
+    if (check.mode === 'incremental') {
+      rebuildScores({ mode: 'incremental', stations: check.stations })
+        .catch(e => console.error('rebuild failed:', e));
+      return res.json({ ok: true, message: `差分計算開始（${check.stations.length}駅）`, status: getBuildStatus() });
+    } else {
+      console.log('[admin] incremental要求だが差分なし → フルモードで実行');
+    }
   }
   
-  // auto / incremental → checkRebuildMode で判定
-  const check = checkRebuildMode();
-  if (check.mode === 'none') {
-    return res.json({ ok: true, message: '再計算不要（最新）', status: getBuildStatus() });
-  } else if (check.mode === 'incremental') {
-    rebuildScores({ mode: 'incremental', stations: check.stations })
-      .catch(e => console.error('rebuild failed:', e));
-    return res.json({ ok: true, message: `差分計算開始（${check.stations.length}駅）`, status: getBuildStatus() });
-  } else {
-    rebuildScores({ mode: 'full' }).catch(e => console.error('rebuild failed:', e));
-    return res.json({ ok: true, message: `フル再計算開始（${check.reason}）`, status: getBuildStatus() });
-  }
+  // デフォルト：強制フルモード
+  console.log('[admin] 手動rebuild受信: 強制フルモード実行（autoスキップ廃止）');
+  rebuildScores({ mode: 'full' }).catch(e => console.error('rebuild failed:', e));
+  return res.json({ ok: true, message: '強制フル再計算開始（全駅再計算）', status: getBuildStatus() });
 });
 
 // 差分レポート（前期版 vs 今期版）
