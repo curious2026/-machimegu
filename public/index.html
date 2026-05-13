@@ -1123,11 +1123,11 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 /* 4軸ダイヤ */
 .sc-axes{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
   margin-bottom:16px;
 }
 .sc-ax{
-  width:64px;height:64px;
+  width:54px;height:54px;
   background:#fff;
   border:2px solid;
   transform:rotate(45deg);
@@ -1135,8 +1135,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   margin:auto;
 }
 .sc-ax > span{transform:rotate(-45deg);text-align:center}
-.sc-ax-name{font-size:11px;font-weight:700;line-height:1;margin-bottom:3px}
-.sc-ax-val{font-size:15px;font-weight:900;line-height:1}
+.sc-ax-name{font-size:10px;font-weight:700;line-height:1;margin-bottom:2px}
+.sc-ax-val{font-size:14px;font-weight:900;line-height:1}
 
 .sc-ax-food{border-color:#ff4466}
 .sc-ax-food .sc-ax-name{color:#ff4466}
@@ -1153,6 +1153,30 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .sc-ax-med{border-color:#f09030}
 .sc-ax-med .sc-ax-name{color:#f09030}
 .sc-ax-med .sc-ax-val{color:#f09030}
+
+/* ボーナス軸：金色でカンスト時★マーク、タップで内訳モーダル */
+.sc-ax-bonus{
+  border-color:#d4a020;
+  cursor:pointer;
+  position:relative;
+  transition:transform 0.15s;
+}
+.sc-ax-bonus .sc-ax-name{color:#d4a020}
+.sc-ax-bonus .sc-ax-val{color:#d4a020}
+.sc-ax-bonus.capped{
+  background:linear-gradient(135deg,#fff8e0 0%,#ffe9a8 100%);
+  border-color:#e09008;
+  box-shadow:0 0 8px rgba(224,144,8,0.4);
+}
+.sc-ax-bonus.capped .sc-ax-val::after{content:'★';font-size:10px;vertical-align:top;margin-left:1px}
+.sc-ax-bonus.tappable:active{transform:rotate(45deg) scale(0.9)}
+.sc-ax-bonus-hint{
+  position:absolute;
+  bottom:-18px;left:50%;transform:translateX(-50%) rotate(-45deg);
+  font-size:9px;color:#888;white-space:nowrap;
+  pointer-events:none;
+  opacity:0.7;
+}
 
 /* 駅情報 */
 .sc-info-grid{
@@ -3716,8 +3740,43 @@ body.checkin-active #checkin-indicator{
   </div>
 </div>
 
+<!-- ボーナス内訳モーダル -->
+<div id="bonus-modal-bg" onclick="closeBonusModal(event)" style="position:fixed;inset:0;background:rgba(5,12,22,0.92);z-index:9000;display:none;align-items:flex-start;justify-content:center;backdrop-filter:blur(6px);padding:20px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div id="bonus-modal" onclick="event.stopPropagation()" style="background:linear-gradient(180deg,#fff8e8 0%,#fff 100%);max-width:380px;width:100%;border-radius:16px;padding:18px 18px 22px;box-shadow:0 16px 48px rgba(0,0,0,0.5);border:2px solid #d4a020;animation:bonusModalIn 0.25s ease-out">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+      <div style="font-size:13px;font-weight:900;color:#7a5500;letter-spacing:1px">街の魅力ボーナス</div>
+      <button onclick="closeBonusModal()" style="background:transparent;border:none;font-size:22px;font-weight:900;color:#7a5500;cursor:pointer;padding:0 4px;line-height:1">×</button>
+    </div>
+    <div id="bonus-modal-station" style="font-size:22px;font-weight:900;color:#1a2030;margin-bottom:10px;letter-spacing:2px">-</div>
+    <div id="bonus-modal-total" style="display:flex;align-items:baseline;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #e0c878">
+      <span style="font-size:34px;font-weight:900;color:#d4a020;line-height:1" id="bonus-modal-pts">0</span>
+      <span style="font-size:14px;color:#7a5500;font-weight:700">/ 100点</span>
+      <span id="bonus-modal-capped" style="display:none;margin-left:auto;font-size:11px;font-weight:900;color:#fff;background:linear-gradient(135deg,#e09008,#c0700a);padding:3px 10px;border-radius:10px;letter-spacing:1px">★ カンスト</span>
+    </div>
+    <div id="bonus-modal-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div id="bonus-modal-empty" style="text-align:center;padding:20px 0;color:#888;font-size:13px;display:none">
+      この駅の半径800m圏内には<br>ボーナス対象施設はありません
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes bonusModalIn{
+  0%{opacity:0;transform:scale(0.92) translateY(20px)}
+  100%{opacity:1;transform:scale(1) translateY(0)}
+}
+.bm-cat-section{padding:8px 0}
+.bm-cat-title{font-size:11px;font-weight:900;color:#7a5500;letter-spacing:1.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.bm-cat-title-count{font-size:10px;color:#a08440;font-weight:700;letter-spacing:0}
+.bm-item{display:flex;align-items:baseline;gap:8px;padding:5px 0;font-size:13px}
+.bm-item-pts{font-weight:900;color:#d4a020;min-width:30px;font-size:14px;text-align:right}
+.bm-item-name{flex:1;color:#1a2030;line-height:1.3;font-weight:600}
+.bm-item-dist{font-size:11px;color:#7a8090;font-weight:600;white-space:nowrap}
+</style>
+
 <!-- ステーションカード モーダル -->
 <div id="card-modal-bg" onclick="closeCardModal(event)">
+
   <div id="card-modal" onclick="event.stopPropagation()">
     <div id="card-flip-wrap">
       <div id="station-card">
@@ -3753,12 +3812,13 @@ body.checkin-active #checkin-indicator{
             <div class="sc-score-label">MACHI<br>SCORE</div>
           </div>
           
-          <!-- 4軸ダイヤ -->
+          <!-- 5軸ダイヤ（飲食/商業/生活/医療/ボーナス） -->
           <div class="sc-axes">
             <div class="sc-ax sc-ax-food"><span class="sc-ax-name">飲食</span><span class="sc-ax-val" id="sc-ax-food">-</span></div>
             <div class="sc-ax sc-ax-com"><span class="sc-ax-name">商業</span><span class="sc-ax-val" id="sc-ax-com">-</span></div>
             <div class="sc-ax sc-ax-life"><span class="sc-ax-name">生活</span><span class="sc-ax-val" id="sc-ax-life">-</span></div>
             <div class="sc-ax sc-ax-med"><span class="sc-ax-name">医療</span><span class="sc-ax-val" id="sc-ax-med">-</span></div>
+            <div class="sc-ax sc-ax-bonus" id="sc-ax-bonus-box" onclick="openBonusModal()"><span class="sc-ax-name">ボーナス</span><span class="sc-ax-val" id="sc-ax-bonus">-</span></div>
           </div>
           
           <!-- 駅情報 -->
@@ -4070,7 +4130,7 @@ const RANKS=[
 ];
 function getRank(s){return RANKS.find(r=>s>=r.min)||RANKS[4];}
 window.getRank=getRank;
-const AC={'飲食':'#ff4466','商業':'#9070ff','生活':'#3aa0ff','医療':'#f09030'};
+const AC={'飲食':'#ff4466','商業':'#9070ff','生活':'#3aa0ff','医療':'#f09030','ボーナス':'#d4a020'};
 const isPc=()=>window.innerWidth>=768;
 
 function shortLine(l){return l.replace('東京メトロ','').replace(/^JR/,'').trim();}
@@ -5412,6 +5472,14 @@ function updateTable(filtered){
     const d=st.details||{};
     const ds=rankAxis==='総合'?st.score:getAxisScore(st);
     const cats=axes.map(n=>{const v=d[n]||{pts:0};return`<span class="rcat" style="background:${AC[n]}1a;color:${AC[n]};border:1px solid ${AC[n]}33">${n} ${v.pts}</span>`;}).join('');
+    // ボーナスpill（タップでモーダル）
+    const bonusObj = d['ボーナス'] || {};
+    const bonusPts = bonusObj.pts || 0;
+    const bonusCapped = !!bonusObj.capped;
+    const bonusHasItems = bonusObj.items && bonusObj.items.length > 0;
+    const bonusPill = bonusHasItems
+      ? `<span class="rcat bonus-pill" data-station="${st.name}_${st.pref}" onclick="event.stopPropagation();openBonusModalFromRanking('${escapeForAttr(st.name)}','${escapeForAttr(st.pref)}')" style="background:${AC['ボーナス']}1a;color:${AC['ボーナス']};border:1px solid ${AC['ボーナス']}55;cursor:pointer">ボーナス ${bonusPts}${bonusCapped?'★':''}</span>`
+      : `<span class="rcat" style="background:#22293a;color:#7a8090;border:1px solid #33405510">ボーナス 0</span>`;
     const fIcon=isFav(st)?'♥':'♡';
     const isTop=i<3;
     const isCheckedIn = window.checkedInStations && window.checkedInStations.has(st.name+'_'+st.pref);
@@ -5427,12 +5495,33 @@ function updateTable(filtered){
           <span class="rfav${isFav(st)?' on':''}" onclick="event.stopPropagation();toggleFav(stationData.find(s=>s.name==='${st.name}'&&s.pref==='${st.pref}'))">${fIcon}</span>
         </div>
         <div class="rline">${formatLinesDisplay(st.lines)} · ${st.pref}</div>
-        <div class="rcats">${cats}</div>
+        <div class="rcats">${cats}${bonusPill}</div>
       </div>
       <span class="rscore" style="color:${color}">${ds}</span>
     </div>`;
   }).join('');
 }
+
+// 引用符のエスケープ（onclickの中で使う）
+function escapeForAttr(s){
+  return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+}
+
+// ランキングからボーナス内訳モーダルを開く
+window.openBonusModalFromRanking = function(name, pref){
+  // station検索
+  const st = stationData.find(s => s.name===name && s.pref===pref);
+  if (!st) return;
+  const bonusObj = (st.details || {})['ボーナス'] || {};
+  window._currentBonusData = {
+    stationName: name,
+    pts: bonusObj.pts || 0,
+    raw: bonusObj.raw || bonusObj.pts || 0,
+    capped: !!bonusObj.capped,
+    items: bonusObj.items || []
+  };
+  openBonusModal();
+};
 
 function onTableClick(name,pref){
   const st=stationData.find(s=>s.name===name&&s.pref===pref);
@@ -6601,7 +6690,7 @@ function openStationCard(data) {
   // スコア
   document.getElementById('sc-score-num').textContent = data.score;
   
-  // 4軸詳細
+  // 5軸詳細（4軸＋ボーナス）
   const details = (st && st.details) ? st.details : {};
   const food = (details['飲食'] && details['飲食'].pts !== undefined) ? details['飲食'].pts : (details['飲食'] || 0);
   const com = (details['商業'] && details['商業'].pts !== undefined) ? details['商業'].pts : (details['商業'] || 0);
@@ -6611,6 +6700,24 @@ function openStationCard(data) {
   document.getElementById('sc-ax-com').textContent = com;
   document.getElementById('sc-ax-life').textContent = life;
   document.getElementById('sc-ax-med').textContent = med;
+  // ボーナス軸
+  const bonusObj = details['ボーナス'] || {};
+  const bonusPts = bonusObj.pts || 0;
+  const bonusEl = document.getElementById('sc-ax-bonus');
+  const bonusBox = document.getElementById('sc-ax-bonus-box');
+  if (bonusEl) bonusEl.textContent = bonusPts;
+  if (bonusBox) {
+    bonusBox.classList.toggle('capped', !!bonusObj.capped);
+    bonusBox.classList.toggle('tappable', (bonusObj.items && bonusObj.items.length > 0));
+  }
+  // モーダル用：駅名+ボーナス内訳を保存
+  window._currentBonusData = {
+    stationName: data.name,
+    pts: bonusPts,
+    raw: bonusObj.raw || bonusPts,
+    capped: !!bonusObj.capped,
+    items: bonusObj.items || []
+  };
   
   // 駅情報 DB から取得
   const stKey = `${data.name}_${data.pref}`;
@@ -6693,6 +6800,98 @@ window.closeCardModal = function(e) {
     document.body.style.overflow = '';
   }
 };
+
+// ═══ ボーナス内訳モーダル ═══
+const BONUS_CAT_LABEL = {
+  university_main:      '大学',
+  university_satellite: 'サテライト',
+  university_hospital:  '大学病院',
+  major_hospital:       '総合病院',
+  large_park:           '公園',
+  famous_temple_shrine: '寺社',
+  museum:               'ミュージアム',
+  landmark:             'ランドマーク'
+};
+const BONUS_CAT_EMOJI = {
+  university_main:      '🎓',
+  university_satellite: '🏫',
+  university_hospital:  '🏥',
+  major_hospital:       '🏥',
+  large_park:           '🌳',
+  famous_temple_shrine: '⛩',
+  museum:               '🏛',
+  landmark:             '🗼'
+};
+const BONUS_CAT_ORDER = [
+  'university_main','university_hospital','university_satellite',
+  'major_hospital','famous_temple_shrine','large_park','museum','landmark'
+];
+
+window.openBonusModal = function(){
+  const data = window._currentBonusData;
+  if (!data) return;
+  const bg = document.getElementById('bonus-modal-bg');
+  if (!bg) return;
+  // 駅名・合計
+  document.getElementById('bonus-modal-station').textContent = data.stationName + '駅';
+  document.getElementById('bonus-modal-pts').textContent = data.pts;
+  document.getElementById('bonus-modal-capped').style.display = data.capped ? 'inline-block' : 'none';
+  // 内訳
+  const listEl = document.getElementById('bonus-modal-list');
+  const emptyEl = document.getElementById('bonus-modal-empty');
+  if (!data.items || data.items.length === 0) {
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+  } else {
+    emptyEl.style.display = 'none';
+    // カテゴリ別グループ化
+    const grouped = {};
+    data.items.forEach(it => {
+      if (!grouped[it.cat]) grouped[it.cat] = [];
+      grouped[it.cat].push(it);
+    });
+    const sections = [];
+    BONUS_CAT_ORDER.forEach(cat => {
+      if (!grouped[cat]) return;
+      const items = grouped[cat];
+      // 点数降順、同点は距離昇順（サーバー側で済み、念のため）
+      items.sort((a,b)=> (b.pts-a.pts)||(a.dist-b.dist));
+      const subtotal = items.reduce((s,i)=>s+i.pts,0);
+      const label = BONUS_CAT_LABEL[cat] || cat;
+      const emoji = BONUS_CAT_EMOJI[cat] || '★';
+      const itemsHTML = items.map(it => `
+        <div class="bm-item">
+          <span class="bm-item-pts">+${it.pts}</span>
+          <span class="bm-item-name">${escapeHtml(it.name)}</span>
+          <span class="bm-item-dist">${it.dist}m</span>
+        </div>
+      `).join('');
+      sections.push(`
+        <div class="bm-cat-section">
+          <div class="bm-cat-title">${emoji} ${label} <span class="bm-cat-title-count">(${items.length}件・+${subtotal}点)</span></div>
+          ${itemsHTML}
+        </div>
+      `);
+    });
+    listEl.innerHTML = sections.join('');
+  }
+  bg.style.display = 'flex';
+};
+
+window.closeBonusModal = function(e){
+  // 背景クリック or ×ボタンで閉じる
+  if (e && e.target && e.target.id !== 'bonus-modal-bg' && e.type !== undefined) return;
+  const bg = document.getElementById('bonus-modal-bg');
+  if (bg) bg.style.display = 'none';
+};
+
+// HTMLエスケープヘルパ（既にあるかもしれないが、安全のため定義）
+if (typeof escapeHtml !== 'function') {
+  window.escapeHtml = function(s){
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  };
+}
 
 // drawCardRadar removed (V2)
 
