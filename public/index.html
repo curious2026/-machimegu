@@ -1155,20 +1155,23 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 /* 4軸ダイヤ */
 .sc-axes{
-  display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
-  margin-bottom:16px;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:0;
+  margin:0 -4px 16px -4px;  /* 左右にほんの少しはみ出して、ひし形が見切れないように */
+  padding:0;
 }
 .sc-ax{
-  width:54px;height:54px;
+  width:50px;height:50px;
   background:#fff;
   border:2px solid;
   transform:rotate(45deg);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  margin:auto;
+  margin:8px auto -2px auto;  /* マイナスマージンで少し重ねる、上は回転分のクリアランス */
+  position:relative;
+  z-index:1;
 }
 .sc-ax > span{transform:rotate(-45deg);text-align:center}
-.sc-ax-name{font-size:10px;font-weight:700;line-height:1;margin-bottom:2px}
-.sc-ax-val{font-size:14px;font-weight:900;line-height:1}
+.sc-ax-name{font-size:9px;font-weight:700;line-height:1;margin-bottom:2px}
+.sc-ax-val{font-size:13px;font-weight:900;line-height:1}
 
 .sc-ax-food{border-color:#ff4466}
 .sc-ax-food .sc-ax-name{color:#ff4466}
@@ -5157,17 +5160,46 @@ async function loadAll(){
   const r=getRadius();
   const cacheKey='mm_scores_v2_r'+r;
   
+  // ★★ ボーナス軸対応の新キャッシュバージョン ★★
+  // 旧キャッシュ(details.ボーナス が無い)は強制的に無効化して、サーバーから再取得
+  const REQUIRED_CACHE_VERSION = 'v2-bonus';  // ボーナス軸追加後のバージョン
+  
   // Step 1: localStorageキャッシュ即表示
   let localData=null;
   let localVersion='';
+  let localFormat='';
   try{
     const raw=localStorage.getItem(cacheKey);
     if(raw){
       const parsed=JSON.parse(raw);
       localData=parsed.stations;
       localVersion=parsed.version||'';
+      localFormat=parsed.format||'';  // 'v2-bonus' 以降が有効
     }
   }catch(e){}
+  
+  // ★ボーナス未対応の古いキャッシュは破棄
+  if(localData && localFormat !== REQUIRED_CACHE_VERSION){
+    console.log('[cache] 旧キャッシュ検出 (format='+localFormat+') → 破棄してサーバー取得');
+    localData = null;
+    localVersion = '';
+    try{ localStorage.removeItem(cacheKey); }catch(e){}
+  }
+  
+  // 念のため：データ内に「ボーナス」フィールドが含まれていない場合も破棄
+  if(localData){
+    const sampleSid = Object.keys(localData)[0];
+    if(sampleSid){
+      const sample = localData[sampleSid];
+      const hasBonus = sample && sample.details && sample.details['ボーナス'];
+      if(!hasBonus){
+        console.log('[cache] ボーナスフィールド無しキャッシュ検出 → 破棄');
+        localData = null;
+        localVersion = '';
+        try{ localStorage.removeItem(cacheKey); }catch(e){}
+      }
+    }
+  }
   
   // 新キャッシュなければ旧キャッシュ移行を試す
   if(!localData){
@@ -5256,11 +5288,12 @@ async function loadAll(){
     return {...st, score:null, details:{}};
   });
   
-  // localStorageに保存
+  // localStorageに保存（★ format='v2-bonus' でボーナス対応版を識別）
   try{
     localStorage.setItem(cacheKey, JSON.stringify({
       version: fresh.version,
       builtAt: fresh.builtAt,
+      format: 'v2-bonus',  // ボーナス軸対応のキャッシュ形式バージョン
       stations: fresh.stations
     }));
   }catch(e){
@@ -5273,6 +5306,7 @@ async function loadAll(){
       localStorage.setItem(cacheKey, JSON.stringify({
         version: fresh.version,
         builtAt: fresh.builtAt,
+        format: 'v2-bonus',
         stations: fresh.stations
       }));
     }catch(e2){console.error('[loadAll] 再保存も失敗',e2);}
@@ -5610,19 +5644,54 @@ if(isPc()){
 if (navigator.geolocation) {
   setTimeout(() => { try { startWatchPosition(); } catch(e) { console.warn('位置監視開始エラー', e); } }, 1500);
   
-  // ★★ 起動時に現在位置を中心に3km圏表示
-  // ズームレベル13 = 約3km半径相当（東京近郊の標準）
+  // ★★ 起動時に現在位置を中心に3km圏表示＋最寄り駅ボックス自動表示
+  // 現在地は画面の上から4割の位置（下に最寄り駅ボックスを表示する空間確保）
   navigator.geolocation.getCurrentPosition(
     pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
       try {
-        lmap.setView([lat, lng], 13);  // 3km圏内表示
-        console.log('[起動] 現在位置中心3km圏表示:', lat, lng);
+        // まず3km圏でセンタリング
+        lmap.setView([lat, lng], 13);
+        
+        // 「現在地を上から4割の位置に」するため、地図を下にパンする
+        // = 表示中心を上にずらす = 地図を下方向に動かす
+        // 画面高さの「中央(50%) → 40%」の差分 = 10% = 約0.1 * mapHeight ピクセル
+        setTimeout(() => {
+          try {
+            const mapEl = document.getElementById('leaflet-map');
+            if (mapEl) {
+              const mapH = mapEl.clientHeight;
+              const offsetY = mapH * 0.10;  // 10%分（中央→上から40%へ）
+              // panBy: 地図を下にスクロール = 表示中心が上に移動 = 現在地が上に
+              lmap.panBy([0, offsetY], { animate: false });
+            }
+          } catch(e) { console.warn('現在地位置オフセット失敗', e); }
+        }, 100);
+        
+        console.log('[起動] 現在位置中心3km圏表示（上40%位置）:', lat, lng);
+        
+        // ★★ 最寄り駅ボックスを自動表示
+        // stationDataがロード済みになるのを待ってから実行
+        setTimeout(() => {
+          try {
+            if (!Array.isArray(stationData) || stationData.length === 0) return;
+            let nearest = null, minDist = Infinity;
+            stationData.forEach(st => {
+              if (!st.lat || !st.lng) return;
+              const d = getDistanceM(lat, lng, st.lat, st.lng);
+              if (d < minDist) { minDist = d; nearest = st; }
+            });
+            if (nearest && typeof showInfo === 'function') {
+              console.log('[起動] 最寄り駅自動表示:', nearest.name, '距離:', Math.round(minDist) + 'm');
+              showInfo(nearest);
+            }
+          } catch(e) { console.warn('起動時最寄り駅表示失敗', e); }
+        }, 2500);  // stationDataロード後（loadAllが2秒程度かかる想定）
+        
       } catch(e) { console.warn('起動時マップ移動失敗', e); }
     },
     err => {
       console.log('[起動] 位置情報取得失敗、東京中心のまま:', err.message);
-      // 失敗時はデフォルトの東京中心11ズーム維持
     },
     { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
   );
@@ -6345,7 +6414,7 @@ window.renderCheckinSection = async function(st) {
     // ランク色を取得（駅マーカーと同じ色）
     const rankInfo = getRank(st.score || 0);
     const rankColor = rankInfo.color || '#3a7bd5';
-    sec.innerHTML = `<div class="ip-ci-status ip-ci-glow" style="--glow-color:${rankColor};--glow-color-soft:${rankColor}44">駅から ${distStr} 離れています<br><strong>500m以内に近づいてステーションカードGET！</strong></div>
+    sec.innerHTML = `<div class="ip-ci-status ip-ci-glow" style="--glow-color:${rankColor};--glow-color-soft:${rankColor}44">駅から ${distStr} 離れています<br>500m以内に近づいて<br><strong>ステーションカードGET！</strong></div>
       <div class="ip-ci-quota">本日 ${todayCount}/${DAILY_LIMIT}駅</div>`;
     return;
   }
