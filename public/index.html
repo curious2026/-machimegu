@@ -5681,7 +5681,10 @@ function onPrefChange(){
 
 function render(){
   markers.forEach(m=>lmap.removeLayer(m));markers=[];
-  selectedMarkerInner=null;closeInfo();
+  selectedMarkerInner=null;
+  // ★★ 起動シーケンス中（最大10秒）は closeInfo を呼ばない
+  // → moveend/zoomend で再描画されても、最寄り駅ボックスは消えない
+  if (!window._startupPhase) closeInfo();
   getVisible().forEach(drawMarker);
   updateTable(getFiltered());
 }
@@ -5729,28 +5732,35 @@ if (navigator.geolocation) {
     pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
       
-      // ★★ 起動時のマップ移動で closeInfo が呼ばれて
-      //     最寄り駅ボックスが消える問題を回避：movestartリスナーを一時的に外す
+      // ★★ 起動シーケンス全体を保護するフラグ
+      // → render() 内の closeInfo() が呼ばれないようにする
+      // → moveend/zoomend でも 最寄り駅ボックスは消えない
+      window._startupPhase = true;
+      console.log('[起動] startupPhase=true（10秒間ボックス保護）');
+      
+      // ★ 念のため movestart も止める（startupPhase で守られてるが二重防衛）
       lmap.off('movestart', closeInfo);
-      console.log('[起動] movestartリスナー一時停止');
       
       try {
         // まず3km圏でセンタリング
         lmap.setView([lat, lng], 13);
         
         // 「現在地を上から4割の位置に」するため、地図を下にパンする
+        // setView のアニメーションが完了してから panBy を実行（300ms待機）
         setTimeout(() => {
           try {
             const mapEl = document.getElementById('leaflet-map');
             if (mapEl) {
               const mapH = mapEl.clientHeight;
-              const offsetY = mapH * 0.10;
+              // mapH * 0.15 = 画面高さの15%下にずらす = 現在地が上から35%位置に
+              const offsetY = mapH * 0.15;
               lmap.panBy([0, offsetY], { animate: false });
+              console.log('[起動] panBy offsetY=' + offsetY + 'px（現在地を上から約35%位置に）');
             }
           } catch(e) { console.warn('現在地位置オフセット失敗', e); }
-        }, 100);
+        }, 300);
         
-        console.log('[起動] 現在位置中心3km圏表示（上40%位置）:', lat, lng);
+        console.log('[起動] 現在位置中心3km圏表示:', lat, lng);
         
         // ★★ 最寄り駅ボックスを自動表示
         // window.getDistanceM、window.showInfo が定義されてるか確認しつつポーリング
@@ -5762,6 +5772,7 @@ if (navigator.geolocation) {
             console.warn('[起動] 最寄り駅表示タイムアウト');
             // タイムアウト時もmovestartリスナーを戻す
             lmap.on('movestart', closeInfo);
+            window._startupPhase = false;
             return;
           }
           // 必要な関数とデータが揃ってるか
@@ -5788,12 +5799,13 @@ if (navigator.geolocation) {
             }
           } catch(e) { console.warn('起動時最寄り駅表示失敗', e); }
           
-          // ★★ 最寄り駅表示成功後、5秒待ってからmovestartリスナーを再登録
+          // ★★ 最寄り駅表示後、5秒待ってから保護解除
           // → 5秒間はマップを動かしてもボックスが閉じない
           // → 5秒後、ユーザーがマップを動かしたら通常通り閉じる
           setTimeout(() => {
+            window._startupPhase = false;
             lmap.on('movestart', closeInfo);
-            console.log('[起動] movestartリスナー再登録完了');
+            console.log('[起動] startupPhase=false、movestartリスナー再登録');
           }, 5000);
         }, 200);
         
