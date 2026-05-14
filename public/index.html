@@ -8278,6 +8278,135 @@ setInterval(() => {
 window.stationData = stationData;
 
 // ─── ログイン状態の監視 ───
+// ═══════════════════════════════════════════════════════════════
+// Step 2: カードコレクション集約ドキュメント（天気組み合わせのFirestore保存）
+// ═══════════════════════════════════════════════════════════════
+// 設計：1ユーザー1ドキュメント users/{uid}/meta/collection に全カードを集約。
+//  - 起動時(ログイン後)に1回だけ読んでメモリキャッシュ(mmCollectionCache)に載せる
+//  - 読み取りはメモリから同期で返す（Firestoreを毎回叩かない＝コスト最小・カクツキゼロ）
+//  - 書き込みはメモリ即更新＋Firestore非同期書き込み
+//  - cards は配列（Step3で1駅複数枚に拡張可能）。Step2では長さ1運用。
+let mmCollectionCache = null;   // { stations:{駅キー:{firstVisitAt,visitCount,pinnedIndex,cards:[]}}, updatedAt }
+window.mmCollectionLoaded = false;
+
+// ログイン後に集約ドキュメントを1回読む
+async function mmLoadCollection(uid) {
+  try {
+    const ref = doc(db, 'users', uid, 'meta', 'collection');
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const data = snap.data();
+      mmCollectionCache = {
+        stations: data.stations || {},
+        updatedAt: data.updatedAt || null
+      };
+    } else {
+      mmCollectionCache = { stations: {}, updatedAt: null };
+    }
+    window.mmCollectionLoaded = true;
+    console.log('[mmCloud] コレクション読み込み完了: ' + Object.keys(mmCollectionCache.stations).length + '駅');
+  } catch (e) {
+    console.error('[mmCloud] コレクション読み込み失敗:', e);
+    mmCollectionCache = { stations: {}, updatedAt: null };
+    window.mmCollectionLoaded = false;
+  }
+}
+
+// 天気記録を読む（メモリキャッシュから同期で返す）
+// 戻り値: {season,time,weather,type,savedAt} または null（未準備・未登録時）
+window.mmCloudGetRecord = function(stationKey) {
+  if (!mmCollectionCache || !mmCollectionCache.stations) return null;
+  const st = mmCollectionCache.stations[stationKey];
+  if (!st || !st.cards || st.cards.length === 0) return null;
+  // Step2は1枚運用：cards[0]（Step3以降は pinnedIndex を使う）
+  const c = st.cards[0];
+  return {
+    season: c.season,
+    time: c.time,
+    weather: c.weather,
+    type: c.type || 'cloud',
+    savedAt: c.capturedAt || null
+  };
+};
+
+// 天気記録を書く（メモリ即更新＋Firestore非同期書き込み）
+window.mmCloudSetRecord = async function(stationKey, record) {
+  if (!stationKey || !record) return;
+  if (!mmCollectionCache) mmCollectionCache = { stations: {}, updatedAt: null };
+  if (!mmCollectionCache.stations) mmCollectionCache.stations = {};
+
+  const cardEntry = {
+    season: record.season,
+    time: record.time,
+    weather: record.weather,
+    type: record.type || 'cloud',
+    capturedAt: Date.now()
+  };
+
+  const existing = mmCollectionCache.stations[stationKey];
+  if (existing && existing.cards && existing.cards.length > 0) {
+    // 既存：Step2は1枚運用なので cards[0] を上書き
+    existing.cards[0] = cardEntry;
+  } else {
+    // 新規
+    mmCollectionCache.stations[stationKey] = {
+      firstVisitAt: Date.now(),
+      visitCount: 1,
+      pinnedIndex: 0,
+      cards: [cardEntry]
+    };
+  }
+
+  // Firestoreに非同期書き込み（待たない＝カクツキ防止。メモリは上で即更新済み）
+  const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
+  if (uid) {
+    try {
+      await setDoc(doc(db, 'users', uid, 'meta', 'collection'), {
+        stations: mmCollectionCache.stations,
+        updatedAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.warn('[mmCloud] 保存失敗:', e);
+    }
+  }
+};
+
+// デバッグ用（コンソールから叩く）
+window.mmCloudDebugDump = function() {
+  console.log('[mmCloud] 集約ドキュメント:', mmCollectionCache);
+  if (mmCollectionCache && mmCollectionCache.stations) {
+    console.table(Object.keys(mmCollectionCache.stations).map(k => {
+      const s = mmCollectionCache.stations[k];
+      const c = (s.cards && s.cards[0]) || {};
+      return { 駅: k, 訪問回数: s.visitCount, 季節: c.season, 時刻: c.time, 天気: c.weather };
+    }));
+  }
+};
+window.mmCloudDebugClearAll = async function() {
+  mmCollectionCache = { stations: {}, updatedAt: null };
+  const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
+  if (uid) {
+    try {
+      await setDoc(doc(db, 'users', uid, 'meta', 'collection'), { stations: {}, updatedAt: serverTimestamp() });
+      console.log('[mmCloud] 全カード記録を削除しました');
+    } catch (e) { console.warn(e); }
+  }
+};
+window.mmCloudDebugClearOne = async function(stationKey) {
+  if (mmCollectionCache && mmCollectionCache.stations) {
+    delete mmCollectionCache.stations[stationKey];
+    const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
+    if (uid) {
+      try {
+        await setDoc(doc(db, 'users', uid, 'meta', 'collection'), {
+          stations: mmCollectionCache.stations, updatedAt: serverTimestamp()
+        });
+        console.log('[mmCloud] ' + stationKey + ' の記録を削除しました');
+      } catch (e) { console.warn(e); }
+    }
+  }
+};
+
 onAuthStateChanged(auth, async (user) => {
   const loginBtn = document.getElementById('loginBtn');
   const userInfo = document.getElementById('userInfo');
@@ -8285,6 +8414,7 @@ onAuthStateChanged(auth, async (user) => {
 
   if (user) {
     loadCheckedInStations(user.uid);
+    mmLoadCollection(user.uid);  // ★Step2: カードコレクション集約ドキュメントをメモリに読み込み
     loginBtn.style.display = 'none';
     userInfo.style.display = 'flex';
     document.getElementById('userAvatar').src = user.photoURL || '';
@@ -10216,6 +10346,8 @@ if ('serviceWorker' in navigator) {
 (function(){
   'use strict';
 
+  // Step2でFirestore集約ドキュメントに移行したため、この定数はもう使われない（無害化のため残置）。
+  // 既存テスターの localStorage 内の古い mm_weather_records は参照されず放置される（案B: 破棄）。
   const MM_RECORDS_KEY = 'mm_weather_records';
   const MM_CACHE_MIN = 10; // 天気API キャッシュ分
 
@@ -10268,19 +10400,21 @@ if ('serviceWorker' in navigator) {
     return 'snowy';
   }
 
-  /* ---------- localStorage 管理 ---------- */
+  /* ---------- 記録管理（Step2: Firestore集約ドキュメント経由）---------- */
+  // window.mmCloudGetRecord / mmCloudSetRecord はモジュールscript側で定義（集約ドキュメントをカプセル化）。
+  // メモリキャッシュから同期で読めるので高速・カクツキなし。
+  // 未準備時（起動直後など）は null を返し、呼び出し側(mmApplyWeather)の決定論フォールバックに任せる。
   function mmGetRecord(stationKey){
-    try {
-      const data = JSON.parse(localStorage.getItem(MM_RECORDS_KEY) || '{}');
-      return data[stationKey] || null;
-    } catch(e){ return null; }
+    if (typeof window.mmCloudGetRecord === 'function') {
+      return window.mmCloudGetRecord(stationKey);
+    }
+    return null;
   }
   function mmSetRecord(stationKey, record){
-    try {
-      const data = JSON.parse(localStorage.getItem(MM_RECORDS_KEY) || '{}');
-      data[stationKey] = record;
-      localStorage.setItem(MM_RECORDS_KEY, JSON.stringify(data));
-    } catch(e){}
+    if (typeof window.mmCloudSetRecord === 'function') {
+      // 非同期だが待たない（カクツキ防止・メモリキャッシュは同期で即更新される）
+      window.mmCloudSetRecord(stationKey, record);
+    }
   }
 
   /* ---------- 案A：駅座標で天気取得（座標ベースキャッシュ） ---------- */
@@ -10459,23 +10593,27 @@ if ('serviceWorker' in navigator) {
   };
   window.mmDebugReapply = mmApplyWeather;
   window.mmDebugClearAll = function(){
-    localStorage.removeItem(MM_RECORDS_KEY);
-    console.log('全カード記録を削除しました（次回開く時にランダム生成されます）');
+    // Step2: Firestore集約ドキュメント経由（localStorageは使わない）
+    if (typeof window.mmCloudDebugClearAll === 'function') {
+      window.mmCloudDebugClearAll();
+    } else {
+      console.warn('mmCloudDebugClearAll 未準備（ログイン後に再実行してください）');
+    }
   };
   window.mmDebugClearOne = function(stationName, pref){
     const key = stationName + '_' + (pref || '');
-    try {
-      const data = JSON.parse(localStorage.getItem(MM_RECORDS_KEY) || '{}');
-      delete data[key];
-      localStorage.setItem(MM_RECORDS_KEY, JSON.stringify(data));
-      console.log(stationName + 'の記録を削除しました');
-    } catch(e){}
+    if (typeof window.mmCloudDebugClearOne === 'function') {
+      window.mmCloudDebugClearOne(key);
+    } else {
+      console.warn('mmCloudDebugClearOne 未準備（ログイン後に再実行してください）');
+    }
   };
   window.mmDebugShowAll = function(){
-    try {
-      const data = JSON.parse(localStorage.getItem(MM_RECORDS_KEY) || '{}');
-      console.table(data);
-    } catch(e){}
+    if (typeof window.mmCloudDebugDump === 'function') {
+      window.mmCloudDebugDump();
+    } else {
+      console.warn('mmCloudDebugDump 未準備（ログイン後に再実行してください）');
+    }
   };
 })();
 </script>
