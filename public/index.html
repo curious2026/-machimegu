@@ -10446,5 +10446,161 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
+<!-- ============================================================ -->
+<!-- Service Worker 自動更新（Phase 1必須・rebuild後ユーザー側強制更新） -->
+<!-- ============================================================ -->
+<script>
+(function setupAutoUpdate(){
+  'use strict';
+  const VERSION_KEY = 'mm_app_data_builtAt';
+  const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5分ごとに再チェック
+  const PROTECTED_PREFIXES = [
+    'firebase:', 'fb:', 'firebaseui::',
+    'mm_fav_', 'mm_settings_', 'mm_user_',
+    'mm_pending_', 'mm_pending_checkin',
+    'mm_weather_records',
+    'mm_app_data_builtAt'
+  ];
+  let isUpdating = false;
+
+  async function fetchServerBuiltAt(){
+    // 第一手段：軽量な /api/version
+    try {
+      const res = await fetch('/api/version', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data.builtAt === 'number' && data.builtAt > 0) {
+          return data.builtAt;
+        }
+      }
+    } catch(e){}
+    // 第二手段：/api/all-scores から builtAt を取得（既存応答にbuiltAtが含まれてる前提）
+    try {
+      const res = await fetch('/api/all-scores?radius=800', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data.builtAt === 'number' && data.builtAt > 0) {
+          return data.builtAt;
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function isProtectedKey(key){
+    if (!key) return false;
+    return PROTECTED_PREFIXES.some(p => key.startsWith(p));
+  }
+
+  async function clearAllCaches(){
+    // 1. Cache Storage（Service Workerがキャッシュしてる /api 系レスポンス、画像など）
+    if ('caches' in window) {
+      try {
+        const names = await caches.keys();
+        await Promise.all(names.map(n => caches.delete(n)));
+        console.log('[mm-update] Cache Storage削除:', names.length, '個');
+      } catch(e) { console.warn('[mm-update] cache delete failed', e); }
+    }
+    // 2. Service Worker をunregister（次回起動時に新バージョンが登録される）
+    if ('serviceWorker' in navigator) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+        console.log('[mm-update] Service Worker解除:', regs.length, '個');
+      } catch(e) { console.warn('[mm-update] SW unregister failed', e); }
+    }
+    // 3. localStorage：データキャッシュだけ削除、ユーザー設定・ログイン・お気に入りは保持
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && !isProtectedKey(k)) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      console.log('[mm-update] localStorage削除:', keysToRemove.length, '個（保護対象は維持）');
+    } catch(e){}
+    // 4. sessionStorage は全削除（一時データのみ）
+    try { sessionStorage.clear(); } catch(e){}
+  }
+
+  function showUpdateToast(){
+    try {
+      const overlay = document.createElement('div');
+      overlay.style.cssText =
+        'position:fixed;inset:0;background:rgba(5,12,22,0.85);' +
+        'z-index:99999998;display:flex;align-items:center;justify-content:center;' +
+        'backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);';
+      const card = document.createElement('div');
+      card.style.cssText =
+        'background:linear-gradient(160deg,#0c1830 0%,#091020 60%,#06101c 100%);' +
+        'border:1.5px solid rgba(88,168,224,0.6);' +
+        'border-radius:18px;padding:26px 32px;text-align:center;' +
+        'box-shadow:0 12px 40px rgba(0,0,0,0.6);max-width:340px;' +
+        'color:#fff;font-family:inherit;';
+      card.innerHTML =
+        '<div style="font-size:36px;margin-bottom:8px">✨</div>' +
+        '<div style="font-size:18px;font-weight:900;margin-bottom:6px;letter-spacing:1px">新しいデータを取得しました</div>' +
+        '<div style="font-size:13px;color:#a8c0e0;line-height:1.5">最新スコアで再起動中…</div>';
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+    } catch(e){}
+  }
+
+  async function checkAndUpdate(){
+    if (isUpdating) return;
+    const serverBuiltAt = await fetchServerBuiltAt();
+    if (!serverBuiltAt) return;
+    const localBuiltAt = parseInt(localStorage.getItem(VERSION_KEY) || '0', 10);
+    if (localBuiltAt === 0) {
+      // 初回起動：現在のバージョンを記録するだけ
+      localStorage.setItem(VERSION_KEY, String(serverBuiltAt));
+      console.log('[mm-update] 初回起動、バージョン記録:', serverBuiltAt);
+      return;
+    }
+    if (serverBuiltAt > localBuiltAt) {
+      isUpdating = true;
+      console.log('[mm-update] 新バージョン検出', {
+        local: new Date(localBuiltAt).toISOString(),
+        server: new Date(serverBuiltAt).toISOString()
+      });
+      showUpdateToast();
+      await clearAllCaches();
+      localStorage.setItem(VERSION_KEY, String(serverBuiltAt));
+      // 1.8秒後にハードリロード
+      setTimeout(() => {
+        try { location.reload(); }
+        catch(e) { window.location.href = window.location.pathname; }
+      }, 1800);
+    }
+  }
+
+  // 起動直後（少し遅延、他のスクリプトの初期化を妨げないよう）
+  function start(){
+    setTimeout(checkAndUpdate, 2000);
+    setInterval(checkAndUpdate, CHECK_INTERVAL_MS);
+    // タブが可視状態に戻った時もチェック（モバイルでアプリ復帰時）
+    document.addEventListener('visibilitychange', function(){
+      if (document.visibilityState === 'visible') checkAndUpdate();
+    });
+  }
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    start();
+  } else {
+    document.addEventListener('DOMContentLoaded', start);
+  }
+
+  // デバッグ用
+  window.mmUpdateCheck = checkAndUpdate;
+  window.mmUpdateForce = async function(){
+    console.log('[mm-update] 強制クリア実行');
+    await clearAllCaches();
+    localStorage.removeItem(VERSION_KEY);
+    setTimeout(() => location.reload(), 500);
+  };
+})();
+</script>
+
 </body>
 </html>
