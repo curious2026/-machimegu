@@ -787,6 +787,21 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// ─── バージョン確認（フロントの自動更新用・超軽量） ───
+// フロント側が起動時/定期的にこれを叩き、builtAt が進んでいたら
+// 自動でキャッシュをクリアして最新データに更新する。
+// rebuild 完了で scoresCache.builtAt が Date.now() に更新される度に、
+// 全ユーザーが次回アクセス時に自動で最新化される。
+app.get('/api/version', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    builtAt: scoresCache.builtAt || 0,
+    version: scoresCache.version || 'unknown',
+    building: buildState.running,
+    serverTime: Date.now()
+  });
+});
+
 // ═══════════════════════════════════════════════════════════════
 // 管理者専用エンドポイント（Firebase認証必須）
 // ═══════════════════════════════════════════════════════════════
