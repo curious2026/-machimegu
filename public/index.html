@@ -5949,7 +5949,8 @@ if (navigator.geolocation) {
 }
 // ★ ログイン後にpendingCheckin救済を試行
 setTimeout(() => {
-  if (auth && auth.currentUser && typeof checkPendingResumption === 'function') {
+  // ★バグC修正：auth → window.auth（このsetTimeoutはモジュール外scriptのため）
+  if (window.auth && window.auth.currentUser && typeof checkPendingResumption === 'function') {
     checkPendingResumption().catch(e => console.warn('救済エラー', e));
   }
 }, 3000);
@@ -5981,6 +5982,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
+
+// ★バグC修正：auth/db をグローバル公開（モジュール外の通常scriptからも参照可能に）
+// checkPendingResumption の救済処理が "auth is not defined" で動かなかった問題の対処
+window.auth = auth;
+window.db = db;
 
 // ════════════════════════════════════════════════════════════════
 // Firebase Analytics 初期化 + ともき除外（3層防御）
@@ -6574,6 +6580,29 @@ async function getTodayCheckinCount(uid) {
   }
 }
 
+// ★バグB修正：今日のチェックイン「一覧」を取得（複合インデックス不要）
+// 重複チェックを stationId+checkedInAt の複合クエリでやると複合インデックスが必須になり、
+// インデックス未作成だとクエリがエラー → catch握りつぶし → 1日1回制限が無効化されていた。
+// この関数は checkedInAt の単一フィールド範囲条件のみ（インデックス不要）で今日の全件を取り、
+// stationId の一致判定はクライアント側で行う。1日のチェックインは数件なので負荷は無視できる。
+async function getTodayCheckinList(uid) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  try {
+    const ckRef = collection(db, 'users', uid, 'checkins');
+    const q = query(ckRef,
+      where('checkedInAt', '>=', Timestamp.fromDate(today)),
+      where('checkedInAt', '<', Timestamp.fromDate(tomorrow)));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data());
+  } catch (e) {
+    console.error('今日のチェックイン一覧取得エラー:', e);
+    return [];
+  }
+}
+
 // ステーションカードあるかチェック
 async function hasStationCard(uid, stationId) {
   try {
@@ -6848,21 +6877,15 @@ async function tryCompleteCheckin() {
   try {
     const stationId = `${pendingCheckin.stationName}_${pendingCheckin.stationPref}`;
     
-    // ★ 同一駅 1日1回制限（日本時間 0:00リセット）
-    // 日本時間の今日0:00を計算（UTC基準で-9時間ずれを補正）
-    const now = new Date();
-    const jstNow = new Date(now.getTime() + 9*60*60*1000);  // JSTに変換
-    const jstTodayStart = new Date(jstNow.getFullYear(), jstNow.getMonth(), jstNow.getDate());
-    const todayStartUTC = new Date(jstTodayStart.getTime() - 9*60*60*1000);  // UTCに戻す
-    
+    // ★ 同一駅 1日1回制限（★バグB修正：複合インデックス不要の方式に変更）
+    // 旧実装は where('stationId','==',...) + where('checkedInAt','>=',...) の複合クエリで、
+    // Firestore複合インデックスが必須 → 未作成だとエラー → catch握りつぶしで制限が無効だった。
+    // 新実装は getTodayCheckinList（単一フィールド範囲、インデックス不要）で今日の全件を取得し、
+    // stationId 一致をクライアント側で判定する。
     try {
-      const checkinsRef = collection(db, 'users', user.uid, 'checkins');
-      const q = query(checkinsRef, 
-        where('stationId', '==', stationId),
-        where('checkedInAt', '>=', todayStartUTC)
-      );
-      const dupSnap = await getDocs(q);
-      if (!dupSnap.empty) {
+      const todayList = await getTodayCheckinList(user.uid);
+      const alreadyToday = todayList.some(c => c.stationId === stationId);
+      if (alreadyToday) {
         alert(`本日は既に「${pendingCheckin.stationName}駅」にチェックイン済みです。\n同じ駅は1日1回までです。`);
         clearPending();
         hideCheckinIndicator();
@@ -7475,6 +7498,12 @@ window.openCardFromHistory = async function(stationName, stationPref) {
   // 駅情報を取得（stationDataから即座に）
   const st = stationData.find(s => s.name === stationName && s.pref === stationPref);
   if (!st) { alert('駅情報が見つかりません'); return; }
+  
+  // ★バグA修正：カードコレクションから開く時も currentStation をセット
+  // これがないと天気処理(mmApplyWeather)が「前に見ていた駅」を参照してしまい、
+  // 開くたびに背景が変わる。地図から開く showInfo は既にセット済み、こちらが抜けていた。
+  currentStation = st;
+  window.currentStation = st;
   
   // ★★ カクツキ対策：Firebase fetchを待たずに、即座にカード描画 ★★
   // stationDataの情報のみで先に描画 → カクツキゼロ
