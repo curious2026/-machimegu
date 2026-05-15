@@ -2069,6 +2069,58 @@ body:not(.splashing) #table-area{
 #badgepage-modal > *,
 #cardlist-modal > *{position:relative;z-index:2}
 
+/* ★Step4: カードバージョン選択モーダル（cardlist-modalと同じ見た目に揃える） */
+#cardversion-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.93);z-index:8800;
+  display:none;align-items:flex-start;justify-content:center;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  overflow-y:auto;
+}
+#cardversion-bg.open{display:flex}
+#cardversion-modal{
+  background:linear-gradient(180deg,#1a2848 0%,#142038 40%,#0e1828 100%);
+  width:100%;max-width:680px;min-height:100vh;
+  position:relative;border-radius:0;overflow:hidden;
+}
+#cardversion-modal::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.06) 0%,transparent 100%);
+  pointer-events:none;border-radius:inherit;z-index:1;
+}
+#cardversion-modal > *{position:relative;z-index:2}
+
+/* バージョン選択モーダル内のグリッドは2列固定（既存mp-card-gridは3列） */
+#cv-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;
+  padding:6px 0;
+}
+
+/* ★Step4: 固定ボタン（カード右上の小さい丸ボタン） */
+.cv-pin-btn{
+  position:absolute;top:6px;right:6px;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(10,20,40,0.78);border:1.5px solid rgba(255,255,255,0.35);
+  color:rgba(255,255,255,0.85);font-size:16px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:5;
+  transition:transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color:transparent;line-height:1;padding:0;
+}
+.cv-pin-btn:hover{transform:scale(1.08)}
+.cv-pin-btn:active{transform:scale(0.94)}
+.cv-pin-btn.pinned{
+  background:rgba(56,189,248,0.92);
+  border-color:rgba(125,211,252,1);
+  color:#0c1830;
+  box-shadow:0 0 14px rgba(56,189,248,0.55);
+}
+
+/* バージョン選択モーダル内のカードは pinned バッジを薄く強調 */
+#cv-grid .mp-mini-card{position:relative}
+#cv-grid .mp-mini-card.is-pinned{
+  box-shadow:0 0 0 2px rgba(125,211,252,0.7), 0 6px 24px rgba(56,189,248,0.25);
+}
+
 .cl-title{font-size:18px !important;letter-spacing:1.5px}
 .cl-hint{font-size:14px !important}
 .cl-back{width:42px !important;height:42px !important;font-size:20px !important}
@@ -4160,6 +4212,24 @@ body.checkin-active #checkin-indicator{
         </div>
       </div>
       <div class="mp-card-grid" id="cl-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ★Step4: カードバージョン選択モーダル（同一駅の複数枚カードを2x2グリッド表示） -->
+<div id="cardversion-bg" onclick="closeCardVersion(event)">
+  <div id="cardversion-modal" onclick="event.stopPropagation()">
+    <div class="cl-header">
+      <button class="cl-back" onclick="closeCardVersion()">←</button>
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <div class="cl-title" id="cv-title">―</div>
+        <div class="cl-title-count" id="cv-count" style="font-size:14px;color:#fff;font-weight:900;letter-spacing:1px"></div>
+      </div>
+      <div class="cl-hint" style="position:absolute;bottom:6px;right:50%;transform:translateX(50%)">タッチで開く・☆で固定</div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="cl-body">
+      <div class="mp-card-grid" id="cv-grid"></div>
     </div>
   </div>
 </div>
@@ -6962,6 +7032,33 @@ async function tryCompleteCheckin() {
       if (cardDoc.exists()) visitCount = cardDoc.data().visitCount || 1;
     } catch {}
 
+    // ★★ Step3: チェックイン成功時にカードコレクション集約ドキュメントへカード追加 ★★
+    // 「カードが増えるのはチェックイン時だけ」（案A）の核心。
+    // 同じ組み合わせなら据え置き＋訪問回数のみ更新、違えば新カード追加（案B）。
+    // mmCloudAddCard はメモリを同期で即更新するため、直後の showCheckinSuccess →
+    // mmApplyWeather の流れで mmCloudGetRecord が新カードを読める。
+    try {
+      if (typeof window.mmCloudAddCard === 'function' &&
+          typeof window.mmStationKey === 'function' &&
+          typeof window.mmGetSeason === 'function' &&
+          typeof window.mmGetTime === 'function' &&
+          typeof window.mmGetWeather === 'function') {
+        const stationObj = { name: pendingCheckin.stationName, pref: pendingCheckin.stationPref };
+        const stKey = window.mmStationKey(stationObj);
+        const weatherStr = await window.mmGetWeather(pendingCheckin.stationLat, pendingCheckin.stationLng);
+        await window.mmCloudAddCard(stKey, {
+          season: window.mmGetSeason(),
+          time: window.mmGetTime(),
+          weather: weatherStr,
+          type: 'fresh'
+        });
+      } else {
+        console.warn('[Step3] mmCloud関連関数の一部が未準備、カード追加をスキップ');
+      }
+    } catch (e) {
+      console.warn('[Step3] mmCloudAddCard 呼び出しエラー（チェックイン自体は成功）:', e);
+    }
+
     if (window.markCheckedIn) window.markCheckedIn(pendingCheckin.stationName, pendingCheckin.stationPref);
 
     showCheckinSuccess({
@@ -7223,8 +7320,10 @@ window.closeCardModal = function(e) {
   document.getElementById('card-modal-bg').classList.remove('open');
   const ret = window.cardCloseReturn;
   window.cardCloseReturn = null;
-  if (ret === 'cardlist' || ret === 'mypage' || ret === 'history') {
-    // モーダルは既に開いたままなので何もしない
+  // ★Step4: バージョンモーダルからカードを開いていた場合は override をクリア（次回正しく pinnedIndex に戻る）
+  if (typeof window._cvClearOverride === 'function') window._cvClearOverride();
+  if (ret === 'cardlist' || ret === 'mypage' || ret === 'history' || ret === 'cardversion') {
+    // モーダルは既に開いたままなので何もしない（cardversion を含む）
   } else {
     document.body.style.overflow = '';
   }
@@ -7498,6 +7597,25 @@ window.openCardFromHistory = async function(stationName, stationPref) {
   // 駅情報を取得（stationDataから即座に）
   const st = stationData.find(s => s.name === stationName && s.pref === stationPref);
   if (!st) { alert('駅情報が見つかりません'); return; }
+  
+  // ★★ Step4: 複数枚あれば「カードバージョン選択モーダル」へ分岐 ★★
+  // バージョンモーダルから特定カードを開く時は window._cv_forceSingle が立っているので
+  // この分岐をスキップして従来通りカード表示に進む。
+  if (!window._cv_forceSingle &&
+      typeof window.mmCloudGetStation === 'function' &&
+      typeof window.mmStationKey === 'function') {
+    const stKey = window.mmStationKey({ name: stationName, pref: stationPref });
+    const stationEntry = window.mmCloudGetStation(stKey);
+    if (stationEntry && stationEntry.cards && stationEntry.cards.length >= 2) {
+      // 複数枚あり：バージョン選択モーダルへ
+      if (typeof window.openCardVersion === 'function') {
+        window.openCardVersion(stationName, stationPref);
+        return;
+      }
+    }
+  }
+  // フラグは1回限りで消費
+  window._cv_forceSingle = false;
   
   // ★バグA修正：カードコレクションから開く時も currentStation をセット
   // これがないと天気処理(mmApplyWeather)が「前に見ていた駅」を参照してしまい、
@@ -7835,6 +7953,154 @@ window.renderCardListSorted = () => {
   });
 };
 
+// ═══════════════════════════════════════════════════════════════
+// ★Step4: カードバージョン選択モーダル（同一駅の複数枚を2x2グリッドで表示）
+// ═══════════════════════════════════════════════════════════════
+// 動作：
+//  - 同じ駅の複数枚カードを「新しい順」で2x2グリッドに並べる
+//  - カードタップ → そのカード固有の天気で個別カード詳細を開く
+//  - 各カード右上の☆/★ボタン → pinnedIndex 更新（コレクション一覧の代表カードが変わる）
+//  - 戻るボタンで閉じる
+window._cvCurrentStation = null;  // {name, pref}
+window._cvLastSortedIndices = []; // 表示順→実index のマッピング（カードタップ時に使う）
+
+window.openCardVersion = function(stationName, stationPref) {
+  window._cvCurrentStation = { name: stationName, pref: stationPref };
+  const titleEl = document.getElementById('cv-title');
+  if (titleEl) titleEl.textContent = stationName;
+  window.renderCardVersion();
+  document.getElementById('cardversion-bg').classList.add('open');
+};
+
+window.closeCardVersion = function(e) {
+  // 背景クリックで閉じる（モーダル本体クリックは event.stopPropagation で来ない）
+  if (e && e.target && e.target.id !== 'cardversion-bg' && typeof e.target.tagName === 'string') {
+    // ボタン経由の場合は e がイベントでないので通す
+    if (e instanceof Event) return;
+  }
+  document.getElementById('cardversion-bg').classList.remove('open');
+  window._cvCurrentStation = null;
+  window._cvLastSortedIndices = [];
+};
+
+window.renderCardVersion = function() {
+  const grid = document.getElementById('cv-grid');
+  const countEl = document.getElementById('cv-count');
+  if (!grid || !window._cvCurrentStation) return;
+  const stName = window._cvCurrentStation.name;
+  const stPref = window._cvCurrentStation.pref;
+  
+  // データ取得
+  if (typeof window.mmStationKey !== 'function' || typeof window.mmCloudGetStation !== 'function') {
+    grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1">データ未準備</div>';
+    return;
+  }
+  const stKey = window.mmStationKey({ name: stName, pref: stPref });
+  const entry = window.mmCloudGetStation(stKey);
+  if (!entry || !entry.cards || entry.cards.length === 0) {
+    grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1">カードが見つかりません</div>';
+    return;
+  }
+  
+  // 駅情報（stationDataから取得：スコア・ランク・路線）
+  const st = stationData.find(s => s.name === stName && s.pref === stPref);
+  const score = st ? (st.scoreCard || st.score || 0) : 0;
+  const rankInfo = (window.getRank && score) ? window.getRank(score) : { rank: '-' };
+  const rank = rankInfo.rank;
+  
+  // 訪問回数（共通値、テキスト統一原則）
+  const visitCount = entry.visitCount || entry.cards.length;
+  const visitStr = visitCount > 1 ? (visitCount + '回') : '初訪問';
+  
+  countEl.textContent = '(' + entry.cards.length + '枚 / 訪問' + visitCount + '回)';
+  
+  // ★案B: 新しい順にソート（capturedAt 降順）。表示順→実index のマッピングを保持。
+  const indexed = entry.cards.map(function(c, i) { return { card: c, originalIndex: i }; });
+  indexed.sort(function(a, b) {
+    return (b.card.capturedAt || 0) - (a.card.capturedAt || 0);
+  });
+  window._cvLastSortedIndices = indexed.map(function(it) { return it.originalIndex; });
+  
+  const pinnedIdx = (typeof entry.pinnedIndex === 'number') ? entry.pinnedIndex : 0;
+  
+  grid.innerHTML = '';
+  indexed.forEach(function(it) {
+    const c = it.card;
+    const origIdx = it.originalIndex;
+    const isPinned = (origIdx === pinnedIdx);
+    
+    const div = document.createElement('div');
+    div.className = 'mp-mini-card' + (isPinned ? ' is-pinned' : '');
+    div.setAttribute('data-rank', rank);
+    
+    // 各カードに「季節+時刻+天気」のサブラベルを薄く表示すると、複数枚の違いが直感的に分かる
+    const seasonJp = ({spring:'春', summer:'夏', autumn:'秋', winter:'冬'})[c.season] || '';
+    const timeJp = ({morning:'朝', noon:'昼', evening:'夕', night:'夜'})[c.time] || '';
+    const weatherJp = ({sunny:'晴', cloudy:'曇', rainy:'雨', snowy:'雪'})[c.weather] || '';
+    const sub = seasonJp + timeJp + weatherJp;
+    
+    div.innerHTML =
+      '<button class="cv-pin-btn ' + (isPinned ? 'pinned' : '') + '" ' +
+      'onclick="event.stopPropagation();window.togglePinCard(' + origIdx + ')" ' +
+      'aria-label="代表カードに固定">' + (isPinned ? '★' : '☆') + '</button>' +
+      '<div class="mc-rank-letter">' + rank + '</div>' +
+      '<div class="mc-name">' + stName + '</div>' +
+      '<div class="mc-score-big">' + score + '</div>' +
+      '<div class="mc-visit-small" style="opacity:0.85">' + sub + '</div>';
+    
+    div.onclick = function() {
+      // ★Step4+5: このカード固有の天気で個別カード詳細を開く＋スワイプ用シーケンスをセット
+      window._cv_overrideIndex = origIdx;
+      window._cv_forceSingle = true;
+      window.cardCloseReturn = 'cardversion';  // ★Step5: _isSwipeable() がこれを見る
+
+      // ★Step5: 同一駅スワイプ用シーケンスを構築（新しい順のカード配列、各要素にcardIndex付き）
+      // この cardSeq を _sortedCardList にセットすれば、既存スワイプロジック
+      // （touchstart/move/end の追従アニメ・閾値・キーボード）がそのまま流用される。
+      // スワイプロジック本体は1行も触らない＝今後の変更は自動的に反映される（同時変更の仕掛け）。
+      const cardSeq = indexed.map(function(it) {
+        return {
+          stationName: stName,
+          stationPref: stPref,
+          cardIndex: it.originalIndex  // _navCard がこれを見て override をセット
+        };
+      });
+      window._sortedCardList = cardSeq;
+      // タップしたカードのソート後表示順indexを _currentCardIndex に
+      window._currentCardIndex = indexed.findIndex(function(it) { return it.originalIndex === origIdx; });
+
+      // バージョンモーダル自体は閉じない（背後に残す→閉じる時に戻る）
+      if (window.openCardFromHistory) {
+        window.openCardFromHistory(stName, stPref);
+      }
+    };
+    grid.appendChild(div);
+  });
+};
+
+// ★Step4: 固定ボタン押下 → pinnedIndex 更新
+window.togglePinCard = async function(originalIndex) {
+  if (!window._cvCurrentStation) return;
+  const stName = window._cvCurrentStation.name;
+  const stPref = window._cvCurrentStation.pref;
+  if (typeof window.mmStationKey !== 'function' || typeof window.mmCloudPinCard !== 'function') return;
+  const stKey = window.mmStationKey({ name: stName, pref: stPref });
+  const ok = await window.mmCloudPinCard(stKey, originalIndex);
+  if (ok) {
+    // モーダル内の表示を即更新
+    window.renderCardVersion();
+    // 背景のコレクション一覧も次回開く時に新代表で描画される（cardListData自体はFirestore由来、
+    // pinnedIndex は別の集約ドキュメントなので、コレクション一覧の見た目は基本変わらない
+    // ＝コレクション一覧で表示されるのは stationCards/firstRank/firstScore、これは Step4 で変わらない）
+  }
+};
+
+// ★Step4: カード詳細を閉じた時に override をクリア
+// （個別カード詳細を閉じる時に呼ばれる closeCardModal で連動させる）
+window._cvClearOverride = function() {
+  window._cv_overrideIndex = undefined;
+};
+
 // ─── カードモーダル：スワイプで前後カード移動（iPhone写真風滑らか追従） ───
 window._swipeStartX = null;
 window._swipeStartY = null;
@@ -7846,9 +8112,21 @@ window._initCardSwipe = function() {
   
   const getWrap = () => document.getElementById('card-flip-wrap');
   
+  // ★Step5: スワイプ可能判定を1関数に集約（「同時変更の仕掛け」の土台）
+  // 今後この判定を変更する時、ここ1箇所変えれば touchstart/touchmove/touchend/keydown
+  // の4箇所と、同一駅スワイプ（cardversion経由）すべてに自動反映される。
+  // 既存の駅スワイプロジック（touchstart/move/end の追従アニメ・閾値・キーボード）が
+  // 一切変更なしで同一駅スワイプにも適用される＝ともきの要求「ロジック流用」を完全実現。
+  if (!window._isSwipeable) {
+    window._isSwipeable = function() {
+      const r = window.cardCloseReturn;
+      return r === 'cardlist' || r === 'mypage' || r === 'cardversion';
+    };
+  }
+  
   modal.addEventListener('touchstart', function(e) {
-    // スワイプ可能：カードリスト or マイページ起源
-    const swipeable = window.cardCloseReturn === 'cardlist' || window.cardCloseReturn === 'mypage';
+    // スワイプ可能：カードリスト・マイページ・バージョンモーダル起源
+    const swipeable = window._isSwipeable();
     if (!swipeable) return;
     if (e.touches.length !== 1) return;
     window._swipeStartX = e.touches[0].clientX;
@@ -7861,7 +8139,7 @@ window._initCardSwipe = function() {
   
   modal.addEventListener('touchmove', function(e) {
     if (window._swipeStartX === null) return;
-    const swipeable = window.cardCloseReturn === 'cardlist' || window.cardCloseReturn === 'mypage';
+    const swipeable = window._isSwipeable();
     if (!swipeable) return;
     const dx = e.touches[0].clientX - window._swipeStartX;
     const dy = e.touches[0].clientY - window._swipeStartY;
@@ -7886,7 +8164,7 @@ window._initCardSwipe = function() {
   
   modal.addEventListener('touchend', function(e) {
     if (window._swipeStartX === null) return;
-    const swipeable = window.cardCloseReturn === 'cardlist' || window.cardCloseReturn === 'mypage';
+    const swipeable = window._isSwipeable();
     if (!swipeable) {
       window._swipeStartX = null; window._swipeStartY = null;
       return;
@@ -7945,7 +8223,7 @@ window._initCardSwipe = function() {
     if (e.isComposing || e.keyCode === 229) return;  // IME入力中
     const bg = document.getElementById('card-modal-bg');
     if (!bg || !bg.classList.contains('open')) return;
-    const swipeable = window.cardCloseReturn === 'cardlist' || window.cardCloseReturn === 'mypage';
+    const swipeable = window._isSwipeable();
     if (!swipeable) return;
     // テキスト入力中はナビしない
     const ae = document.activeElement;
@@ -7977,6 +8255,15 @@ window._navCard = function(direction) {
     wrap.classList.remove('swipe-in-left', 'swipe-in-right');
     void wrap.offsetWidth;
     wrap.classList.add(direction > 0 ? 'swipe-in-left' : 'swipe-in-right');
+  }
+  // ★Step5: 同一駅スワイプモード判定（要素にcardIndex があれば override セット）
+  // ・通常モード（コレクション/マイページから）：c = {stationName, stationPref}、cardIndex なし
+  // ・同一駅モード（バージョンモーダルから）：c = {stationName, stationPref, cardIndex}
+  //   → cardIndex を override にセット → mmCloudGetRecord がそのカードの天気を返す
+  //   → 結果として「同じ駅のテキスト、違う背景」になる（ともきの仕様：背景のみ変わる）
+  if (typeof c.cardIndex === 'number') {
+    window._cv_overrideIndex = c.cardIndex;
+    window._cv_forceSingle = true;
   }
   if (window.openCardFromHistory) {
     window.openCardFromHistory(c.stationName, c.stationPref);
@@ -8313,23 +8600,67 @@ async function mmLoadCollection(uid) {
 }
 
 // 天気記録を読む（メモリキャッシュから同期で返す）
-// 戻り値: {season,time,weather,type,savedAt} または null（未準備・未登録時）
+// 戻り値: {season,time,weather,type,savedAt,special} または null（未準備・未登録時）
 window.mmCloudGetRecord = function(stationKey) {
   if (!mmCollectionCache || !mmCollectionCache.stations) return null;
   const st = mmCollectionCache.stations[stationKey];
   if (!st || !st.cards || st.cards.length === 0) return null;
-  // Step2は1枚運用：cards[0]（Step3以降は pinnedIndex を使う）
-  const c = st.cards[0];
+  // ★Step3: pinnedIndex のカードを返す（Step4「固定」ボタンで代表カードを切り替えるための土台）
+  // pinnedIndex が無効な値（範囲外・型違い）なら 0 にフォールバック
+  const len = st.cards.length;
+  let idx = (typeof st.pinnedIndex === 'number' && st.pinnedIndex >= 0 && st.pinnedIndex < len) ? st.pinnedIndex : 0;
+  // ★Step4: バージョンモーダルから特定カードを開く時の override
+  if (typeof window._cv_overrideIndex === 'number' && window._cv_overrideIndex >= 0 && window._cv_overrideIndex < len) {
+    idx = window._cv_overrideIndex;
+  }
+  const c = st.cards[idx];
   return {
     season: c.season,
     time: c.time,
     weather: c.weather,
     type: c.type || 'cloud',
-    savedAt: c.capturedAt || null
+    savedAt: c.capturedAt || null,
+    special: c.special || null  // Step3: スペシャルカード判定値（現状常にnull、将来用）
   };
 };
 
+// ★Step4: 駅エントリ全体を返す（バージョンモーダル用）
+// 戻り値: {firstVisitAt,lastVisitAt,visitCount,pinnedIndex,cards:[...]} または null
+window.mmCloudGetStation = function(stationKey) {
+  if (!mmCollectionCache || !mmCollectionCache.stations) return null;
+  const st = mmCollectionCache.stations[stationKey];
+  if (!st) return null;
+  return st;
+};
+
+// ★Step4: pinnedIndex を更新（代表カード切り替え）
+// メモリ即更新＋Firestore非同期書き込み
+window.mmCloudPinCard = async function(stationKey, newIndex) {
+  if (!stationKey || typeof newIndex !== 'number') return false;
+  if (!mmCollectionCache || !mmCollectionCache.stations) return false;
+  const st = mmCollectionCache.stations[stationKey];
+  if (!st || !st.cards) return false;
+  if (newIndex < 0 || newIndex >= st.cards.length) return false;
+  st.pinnedIndex = newIndex;
+  const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
+  if (uid) {
+    try {
+      await setDoc(doc(db, 'users', uid, 'meta', 'collection'), {
+        stations: mmCollectionCache.stations,
+        updatedAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.warn('[mmCloud] PinCard 保存失敗:', e);
+      return false;
+    }
+  }
+  console.log('[mmCloud] PinCard ' + stationKey + ' → index=' + newIndex);
+  return true;
+};
+
 // 天気記録を書く（メモリ即更新＋Firestore非同期書き込み）
+// ★★ Step2用「上書き」関数。Step3でカード追加用の mmCloudAddCard が新設されたため、
+//     通常の運用ではこの関数は呼ばれない（Deprecated）。万一のフォールバック用に残置。
 window.mmCloudSetRecord = async function(stationKey, record) {
   if (!stationKey || !record) return;
   if (!mmCollectionCache) mmCollectionCache = { stations: {}, updatedAt: null };
@@ -8340,7 +8671,8 @@ window.mmCloudSetRecord = async function(stationKey, record) {
     time: record.time,
     weather: record.weather,
     type: record.type || 'cloud',
-    capturedAt: Date.now()
+    capturedAt: Date.now(),
+    special: null  // Step3: スペシャルカード判定用フィールド（将来用、現状は常にnull）
   };
 
   const existing = mmCollectionCache.stations[stationKey];
@@ -8351,6 +8683,7 @@ window.mmCloudSetRecord = async function(stationKey, record) {
     // 新規
     mmCollectionCache.stations[stationKey] = {
       firstVisitAt: Date.now(),
+      lastVisitAt: Date.now(),
       visitCount: 1,
       pinnedIndex: 0,
       cards: [cardEntry]
@@ -8369,6 +8702,84 @@ window.mmCloudSetRecord = async function(stationKey, record) {
       console.warn('[mmCloud] 保存失敗:', e);
     }
   }
+};
+
+// ★★ Step3: チェックイン成功時にカードを追加する（メイン関数）
+// 動作：
+//  - 新規駅 → 新規エントリ作成、cards に1枚追加
+//  - 既存駅で「全く同じ組み合わせ」のカードが既にある → カード据え置き、訪問回数のみ更新（案B）
+//  - 既存駅で「新しい組み合わせ」 → cards に追加（自然上限64枚、特別な制限なし）
+// 引数 weather = { season, time, weather, type:'fresh' }
+window.mmCloudAddCard = async function(stationKey, weather) {
+  if (!stationKey || !weather) return { status: 'error' };
+  if (!mmCollectionCache) mmCollectionCache = { stations: {}, updatedAt: null };
+  if (!mmCollectionCache.stations) mmCollectionCache.stations = {};
+
+  const now = Date.now();
+  const existing = mmCollectionCache.stations[stationKey];
+  let status; // 'new_station' | 'new_card' | 'duplicate'
+
+  if (existing && existing.cards && existing.cards.length > 0) {
+    // 既存駅
+    const duplicate = existing.cards.some(function(c) {
+      return c.season === weather.season &&
+             c.time === weather.time &&
+             c.weather === weather.weather;
+    });
+    if (duplicate) {
+      // 案B: 同じ組み合わせ → 訪問回数だけ更新、カード据え置き
+      existing.visitCount = (existing.visitCount || 0) + 1;
+      existing.lastVisitAt = now;
+      status = 'duplicate';
+    } else {
+      // 新組み合わせ → カード追加（自然上限64で打ち止め）
+      existing.cards.push({
+        season: weather.season,
+        time: weather.time,
+        weather: weather.weather,
+        type: weather.type || 'fresh',
+        capturedAt: now,
+        special: null  // 将来用：'first_checkin','new_year','birthday'等のスペシャル判定値
+      });
+      existing.visitCount = (existing.visitCount || 0) + 1;
+      existing.lastVisitAt = now;
+      status = 'new_card';
+    }
+  } else {
+    // 新規駅
+    mmCollectionCache.stations[stationKey] = {
+      firstVisitAt: now,
+      lastVisitAt: now,
+      visitCount: 1,
+      pinnedIndex: 0,
+      cards: [{
+        season: weather.season,
+        time: weather.time,
+        weather: weather.weather,
+        type: weather.type || 'fresh',
+        capturedAt: now,
+        special: null
+      }]
+    };
+    status = 'new_station';
+  }
+
+  // Firestoreに非同期書き込み（メモリは上で即更新済み）
+  const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
+  if (uid) {
+    try {
+      await setDoc(doc(db, 'users', uid, 'meta', 'collection'), {
+        stations: mmCollectionCache.stations,
+        updatedAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.warn('[mmCloud] AddCard 保存失敗:', e);
+    }
+  }
+  console.log('[mmCloud] AddCard ' + stationKey + ' → ' + status +
+    ' (cards=' + mmCollectionCache.stations[stationKey].cards.length +
+    ', visits=' + mmCollectionCache.stations[stationKey].visitCount + ')');
+  return { status: status, station: mmCollectionCache.stations[stationKey] };
 };
 
 // デバッグ用（コンソールから叩く）
@@ -10466,33 +10877,19 @@ if ('serviceWorker' in navigator) {
 
     let record = mmGetRecord(stationKey);
 
-    // 記録なしの場合：新規チェックインか過去カードか判別
+    /* ─── Step3: 記録なしの場合は「決定論的フォールバックを表示用に生成、保存はしない」 ─── */
+    /* カード追加は完全にチェックイン成功処理側に移った（mmCloudAddCard）。
+       ここでカードを開いただけで保存されてしまうと、コレクションを眺めるだけで
+       カードが増殖し、提案3の「チェックインで増える」設計が壊れる。 */
     if(!record){
-      // チェックイン成功モーダルが open かチェック
-      const successBg = document.getElementById('checkin-success-bg');
-      const isJustCheckedIn = successBg && (successBg.classList.contains('open') || getComputedStyle(successBg).display !== 'none');
-
-      if(isJustCheckedIn && typeof station.lat === 'number' && typeof station.lng === 'number'){
-        // 新規チェックイン：駅座標で現在の天気取得
-        const weather = await mmGetWeather(station.lat, station.lng);
-        record = {
-          season: mmGetSeason(),
-          time: mmGetTime(),
-          weather: weather,
-          type: 'fresh',
-          savedAt: Date.now()
-        };
-      } else {
-        // 過去カード：駅IDから決定論的ランダム
-        record = {
-          season: mmRandomSeason(stationKey),
-          time: mmRandomTime(stationKey),
-          weather: mmRandomWeather(stationKey),
-          type: 'random',
-          savedAt: Date.now()
-        };
-      }
-      mmSetRecord(stationKey, record);
+      // 未チェックイン駅・記録未読込時のフォールバック（表示のみ、Firestoreに保存しない）
+      record = {
+        season: mmRandomSeason(stationKey),
+        time: mmRandomTime(stationKey),
+        weather: mmRandomWeather(stationKey),
+        type: 'fallback',
+        savedAt: null
+      };
     }
 
     /* ---- カードに適用 ---- */
@@ -10592,6 +10989,14 @@ if ('serviceWorker' in navigator) {
     mmApplyWeather();
   };
   window.mmDebugReapply = mmApplyWeather;
+
+  /* ─── Step3: モジュールscript側から呼べるよう、補助関数をwindowに公開 ─── */
+  /* チェックイン成功処理（モジュール内）から「現在の季節・時刻・天気」を取得して
+     mmCloudAddCard に渡すため。 */
+  window.mmStationKey = mmStationKey;
+  window.mmGetSeason = mmGetSeason;
+  window.mmGetTime = mmGetTime;
+  window.mmGetWeather = mmGetWeather;
   window.mmDebugClearAll = function(){
     // Step2: Firestore集約ドキュメント経由（localStorageは使わない）
     if (typeof window.mmCloudDebugClearAll === 'function') {
