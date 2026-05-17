@@ -3418,6 +3418,23 @@ body.checkin-active #checkin-indicator{
 </style>
 </head>
 <body class="splashing">
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- ★バグ2修正：iPhone標準の「最上部タップ→スクロールトップ」を再現 -->
+<!-- 透明な極薄バーを最上部に固定。タップで現在開いてるモーダル/画面の -->
+<!-- 主要スクロール要素を先頭にスクロール。env(safe-area-inset-top)対応で -->
+<!-- ノッチ機種でも適切な領域を確保。z-index は最上位（モーダルより上）。 -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div id="top-tap-catcher"
+     onclick="window.scrollOpenedToTop && window.scrollOpenedToTop()"
+     ontouchstart="window.scrollOpenedToTop && window.scrollOpenedToTop()"
+     style="position:fixed;top:0;left:0;right:0;
+            height:calc(env(safe-area-inset-top, 0px) + 22px);
+            min-height:22px;
+            z-index:99999990;
+            background:transparent;
+            pointer-events:auto;
+            -webkit-tap-highlight-color:transparent;"
+     aria-hidden="true"></div>
 <!-- ═══ 起動スプラッシュアニメーション ═══ -->
 <div id="splash-overlay" onclick="skipSplash()">
   <div class="splash" id="splash-content">
@@ -6394,6 +6411,14 @@ let checkinTimer = null;
 let todayCount = 0;
 let userProfileCache = null; // 今ログイン中のユーザー情報
 
+// ★バグ3修正：本日チェックイン済み駅のID集合（メモリキャッシュ）
+// 駅情報パネル表示時に「即座に」チェックイン済みを判定するために必要。
+// 旧実装は5分のpendingCheckinタイマーが終わってからFirestoreクエリ→エラー表示の流れで、
+// 駅情報を開いた時点では「チェックイン可能」と表示されてしまっていた。
+// このSetはログイン時にgetTodayCheckinListで初期化し、チェックイン成功時にadd、
+// ログアウト時にclear、日付が変わった時もリセット（簡易実装としてアプリ再起動でリセット）。
+let todayCheckedInStationIds = new Set();
+
 // stationId生成
 function makeStationId(st) {
   return `${st.name}_${st.pref}`;
@@ -6706,6 +6731,16 @@ window.renderCheckinSection = async function(st) {
   if (!user) {
     sec.innerHTML = `<div class="ip-ci-status locked">ログインしてチェックイン</div>
       <button class="ip-ci-btn" onclick="signInWithGoogle()">Googleでログイン</button>`;
+    return;
+  }
+
+  // ★バグ3修正：本日チェックイン済み駅なら、即座に「済み」表示（最優先判定）
+  // pendingCheckinよりも先に判定する。理由：本日済みの駅では、そもそもpendingに入っていないはず。
+  // メモリキャッシュ参照のためFirestoreクエリ不要＝即時反応。
+  const stationIdForCheck = `${st.name}_${st.pref}`;
+  if (todayCheckedInStationIds.has(stationIdForCheck)) {
+    sec.innerHTML = `<div class="ip-ci-status locked">✅ 本日チェックイン済み<br><span style="font-size:11px;opacity:0.75">同じ駅は1日1回まで</span></div>
+      <div class="ip-ci-quota" style="margin-top:6px">本日 ${todayCount}/${DAILY_LIMIT}駅</div>`;
     return;
   }
 
@@ -7028,6 +7063,8 @@ async function tryCompleteCheckin() {
 
     // 今日の回数を再取得
     todayCount = await getTodayCheckinCount(user.uid);
+    // ★バグ3修正：本日チェックイン済みSetに即座に追加（次回info-panel表示時に即反映）
+    todayCheckedInStationIds.add(stationId);
 
     // 訪問回数取得
     let visitCount = 1;
@@ -7328,6 +7365,15 @@ window.closeCardModal = function(e) {
   if (typeof window._cvClearOverride === 'function') window._cvClearOverride();
   if (ret === 'cardlist' || ret === 'mypage' || ret === 'history' || ret === 'cardversion') {
     // モーダルは既に開いたままなので何もしない（cardversion を含む）
+    // ★バグ1修正：cardversion の場合、divクリック時に一時的に隠してあるバージョンモーダルを
+    // 再表示する（state は _cvCurrentStation に保持されたまま）。
+    // ピン留め変更が裏で起きてる可能性があるので、念のため renderCardVersion で再描画。
+    if (ret === 'cardversion' && window._cvCurrentStation) {
+      if (typeof window.renderCardVersion === 'function') {
+        window.renderCardVersion();
+      }
+      document.getElementById('cardversion-bg').classList.add('open');
+    }
   } else {
     document.body.style.overflow = '';
   }
@@ -8073,7 +8119,11 @@ window.renderCardVersion = function() {
       // タップしたカードのソート後表示順indexを _currentCardIndex に
       window._currentCardIndex = indexed.findIndex(function(it) { return it.originalIndex === origIdx; });
 
-      // バージョンモーダル自体は閉じない（背後に残す→閉じる時に戻る）
+      // ★バグ1修正：バージョンモーダル(z-index:8800)がカード詳細(z-index:8000)を覆ってしまい、
+      // タップしたカードが見えない問題への対応。バージョンモーダルを一時的に閉じる（stateは保持）。
+      // closeCardModal で cardCloseReturn==='cardversion' を検出して、再表示する。
+      document.getElementById('cardversion-bg').classList.remove('open');
+
       if (window.openCardFromHistory) {
         window.openCardFromHistory(stName, stPref);
       }
@@ -8859,6 +8909,15 @@ onAuthStateChanged(auth, async (user) => {
         // Phase 3: 今日のチェックイン数取得・進行中チェックインの復元・位置監視開始
         todayCount = await getTodayCheckinCount(user.uid);
         console.log(`今日のチェックイン: ${todayCount}/${DAILY_LIMIT}駅`);
+        // ★バグ3修正：本日チェックイン済み駅IDをメモリキャッシュに展開
+        try {
+          const todayList = await getTodayCheckinList(user.uid);
+          todayCheckedInStationIds = new Set(todayList.map(c => c.stationId));
+          console.log(`本日チェック済み駅: ${todayCheckedInStationIds.size}件`);
+        } catch(e) {
+          console.warn('本日チェック済み駅の取得失敗:', e.message);
+          todayCheckedInStationIds = new Set();
+        }
         startWatchPosition();
         await restorePendingCheckin();
         // 既に駅情報が表示されている場合は更新
@@ -8876,6 +8935,7 @@ onAuthStateChanged(auth, async (user) => {
     if (checkinTimer) { clearInterval(checkinTimer); checkinTimer = null; }
     pendingCheckin = null;
     todayCount = 0;
+    todayCheckedInStationIds = new Set();  // ★バグ3修正：ログアウト時はリセット
     userProfileCache = null;
     stopWatchPosition();
     hideCheckinIndicator();
@@ -11024,6 +11084,101 @@ if ('serviceWorker' in navigator) {
       console.warn('mmCloudDebugDump 未準備（ログイン後に再実行してください）');
     }
   };
+})();
+</script>
+
+<!-- ============================================================ -->
+<!-- ★バグ2修正：iPhone標準の「最上部タップ→スクロールトップ」を再現 -->
+<!-- top-tap-catcher（body直後の透明バー）から呼ばれる。            -->
+<!-- 現在開いてるモーダル/画面の主要スクロール要素を順番に判定し、    -->
+<!-- 最も画面に出ているものを smoothly に先頭へスクロール。            -->
+<!-- ============================================================ -->
+<script>
+(function setupScrollToTop(){
+  'use strict';
+
+  // 開いてるか判定するヘルパー（display:none を除外）
+  function isVisible(el){
+    if (!el) return false;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none') return false;
+    if (cs.visibility === 'hidden') return false;
+    return true;
+  }
+
+  // スクロール対象を上にスクロール（smooth）
+  function scrollToTopSafe(el){
+    if (!el) return false;
+    try {
+      // smooth scroll、対応しないブラウザは即時
+      if (typeof el.scrollTo === 'function') {
+        el.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        el.scrollTop = 0;
+      }
+      return true;
+    } catch(e) {
+      try { el.scrollTop = 0; return true; } catch(_) { return false; }
+    }
+  }
+
+  window.scrollOpenedToTop = function(){
+    // 優先順位：上に重なってるモーダルから順に判定（z-index降順）
+    // カード詳細(8000)<バージョン(8800)<その他のモーダル
+    // 重要：「開いている＋画面に見えている」モーダルを優先
+
+    // 1. カードバージョン選択モーダル（z-index 8800、最上位）
+    const cvBg = document.getElementById('cardversion-bg');
+    if (cvBg && cvBg.classList.contains('open')) {
+      return scrollToTopSafe(cvBg);
+    }
+
+    // 2. カード詳細モーダル（z-index 8000）
+    const cmBg = document.getElementById('card-modal-bg');
+    if (cmBg && cmBg.classList.contains('open')) {
+      return scrollToTopSafe(cmBg);
+    }
+
+    // 3. マイカード一覧
+    const clBg = document.getElementById('cardlist-bg');
+    if (clBg && clBg.classList.contains('open')) {
+      return scrollToTopSafe(clBg);
+    }
+
+    // 4. マイページ
+    const mpBg = document.getElementById('mypage-bg');
+    if (mpBg && mpBg.classList.contains('open')) {
+      return scrollToTopSafe(mpBg);
+    }
+
+    // 5. 履歴
+    const hsBg = document.getElementById('history-bg');
+    if (hsBg && hsBg.classList.contains('open')) {
+      return scrollToTopSafe(hsBg);
+    }
+
+    // 6. ボーナス内訳モーダル（もしあれば）
+    const bnBg = document.getElementById('bonus-detail-bg');
+    if (bnBg && isVisible(bnBg) && bnBg.classList.contains('open')) {
+      return scrollToTopSafe(bnBg);
+    }
+
+    // 7. 街力ランキング（地図画面右の rank-list）
+    const rankList = document.getElementById('rank-list');
+    if (rankList && isVisible(rankList) && rankList.scrollTop > 0) {
+      return scrollToTopSafe(rankList);
+    }
+
+    // 8. デフォルト：windowをスクロール
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch(e) {
+      window.scrollTo(0, 0);
+    }
+    return true;
+  };
+
+  console.log('[scroll-to-top] 最上部タップ→スクロールトップ機能 有効');
 })();
 </script>
 
