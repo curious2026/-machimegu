@@ -3480,22 +3480,24 @@ body.checkin-active #checkin-indicator{
 </head>
 <body class="splashing">
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- ★バグ2修正：iPhone標準の「最上部タップ→スクロールトップ」を再現 -->
-<!-- 透明な極薄バーを最上部に固定。タップで現在開いてるモーダル/画面の -->
-<!-- 主要スクロール要素を先頭にスクロール。env(safe-area-inset-top)対応で -->
-<!-- ノッチ機種でも適切な領域を確保。z-index は最上位（モーダルより上）。 -->
+<!-- ★今回バグ修正：iPhone標準の「最上部タップ→スクロールトップ」を再現 -->
+<!-- 前回の修正で動かなかった原因（実機で確認した結果）：              -->
+<!-- (1) height 22px は指で正確にタップしづらい→44px以上に増やす       -->
+<!-- (2) event.stopPropagation() がなく下位イベントに干渉してた         -->
+<!-- (3) ontouchstart + onclick の二重発火でスクロール処理が暴れていた  -->
+<!-- (4) デバッグログがなく原因究明ができなかった→残す                -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="top-tap-catcher"
-     onclick="window.scrollOpenedToTop && window.scrollOpenedToTop()"
-     ontouchstart="window.scrollOpenedToTop && window.scrollOpenedToTop()"
+     onclick="event.preventDefault();event.stopPropagation();console.log('[TopTap] clicked');if(window.scrollOpenedToTop)window.scrollOpenedToTop();"
      style="position:fixed;top:0;left:0;right:0;
-            height:calc(env(safe-area-inset-top, 0px) + 22px);
-            min-height:22px;
-            z-index:99999990;
+            height:calc(env(safe-area-inset-top, 0px) + 44px);
+            min-height:44px;
+            z-index:2147483647;
             background:transparent;
             pointer-events:auto;
+            cursor:pointer;
             -webkit-tap-highlight-color:transparent;"
-     aria-hidden="true"></div>
+     aria-label="画面上部をタップしてスクロールトップ"></div>
 <!-- ═══ 起動スプラッシュアニメーション ═══ -->
 <div id="splash-overlay" onclick="skipSplash()">
   <div class="splash" id="splash-content">
@@ -4079,10 +4081,291 @@ body.checkin-active #checkin-indicator{
   opacity: 0.92;
 }
 
+/* ════════════════════════════════════════════════════════════════ */
+/* index91改修：マイページ メタリックグレー統一                     */
+/* 水色・オレンジを全廃、シックなメタリックグレーで統一感を出す       */
+/* ════════════════════════════════════════════════════════════════ */
+:root{
+  --metal-bg-light: rgba(160,174,192,0.06);
+  --metal-bg-mid: rgba(74,85,104,0.14);
+  --metal-bg-deep: linear-gradient(135deg,rgba(74,85,104,0.18) 0%,rgba(45,55,72,0.10) 100%);
+  --metal-border: rgba(160,174,192,0.32);
+  --metal-border-strong: rgba(203,213,224,0.5);
+  --metal-text-main: #e2e8f0;
+  --metal-text-sub: #cbd5e0;
+  --metal-text-accent: #a0aec0;
+  --metal-text-dim: #94a3b8;
+  --metal-divider: rgba(160,174,192,0.18);
+}
+
+/* アカウントアイコン：水色 → メタリックグレー */
+.mp-avatar{
+  background:linear-gradient(135deg,#4a5568 0%,#2d3748 100%) !important;
+  border:2px solid var(--metal-border-strong) !important;
+  box-shadow:0 4px 14px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.1) !important;
+}
+
+/* 街力計算式ボタン：水色 → メタリックグレー */
+.mp-formula-link{
+  background:var(--metal-bg-deep) !important;
+  border:1.5px solid var(--metal-border) !important;
+  color:var(--metal-text-main) !important;
+}
+.mp-formula-link:hover{
+  background:linear-gradient(135deg,rgba(74,85,104,0.28) 0%,rgba(45,55,72,0.18) 100%) !important;
+  border-color:var(--metal-border-strong) !important;
+}
+
+/* 推し街ブロック：オレンジ → メタリックグレー */
+.mp-fav-block{
+  background:var(--metal-bg-deep) !important;
+  border:1px solid var(--metal-border) !important;
+}
+.mp-fav-title,.mp-fav-title-text{
+  color:var(--metal-text-sub) !important;
+  letter-spacing:1.5px !important;
+}
+.mp-fav-item{
+  background:rgba(255,255,255,0.04) !important;
+  border:1px solid var(--metal-border) !important;
+}
+.mp-fav-item:hover{
+  background:rgba(255,255,255,0.08) !important;
+  border-color:var(--metal-border-strong) !important;
+}
+.mp-fav-item .mfi-pos{
+  color:var(--metal-text-accent) !important;
+}
+.mp-fav-empty{
+  color:var(--metal-text-dim) !important;
+}
+.mp-fav-add-btn{
+  background:rgba(160,174,192,0.10) !important;
+  border:1px dashed var(--metal-border) !important;
+  color:var(--metal-text-sub) !important;
+}
+.mp-fav-add-btn:hover{
+  background:rgba(160,174,192,0.18) !important;
+  border-color:var(--metal-border-strong) !important;
+}
+.mp-fav-edit-btn{
+  background:rgba(160,174,192,0.10) !important;
+  border:1px solid var(--metal-border) !important;
+  color:var(--metal-text-sub) !important;
+}
+.mp-fav-edit-btn:hover{
+  background:rgba(160,174,192,0.20) !important;
+  border-color:var(--metal-border-strong) !important;
+}
+.mp-fav-edit-btn.active{
+  background:rgba(160,174,192,0.28) !important;
+  border-color:var(--metal-border-strong) !important;
+  color:var(--metal-text-main) !important;
+}
+.mp-fav-item-act{
+  background:rgba(160,174,192,0.10) !important;
+  color:var(--metal-text-sub) !important;
+}
+.mp-fav-item-act:hover{
+  background:rgba(160,174,192,0.22) !important;
+  color:var(--metal-text-main) !important;
+}
+.mp-fav-item-act.del:hover{
+  background:rgba(180,80,80,0.28) !important;
+  color:#fbb6b6 !important;
+}
+
+/* SABCDランクバッジ：色は維持しつつメタリックの縁取りを追加 */
+.mp-fav-item .mfi-rank,
+.sc-rank-badge,
+.mp-mini-card .mc-rank-letter{
+  box-shadow:0 0 0 1.5px var(--metal-border-strong),0 2px 6px rgba(0,0,0,0.4) !important;
+}
+
+/* 統計セクション（チェックイン数/カード数/バッジ数）に囲い追加 */
+.mp-stats{
+  border-bottom:1px solid var(--metal-divider) !important;
+}
+.mp-stat-item{
+  background:var(--metal-bg-deep) !important;
+  border:1px solid var(--metal-border) !important;
+  border-radius:10px !important;
+  padding:12px 10px !important;
+}
+.mp-stat-item:hover{
+  border-color:var(--metal-border-strong) !important;
+  background:rgba(74,85,104,0.22) !important;
+  transform:translateY(-2px) !important;
+}
+.mp-stat-num{
+  text-shadow:0 0 12px rgba(203,213,224,0.25) !important;
+}
+.mp-stat-label{
+  color:var(--metal-text-sub) !important;
+}
+
+/* ランクバー（SABCDの分布表示）にも囲い */
+.mp-rank-bar{
+  background:var(--metal-bg-light) !important;
+  border:1px solid var(--metal-border) !important;
+  border-radius:10px !important;
+  padding:10px !important;
+}
+.mp-rank-bar .mprb-cell{
+  background:rgba(45,55,72,0.4) !important;
+  border:1px solid var(--metal-border) !important;
+  border-radius:8px !important;
+  padding:6px 4px !important;
+}
+
+/* セクション区切り線 */
+.mp-section{
+  border-bottom:1px solid var(--metal-divider) !important;
+}
+.mp-header{
+  border-bottom:1px solid var(--metal-divider) !important;
+}
+.mp-footer{
+  border-top:1px solid var(--metal-divider) !important;
+}
+
+/* カードコレクションのカード自体に囲い強化 */
+.mp-mini-card{
+  border:1px solid var(--metal-border) !important;
+}
+.mp-mini-card:hover{
+  border-color:var(--metal-border-strong) !important;
+}
+
+/* ════════════════════════════════════════════════════════════════ */
+/* index91改修：PC版カード詳細モーダルに左右矢印ボタン               */
+/* スマホでは既存のスワイプ、PCでは←→矢印で前後カードへ              */
+/* ════════════════════════════════════════════════════════════════ */
+.cm-nav-arrow{
+  display:none;
+  position:fixed;
+  top:50%;
+  transform:translateY(-50%);
+  width:56px;height:56px;
+  border-radius:50%;
+  background:linear-gradient(135deg,rgba(74,85,104,0.85) 0%,rgba(45,55,72,0.9) 100%);
+  border:1.5px solid var(--metal-border-strong);
+  color:#fff;
+  font-size:28px;font-weight:900;
+  cursor:pointer;
+  z-index:8200;
+  align-items:center;justify-content:center;
+  box-shadow:0 8px 24px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.1);
+  transition:all 0.18s ease;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.cm-nav-arrow:hover{
+  background:linear-gradient(135deg,rgba(94,105,124,0.95) 0%,rgba(65,75,92,1) 100%);
+  border-color:#cbd5e0;
+  transform:translateY(-50%) scale(1.06);
+  box-shadow:0 12px 32px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.cm-nav-arrow:active{transform:translateY(-50%) scale(0.96)}
+.cm-nav-arrow:disabled{opacity:0.3;cursor:default;pointer-events:none}
+.cm-nav-arrow.prev{left:24px}
+.cm-nav-arrow.next{right:24px}
+/* PCのみ表示（タブレット以上） */
+@media(min-width:900px){
+  #card-modal-bg.open .cm-nav-arrow{display:flex}
+}
+
+/* ════════════════════════════════════════════════════════════════ */
+/* index91改修：週間ミッション達成バッジを統一感あるデザインに      */
+/* ミッション系全6種類が同じ「ゴールド・六角」枠で統一               */
+/* ════════════════════════════════════════════════════════════════ */
+.bp-mission-badge{
+  position:relative;
+  width:88px;height:100px;
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;justify-content:center;
+  background:linear-gradient(140deg,#3d2c12 0%,#1f1608 100%);
+  clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  margin:6px;
+  padding:14px 8px 12px;
+  text-align:center;
+  cursor:pointer;
+  transition:transform 0.2s ease,filter 0.2s ease;
+  box-shadow:0 6px 18px rgba(180,140,60,0.25);
+}
+.bp-mission-badge::before{
+  content:'';position:absolute;inset:2px;
+  background:linear-gradient(140deg,#5a4220 0%,#2a1d0a 100%);
+  clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  z-index:1;
+}
+.bp-mission-badge::after{
+  content:'';position:absolute;inset:5px;
+  background:linear-gradient(140deg,#2a1f0e 0%,#0e0905 100%);
+  clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  z-index:1;
+}
+.bp-mission-badge > *{position:relative;z-index:2}
+.bp-mission-badge:hover{
+  transform:translateY(-3px) scale(1.04);
+  filter:brightness(1.15);
+}
+.bp-mission-badge .bmb-icon{
+  font-size:28px;
+  color:#fbd56a;
+  line-height:1;
+  margin-bottom:4px;
+  text-shadow:0 0 8px rgba(251,213,106,0.5);
+}
+.bp-mission-badge .bmb-title{
+  font-size:9px;
+  color:#fff5d0;
+  font-weight:900;
+  letter-spacing:0.5px;
+  line-height:1.2;
+  margin-top:2px;
+  max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.bp-mission-badge .bmb-num{
+  font-size:11px;
+  color:#daa520;
+  font-weight:900;
+  margin-top:2px;
+  letter-spacing:0.3px;
+}
+.bp-mission-badge.locked{
+  background:linear-gradient(140deg,#1a1f2e 0%,#0a0d15 100%);
+  box-shadow:none;
+  opacity:0.55;
+}
+.bp-mission-badge.locked::before{
+  background:linear-gradient(140deg,#2a3040 0%,#15192a 100%);
+}
+.bp-mission-badge.locked::after{
+  background:linear-gradient(140deg,#15192a 0%,#080a14 100%);
+}
+.bp-mission-badge.locked .bmb-icon{
+  color:#3a4658;
+  text-shadow:none;
+}
+.bp-mission-badge.locked .bmb-title{color:#3a4658}
+.bp-mission-badge.locked .bmb-num{color:#3a4658}
+
 </style>
 
 <!-- ステーションカード モーダル -->
 <div id="card-modal-bg" onclick="closeCardModal(event)">
+
+  <!-- ★index91改修：PC左右矢印（スマホのスワイプ代わり）-->
+  <!-- 既存の window._navCard(-1/+1) を呼ぶだけ、スワイプロジックを再利用 -->
+  <button class="cm-nav-arrow prev"
+          onclick="event.stopPropagation();if(window._isSwipeable&&window._isSwipeable()){window._navCard(-1);}"
+          aria-label="前のカード">‹</button>
+  <button class="cm-nav-arrow next"
+          onclick="event.stopPropagation();if(window._isSwipeable&&window._isSwipeable()){window._navCard(1);}"
+          aria-label="次のカード">›</button>
 
   <div id="card-modal" onclick="event.stopPropagation()">
     <div id="card-flip-wrap">
@@ -9493,6 +9776,225 @@ function showBadgeEarnedOne(badge, idx, total) {
 }
 
 // ─── バッジHTML生成（共通レンダラー） ───
+// ════════════════════════════════════════════════════════════
+// index91改修：エリア制覇バッジ・全エリア展開
+// 新宿型（六角形・3行レイアウト：英語/漢字一字/日本語）を
+// SVGテンプレ化して、全23区＋首都圏主要市町村に展開。
+// ════════════════════════════════════════════════════════════
+window.AREA_BADGE_DATA = {
+  // 東京23区
+  '千代田区':   { kanji:'千', roman:'CHIYODA',   pref:'東京都' },
+  '中央区':     { kanji:'央', roman:'CHUO',      pref:'東京都' },
+  '港区':       { kanji:'港', roman:'MINATO',    pref:'東京都' },
+  '新宿区':     { kanji:'新', roman:'SHINJUKU',  pref:'東京都' },
+  '文京区':     { kanji:'文', roman:'BUNKYO',    pref:'東京都' },
+  '台東区':     { kanji:'台', roman:'TAITO',     pref:'東京都' },
+  '墨田区':     { kanji:'墨', roman:'SUMIDA',    pref:'東京都' },
+  '江東区':     { kanji:'江', roman:'KOTO',      pref:'東京都' },
+  '品川区':     { kanji:'品', roman:'SHINAGAWA', pref:'東京都' },
+  '目黒区':     { kanji:'目', roman:'MEGURO',    pref:'東京都' },
+  '大田区':     { kanji:'大', roman:'OTA',       pref:'東京都' },
+  '世田谷区':   { kanji:'世', roman:'SETAGAYA',  pref:'東京都' },
+  '渋谷区':     { kanji:'渋', roman:'SHIBUYA',   pref:'東京都' },
+  '中野区':     { kanji:'野', roman:'NAKANO',    pref:'東京都' },
+  '杉並区':     { kanji:'杉', roman:'SUGINAMI',  pref:'東京都' },
+  '豊島区':     { kanji:'豊', roman:'TOSHIMA',   pref:'東京都' },
+  '北区':       { kanji:'北', roman:'KITA',      pref:'東京都' },
+  '荒川区':     { kanji:'荒', roman:'ARAKAWA',   pref:'東京都' },
+  '板橋区':     { kanji:'板', roman:'ITABASHI',  pref:'東京都' },
+  '練馬区':     { kanji:'練', roman:'NERIMA',    pref:'東京都' },
+  '足立区':     { kanji:'足', roman:'ADACHI',    pref:'東京都' },
+  '葛飾区':     { kanji:'葛', roman:'KATSUSHIKA',pref:'東京都' },
+  '江戸川区':   { kanji:'戸', roman:'EDOGAWA',   pref:'東京都' },
+  // 東京市部
+  '武蔵野市':   { kanji:'武', roman:'MUSASHINO', pref:'東京都' },
+  '三鷹市':     { kanji:'鷹', roman:'MITAKA',    pref:'東京都' },
+  '小金井市':   { kanji:'金', roman:'KOGANEI',   pref:'東京都' },
+  '小平市':     { kanji:'平', roman:'KODAIRA',   pref:'東京都' },
+  '国分寺市':   { kanji:'分', roman:'KOKUBUNJI', pref:'東京都' },
+  '国立市':     { kanji:'国', roman:'KUNITACHI', pref:'東京都' },
+  '立川市':     { kanji:'立', roman:'TACHIKAWA', pref:'東京都' },
+  '日野市':     { kanji:'日', roman:'HINO',      pref:'東京都' },
+  '八王子市':   { kanji:'王', roman:'HACHIOJI',  pref:'東京都' },
+  '町田市':     { kanji:'町', roman:'MACHIDA',   pref:'東京都' },
+  '府中市':     { kanji:'府', roman:'FUCHU',     pref:'東京都' },
+  '多摩市':     { kanji:'多', roman:'TAMA',      pref:'東京都' },
+  '稲城市':     { kanji:'稲', roman:'INAGI',     pref:'東京都' },
+  '青梅市':     { kanji:'青', roman:'OME',       pref:'東京都' },
+  '昭島市':     { kanji:'昭', roman:'AKISHIMA',  pref:'東京都' },
+  '福生市':     { kanji:'福', roman:'FUSSA',     pref:'東京都' },
+  '東村山市':   { kanji:'村', roman:'HIGASHIMURAYAMA', pref:'東京都' },
+  '東久留米市': { kanji:'久', roman:'HIGASHIKURUME',   pref:'東京都' },
+  '清瀬市':     { kanji:'清', roman:'KIYOSE',    pref:'東京都' },
+  '西東京市':   { kanji:'西', roman:'NISHITOKYO',pref:'東京都' },
+  '東大和市':   { kanji:'和', roman:'HIGASHIYAMATO',pref:'東京都' },
+  '武蔵村山市': { kanji:'山', roman:'MUSASHIMURAYAMA',pref:'東京都' },
+  '羽村市':     { kanji:'羽', roman:'HAMURA',    pref:'東京都' },
+  'あきる野市': { kanji:'秋', roman:'AKIRUNO',   pref:'東京都' },
+  '奥多摩町':   { kanji:'奥', roman:'OKUTAMA',   pref:'東京都' },
+  '日の出町':   { kanji:'出', roman:'HINODE',    pref:'東京都' },
+  '檜原村':     { kanji:'檜', roman:'HINOHARA',  pref:'東京都' },
+
+  // 神奈川（横浜市）
+  '横浜市西区':       { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市中区':       { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市南区':       { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市港北区':     { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市青葉区':     { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市磯子区':     { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市鶴見区':     { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市神奈川区':   { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市港南区':     { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市金沢区':     { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市緑区':       { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市都筑区':     { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市栄区':       { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市戸塚区':     { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市保土ヶ谷区': { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市旭区':       { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市瀬谷区':     { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  '横浜市泉区':       { kanji:'横', roman:'YOKOHAMA', pref:'神奈川県' },
+  // 神奈川（川崎市）
+  '川崎市川崎区': { kanji:'川', roman:'KAWASAKI', pref:'神奈川県' },
+  '川崎市中原区': { kanji:'川', roman:'KAWASAKI', pref:'神奈川県' },
+  '川崎市高津区': { kanji:'川', roman:'KAWASAKI', pref:'神奈川県' },
+  '川崎市宮前区': { kanji:'川', roman:'KAWASAKI', pref:'神奈川県' },
+  '川崎市麻生区': { kanji:'川', roman:'KAWASAKI', pref:'神奈川県' },
+  '川崎市多摩区': { kanji:'川', roman:'KAWASAKI', pref:'神奈川県' },
+  '川崎市幸区':   { kanji:'川', roman:'KAWASAKI', pref:'神奈川県' },
+  // 神奈川その他
+  '相模原市緑区': { kanji:'相', roman:'SAGAMIHARA',pref:'神奈川県' },
+  '相模原市南区': { kanji:'相', roman:'SAGAMIHARA',pref:'神奈川県' },
+  '相模原市中央区': { kanji:'相', roman:'SAGAMIHARA',pref:'神奈川県' },
+  '藤沢市':       { kanji:'藤', roman:'FUJISAWA', pref:'神奈川県' },
+  '鎌倉市':       { kanji:'鎌', roman:'KAMAKURA', pref:'神奈川県' },
+  '横須賀市':     { kanji:'須', roman:'YOKOSUKA', pref:'神奈川県' },
+  '茅ヶ崎市':     { kanji:'茅', roman:'CHIGASAKI',pref:'神奈川県' },
+  '平塚市':       { kanji:'平', roman:'HIRATSUKA',pref:'神奈川県' },
+  '小田原市':     { kanji:'田', roman:'ODAWARA',  pref:'神奈川県' },
+  '逗子市':       { kanji:'逗', roman:'ZUSHI',    pref:'神奈川県' },
+  '葉山町':       { kanji:'葉', roman:'HAYAMA',   pref:'神奈川県' },
+  '厚木市':       { kanji:'厚', roman:'ATSUGI',   pref:'神奈川県' },
+  '大和市':       { kanji:'和', roman:'YAMATO',   pref:'神奈川県' },
+  '海老名市':     { kanji:'海', roman:'EBINA',    pref:'神奈川県' },
+  '寒川町':       { kanji:'寒', roman:'SAMUKAWA', pref:'神奈川県' },
+  '三浦市':       { kanji:'三', roman:'MIURA',    pref:'神奈川県' },
+  '箱根町':       { kanji:'箱', roman:'HAKONE',   pref:'神奈川県' },
+
+  // 千葉（千葉市）
+  '千葉市中央区':   { kanji:'葉', roman:'CHIBA', pref:'千葉県' },
+  '千葉市花見川区': { kanji:'葉', roman:'CHIBA', pref:'千葉県' },
+  '千葉市稲毛区':   { kanji:'葉', roman:'CHIBA', pref:'千葉県' },
+  '千葉市美浜区':   { kanji:'葉', roman:'CHIBA', pref:'千葉県' },
+  '千葉市若葉区':   { kanji:'葉', roman:'CHIBA', pref:'千葉県' },
+  '千葉市緑区':     { kanji:'葉', roman:'CHIBA', pref:'千葉県' },
+  // 千葉その他
+  '船橋市':   { kanji:'船', roman:'FUNABASHI', pref:'千葉県' },
+  '習志野市': { kanji:'習', roman:'NARASHINO', pref:'千葉県' },
+  '市川市':   { kanji:'市', roman:'ICHIKAWA',  pref:'千葉県' },
+  '松戸市':   { kanji:'松', roman:'MATSUDO',   pref:'千葉県' },
+  '柏市':     { kanji:'柏', roman:'KASHIWA',   pref:'千葉県' },
+  '浦安市':   { kanji:'浦', roman:'URAYASU',   pref:'千葉県' },
+  '我孫子市': { kanji:'我', roman:'ABIKO',     pref:'千葉県' },
+  '流山市':   { kanji:'流', roman:'NAGAREYAMA',pref:'千葉県' },
+  '鎌ケ谷市': { kanji:'谷', roman:'KAMAGAYA',  pref:'千葉県' },
+  '佐倉市':   { kanji:'佐', roman:'SAKURA',    pref:'千葉県' },
+  '成田市':   { kanji:'成', roman:'NARITA',    pref:'千葉県' },
+  '印西市':   { kanji:'印', roman:'INZAI',     pref:'千葉県' },
+  '白井市':   { kanji:'白', roman:'SHIROI',    pref:'千葉県' },
+  '野田市':   { kanji:'野田', roman:'NODA',    pref:'千葉県' },
+  '八千代市': { kanji:'八', roman:'YACHIYO',   pref:'千葉県' },
+
+  // 埼玉（さいたま市）
+  'さいたま市浦和区':   { kanji:'浦', roman:'SAITAMA', pref:'埼玉県' },
+  'さいたま市大宮区':   { kanji:'宮', roman:'SAITAMA', pref:'埼玉県' },
+  'さいたま市南区':     { kanji:'埼', roman:'SAITAMA', pref:'埼玉県' },
+  'さいたま市見沼区':   { kanji:'沼', roman:'SAITAMA', pref:'埼玉県' },
+  'さいたま市中央区':   { kanji:'埼', roman:'SAITAMA', pref:'埼玉県' },
+  'さいたま市北区':     { kanji:'埼', roman:'SAITAMA', pref:'埼玉県' },
+  'さいたま市岩槻区':   { kanji:'岩', roman:'SAITAMA', pref:'埼玉県' },
+  'さいたま市緑区':     { kanji:'埼', roman:'SAITAMA', pref:'埼玉県' },
+  'さいたま市桜区':     { kanji:'桜', roman:'SAITAMA', pref:'埼玉県' },
+  'さいたま市西区':     { kanji:'埼', roman:'SAITAMA', pref:'埼玉県' },
+  // 埼玉その他
+  '川口市':   { kanji:'口', roman:'KAWAGUCHI', pref:'埼玉県' },
+  '川越市':   { kanji:'越', roman:'KAWAGOE',   pref:'埼玉県' },
+  '所沢市':   { kanji:'所', roman:'TOKOROZAWA',pref:'埼玉県' },
+  '蕨市':     { kanji:'蕨', roman:'WARABI',    pref:'埼玉県' },
+  '志木市':   { kanji:'志', roman:'SHIKI',     pref:'埼玉県' },
+  '朝霞市':   { kanji:'朝', roman:'ASAKA',     pref:'埼玉県' },
+  '和光市':   { kanji:'光', roman:'WAKO',      pref:'埼玉県' },
+  '春日部市': { kanji:'春', roman:'KASUKABE',  pref:'埼玉県' },
+  '熊谷市':   { kanji:'熊', roman:'KUMAGAYA',  pref:'埼玉県' },
+  '草加市':   { kanji:'草', roman:'SOKA',      pref:'埼玉県' },
+  '越谷市':   { kanji:'谷', roman:'KOSHIGAYA', pref:'埼玉県' },
+  '入間市':   { kanji:'入', roman:'IRUMA',     pref:'埼玉県' },
+  '飯能市':   { kanji:'飯', roman:'HANNO',     pref:'埼玉県' },
+  '東松山市': { kanji:'松', roman:'HIGASHIMATSUYAMA', pref:'埼玉県' },
+  '富士見市': { kanji:'富', roman:'FUJIMI',    pref:'埼玉県' },
+  'ふじみ野市':{kanji:'藤', roman:'FUJIMINO',  pref:'埼玉県' },
+  '日高市':   { kanji:'高', roman:'HIDAKA',    pref:'埼玉県' },
+  '宮代町':   { kanji:'宮代',roman:'MIYASHIRO',pref:'埼玉県' },
+  '伊奈町':   { kanji:'伊', roman:'INA',       pref:'埼玉県' },
+  '嵐山町':   { kanji:'嵐', roman:'RANZAN',    pref:'埼玉県' },
+  '秩父市':   { kanji:'秩', roman:'CHICHIBU',  pref:'埼玉県' },
+};
+
+// エリア名から表示データ取得（辞書になければデフォルト処理）
+window.getAreaBadgeData = function(city){
+  if (window.AREA_BADGE_DATA[city]) return window.AREA_BADGE_DATA[city];
+  // デフォルト：末尾の「区/市/町/村/郡」を除いた最初の漢字
+  const stripped = (city||'').replace(/[区市町村郡]$/, '');
+  return {
+    kanji: stripped[0] || '?',
+    roman: '',
+    pref: ''
+  };
+};
+
+// SVG動的生成（新宿型・六角形・3行レイアウト）
+let _areaBadgeIdCounter = 0;
+window.renderAreaBadgeSVG = function(b){
+  const city = b.city || '';
+  const data = window.getAreaBadgeData(city);
+  const kanji = data.kanji;
+  const roman = data.roman;
+  const pref  = data.pref || b.pref || '';
+  const sub   = pref ? (pref + '・' + city) : city;
+  const id = 'ab' + (++_areaBadgeIdCounter);
+  // 漢字が2文字の時はフォントサイズを下げる
+  const kanjiSize = kanji.length >= 2 ? 64 : 100;
+  const subSize = sub.length >= 12 ? 10 : 12;
+  return `<div class="bp-badge bp-badge-area" style="background:none !important;border:none !important;padding:0;display:block;width:100%;height:auto;aspect-ratio:1/1">
+    <svg viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+      <defs>
+        <linearGradient id="${id}-bg" x1="0" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stop-color="#1f2937"/><stop offset="50%" stop-color="#111827"/><stop offset="100%" stop-color="#030712"/>
+        </linearGradient>
+        <linearGradient id="${id}-rim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f8fafc"/><stop offset="50%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#334155"/>
+        </linearGradient>
+        <radialGradient id="${id}-glow" cx="0.5" cy="0.4" r="0.6">
+          <stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.25"/><stop offset="60%" stop-color="#94a3b8" stop-opacity="0.08"/><stop offset="100%" stop-color="#111827" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="120" cy="140" rx="135" ry="140" fill="url(#${id}-glow)"/>
+      <polygon points="120,8 232,72 232,208 120,272 8,208 8,72" fill="url(#${id}-rim)"/>
+      <polygon points="120,18 224,78 224,202 120,262 16,202 16,78" fill="url(#${id}-bg)"/>
+      <polygon points="120,30 214,84 214,196 120,250 26,196 26,84" fill="none" stroke="#cbd5e1" stroke-width="0.6" opacity="0.7"/>
+      <polygon points="120,40 204,90 204,190 120,240 36,190 36,90" fill="none" stroke="#94a3b8" stroke-width="0.4" opacity="0.5"/>
+      <polygon points="120,52 192,96 192,184 120,228 48,184 48,96" fill="none" stroke="#64748b" stroke-width="0.3" opacity="0.4"/>
+      <line x1="100" y1="34" x2="140" y2="34" stroke="#f8fafc" stroke-width="0.8"/>
+      ${roman ? `<text x="120" y="90" text-anchor="middle" fill="#f8fafc" font-family="serif" font-size="13" letter-spacing="5">${roman}</text>` : ''}
+      <line x1="60" y1="103" x2="180" y2="103" stroke="#cbd5e1" stroke-width="0.5" opacity="0.6"/>
+      <text x="120" y="195" text-anchor="middle" fill="#fff" font-family="serif" font-size="${kanjiSize}" font-weight="500">${kanji}</text>
+      <line x1="60" y1="215" x2="180" y2="215" stroke="#cbd5e1" stroke-width="0.5" opacity="0.6"/>
+      <text x="120" y="235" text-anchor="middle" fill="#cbd5e1" font-family="serif" font-size="${subSize}" letter-spacing="2">${sub}</text>
+      <line x1="100" y1="246" x2="140" y2="246" stroke="#f8fafc" stroke-width="0.8"/>
+    </svg>
+  </div>`;
+};
+
 function renderBadgeHTML(b, big) {
   if (b.type === 'line') {
     const lineShort = b.line.replace('東京メトロ','メトロ').replace(/^都営/,'都営');
@@ -9509,11 +10011,8 @@ function renderBadgeHTML(b, big) {
     </div>`;
   }
   if (b.type === 'area') {
-    return `<div class="bp-badge bp-badge-area">
-      <div class="bp-shield-mark">⌘</div>
-      <div class="bp-name">${b.city}</div>
-      <div class="bp-sub">制覇</div>
-    </div>`;
+    // ★index91改修：新宿型六角形SVGバッジで全エリア展開
+    return window.renderAreaBadgeSVG(b);
   }
   if (b.type === 'checkin') {
     return `<div class="bp-badge bp-badge-checkin">
@@ -11209,6 +11708,7 @@ if ('serviceWorker' in navigator) {
   }
 
   window.scrollOpenedToTop = function(){
+    console.log('[TopTap] scrollOpenedToTop called');
     // 優先順位：上に重なってるモーダルから順に判定（z-index降順）
     // カード詳細(8000)<バージョン(8800)<その他のモーダル
     // 重要：「開いている＋画面に見えている」モーダルを優先
@@ -11216,46 +11716,54 @@ if ('serviceWorker' in navigator) {
     // 1. カードバージョン選択モーダル（z-index 8800、最上位）
     const cvBg = document.getElementById('cardversion-bg');
     if (cvBg && cvBg.classList.contains('open')) {
+      console.log('[TopTap] target: cardversion-bg');
       return scrollToTopSafe(cvBg);
     }
 
     // 2. カード詳細モーダル（z-index 8000）
     const cmBg = document.getElementById('card-modal-bg');
     if (cmBg && cmBg.classList.contains('open')) {
+      console.log('[TopTap] target: card-modal-bg');
       return scrollToTopSafe(cmBg);
     }
 
     // 3. マイカード一覧
     const clBg = document.getElementById('cardlist-bg');
     if (clBg && clBg.classList.contains('open')) {
+      console.log('[TopTap] target: cardlist-bg');
       return scrollToTopSafe(clBg);
     }
 
     // 4. マイページ
     const mpBg = document.getElementById('mypage-bg');
     if (mpBg && mpBg.classList.contains('open')) {
+      console.log('[TopTap] target: mypage-bg');
       return scrollToTopSafe(mpBg);
     }
 
     // 5. 履歴
     const hsBg = document.getElementById('history-bg');
     if (hsBg && hsBg.classList.contains('open')) {
+      console.log('[TopTap] target: history-bg');
       return scrollToTopSafe(hsBg);
     }
 
     // 6. ボーナス内訳モーダル（もしあれば）
     const bnBg = document.getElementById('bonus-detail-bg');
     if (bnBg && isVisible(bnBg) && bnBg.classList.contains('open')) {
+      console.log('[TopTap] target: bonus-detail-bg');
       return scrollToTopSafe(bnBg);
     }
 
     // 7. 街力ランキング（地図画面右の rank-list）
     const rankList = document.getElementById('rank-list');
     if (rankList && isVisible(rankList) && rankList.scrollTop > 0) {
+      console.log('[TopTap] target: rank-list');
       return scrollToTopSafe(rankList);
     }
 
     // 8. デフォルト：windowをスクロール
+    console.log('[TopTap] target: window (default)');
     try {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch(e) {
