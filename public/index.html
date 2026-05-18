@@ -873,6 +873,29 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   color:#fff;background:rgba(255,255,255,0.08)
 }
 
+/* ─── 獲得Scoreバナー（マイページ最上部） ─── */
+.mp-score-banner{
+  padding:22px 20px 18px;
+  text-align:center;
+  border-bottom:1px solid rgba(120,150,210,0.15);
+  background:linear-gradient(180deg,rgba(45,95,122,0.08) 0%,rgba(45,95,122,0.02) 100%);
+}
+.mp-score-label{
+  font-size:13px;font-weight:700;color:#9fb8d8;
+  letter-spacing:3px;margin-bottom:6px;
+  text-transform:uppercase;
+}
+.mp-score-value{
+  font-size:42px;font-weight:900;color:#fff;
+  letter-spacing:1px;line-height:1.1;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+@media (max-width:480px){
+  .mp-score-banner{padding:18px 16px 14px}
+  .mp-score-value{font-size:36px}
+}
+
 .mp-profile{
   text-align:center;padding:24px 20px 18px;
   border-bottom:1px solid rgba(120,150,210,0.12);
@@ -4449,6 +4472,12 @@ body.checkin-active #checkin-indicator{
         <a href="/terms.html" target="_blank" rel="noopener">利用規約</a>
         <a href="/privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>
       </div>
+    </div>
+    
+    <!-- 獲得Scoreバナー -->
+    <div class="mp-score-banner">
+      <div class="mp-score-label">獲得Score</div>
+      <div class="mp-score-value" id="mp-acquired-score">0</div>
     </div>
     
     <!-- プロフィール（D-2.2：左にアカウント+街力ボタン、右に推し街） -->
@@ -8872,6 +8901,10 @@ async function loadMypageData(uid) {
     
     document.getElementById('mp-st-cards').textContent = cards.length;
     document.getElementById('mp-st-checkins').textContent = totalCheckins;
+    
+    // 獲得Score表示（各駅初訪問時のスコア合計）
+    const scoreEl = document.getElementById('mp-acquired-score');
+    if (scoreEl) scoreEl.textContent = (totalPower || 0).toLocaleString();
     
     // ランクバー
     const rankColors = {S:'#fb7185',A:'#ffb070',B:'#ffd966',C:'#84d49b',D:'#7fb8e0',E:'#a0b0c0'};
