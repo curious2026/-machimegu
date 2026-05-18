@@ -861,6 +861,16 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .mp-back:hover{background:rgba(255,255,255,0.12)}
 .mp-title{font-size:17px;font-weight:900;color:#fff;letter-spacing:1px}
+.mp-links{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.mp-links a{
+  color:#9fb8d8;text-decoration:none;font-size:13px;
+  padding:3px 6px;white-space:nowrap;border-radius:4px;
+  line-height:1.2;
+  transition:background 0.15s,color 0.15s;
+}
+.mp-links a:hover,.mp-links a:active{
+  color:#fff;background:rgba(255,255,255,0.08)
+}
 
 .mp-profile{
   text-align:center;padding:24px 20px 18px;
@@ -4434,7 +4444,10 @@ body.checkin-active #checkin-indicator{
     <div class="mp-header">
       <button class="mp-back" onclick="closeMypage()">←</button>
       <div class="mp-title">マイページ</div>
-      <div style="width:36px"></div>
+      <div class="mp-links">
+        <a href="/terms.html" target="_blank" rel="noopener">利用規約</a>
+        <a href="/privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>
+      </div>
     </div>
     
     <!-- プロフィール（D-2.2：左にアカウント+街力ボタン、右に推し街） -->
