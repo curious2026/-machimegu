@@ -1,3 +1,5 @@
 # https://www.robotstxt.org/robotstxt.html
+# 街巡-まちめぐ- 正式リリース前のため、全クローラーをブロック中
+# リリース時に Disallow: / の "/" を削除して解除
 User-agent: *
-Disallow:
+Disallow: /
