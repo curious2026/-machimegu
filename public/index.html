@@ -6463,6 +6463,8 @@ loadAll();
 <!-- ═══ Firebase Authentication + Firestore (Phase 1+2+3) ═══ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider }
+  from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app-check.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, serverTimestamp, increment, Timestamp }
@@ -6481,6 +6483,29 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+// ════════════════════════════════════════════════════════════════
+// ★index101: Firebase App Check 初期化（reCAPTCHA Enterprise）
+// 目的：悪意ユーザーによる Firebase API 直接叩き攻撃を防ぐ
+// 現状：「未強制モード」で運用中（friend test に影響しない）
+//   → Firebase Console > App Check > API タブで全て「非適用」
+//   → トークン収集のみ、APIアクセス自体は従来通り通る
+//   → 1〜2週間後、メトリクス確認のうえ「強制モード」に切替
+// 注意：reCAPTCHA キーは公開しても安全（ドメイン制限あり）
+//       本番ドメイン machimegu-production.up.railway.app + localhost
+// ════════════════════════════════════════════════════════════════
+let appCheck = null;
+try {
+  appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider('6LcQn-8sAAAAACZ4J0cqnQes4VMRYm5mUecZya8T'),
+    isTokenAutoRefreshEnabled: true
+  });
+  console.log('[AppCheck] 初期化成功');
+} catch(e) {
+  // App Check 失敗してもアプリ全体は動作させる（fail-open設計）
+  console.warn('[AppCheck] 初期化失敗（無視して続行）:', e.message);
+}
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
