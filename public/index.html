@@ -259,17 +259,17 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 @media(max-width:767px){
   #filters{gap:2px;padding:3px 4px}
   .fsel{padding:3px 3px!important;font-size:11px!important}
-  #favFilter{font-size:18px!important;padding:1px 5px!important}
+  #searchBtn{font-size:18px!important;padding:1px 5px!important}
   #statusbar{font-size:9px!important}
 }
 .fsel{background:rgba(255,255,255,0.05);color:#c8d6f0;border:1px solid rgba(120,150,210,0.2);
   padding:4px 5px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600;flex-shrink:0}
 .fsel option{background:#15203a;color:#d8e8f8;font-weight:600}
-#favFilter{background:rgba(255,70,110,0.1);border:1px solid rgba(255,80,120,0.32);
-  color:#cc4466;font-size:22px;cursor:pointer;padding:1px 7px;border-radius:7px;
+#searchBtn{background:rgba(70,140,255,0.1);border:1px solid rgba(80,150,255,0.32);
+  color:#6aa8ff;font-size:18px;cursor:pointer;padding:3px 8px;border-radius:7px;
   line-height:1;transition:all 0.2s;flex-shrink:0}
-#favFilter.on{background:rgba(255,70,110,0.26);border-color:rgba(255,100,140,0.6);color:#ff5588}
-#favFilter:hover{transform:scale(1.1)}
+#searchBtn:hover{transform:scale(1.08);background:rgba(70,140,255,0.18)}
+#searchBtn:active{transform:scale(0.95)}
 #statusbar{font-size:10px;color:#5878b8;white-space:nowrap;flex-shrink:0;font-weight:600;margin-left:auto;padding-right:2px}
 #statusbar.anim{color:#5a90ff;animation:pulse 1.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:0.35}50%{opacity:1}}
@@ -324,8 +324,48 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .ip-actions{display:flex;align-items:center;gap:5px;flex-shrink:0}
 .ip-close{background:none;border:none;color:#5060a0;font-size:16px;cursor:pointer;padding:0}
 .ip-close:hover{color:#fff}
-.ip-fav{background:none;border:none;font-size:18px;cursor:pointer;padding:0;transition:transform 0.15s;line-height:1;color:#ffffff}
-.ip-fav:hover{transform:scale(1.3)}
+/* お気に入り♡関連CSS（.ip-fav, .rfav）はRound 3で廃止 */
+/* ═══ 検索モーダル（Round 3） ═══ */
+#search-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:flex-start;justify-content:center;z-index:10000;padding:60px 16px 16px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#search-modal-bg.open{display:flex}
+#search-modal{background:linear-gradient(180deg,#1a2440 0%,#0f1830 100%);border:1px solid rgba(100,140,220,0.3);border-radius:14px;width:100%;max-width:440px;max-height:calc(100vh - 100px);box-shadow:0 20px 60px rgba(0,0,0,0.6);display:flex;flex-direction:column;overflow:hidden}
+.srch-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(100,140,220,0.18);background:rgba(70,140,255,0.06)}
+.srch-title{font-size:16px;font-weight:700;color:#c8d6f0;letter-spacing:0.5px}
+.srch-x{background:none;border:none;color:#8090b8;font-size:20px;cursor:pointer;padding:4px 10px;border-radius:6px;line-height:1;transition:all 0.15s}
+.srch-x:hover{background:rgba(255,255,255,0.08);color:#fff}
+.srch-input-wrap{position:relative;padding:14px 16px 8px}
+.srch-input{width:100%;background:rgba(0,0,0,0.25);border:1.5px solid rgba(100,140,220,0.35);border-radius:10px;padding:12px 38px 12px 14px;font-size:16px;color:#f0f4ff;outline:none;font-family:inherit;transition:border-color 0.2s,background 0.2s;box-sizing:border-box}
+.srch-input:focus{border-color:rgba(120,180,255,0.7);background:rgba(0,0,0,0.4)}
+.srch-input::placeholder{color:#5870a0}
+.srch-clear{position:absolute;right:24px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.08);border:none;color:#8090b8;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:11px;line-height:1;display:none;align-items:center;justify-content:center;padding:0}
+.srch-clear.show{display:flex}
+.srch-clear:hover{background:rgba(255,255,255,0.16);color:#fff}
+.srch-hint{padding:0 16px 8px;font-size:11px;color:#5878b0;line-height:1.5}
+.srch-results{flex:1;overflow-y:auto;padding:4px 8px 12px;min-height:120px;max-height:calc(100vh - 280px);-webkit-overflow-scrolling:touch}
+.srch-empty{text-align:center;color:#5878a0;font-size:13px;padding:30px 12px;line-height:1.6}
+.srch-row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:9px;cursor:pointer;transition:background 0.12s;border:1px solid transparent}
+.srch-row:hover,.srch-row:active{background:rgba(80,140,220,0.14);border-color:rgba(100,160,240,0.3)}
+.srch-rank{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;font-weight:800;font-size:14px;flex-shrink:0}
+.srch-rank.S{background:rgba(255,34,68,0.18);color:#ff4466;border:1px solid rgba(255,34,68,0.4)}
+.srch-rank.A{background:rgba(255,136,0,0.18);color:#ff9930;border:1px solid rgba(255,136,0,0.4)}
+.srch-rank.B{background:rgba(255,215,0,0.18);color:#ffd744;border:1px solid rgba(255,215,0,0.4)}
+.srch-rank.C{background:rgba(68,204,136,0.18);color:#5cd99a;border:1px solid rgba(68,204,136,0.4)}
+.srch-rank.D{background:rgba(68,170,255,0.18);color:#6abaff;border:1px solid rgba(68,170,255,0.4)}
+.srch-info{flex:1;min-width:0}
+.srch-stname{font-size:15px;font-weight:700;color:#e8f0ff;line-height:1.3}
+.srch-stmeta{font-size:11px;color:#7090c0;margin-top:2px;line-height:1.3}
+.srch-score{font-size:14px;font-weight:700;color:#a8c8ff;flex-shrink:0;letter-spacing:0.3px}
+.srch-section{font-size:11px;color:#5878a0;padding:8px 12px 4px;font-weight:600;letter-spacing:0.5px}
+@media (max-width:520px){
+  #search-modal-bg{padding:50px 12px 12px}
+  .srch-input{font-size:16px}
+  .srch-results{max-height:calc(100vh - 250px)}
+}
+.search-pulse-marker{animation:searchPulse 1.4s ease-in-out infinite}
+@keyframes searchPulse{
+  0%,100%{stroke-opacity:0.9;stroke-width:3}
+  50%{stroke-opacity:0.4;stroke-width:6}
+}
 .ip-share{background:rgba(0,0,0,0.3);border:1px solid rgba(100,140,255,0.28);
   color:#8898f0;font-size:9px;padding:3px 7px;border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700}
 .ip-share:hover{color:#c0d8ff}
@@ -402,9 +442,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .rinfo{flex:1;min-width:0}
 .rname-row{display:flex;align-items:center;gap:5px}
 .rname{font-size:15px;font-weight:700;color:#e0ecff;letter-spacing:0.3px}
-.rfav{font-size:15px;cursor:pointer;line-height:1;flex-shrink:0;transition:transform 0.15s;color:#8090c0;font-weight:700}
-.rfav.on{color:#ff5588}
-.rfav:hover{transform:scale(1.3)}
+/* .rfav廃止（Round 3） */
 .rline{font-size:11px;color:#b0c4e0;margin-top:2px;font-weight:500}
 .rcats{display:flex;gap:3px;margin-top:5px;flex-wrap:nowrap;overflow:hidden}
 .rcat{font-size:9px;padding:2px 5px;border-radius:3px;font-weight:700;white-space:nowrap;flex-shrink:0}
@@ -2690,7 +2728,7 @@ body:not(.splashing) #table-area{
     flex-wrap:nowrap !important;
     overflow:visible !important;
   }
-  #favFilter{
+  #searchBtn{
     padding:3px 6px !important;
     font-size:13px !important;
     flex-shrink:0 !important;
@@ -3686,7 +3724,7 @@ body.checkin-active #checkin-indicator{
       <option value="800">800m</option>
       <option value="1200">1.2km</option>
     </select>
-    <button id="favFilter" onclick="toggleFavFilter()">♥</button>
+    <button id="searchBtn" onclick="openSearchModal()" title="駅名で検索" aria-label="駅名検索">🔍</button>
     <span id="statusbar"></span>
   </div>
 
@@ -3708,7 +3746,6 @@ body.checkin-active #checkin-indicator{
         <div class="ip-head">
           <div style="flex:1;min-width:0"><div class="ip-name" id="ip-name"></div><div class="ip-line" id="ip-line"></div></div>
           <div class="ip-actions">
-            <button class="ip-fav" id="ip-fav-btn" onclick="toggleFav(currentStation)">♡</button>
             <button class="ip-close" onclick="closeInfo()">✕</button>
           </div>
         </div>
@@ -3808,6 +3845,24 @@ body.checkin-active #checkin-indicator{
       </div>
     </div>
     <button onclick="closeLogModal()" style="margin-top:10px;width:100%;padding:10px;background:rgba(80,120,255,0.15);border:1px solid rgba(100,150,255,0.3);border-radius:8px;color:#a0c0ff;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit">とじる</button>
+  </div>
+</div>
+
+<!-- 駅名検索モーダル -->
+<div id="search-modal-bg" onclick="if(event.target===this)closeSearchModal()">
+  <div id="search-modal" onclick="event.stopPropagation()">
+    <div class="srch-hdr">
+      <div class="srch-title">🔍 駅名で検索</div>
+      <button class="srch-x" onclick="closeSearchModal()" aria-label="閉じる">✕</button>
+    </div>
+    <div class="srch-input-wrap">
+      <input type="text" id="srch-input" class="srch-input" placeholder="駅名を入力（例: 新宿、しんじゅく、シンジュク）" autocomplete="off" />
+      <button class="srch-clear" id="srch-clear" onclick="clearSearch()" aria-label="クリア">✕</button>
+    </div>
+    <div class="srch-hint">漢字・ひらがな・カタカナ対応／タップで地図にジャンプ</div>
+    <div class="srch-results" id="srch-results">
+      <div class="srch-empty">駅名を入力してください</div>
+    </div>
   </div>
 </div>
 
@@ -4421,7 +4476,6 @@ body.checkin-active #checkin-indicator{
               <div class="sc-visit-count" id="sc-visit-count">初訪問</div>
             </div>
             <div class="sc-actions">
-              <button class="sc-act-btn" id="sc-fav-btn" onclick="toggleCardFav()" title="お気に入り">♡</button>
               <button class="sc-act-btn" onclick="shareCard()" title="共有">↗</button>
             </div>
           </div>
@@ -4902,27 +4956,188 @@ function sortedLineKeys(obj){
   });
 }
 
-// ═══ お気に入り ═══
-let favs=new Set(JSON.parse(localStorage.getItem('spc_favs')||'[]'));
-let showFavOnly=false;
-function isFav(st){return favs.has(st.name+'_'+st.pref);}
-function toggleFav(st){
-  if(!st)return;
-  const k=st.name+'_'+st.pref;
-  if(favs.has(k))favs.delete(k);else favs.add(k);
-  localStorage.setItem('spc_favs',JSON.stringify([...favs]));
-  updateFavBtn(st);render();
-}
-function updateFavBtn(st){
-  const btn=document.getElementById('ip-fav-btn');
-  if(btn)btn.textContent=isFav(st)?'♥':'♡';
-}
-function toggleFavFilter(){
-  showFavOnly=!showFavOnly;
-  document.getElementById('favFilter').classList.toggle('on',showFavOnly);render();
-}
+// ═══ お気に入り（♡）システムはRound 3で廃止、検索機能に置き換え ═══
+// 推し街（★/favStations）は別システム（Firestore）で温存
 
 let currentStation=null;
+
+// ═══════════════════════════════════════════════════════════════
+// 駅名検索システム（Round 3）
+// 漢字／カタカナ／ひらがな入力対応（カタカナ↔ひらがな正規化）
+// ひらがな入力での漢字駅名マッチは別途読み辞書が必要（次ラウンド予定）
+// ═══════════════════════════════════════════════════════════════
+
+// カタカナ↔ひらがな相互変換ユーティリティ
+function kataToHira(str){
+  return str.replace(/[\u30A1-\u30F6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+}
+function hiraToKata(str){
+  return str.replace(/[\u3041-\u3096]/g, ch => String.fromCharCode(ch.charCodeAt(0) + 0x60));
+}
+// 検索用に正規化（小文字+空白除去+両形態を保持できるよう変換用）
+function normalizeForSearch(str){
+  return (str||'').trim().toLowerCase().replace(/\s+/g,'');
+}
+
+let _searchHighlightMarker = null; // 検索結果ハイライトマーカー
+
+window.openSearchModal = function(){
+  const bg = document.getElementById('search-modal-bg');
+  if(!bg) return;
+  bg.classList.add('open');
+  const inp = document.getElementById('srch-input');
+  if(inp){
+    inp.value = '';
+    setTimeout(()=>{ try{inp.focus();}catch(e){} }, 100);
+  }
+  document.getElementById('srch-clear').classList.remove('show');
+  renderSearchResults('');
+};
+
+window.closeSearchModal = function(){
+  const bg = document.getElementById('search-modal-bg');
+  if(bg) bg.classList.remove('open');
+};
+
+window.clearSearch = function(){
+  const inp = document.getElementById('srch-input');
+  if(inp){ inp.value=''; inp.focus(); }
+  document.getElementById('srch-clear').classList.remove('show');
+  renderSearchResults('');
+};
+
+function renderSearchResults(query){
+  const out = document.getElementById('srch-results');
+  if(!out) return;
+  const q = normalizeForSearch(query);
+  if(!q){
+    out.innerHTML = '<div class="srch-empty">駅名を入力してください<br><span style="opacity:0.7;font-size:11px">漢字・ひらがな・カタカナで検索できます</span></div>';
+    return;
+  }
+  // 検索クエリのパターン（漢字一致＋カタカナ↔ひらがな相互正規化）
+  const qHira = kataToHira(q);
+  const qKata = hiraToKata(q);
+  // 全駅から部分一致を検索（score>0の駅のみ）
+  if(!Array.isArray(stationData) || stationData.length === 0){
+    out.innerHTML = '<div class="srch-empty">駅データ読み込み中...<br>少し待ってもう一度</div>';
+    return;
+  }
+  const matches = stationData.filter(s=>{
+    if(!s.score) return false;
+    const name = s.name||'';
+    // 漢字駅名そのまま部分一致
+    if(name.includes(q) || name.toLowerCase().includes(q)) return true;
+    // カタカナ駅名（ヶ・ノ等含む）のひらがな正規化マッチ
+    const nameHira = kataToHira(name);
+    if(nameHira.includes(qHira)) return true;
+    const nameKata = hiraToKata(name);
+    if(nameKata.includes(qKata)) return true;
+    return false;
+  });
+  if(matches.length === 0){
+    out.innerHTML = `<div class="srch-empty">「${escapeHtml(query)}」に一致する駅が見つかりません<br><span style="opacity:0.7;font-size:11px">部分一致で検索しています</span></div>`;
+    return;
+  }
+  // スコア降順でソート、最大50件
+  matches.sort((a,b)=>(b.score||0)-(a.score||0));
+  const limited = matches.slice(0, 50);
+  // 重複駅名の判定（同名異駅がある場合に県名で区別）
+  const nameCount = {};
+  matches.forEach(s=>{ nameCount[s.name] = (nameCount[s.name]||0) + 1; });
+  const html = limited.map(s=>{
+    const rank = getRank(s.score).rank;
+    const showPref = nameCount[s.name] > 1; // 同名駅複数あれば県名表示
+    const lineDisplay = formatLinesDisplay(s.lines) || '';
+    const meta = showPref
+      ? `${s.pref}・${lineDisplay}`
+      : lineDisplay;
+    return `<div class="srch-row" onclick="jumpToStation('${escapeForAttr(s.name)}','${escapeForAttr(s.pref)}')">
+      <span class="srch-rank ${rank}">${rank}</span>
+      <div class="srch-info">
+        <div class="srch-stname">${escapeHtml(s.name)}駅${showPref?`<span style="font-size:11px;color:#7090c0;font-weight:500;margin-left:6px">(${escapeHtml(s.pref)})</span>`:''}</div>
+        <div class="srch-stmeta">${escapeHtml(meta)}</div>
+      </div>
+      <span class="srch-score">${s.score}</span>
+    </div>`;
+  }).join('');
+  const header = matches.length > 50
+    ? `<div class="srch-section">${matches.length}件ヒット（上位50件表示）</div>`
+    : `<div class="srch-section">${matches.length}件ヒット</div>`;
+  out.innerHTML = header + html;
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+window.jumpToStation = function(name, pref){
+  const st = stationData.find(s => s.name===name && s.pref===pref);
+  if(!st || !st.lat || !st.lng) return;
+  closeSearchModal();
+  // ランキング画面表示中なら、まず地図画面に切替
+  try{
+    if(typeof setView === 'function' && typeof isPc === 'function' && !isPc()){
+      setView('map');
+    }
+  }catch(e){}
+  // 地図にフォーカス＋ハイライト
+  let mapInstance = null;
+  try{ if(typeof lmap !== 'undefined') mapInstance = lmap; }catch(e){}
+  if(!mapInstance && window.lmap) mapInstance = window.lmap;
+  if(mapInstance && mapInstance.flyTo){
+    mapInstance.flyTo([st.lat, st.lng], 15, {duration: 0.8});
+  }
+  // 既存ハイライトマーカー除去
+  if(_searchHighlightMarker && mapInstance){
+    try{ mapInstance.removeLayer(_searchHighlightMarker); }catch(e){}
+    _searchHighlightMarker = null;
+  }
+  // 新ハイライト：パルスエフェクト付き円
+  if(window.L && mapInstance){
+    _searchHighlightMarker = window.L.circleMarker([st.lat, st.lng], {
+      radius: 22,
+      color: '#6aa8ff',
+      fillColor: '#6aa8ff',
+      fillOpacity: 0.25,
+      weight: 3,
+      opacity: 0.9,
+      className: 'search-pulse-marker'
+    }).addTo(mapInstance);
+    // 5秒後に自動で消す
+    setTimeout(()=>{
+      if(_searchHighlightMarker && mapInstance){
+        try{ mapInstance.removeLayer(_searchHighlightMarker); }catch(e){}
+        _searchHighlightMarker = null;
+      }
+    }, 5000);
+  }
+  // 駅情報モーダルを開く（地図ジャンプ完了後）
+  setTimeout(()=>{
+    if(typeof showInfo === 'function'){
+      showInfo(st);
+    } else if(window.showInfo){
+      window.showInfo(st);
+    }
+  }, 600);
+};
+
+// 検索入力リアルタイム反応
+document.addEventListener('DOMContentLoaded', function(){
+  const inp = document.getElementById('srch-input');
+  const clearBtn = document.getElementById('srch-clear');
+  if(inp){
+    inp.addEventListener('input', function(e){
+      const v = e.target.value;
+      if(clearBtn) clearBtn.classList.toggle('show', !!v);
+      renderSearchResults(v);
+    });
+    // Escで閉じる
+    inp.addEventListener('keydown', function(e){
+      if(e.key === 'Escape') closeSearchModal();
+    });
+  }
+});
+
 function shareStation(){
   if(!currentStation)return;
   const txt=`${currentStation.name}駅の街力は ${currentStation.score}点（${getRank(currentStation.score).rank}ランク）！ #街巡まちめぐ`;
@@ -6111,7 +6326,6 @@ function getFiltered(){
     if(pref&&s.pref!==pref)return false;
     if(line&&!s.lines.includes(line))return false;
     if(rank&&getRank(s.score).rank!==rank)return false;
-    if(showFavOnly&&!isFav(s))return false;
     return true;
   });
 }
@@ -6251,7 +6465,6 @@ function showInfo(st){
   sc.textContent=st.score;sc.style.color=color;
   document.getElementById('ip-rank').textContent=rank+'ランク';
   document.getElementById('ip-rank').style.color=color;
-  updateFavBtn(st);
   const nearby=getNearby(st);
   document.getElementById('ip-nearby').innerHTML=
     '<div class="ip-nearby-title">近隣の強い駅</div>'+
@@ -6302,7 +6515,6 @@ function updateTable(filtered){
     const bonusPill = bonusHasItems
       ? `<span class="rcat bonus-pill" data-station="${st.name}_${st.pref}" onclick="event.stopPropagation();openBonusModalFromRanking('${escapeForAttr(st.name)}','${escapeForAttr(st.pref)}')" style="background:${AC['ボーナス']}1a;color:${AC['ボーナス']};border:1px solid ${AC['ボーナス']}55;cursor:pointer">ボーナス ${bonusPts}${bonusCapped?'★':''}</span>`
       : `<span class="rcat" style="background:#22293a;color:#7a8090;border:1px solid #33405510">ボーナス 0</span>`;
-    const fIcon=isFav(st)?'♥':'♡';
     const isTop=i<3;
     const isCheckedIn = window.checkedInStations && window.checkedInStations.has(st.name+'_'+st.pref);
     return`<div class="rank-row${isCheckedIn?' checked-in':''}" onclick="onTableClick('${st.name}','${st.pref}')">
@@ -6314,7 +6526,6 @@ function updateTable(filtered){
         <div class="rname-row">
           <span class="rname">${st.name}駅</span>
           <span class="rcardico" onclick="event.stopPropagation();openCardFromRanking('${st.name}','${st.pref}')" title="マイカード">📇</span>
-          <span class="rfav${isFav(st)?' on':''}" onclick="event.stopPropagation();toggleFav(stationData.find(s=>s.name==='${st.name}'&&s.pref==='${st.pref}'))">${fIcon}</span>
         </div>
         <div class="rline">${formatLinesDisplay(st.lines)} · ${st.pref}</div>
         <div class="rcats">${cats}${bonusPill}</div>
@@ -7838,9 +8049,8 @@ async function openStationCard(data) {
   void wrap.offsetWidth; // reflow
   wrap.style.animation = '';
   cardEl.style.animation = '';
-  // currentCardStation 保存・お気に入り状態反映
+  // currentCardStation 保存（Round 3で♡廃止、推し街はFirestoreで別管理）
   currentCardStation = data;
-  updateCardFavButton();
   
   document.getElementById('card-modal-bg').classList.add('open');
   if (window._initCardSwipe) window._initCardSwipe();
@@ -8028,29 +8238,6 @@ window.openCardFromPanel = function() {
 
 // ─── カード内アクション ───
 let currentCardStation = null;
-
-window.toggleCardFav = function() {
-  if (!currentCardStation) return;
-  const st = stationData.find(s => s.name === currentCardStation.name && s.pref === currentCardStation.pref);
-  if (st && window.toggleFav) {
-    window.toggleFav(st);
-    updateCardFavButton();
-  }
-};
-
-window.updateCardFavButton = function() {
-  if (!currentCardStation) return;
-  const st = stationData.find(s => s.name === currentCardStation.name && s.pref === currentCardStation.pref);
-  const btn = document.getElementById('sc-fav-btn');
-  if (!btn) return;
-  if (st && window.isFav && window.isFav(st)) {
-    btn.textContent = '♥';
-    btn.classList.add('active');
-  } else {
-    btn.textContent = '♡';
-    btn.classList.remove('active');
-  }
-};
 
 window.shareCard = async function() {
   if (!currentCardStation) return;
