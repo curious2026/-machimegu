@@ -4318,14 +4318,13 @@ body.checkin-active #checkin-indicator{
 /* ════════════════════════════════════════════════════════════════ */
 .bp-mission-badge{
   position:relative;
-  width:104px;height:128px;
-  display:inline-flex;
+  aspect-ratio:1;
+  display:flex;
   flex-direction:column;
   align-items:center;justify-content:center;
   background:linear-gradient(140deg,#1e2940 0%,#0a1224 100%);
   clip-path:polygon(0% 0%,100% 0%,100% 60%,50% 100%,0% 60%);
-  margin:6px;
-  padding:18px 8px 24px;
+  padding:14px 6px 26px;
   text-align:center;
   cursor:pointer;
   transition:transform 0.2s ease,filter 0.2s ease;
@@ -4351,16 +4350,18 @@ body.checkin-active #checkin-indicator{
 }
 .bp-mission-badge .bmb-icon{display:none !important}
 .bp-mission-badge .bmb-title{
-  font-size:12px;
+  font-size:13px;
   color:#fff5d0;
   font-weight:900;
   letter-spacing:0.2px;
-  line-height:1.3;
+  line-height:1.25;
   max-width:100%;
   padding:0 2px;
   word-break:keep-all;
   /* 2行表示用：white-space pre-line で改行コードを反映 */
   white-space:pre-line;
+  /* 五角形の下尖り考慮で上方寄せ */
+  margin-top:-6px;
 }
 .bp-mission-badge .bmb-num{display:none !important}
 .bp-mission-badge.locked{
@@ -10129,8 +10130,8 @@ window.renderAreaBadgeSVG = function(b){
   // 漢字フォントサイズ：1文字=68、2文字=52、3文字=42
   const kanjiLen = kanji.length;
   const kanjiSize = kanjiLen === 1 ? 68 : (kanjiLen === 2 ? 52 : 42);
-  // サブ文字数で可変：短=20、中=17、長=14、超長=12
-  const subSize = sub.length <= 7 ? 20 : (sub.length <= 10 ? 17 : (sub.length <= 13 ? 14 : 12));
+  // サブ文字数で可変：短=26、中=22、長=18、超長=15（可読性大幅向上）
+  const subSize = sub.length <= 7 ? 26 : (sub.length <= 10 ? 22 : (sub.length <= 13 ? 18 : 15));
   // ローマ字
   const romanSize = roman.length <= 8 ? 13 : (roman.length <= 12 ? 11 : 10);
   const romanSpacing = roman.length <= 8 ? 4 : (roman.length <= 12 ? 3 : 2);
@@ -10160,9 +10161,10 @@ window.renderAreaBadgeSVG = function(b){
       <text x="120" y="180" text-anchor="middle" fill="#fff" font-family="serif" font-size="${kanjiSize}" font-weight="500">${kanji}</text>
       <line x1="50" y1="194" x2="190" y2="194" stroke="#e2e8f0" stroke-width="0.8" opacity="0.7"/>
       <line x1="65" y1="197" x2="175" y2="197" stroke="#94a3b8" stroke-width="0.4" opacity="0.5"/>
-      <!-- 3行目: 県・市区町村 + その直下に細い装飾線 -->
-      <text x="120" y="222" text-anchor="middle" fill="#e2e8f0" font-family="serif" font-size="${subSize}" letter-spacing="1.2">${sub}</text>
-      <line x1="80" y1="232" x2="160" y2="232" stroke="#cbd5e1" stroke-width="0.5" opacity="0.55"/>
+      <!-- 3行目: 県・市区町村 + その直下に強調装飾線（拡大文字に対応） -->
+      <text x="120" y="225" text-anchor="middle" fill="#e2e8f0" font-family="serif" font-size="${subSize}" letter-spacing="1.2">${sub}</text>
+      <line x1="60" y1="244" x2="180" y2="244" stroke="#e2e8f0" stroke-width="1.0" opacity="0.85"/>
+      <line x1="75" y1="247" x2="165" y2="247" stroke="#94a3b8" stroke-width="0.6" opacity="0.55"/>
     </svg>
   </div>`;
 };
