@@ -4319,6 +4319,8 @@ body.checkin-active #checkin-indicator{
 .bp-mission-badge{
   position:relative;
   aspect-ratio:1;
+  width:88%;
+  margin:0 auto;
   display:flex;
   flex-direction:column;
   align-items:center;justify-content:center;
@@ -10125,18 +10127,18 @@ window.renderAreaBadgeSVG = function(b){
   const kanji = data.kanji;
   const roman = data.roman;
   const pref  = data.pref || b.pref || '';
-  const sub   = pref ? (pref + '・' + city) : city;
   const id = 'ab' + (++_areaBadgeIdCounter);
-  // 漢字フォントサイズ：1文字=68、2文字=52、3文字=42
+  // 漢字フォントサイズ：1文字=78、2文字=62、3文字=48
   const kanjiLen = kanji.length;
-  const kanjiSize = kanjiLen === 1 ? 68 : (kanjiLen === 2 ? 52 : 42);
-  // サブ文字数で可変：短=26、中=22、長=18、超長=15（可読性大幅向上）
-  const subSize = sub.length <= 7 ? 26 : (sub.length <= 10 ? 22 : (sub.length <= 13 ? 18 : 15));
-  // ローマ字
-  const romanSize = roman.length <= 8 ? 13 : (roman.length <= 12 ? 11 : 10);
+  const kanjiSize = kanjiLen === 1 ? 78 : (kanjiLen === 2 ? 62 : 48);
+  // 県・市町村を2段表示：それぞれ単独で大きく表示
+  const prefSize = pref.length <= 3 ? 32 : (pref.length <= 5 ? 28 : 22);
+  const citySize = city.length <= 3 ? 32 : (city.length <= 5 ? 28 : 22);
+  // ローマ字：各サイズを+1
+  const romanSize = roman.length <= 8 ? 18 : (roman.length <= 12 ? 15 : 13);
   const romanSpacing = roman.length <= 8 ? 4 : (roman.length <= 12 ? 3 : 2);
   return `<div class="bp-badge bp-badge-area" style="background:none !important;border:none !important;padding:0;display:block;width:100%;height:auto;aspect-ratio:1/1">
-    <svg viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+    <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
       <defs>
         <linearGradient id="${id}-bg" x1="0" y1="0" x2="0.5" y2="1">
           <stop offset="0%" stop-color="#1f2937"/><stop offset="50%" stop-color="#111827"/><stop offset="100%" stop-color="#030712"/>
@@ -10148,23 +10150,24 @@ window.renderAreaBadgeSVG = function(b){
           <stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.25"/><stop offset="60%" stop-color="#94a3b8" stop-opacity="0.08"/><stop offset="100%" stop-color="#111827" stop-opacity="0"/>
         </radialGradient>
       </defs>
-      <ellipse cx="120" cy="140" rx="135" ry="140" fill="url(#${id}-glow)"/>
-      <polygon points="120,8 232,72 232,208 120,272 8,208 8,72" fill="url(#${id}-rim)"/>
-      <polygon points="120,18 224,78 224,202 120,262 16,202 16,78" fill="url(#${id}-bg)"/>
-      <polygon points="120,30 214,84 214,196 120,250 26,196 26,84" fill="none" stroke="#cbd5e1" stroke-width="0.6" opacity="0.7"/>
-      <polygon points="120,40 204,90 204,190 120,240 36,190 36,90" fill="none" stroke="#94a3b8" stroke-width="0.4" opacity="0.5"/>
-      <polygon points="120,52 192,96 192,184 120,228 48,184 48,96" fill="none" stroke="#64748b" stroke-width="0.3" opacity="0.4"/>
-      <!-- 1行目: ROMAN（あれば） + その直下に細い装飾線（アンダーライン強調） -->
-      ${roman ? `<text x="120" y="76" text-anchor="middle" fill="#f8fafc" font-family="serif" font-size="${romanSize}" letter-spacing="${romanSpacing}">${roman}</text>
-      <line x1="80" y1="83" x2="160" y2="83" stroke="#cbd5e1" stroke-width="0.5" opacity="0.55"/>` : ''}
-      <!-- 2行目: 漢字（最重要、最大）+ その直下に太めの装飾線（強調アンダー） -->
-      <text x="120" y="180" text-anchor="middle" fill="#fff" font-family="serif" font-size="${kanjiSize}" font-weight="500">${kanji}</text>
-      <line x1="50" y1="194" x2="190" y2="194" stroke="#e2e8f0" stroke-width="0.8" opacity="0.7"/>
-      <line x1="65" y1="197" x2="175" y2="197" stroke="#94a3b8" stroke-width="0.4" opacity="0.5"/>
-      <!-- 3行目: 県・市区町村 + その直下に強調装飾線（拡大文字に対応） -->
-      <text x="120" y="225" text-anchor="middle" fill="#e2e8f0" font-family="serif" font-size="${subSize}" letter-spacing="1.2">${sub}</text>
-      <line x1="60" y1="244" x2="180" y2="244" stroke="#e2e8f0" stroke-width="1.0" opacity="0.85"/>
-      <line x1="75" y1="247" x2="165" y2="247" stroke="#94a3b8" stroke-width="0.6" opacity="0.55"/>
+      <ellipse cx="120" cy="120" rx="135" ry="120" fill="url(#${id}-glow)"/>
+      <polygon points="120,8 232,62 232,178 120,232 8,178 8,62" fill="url(#${id}-rim)"/>
+      <polygon points="120,18 224,68 224,172 120,222 16,172 16,68" fill="url(#${id}-bg)"/>
+      <polygon points="120,26 214,72 214,168 120,214 26,168 26,72" fill="none" stroke="#cbd5e1" stroke-width="0.6" opacity="0.7"/>
+      <polygon points="120,34 204,77 204,163 120,206 36,163 36,77" fill="none" stroke="#94a3b8" stroke-width="0.4" opacity="0.5"/>
+      <polygon points="120,44 192,82 192,158 120,196 48,158 48,82" fill="none" stroke="#64748b" stroke-width="0.3" opacity="0.4"/>
+      <!-- 1行目: ROMAN（あれば） + その直下に細い装飾線 -->
+      ${roman ? `<text x="120" y="55" text-anchor="middle" fill="#f8fafc" font-family="serif" font-size="${romanSize}" letter-spacing="${romanSpacing}">${roman}</text>
+      <line x1="80" y1="65" x2="160" y2="65" stroke="#cbd5e1" stroke-width="0.5" opacity="0.55"/>` : ''}
+      <!-- 2行目: 漢字（最重要、最大）- できるだけ上に -->
+      <text x="120" y="130" text-anchor="middle" fill="#fff" font-family="serif" font-size="${kanjiSize}" font-weight="500">${kanji}</text>
+      <line x1="50" y1="146" x2="190" y2="146" stroke="#e2e8f0" stroke-width="0.8" opacity="0.7"/>
+      <line x1="65" y1="149" x2="175" y2="149" stroke="#94a3b8" stroke-width="0.4" opacity="0.5"/>
+      <!-- 3行目: 県名（1段目） + 4行目: 市町村（2段目） -->
+      ${pref ? `<text x="120" y="178" text-anchor="middle" fill="#e2e8f0" font-family="serif" font-size="${prefSize}" letter-spacing="1.2">${pref}</text>` : ''}
+      <text x="120" y="${pref ? 210 : 195}" text-anchor="middle" fill="#e2e8f0" font-family="serif" font-size="${citySize}" letter-spacing="1.2">${city}</text>
+      <line x1="60" y1="222" x2="180" y2="222" stroke="#e2e8f0" stroke-width="1.0" opacity="0.85"/>
+      <line x1="75" y1="225" x2="165" y2="225" stroke="#94a3b8" stroke-width="0.6" opacity="0.55"/>
     </svg>
   </div>`;
 };
