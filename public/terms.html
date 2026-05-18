@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow">
+<title>利用規約 — 街巡-まちめぐ-</title>
+<link rel="icon" type="image/png" href="/logo192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #fafaf7;
+    --paper: #ffffff;
+    --ink: #2a2a2a;
+    --ink-soft: #555;
+    --line: #e6e3da;
+    --accent: #2d5f7a;
+    --accent-soft: #f0e9d8;
+    --heading-font: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    --body-font: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.85;
+    -webkit-text-size-adjust: 100%;
+  }
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  /* ヘッダー */
+  .site-header {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 40px;
+  }
+  .site-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .site-logo-mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+  }
+  .site-name {
+    font-family: var(--heading-font);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .site-tag {
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.2em;
+  }
+  /* タイトル */
+  h1 {
+    font-family: var(--heading-font);
+    font-size: 32px;
+    font-weight: 700;
+    margin: 24px 0 8px;
+    color: var(--ink);
+    letter-spacing: 0.05em;
+  }
+  .subtitle {
+    font-family: var(--heading-font);
+    font-size: 21px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+    margin-bottom: 32px;
+  }
+  /* 序文 */
+  .preamble {
+    background: var(--paper);
+    border-left: 4px solid var(--accent);
+    padding: 20px 24px;
+    margin: 24px 0 40px;
+    border-radius: 0 6px 6px 0;
+    font-size: 15px;
+  }
+  /* 各条 */
+  h2 {
+    font-family: var(--heading-font);
+    font-size: 21px;
+    font-weight: 700;
+    margin: 48px 0 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+  h2:first-of-type {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 16px;
+  }
+  p { margin: 12px 0; }
+  ol, ul {
+    margin: 12px 0;
+    padding-left: 28px;
+  }
+  ol li, ul li { margin: 8px 0; }
+  ol.numbered > li { margin-bottom: 12px; }
+  /* 強調 */
+  .highlight {
+    background: var(--accent-soft);
+    padding: 16px 20px;
+    border-radius: 6px;
+    margin: 16px 0;
+    font-size: 15px;
+  }
+  .highlight strong { color: var(--accent); }
+  /* フッター */
+  .footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .footer-meta { margin-bottom: 16px; }
+  .footer-meta dt {
+    font-weight: 700;
+    color: var(--ink);
+    margin-top: 8px;
+  }
+  .footer-meta dd { margin: 0 0 4px; }
+  .footer-nav {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  .footer-nav a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+  }
+  .footer-nav a:hover { color: var(--ink); }
+  a.contact {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+  /* レスポンシブ */
+  @media (max-width: 600px) {
+    body { font-size: 15px; }
+    .container { padding: 24px 16px 60px; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 18px; margin: 36px 0 12px; padding-top: 12px; }
+    .subtitle { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="site-header">
+  <a href="/" class="site-logo">
+    <img src="https://machimegu.com/logo192.png" alt="街巡-まちめぐ-" class="site-logo-mark" width="44" height="44">
+    <div>
+      <div class="site-name">街巡-まちめぐ-</div>
+      <div class="site-tag">MACHI-MEGU</div>
+    </div>
+  </a>
+</header>
+
+<h1>利用規約</h1>
+<div class="subtitle">「街にでよう」</div>
+
+<div class="preamble">
+この利用規約（以下「本規約」）は、街巡-まちめぐ-製作委員会（以下「当方」）が提供するウェブサービス「街巡-まちめぐ-」（以下「本サービス」）の利用条件を定めるものです。本サービスをご利用になる方（以下「利用者」）は、本規約に同意したうえで本サービスをご利用いただくものとします。
+</div>
+
+<h2>第1条（適用）</h2>
+<ol class="numbered">
+  <li>本規約は、本サービスの提供条件及び本サービスの利用に関する当方と利用者との間の権利義務関係を定めることを目的とし、利用者と当方との間の本サービスの利用に関わる一切の関係に適用されます。</li>
+  <li>当方が本サービス上で掲載する個別規定・ヘルプ・案内等（以下「個別規定」）は、本規約の一部を構成するものとします。本規約の規定と個別規定の規定が矛盾する場合には、個別規定の規定が優先するものとします。</li>
+</ol>
+
+<h2>第2条(定義)</h2>
+<p>本規約において使用する用語の定義は以下のとおりとします。</p>
+<ol class="numbered">
+  <li>「本サービス」とは、当方が運営するウェブサービス「街巡-まちめぐ-」をいいます。</li>
+  <li>「街力スコア」とは、本サービスが各駅周辺の公開POI（地点）データをもとに算出する商業活力等の相対指標をいいます。</li>
+  <li>「利用者情報」とは、利用者が本サービスの利用にあたり当方に提供する情報及び利用者の利用状況等から取得される情報をいいます。</li>
+  <li>「統計データ」とは、利用者情報を統計的に加工し、特定の個人を識別できない形にした情報をいいます。</li>
+</ol>
+
+<h2>第3条（アカウント登録・削除）</h2>
+<ol class="numbered">
+  <li>本サービスの一部機能の利用にあたり、利用者はGoogleアカウントによる認証を行うものとします。</li>
+  <li>利用者は、登録情報に変更があった場合、速やかに当方の定める方法により変更内容を反映するものとします。</li>
+  <li>利用者は、自己の認証情報の管理について一切の責任を負うものとし、これを第三者に貸与・譲渡・売買・質入等することはできません。</li>
+  <li>利用者は、いつでも自身のアカウントを削除することができます。具体的な削除方法及び削除後のデータ取扱いは、別途定める <a href="/privacy.html" class="contact">プライバシーポリシー</a> に従います。</li>
+</ol>
+
+<h2>第4条（利用条件）</h2>
+<ol class="numbered">
+  <li>本サービスは、原則として無償でご利用いただけます。ただし、将来的に有料機能が追加される場合、その利用条件は別途定めるものとします。</li>
+  <li>本サービスの利用には、インターネット接続環境及びこれに必要な機器が必要となります。これらの準備及び費用は利用者の負担となります。</li>
+  <li>利用者は、本サービスの利用にあたり、自己の判断と責任において必要な情報の確認及び安全対策（位置情報の取扱い、外出時の安全確保等）を行うものとします。</li>
+</ol>
+
+<h2>第5条（禁止事項）</h2>
+<p>利用者は、本サービスの利用にあたり、以下に該当する行為またはそのおそれのある行為を行ってはなりません。</p>
+<ol class="numbered">
+  <li>法令または公序良俗に違反する行為</li>
+  <li>犯罪行為に関連する行為</li>
+  <li>当方、他の利用者、または第三者の知的財産権、肖像権、プライバシー、名誉その他の権利または利益を侵害する行為</li>
+  <li>本サービスのサーバーまたはネットワークの機能を破壊・妨害する行為</li>
+  <li>本サービスの運営を妨害するおそれのある行為</li>
+  <li>不正な目的をもって本サービスを利用する行為</li>
+  <li>本サービスのデータを、自動化された手段（スクレイピング、クローラー、ボット等）により大量に取得する行為</li>
+  <li>当方の事前の書面による許可なく、本サービスのデータ、街力スコア、駅紹介コメント等を商業目的で利用または再配布する行為</li>
+  <li>本サービスのリバースエンジニアリング、逆コンパイル、逆アセンブル等の行為</li>
+  <li>他の利用者になりすます行為</li>
+  <li>不正アクセス、不正利用、その他セキュリティを侵害する行為</li>
+  <li>その他、当方が不適切と判断する行為</li>
+</ol>
+
+<h2>第6条（街力スコアの位置づけ及び免責）</h2>
+<div class="highlight">
+<p><strong>「街力スコア」は、各駅周辺の公開POIデータをもとに算出した相対指標であり、個別の街・駅の優劣や生活適性を断定するものではありません。</strong></p>
+</div>
+<ol class="numbered">
+  <li>街力スコアは、街選びや訪問先選びの一参考情報として提供されるものであり、実際の生活・訪問・投資判断等は利用者ご自身の責任において行ってください。</li>
+  <li>街力スコアの算出ロジック、評価軸、対象範囲（半径等）は、本サービスの改善のため予告なく変更されることがあります。</li>
+  <li>当方は、街力スコアの正確性、完全性、最新性、特定目的への適合性について、いかなる保証も行いません。</li>
+  <li>本サービスが利用する地図データ、POI（地点）データには、外部の公開データ（国土地理院、Overture Maps、Foursquare Open Source Places等）を含みます。これらの第三者データの誤り・欠落に起因する表示の不正確について、当方は責任を負いません。</li>
+</ol>
+
+<h2>第7条（知的財産権）</h2>
+<ol class="numbered">
+  <li>本サービスを構成する文章、画像、ロゴ、デザイン、プログラム、街力スコアの算出ロジック、駅紹介コメント等の一切の知的財産権は、当方または当方に使用許諾を与えた正当な権利者に帰属します。</li>
+  <li>本サービスが利用する地図タイル・POIデータ等の外部データの著作権は、各データ提供者に帰属します。当方は、それぞれのライセンス条件（オープンライセンス含む）に従って利用しています。</li>
+  <li>統計データ（個人を特定できない形に加工した情報）の知的財産権は当方に帰属します。当方は、統計データを自由に利用、加工、第三者提供することができるものとします。</li>
+  <li>利用者は、本規約に基づき本サービスを利用するための非独占的・譲渡不能な利用権を有するに留まり、本サービスに含まれる知的財産権を取得するものではありません。</li>
+</ol>
+
+<h2>第8条（広告・トラッキング・データ売買について）</h2>
+<ol class="numbered">
+  <li>本サービスは、現時点で広告表示を行っておりません。将来的に広告機能を導入する場合には、本規約及びプライバシーポリシーの変更により事前に通知します。</li>
+  <li>本サービスは、他のアプリケーション・ウェブサイトをまたいだ利用者の追跡（クロスアプリ／クロスサイトトラッキング）を行いません。</li>
+  <li>本サービスは、IDFA（広告識別子）等の広告目的の識別子を利用しません。</li>
+  <li>当方は、特定の個人を識別できる情報を、本サービスの目的外で第三者に売買することはありません。ただし、統計データ（個人を特定できない情報）の第三者提供は、プライバシーポリシーに定めるところに従い行うことがあります。</li>
+</ol>
+
+<h2>第9条（サービス内容の変更・中断・終了）</h2>
+<ol class="numbered">
+  <li>当方は、利用者に通知することなく、本サービスの内容（機能、画面、街力スコアの仕様等）を変更し、または本サービスの提供を中断・終了することができるものとします。</li>
+  <li>当方は、本サービスの変更・中断・終了によって利用者または第三者に生じた損害について、一切の責任を負いません。</li>
+</ol>
+
+<h2>第10条（免責事項）</h2>
+<ol class="numbered">
+  <li>当方は、本サービスに関して、その完全性、正確性、確実性、有用性、特定目的への適合性等について、いかなる保証も行いません。</li>
+  <li>本サービスは現状有姿（as is）で提供されるものであり、当方は利用者に対し、本サービスの仕様の変更、不具合の修正、機能の追加等を行う義務を負いません。</li>
+  <li>当方は、本サービスの利用または利用不能により利用者に生じたあらゆる損害（直接損害、間接損害、特別損害、結果的損害、逸失利益を含むがこれらに限られない）について、一切の責任を負いません。</li>
+  <li>本サービスは、駅周辺へのお出かけや散策を楽しむための情報を提供するものですが、実際の外出時の安全確保（交通安全、防犯、体調管理、天候判断等）は利用者ご自身の責任において行ってください。当方は外出に伴う事故・トラブル等について一切の責任を負いません。</li>
+  <li>利用者間または利用者と第三者との間でトラブルが発生した場合、当事者間で解決するものとし、当方は一切の責任を負いません。</li>
+</ol>
+
+<h2>第11条（個人情報の取扱い）</h2>
+<p>当方は、本サービスの利用によって取得する利用者の個人情報については、別途定める <a href="/privacy.html" class="contact">プライバシーポリシー</a> に従って適切に取り扱います。</p>
+
+<h2>第12条（規約の変更）</h2>
+<ol class="numbered">
+  <li>当方は、必要と判断した場合には、利用者に通知することなくいつでも本規約を変更することができるものとします。</li>
+  <li>本規約の変更後、本サービスの利用を継続した利用者は、変更後の本規約に同意したものとみなします。</li>
+  <li>重大な変更については、本サービス上で適切な方法により周知するよう努めるものとします。</li>
+</ol>
+
+<h2>第13条（準拠法・管轄）</h2>
+<ol class="numbered">
+  <li>本規約の解釈にあたっては、日本法を準拠法とします。</li>
+  <li>本サービスに関して紛争が生じた場合には、当方の所在地を管轄する裁判所を専属的合意管轄裁判所とします。</li>
+</ol>
+
+<h2>第14条（お問い合わせ）</h2>
+<p>本規約に関するお問い合わせは、以下までご連絡ください。</p>
+<p>運営：街巡-まちめぐ-製作委員会<br>
+連絡先：<a href="mailto:machimegu2026@gmail.com" class="contact">machimegu2026@gmail.com</a></p>
+
+<div class="footer">
+  <dl class="footer-meta">
+    <dt>制定日</dt>
+    <dd>2026年5月18日</dd>
+    <dt>最終更新日</dt>
+    <dd>2026年5月18日</dd>
+  </dl>
+  <nav class="footer-nav">
+    <a href="/">街巡-まちめぐ-トップへ戻る</a>
+    <a href="/privacy.html">プライバシーポリシー</a>
+  </nav>
+</div>
+
+</div>
+</body>
+</html>

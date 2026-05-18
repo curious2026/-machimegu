@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow">
+<title>プライバシーポリシー — 街巡-まちめぐ-</title>
+<link rel="icon" type="image/png" href="/logo192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #fafaf7;
+    --paper: #ffffff;
+    --ink: #2a2a2a;
+    --ink-soft: #555;
+    --line: #e6e3da;
+    --accent: #2d5f7a;
+    --accent-soft: #f0e9d8;
+    --heading-font: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    --body-font: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.85;
+    -webkit-text-size-adjust: 100%;
+  }
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  /* ヘッダー */
+  .site-header {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 40px;
+  }
+  .site-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .site-logo-mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+  }
+  .site-name {
+    font-family: var(--heading-font);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .site-tag {
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.2em;
+  }
+  /* タイトル */
+  h1 {
+    font-family: var(--heading-font);
+    font-size: 32px;
+    font-weight: 700;
+    margin: 24px 0 8px;
+    color: var(--ink);
+    letter-spacing: 0.05em;
+  }
+  .subtitle {
+    font-family: var(--heading-font);
+    font-size: 21px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+    margin-bottom: 32px;
+  }
+  /* 序文 */
+  .preamble {
+    background: var(--paper);
+    border-left: 4px solid var(--accent);
+    padding: 20px 24px;
+    margin: 24px 0 40px;
+    border-radius: 0 6px 6px 0;
+    font-size: 15px;
+  }
+  /* 各章 */
+  h2 {
+    font-family: var(--heading-font);
+    font-size: 21px;
+    font-weight: 700;
+    margin: 48px 0 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+  h2:first-of-type {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 16px;
+  }
+  h3 {
+    font-family: var(--heading-font);
+    font-size: 17px;
+    font-weight: 700;
+    margin: 24px 0 8px;
+    color: var(--ink);
+  }
+  p { margin: 12px 0; }
+  ol, ul {
+    margin: 12px 0;
+    padding-left: 28px;
+  }
+  ol li, ul li { margin: 8px 0; }
+  ol.numbered > li { margin-bottom: 12px; }
+  /* テーブル */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 15px;
+    background: var(--paper);
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 12px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--accent-soft);
+    font-weight: 700;
+    color: var(--ink);
+  }
+  /* 強調 */
+  .highlight {
+    background: var(--accent-soft);
+    padding: 16px 20px;
+    border-radius: 6px;
+    margin: 16px 0;
+    font-size: 15px;
+  }
+  .highlight strong { color: var(--accent); }
+  /* フッター */
+  .footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .footer-meta { margin-bottom: 16px; }
+  .footer-meta dt {
+    font-weight: 700;
+    color: var(--ink);
+    margin-top: 8px;
+  }
+  .footer-meta dd { margin: 0 0 4px; }
+  .footer-nav {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  .footer-nav a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+  }
+  .footer-nav a:hover { color: var(--ink); }
+  a.contact {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+  /* レスポンシブ */
+  @media (max-width: 600px) {
+    body { font-size: 15px; }
+    .container { padding: 24px 16px 60px; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 18px; margin: 36px 0 12px; padding-top: 12px; }
+    h3 { font-size: 16px; }
+    .subtitle { font-size: 18px; }
+    table { font-size: 14px; }
+    th, td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="site-header">
+  <a href="/" class="site-logo">
+    <img src="https://machimegu.com/logo192.png" alt="街巡-まちめぐ-" class="site-logo-mark" width="44" height="44">
+    <div>
+      <div class="site-name">街巡-まちめぐ-</div>
+      <div class="site-tag">MACHI-MEGU</div>
+    </div>
+  </a>
+</header>
+
+<h1>プライバシーポリシー</h1>
+<div class="subtitle">「街にでよう」</div>
+
+<div class="preamble">
+街巡-まちめぐ-製作委員会（以下「当方」）は、ウェブサービス「街巡-まちめぐ-」（以下「本サービス」）の提供にあたり、利用者の個人情報及び利用情報（以下「利用者情報」）の取扱いについて、本ポリシーを定めます。本サービスをご利用いただく方は、本ポリシーの内容に同意のうえご利用ください。
+</div>
+
+<h2>1. 基本方針</h2>
+<p>当方は、個人情報の保護に関する法律（個人情報保護法）その他関連法令を遵守し、利用者情報を適切に取り扱います。</p>
+<p>当方は、利用者情報の取得・利用にあたり、その利用目的を明示し、利用目的の達成に必要な範囲内でのみ取り扱います。</p>
+
+<h2>2. 取得する情報</h2>
+<p>当方は、本サービスの提供にあたり、以下の情報を取得します。</p>
+
+<h3>(1) 利用者が直接提供する情報</h3>
+<table>
+  <thead><tr><th>項目</th><th>取得の場面</th></tr></thead>
+  <tbody>
+    <tr><td>Googleアカウント情報（メールアドレス、表示名、プロフィール画像URL）</td><td>Googleアカウントによるログイン時</td></tr>
+    <tr><td>チェックイン履歴・コレクションデータ・お気に入り情報</td><td>本サービスの利用中</td></tr>
+  </tbody>
+</table>
+
+<h3>(2) 自動的に取得する情報</h3>
+<table>
+  <thead><tr><th>項目</th><th>取得の場面</th></tr></thead>
+  <tbody>
+    <tr><td>位置情報（緯度・経度）</td><td>利用者がチェックイン機能を利用し、ブラウザ上で位置情報の使用を許可した場合のみ</td></tr>
+    <tr><td>端末情報（OS、ブラウザ種別・バージョン、画面サイズ等）</td><td>本サービスへのアクセス時</td></tr>
+    <tr><td>IPアドレス</td><td>本サービスへのアクセス時</td></tr>
+    <tr><td>アクセスログ・操作ログ（閲覧ページ、滞在時間、クリック等）</td><td>本サービスの利用中</td></tr>
+    <tr><td>Cookie及び類似技術（ローカルストレージ等）により取得される識別子</td><td>本サービスへのアクセス時</td></tr>
+    <tr><td>不正アクセス検知のためのブラウザ環境情報（reCAPTCHA Enterprise）</td><td>本サービスへのアクセス時</td></tr>
+  </tbody>
+</table>
+
+<h2>3. 利用目的</h2>
+<p>取得した利用者情報は、以下の目的のために利用します。</p>
+<ol class="numbered">
+  <li>本サービスの提供・運営・維持・改善のため</li>
+  <li>利用者の認証、本人確認、ログイン状態の維持のため</li>
+  <li>チェックイン履歴・コレクションデータ等の保存及び表示のため</li>
+  <li>位置情報に基づくチェックイン機能の提供及び駅周辺情報の表示のため</li>
+  <li>本サービスの利用状況の把握・分析、機能改善、新機能開発のため</li>
+  <li>不正アクセス、不正利用、スパム行為の検知及び防止のため</li>
+  <li>システム障害・不具合の調査及び対応のため</li>
+  <li>お問い合わせへの対応のため</li>
+  <li>利用規約違反等への対応のため</li>
+  <li>法令に基づく対応のため</li>
+  <li>個人を特定できない統計データを作成し、当方の事業運営、第三者（法人含む）への提供、研究・調査・マーケティング目的での利用のため</li>
+</ol>
+
+<h2>4. 位置情報の取扱い</h2>
+<div class="highlight">
+<p><strong>位置情報は、利用者がブラウザ上で明示的に許可した場合にのみ取得されます。</strong>許可しない場合、チェックイン機能は利用できませんが、本サービスの他の機能（地図閲覧、ランキング閲覧等）は引き続きご利用いただけます。</p>
+</div>
+<ol class="numbered">
+  <li>位置情報は、チェックイン機能の判定（利用者が駅近辺にいることの確認）及び駅周辺情報の表示にのみ利用します。</li>
+  <li>位置情報は、ブラウザの設定からいつでも許可を取り消すことができます。</li>
+  <li>当方は、利用者の現在地を継続的に追跡したり、利用者の同意なく特定の個人を識別できる形で第三者に提供したりすることはありません。</li>
+  <li>取得した位置情報のうち、駅エリア単位に集約・匿名化したものは、第6項の統計データとして利用されることがあります。</li>
+</ol>
+
+<h2>5. 第三者への提供・委託</h2>
+<p>当方は、特定の個人を識別できる情報については、利用者の同意なく第三者に提供することはありません。ただし、以下の場合を除きます。</p>
+<ol class="numbered">
+  <li>法令に基づく場合</li>
+  <li>人の生命、身体または財産の保護のために必要がある場合であって、利用者の同意を得ることが困難であるとき</li>
+  <li>公衆衛生の向上または児童の健全な育成の推進のために特に必要がある場合であって、利用者の同意を得ることが困難であるとき</li>
+  <li>国の機関もしくは地方公共団体またはその委託を受けた者が法令の定める事務を遂行することに対して協力する必要がある場合</li>
+</ol>
+
+<h3>業務委託・サブプロセッサについて</h3>
+<p>当方は、本サービスの提供のため、以下の外部サービスを利用しています。これらのサービス提供者は、当方の管理下で利用者情報を取扱う業務委託先（サブプロセッサ）として位置づけられます。</p>
+<table>
+  <thead><tr><th>提供者</th><th>サービス</th><th>取扱う情報</th></tr></thead>
+  <tbody>
+    <tr><td>Google LLC</td><td>Firebase Authentication（認証）</td><td>Googleアカウント情報</td></tr>
+    <tr><td>Google LLC</td><td>Cloud Firestore（データベース）</td><td>チェックイン履歴、コレクションデータ等</td></tr>
+    <tr><td>Google LLC</td><td>Firebase Analytics（利用状況分析）</td><td>アクセスログ、端末情報等</td></tr>
+    <tr><td>Google LLC</td><td>Firebase App Check / reCAPTCHA Enterprise（不正検知）</td><td>ブラウザ環境情報、IPアドレス</td></tr>
+    <tr><td>Cloudflare, Inc.</td><td>DNS・CDN・セキュリティ</td><td>IPアドレス、アクセスログ</td></tr>
+    <tr><td>Railway Corporation</td><td>サーバーホスティング</td><td>アクセスログ、リクエスト内容</td></tr>
+  </tbody>
+</table>
+<p>これらのサービス提供者は、それぞれのプライバシーポリシーに従って利用者情報を取扱います。各社のプライバシーポリシーは、それぞれの公式ウェブサイトでご確認ください。</p>
+
+<h2>6. 統計データの作成及び提供</h2>
+<div class="highlight">
+<p><strong>当方は、利用者情報を統計的に加工し、特定の個人を識別できない形にした統計データを作成し、第三者（自治体・企業・研究機関等を含む法人）に提供することがあります。</strong></p>
+</div>
+<ol class="numbered">
+  <li>統計データの例：
+    <ul>
+      <li>性別・年代別の駅エリア訪問傾向（例：「30代男性の大手町エリアチェックイン率」）</li>
+      <li>時間帯別・曜日別・季節別の駅エリア利用傾向</li>
+      <li>駅エリア間の人流・回遊パターン</li>
+      <li>イベント・天候等による街利用変化</li>
+      <li>その他、街・駅エリアの活動を可視化するための集約データ</li>
+    </ul>
+  </li>
+  <li>統計データは、特定の利用者を識別することができない形式に加工されており、個人情報保護法上の「個人情報」「個人関連情報」に該当しません。したがって、第三者提供にあたって個別の同意は要しないものとします。</li>
+  <li>統計データの提供目的の例：駅エリアの活性化、自治体・企業の街づくり支援、不動産・商業立地の判断材料、観光・地域マーケティング、学術研究等</li>
+  <li>利用者は、自身の利用者情報を統計データの作成・提供に利用されることを希望しない場合、本ポリシー末尾の連絡先までご連絡いただくことで、合理的な範囲内で利用拒否の対応を行います。</li>
+</ol>
+
+<h2>7. データの国外移転</h2>
+<p>第5項に記載の業務委託先のうち、Google LLC、Cloudflare, Inc.、Railway Corporationは米国に本拠を置く事業者であり、利用者情報の処理が日本国外（主に米国）で行われる可能性があります。当方は、これらの委託先が適切な安全管理措置を講じていることを確認したうえで利用しています。</p>
+
+<h2>8. Cookie及び類似技術の利用</h2>
+<p>本サービスは、利用者の利便性向上、ログイン状態の維持、利用状況の分析等のためにCookie及び類似技術（ローカルストレージ等）を利用します。</p>
+<p>利用者は、ブラウザの設定によりCookieの受け入れを拒否することができますが、その場合、本サービスの一部機能が正しく動作しない可能性があります。</p>
+
+<h2>9. ユーザー追跡及び広告について</h2>
+<ol class="numbered">
+  <li>本サービスは、他のアプリケーション・ウェブサイトをまたいだ利用者の追跡（クロスアプリ／クロスサイトトラッキング）を行いません。</li>
+  <li>本サービスは、IDFA（広告識別子）、AAID等の広告目的の識別子を利用しません。</li>
+  <li>本サービスは、現時点で広告表示を行っておりません。将来的に広告機能を導入する場合には、本ポリシーの変更により事前に通知します。</li>
+  <li>当方は、特定の個人を識別できる情報を、本サービスの目的外で第三者に売買することはありません。</li>
+</ol>
+
+<h2>10. データの保管期間</h2>
+<ol class="numbered">
+  <li>当方は、利用目的の達成に必要な期間に限り、利用者情報を保管します。</li>
+  <li>利用者がアカウントを削除した場合、当該利用者の個人を特定できる情報は、合理的な期間内に削除または匿名化します。ただし、法令により保管が義務付けられる情報、不正利用防止のため必要な情報については、必要な期間保管する場合があります。</li>
+  <li>個人を特定できない形に加工された統計データは、本サービス終了後も保持される場合があります。</li>
+</ol>
+
+<h2>11. 利用者の権利</h2>
+<p>利用者は、自己の個人情報について、以下の請求を行うことができます。</p>
+<ol class="numbered">
+  <li>利用目的の通知</li>
+  <li>開示（保有個人データの開示）</li>
+  <li>訂正・追加・削除</li>
+  <li>利用の停止・消去</li>
+  <li>第三者への提供の停止</li>
+  <li>統計データの作成・提供への利用拒否</li>
+  <li>アカウントの削除</li>
+</ol>
+<p>これらの請求は、本ポリシー末尾の連絡先までご連絡ください。当方は、本人確認を行ったうえで、合理的な期間内に対応します。</p>
+
+<h2>12. アカウント削除及びデータ削除の手順</h2>
+<div class="highlight">
+<p><strong>利用者は、本サービスからの退会及びアカウント削除を、以下のいずれかの方法でいつでも行うことができます。</strong></p>
+</div>
+<ol class="numbered">
+  <li>削除方法：
+    <ul>
+      <li><strong>アプリ内</strong>：本サービスのマイページ内「アカウント削除」より手続き（実装予定）</li>
+      <li><strong>アプリ外（メール）</strong>：<a href="mailto:machimegu2026@gmail.com" class="contact">machimegu2026@gmail.com</a> 宛に、Googleアカウントの登録メールアドレスから削除希望の旨をご連絡ください。</li>
+    </ul>
+  </li>
+  <li>アカウント削除のお申し出を受領した場合、当方は本人確認を行ったうえで、合理的な期間内（原則として30日以内）に利用者の個人を特定できる情報を削除または匿名化します。</li>
+  <li>ただし、法令により保管が義務付けられる情報、紛争解決・不正利用防止のため必要な情報については、必要な期間に限り保管する場合があります。</li>
+  <li>削除完了後の復旧はできません。チェックイン履歴、コレクションデータ等は失われます。</li>
+  <li>個人を特定できない形に加工済みの統計データは、削除の対象外となります。</li>
+</ol>
+
+<h2>13. 13歳未満のお子様の保護</h2>
+<ol class="numbered">
+  <li>本サービスは、13歳未満のお子様を主要な対象としていません。</li>
+  <li>13歳未満のお子様が本サービスを利用される場合は、必ず保護者の方の同意・監督のもとでご利用いただくものとします。</li>
+  <li>当方は、13歳未満のお子様の個人情報を保護者の同意なく意図的に収集することはありません。13歳未満のお子様の個人情報を知らずに収集したことが判明した場合、保護者からの申し出により、当該情報を速やかに削除します。</li>
+</ol>
+
+<h2>14. 安全管理措置</h2>
+<p>当方は、利用者情報の漏えい、滅失、毀損の防止、その他の安全管理のために、以下を含む適切な措置を講じています。</p>
+<ol class="numbered">
+  <li>通信の暗号化（HTTPS／TLS）</li>
+  <li>Firebase Security Rulesによるデータアクセス制御</li>
+  <li>App Check（reCAPTCHA Enterprise）による不正アクセス検知</li>
+  <li>定期的なバックアップ及び災害復旧の仕組み（Point-in-Time Recovery）</li>
+  <li>業務委託先の選定及び監督</li>
+  <li>従事者の管理・教育</li>
+</ol>
+
+<h2>15. プライバシーポリシーの変更</h2>
+<ol class="numbered">
+  <li>当方は、必要に応じて本ポリシーを変更することがあります。</li>
+  <li>重要な変更については、本サービス上で適切な方法により周知します。</li>
+  <li>変更後の本ポリシーは、本サービス上に掲載した時点から効力を生じるものとします。</li>
+</ol>
+
+<h2>16. お問い合わせ</h2>
+<p>本ポリシーに関するお問い合わせ、または個人情報の開示・訂正・削除等のご請求、アカウント削除のご依頼、統計データへの利用拒否のお申し出等は、以下までご連絡ください。</p>
+<p>運営：街巡-まちめぐ-製作委員会<br>
+連絡先：<a href="mailto:machimegu2026@gmail.com" class="contact">machimegu2026@gmail.com</a></p>
+
+<div class="footer">
+  <dl class="footer-meta">
+    <dt>制定日</dt>
+    <dd>2026年5月18日</dd>
+    <dt>最終更新日</dt>
+    <dd>2026年5月18日</dd>
+  </dl>
+  <nav class="footer-nav">
+    <a href="/">街巡-まちめぐ-トップへ戻る</a>
+    <a href="/terms.html">利用規約</a>
+  </nav>
+</div>
+
+</div>
+</body>
+</html>
