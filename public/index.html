@@ -126,7 +126,28 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- VERSION: index31 (cache-bust 2026.05.08-12:30) -->
-<title>街巡－まちめぐ－</title>
+<title>街巡-まちめぐ- | 街にでよう</title>
+
+<!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
+<meta name="description" content="街にでよう。1-1000の街力スコアで、知らない街との出会いを。駅周辺をチェックインしてカードを集めよう。">
+<meta name="theme-color" content="#0c1830">
+
+<meta property="og:title" content="街巡-まちめぐ- | 街にでよう">
+<meta property="og:description" content="街にでよう。1-1000の街力スコアで、知らない街との出会いを。駅周辺をチェックインしてカードを集めよう。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://machimegu.com/">
+<meta property="og:image" content="https://machimegu.com/og_image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="街巡-まちめぐ- 街にでよう">
+<meta property="og:site_name" content="街巡-まちめぐ-">
+<meta property="og:locale" content="ja_JP">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="街巡-まちめぐ- | 街にでよう">
+<meta name="twitter:description" content="街にでよう。1-1000の街力スコアで、知らない街との出会いを。">
+<meta name="twitter:image" content="https://machimegu.com/og_image.png">
+<meta name="twitter:image:alt" content="街巡-まちめぐ-">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/logo192.png">
@@ -1491,12 +1512,20 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .sc-checkin-info{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sc-actions{display:flex;gap:8px;flex-shrink:0;padding-top:6px}
 .sc-act-btn{
-  width:36px;height:36px;border-radius:50%;
-  background:rgba(255,255,255,0.7);border:1.5px solid var(--card-color);
-  color:var(--card-color);font-size:18px;font-weight:900;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  min-width:80px;height:36px;border-radius:18px;padding:0 14px;
+  background:var(--card-color);border:1.5px solid var(--card-color);
+  color:#fff;font-size:13px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;
   transition:all 0.15s;line-height:1;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
 }
+.sc-act-btn:hover,.sc-act-btn:active{
+  background:rgba(255,255,255,0.95);
+  color:var(--card-color);
+  transform:translateY(-1px);
+  box-shadow:0 3px 10px rgba(0,0,0,0.25);
+}
+.sc-act-label{font-weight:700;letter-spacing:0.5px}
 .sc-act-btn:hover{background:var(--card-color);color:#fff;transform:translateY(-2px)}
 .sc-act-btn.active{background:var(--card-color);color:#fff}
 
@@ -4489,7 +4518,14 @@ body.checkin-active #checkin-indicator{
               <div class="sc-visit-count" id="sc-visit-count">初訪問</div>
             </div>
             <div class="sc-actions">
-              <button class="sc-act-btn" onclick="shareCard()" title="共有">↗</button>
+              <button class="sc-act-btn" onclick="shareCard()" title="シェア" aria-label="このカードをシェア">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                  <polyline points="16 6 12 2 8 6"></polyline>
+                  <line x1="12" y1="2" x2="12" y2="15"></line>
+                </svg>
+                <span class="sc-act-label">シェア</span>
+              </button>
             </div>
           </div>
           
@@ -5553,7 +5589,7 @@ document.addEventListener('DOMContentLoaded', function(){
 function shareStation(){
   if(!currentStation)return;
   const txt=`${currentStation.name}駅の街力は ${currentStation.score}点（${getRank(currentStation.score).rank}ランク）！ #街巡まちめぐ`;
-  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent('https://street-power-production.up.railway.app'),'_blank');
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent('https://machimegu.com'),'_blank');
 }
 
 let rankAxis='総合',sortDesc=true;
@@ -7170,7 +7206,7 @@ const app = initializeApp(firebaseConfig);
 //   → トークン収集のみ、APIアクセス自体は従来通り通る
 //   → 1〜2週間後、メトリクス確認のうえ「強制モード」に切替
 // 注意：reCAPTCHA キーは公開しても安全（ドメイン制限あり）
-//       本番ドメイン machimegu-production.up.railway.app + localhost
+//       本番ドメイン machimegu.com + machimegu-production.up.railway.app + localhost
 // ════════════════════════════════════════════════════════════════
 let appCheck = null;
 try {
