@@ -7580,7 +7580,7 @@ loadAll();
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app-check.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, reauthenticateWithPopup, deleteUser }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, reauthenticateWithPopup, deleteUser }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, serverTimestamp, increment, Timestamp }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -7729,8 +7729,20 @@ function buildProfileSelects() {
 }
 
 // ─── ログイン処理 ───
+// ─── モバイル端末判定 ───
+function mmIsMobileDevice() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '');
+}
+
 window.signInWithGoogle = async () => {
   try {
+    // ★モバイル端末はRedirect方式（iOSのpopup-blocked対策）
+    if (mmIsMobileDevice()) {
+      await signInWithRedirect(auth, provider);
+      // ※Redirectは戻り処理がgetRedirectResult側で実行される
+      return;
+    }
+    // PCはPopup方式（既存挙動）
     await signInWithPopup(auth, provider);
     safeLogEvent('login', { method: 'Google' });
   } catch (e) {
@@ -7740,6 +7752,27 @@ window.signInWithGoogle = async () => {
     }
   }
 };
+
+// ─── Redirectからの戻り処理（モバイル端末用）───
+// ページロード時にURLパラメータをチェックして、Google認証から戻ってきたら処理
+(async () => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      console.log('[Auth] Redirectログイン成功:', result.user.email);
+      safeLogEvent('login', { method: 'Google_Redirect' });
+    }
+  } catch (e) {
+    console.error('[Auth] Redirect戻り処理エラー:', e);
+    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
+      // 致命的なエラーのみアラート（initial state欠落は無視）
+      if (e.code !== 'auth/missing-or-invalid-nonce' &&
+          !(e.message || '').includes('missing initial state')) {
+        console.warn('[Auth] Redirect戻りエラー（無視可能）:', e.message);
+      }
+    }
+  }
+})();
 
 window.signOutUser = async () => {
   try {
