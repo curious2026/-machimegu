@@ -4490,6 +4490,298 @@ body.checkin-active #checkin-indicator{
 }
 .bp-mission-badge.locked .bmb-title{color:#5a6478}
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+ * Step5: シャイニー/ミシック レアカード背景デザイン
+ *   - data-tier="shiny"    → 1/30 ナイトモード（既存カード上に重ねる）
+ *   - data-tier="mythic-X" → 1/500 季節モチーフ（春=桜/夏=花火/秋=紅葉/冬=雪）
+ *   - HTMLは一切触らず、CSS背景のみで実装
+ * ═══════════════════════════════════════════════════════════════ */
+
+/* ─── ステーションカードモーダル本体 ─── */
+.sc-card[data-tier="shiny"],
+.mp-mini-card[data-tier="shiny"]{
+  background:radial-gradient(circle at 30% 20%, #1e3a7a 0%, #0a1238 60%, #040818 100%) !important;
+  box-shadow:0 6px 24px rgba(80,120,255,0.35), 0 0 0 1.5px rgba(125,180,255,0.5) inset !important;
+  color:#d4e5ff !important;
+  position:relative;
+  overflow:hidden;
+}
+.sc-card[data-tier="shiny"]::before,
+.mp-mini-card[data-tier="shiny"]::before{
+  content:''; position:absolute; inset:0;
+  background-image:
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.95) 0px, rgba(255,255,255,0) 2px),
+    radial-gradient(circle at 78% 35%, rgba(125,180,255,0.85) 0px, rgba(125,180,255,0) 2px),
+    radial-gradient(circle at 15% 62%, rgba(255,255,255,0.7) 0px, rgba(255,255,255,0) 1.5px),
+    radial-gradient(circle at 68% 78%, rgba(196,168,255,0.8) 0px, rgba(196,168,255,0) 2px),
+    radial-gradient(circle at 88% 12%, rgba(255,255,255,0.6) 0px, rgba(255,255,255,0) 1px);
+  pointer-events:none;
+  animation: shineSparkle 4s ease-in-out infinite;
+}
+@keyframes shineSparkle{
+  0%, 100%{opacity:0.7}
+  50%{opacity:1}
+}
+
+/* ─── ミシック共通（季節別の上に重ねる金箔ホロ） ─── */
+.sc-card[data-tier^="mythic"],
+.mp-mini-card[data-tier^="mythic"]{
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 6px 28px rgba(212,175,55,0.5), 0 0 0 2px rgba(212,175,55,0.7) inset !important;
+  color:#f5e6c8 !important;
+}
+.sc-card[data-tier^="mythic"]::after,
+.mp-mini-card[data-tier^="mythic"]::after{
+  content:''; position:absolute; inset:0;
+  background-image:
+    linear-gradient(115deg, transparent 30%, rgba(212,175,55,0.25) 35%, transparent 40%),
+    linear-gradient(115deg, transparent 60%, rgba(255,126,185,0.2) 65%, transparent 70%);
+  pointer-events:none;
+  animation: mythicShimmer 3.5s ease-in-out infinite;
+}
+@keyframes mythicShimmer{
+  0%, 100%{opacity:0.6; background-position:0% 0%, 0% 0%}
+  50%{opacity:1; background-position:30% 0%, -30% 0%}
+}
+
+/* ─── ミシック・春（桜） ─── */
+.sc-card[data-tier="mythic-spring"],
+.mp-mini-card[data-tier="mythic-spring"]{
+  background:linear-gradient(160deg, #3d1f4a 0%, #2a1538 50%, #1a0830 100%) !important;
+}
+.sc-card[data-tier="mythic-spring"]::before,
+.mp-mini-card[data-tier="mythic-spring"]::before{
+  content:''; position:absolute; inset:0;
+  background-image:
+    radial-gradient(ellipse 12px 16px at 22% 22%, rgba(255,183,197,0.7) 0%, transparent 65%),
+    radial-gradient(ellipse 10px 14px at 78% 38%, rgba(255,200,210,0.6) 0%, transparent 65%),
+    radial-gradient(ellipse 14px 18px at 18% 72%, rgba(255,183,197,0.65) 0%, transparent 65%),
+    radial-gradient(ellipse 9px 12px at 88% 78%, rgba(255,200,210,0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 11px 14px at 50% 50%, rgba(255,183,197,0.5) 0%, transparent 60%);
+  pointer-events:none;
+}
+
+/* ─── ミシック・夏（花火） ─── */
+.sc-card[data-tier="mythic-summer"],
+.mp-mini-card[data-tier="mythic-summer"]{
+  background:linear-gradient(180deg, #1a0040 0%, #2a1052 40%, #0a0828 100%) !important;
+}
+.sc-card[data-tier="mythic-summer"]::before,
+.mp-mini-card[data-tier="mythic-summer"]::before{
+  content:''; position:absolute; inset:0;
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(255,180,80,0.4) 0px, rgba(255,100,180,0.2) 25px, transparent 60px),
+    radial-gradient(circle at 75% 45%, rgba(120,180,255,0.4) 0px, rgba(180,120,255,0.2) 20px, transparent 50px),
+    radial-gradient(circle at 50% 75%, rgba(255,230,100,0.35) 0px, rgba(255,140,80,0.2) 25px, transparent 60px);
+  pointer-events:none;
+}
+
+/* ─── ミシック・秋（紅葉） ─── */
+.sc-card[data-tier="mythic-autumn"],
+.mp-mini-card[data-tier="mythic-autumn"]{
+  background:linear-gradient(160deg, #4a1f1f 0%, #2f1010 50%, #1a0808 100%) !important;
+}
+.sc-card[data-tier="mythic-autumn"]::before,
+.mp-mini-card[data-tier="mythic-autumn"]::before{
+  content:''; position:absolute; inset:0;
+  background-image:
+    radial-gradient(ellipse 14px 12px at 22% 28%, rgba(232,140,60,0.7) 0%, transparent 65%),
+    radial-gradient(ellipse 12px 10px at 78% 22%, rgba(220,80,40,0.65) 0%, transparent 65%),
+    radial-gradient(ellipse 13px 11px at 30% 70%, rgba(255,180,80,0.6) 0%, transparent 65%),
+    radial-gradient(ellipse 11px 9px at 75% 80%, rgba(232,140,60,0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 10px 8px at 88% 55%, rgba(255,200,100,0.5) 0%, transparent 60%);
+  pointer-events:none;
+}
+
+/* ─── ミシック・冬（雪） ─── */
+.sc-card[data-tier="mythic-winter"],
+.mp-mini-card[data-tier="mythic-winter"]{
+  background:linear-gradient(180deg, #1a2848 0%, #0e1a38 50%, #050a20 100%) !important;
+}
+.sc-card[data-tier="mythic-winter"]::before,
+.mp-mini-card[data-tier="mythic-winter"]::before{
+  content:''; position:absolute; inset:0;
+  background-image:
+    radial-gradient(circle at 22% 25%, rgba(255,255,255,0.85) 0px, transparent 4px),
+    radial-gradient(circle at 78% 38%, rgba(220,235,255,0.7) 0px, transparent 3px),
+    radial-gradient(circle at 35% 68%, rgba(255,255,255,0.75) 0px, transparent 4px),
+    radial-gradient(circle at 65% 80%, rgba(220,235,255,0.65) 0px, transparent 3px),
+    radial-gradient(circle at 88% 18%, rgba(255,255,255,0.7) 0px, transparent 3px),
+    radial-gradient(circle at 50% 50%, rgba(180,210,255,0.4) 0px, transparent 6px);
+  pointer-events:none;
+}
+
+/* ─── tier別ランクバッジ（金色固定）─── */
+.sc-card[data-tier="shiny"] #sc-rank-badge,
+.sc-card[data-tier^="mythic"] #sc-rank-badge,
+.mp-mini-card[data-tier="shiny"] .mc-rank-letter,
+.mp-mini-card[data-tier^="mythic"] .mc-rank-letter{
+  background:linear-gradient(135deg, #f5e6a8 0%, #d4af37 50%, #b8941f 100%) !important;
+  color:#3d1f0a !important;
+  font-weight:700 !important;
+  box-shadow:0 0 12px rgba(212,175,55,0.5) !important;
+}
+
+/* ─── tier別駅名（ネオン/金箔発光）─── */
+.sc-card[data-tier="shiny"] #sc-station-name,
+.mp-mini-card[data-tier="shiny"] .mc-name{
+  color:#fff !important;
+  text-shadow:0 0 14px rgba(125,180,255,0.7), 0 0 4px rgba(125,180,255,0.5) !important;
+}
+.sc-card[data-tier^="mythic"] #sc-station-name,
+.mp-mini-card[data-tier^="mythic"] .mc-name{
+  color:#fff !important;
+  text-shadow:0 0 16px rgba(212,175,55,0.85), 0 0 6px rgba(255,200,210,0.5) !important;
+}
+
+/* ─── スコア数字の発光 ─── */
+.sc-card[data-tier="shiny"] .sc-score-number,
+.mp-mini-card[data-tier="shiny"] .mc-score-big{
+  background:linear-gradient(180deg,#fff 0%,#a5c8ff 100%) !important;
+  -webkit-background-clip:text !important; background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  filter:drop-shadow(0 0 8px rgba(125,180,255,0.6));
+}
+.sc-card[data-tier^="mythic"] .sc-score-number,
+.mp-mini-card[data-tier^="mythic"] .mc-score-big{
+  background:linear-gradient(180deg,#fff 0%,#d4af37 100%) !important;
+  -webkit-background-clip:text !important; background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  filter:drop-shadow(0 0 10px rgba(212,175,55,0.7));
+}
+
+/* ─── tierラベル（カード内に薄く表示） ─── */
+.mp-mini-card[data-tier="shiny"]::after{
+  content:'★ SHINY';
+  position:absolute; top:8px; left:8px;
+  font-size:9px; font-weight:700; letter-spacing:1.5px;
+  color:#7db4ff; opacity:0.85;
+  text-shadow:0 0 4px rgba(125,180,255,0.6);
+  z-index:5;
+}
+.mp-mini-card[data-tier^="mythic"]::after{
+  position:absolute; top:8px; left:8px;
+  font-size:9px; font-weight:700; letter-spacing:1.5px;
+  color:#d4af37; opacity:0.95;
+  text-shadow:0 0 6px rgba(212,175,55,0.7);
+  z-index:5;
+}
+.mp-mini-card[data-tier="mythic-spring"]::after{ content:'✦ MYTHIC ✦ 桜'; }
+.mp-mini-card[data-tier="mythic-summer"]::after{ content:'✦ MYTHIC ✦ 花火'; }
+.mp-mini-card[data-tier="mythic-autumn"]::after{ content:'✦ MYTHIC ✦ 紅葉'; }
+.mp-mini-card[data-tier="mythic-winter"]::after{ content:'✦ MYTHIC ✦ 雪'; }
+
+/* ═══════════════════════════════════════════════════════════════
+ * Step5b: ミシック出現フラッシュ演出
+ * ═══════════════════════════════════════════════════════════════ */
+#mythic-flash-overlay{
+  position:fixed; inset:0; z-index:9999;
+  background:radial-gradient(circle at center, rgba(212,175,55,0.95) 0%, rgba(60,30,80,0.98) 70%, rgba(0,0,0,1) 100%);
+  display:none; align-items:center; justify-content:center;
+  pointer-events:none;
+}
+#mythic-flash-overlay.open{ display:flex; animation: mythicFlashAnim 2.5s ease-out forwards; }
+@keyframes mythicFlashAnim{
+  0%{opacity:0; transform:scale(1)}
+  10%{opacity:1; transform:scale(1)}
+  30%{opacity:1; transform:scale(1.05)}
+  80%{opacity:1; transform:scale(1)}
+  100%{opacity:0; transform:scale(1)}
+}
+.mythic-flash-content{
+  text-align:center; color:#fff;
+  font-family:'Zen Antique Soft', serif;
+}
+.mythic-flash-title{
+  font-size:48px; font-weight:700; letter-spacing:8px;
+  color:#fff;
+  text-shadow:0 0 30px rgba(212,175,55,1), 0 0 60px rgba(255,200,210,0.7);
+  margin-bottom:16px;
+  animation: mythicTextPulse 1s ease-in-out infinite alternate;
+}
+@keyframes mythicTextPulse{
+  from{text-shadow:0 0 30px rgba(212,175,55,1), 0 0 60px rgba(255,200,210,0.7)}
+  to{text-shadow:0 0 50px rgba(212,175,55,1), 0 0 100px rgba(255,200,210,1)}
+}
+.mythic-flash-sub{
+  font-size:22px; letter-spacing:4px; color:#f5e6c8;
+  text-shadow:0 0 12px rgba(212,175,55,0.8);
+}
+
+/* ─── シャイニー出現の控えめキラ演出 ─── */
+#shiny-flash-overlay{
+  position:fixed; inset:0; z-index:9998;
+  background:radial-gradient(circle at center, rgba(125,180,255,0.3) 0%, transparent 60%);
+  display:none; pointer-events:none;
+}
+#shiny-flash-overlay.open{
+  display:block;
+  animation: shinyFlashAnim 1.2s ease-out forwards;
+}
+@keyframes shinyFlashAnim{
+  0%{opacity:0; transform:scale(0.95)}
+  20%{opacity:1; transform:scale(1)}
+  100%{opacity:0; transform:scale(1.1)}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * Step5c: 自動シェアモーダル（ミシック専用）
+ * ═══════════════════════════════════════════════════════════════ */
+#auto-share-modal{
+  position:fixed; inset:0; z-index:9700;
+  background:rgba(5,12,22,0.92); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  display:none; align-items:center; justify-content:center;
+  padding:20px;
+}
+#auto-share-modal.open{ display:flex; }
+.asm-box{
+  background:linear-gradient(180deg, #1a2848 0%, #0e1828 100%);
+  border-radius:18px; padding:24px 22px;
+  max-width:380px; width:100%;
+  box-shadow:0 12px 50px rgba(212,175,55,0.4), 0 0 0 2px rgba(212,175,55,0.5) inset;
+  text-align:center;
+}
+.asm-title{
+  font-family:'Zen Antique Soft', serif;
+  font-size:22px; color:#fff; font-weight:700;
+  margin-bottom:6px;
+  text-shadow:0 0 10px rgba(212,175,55,0.6);
+}
+.asm-sub{
+  font-size:13px; color:#d4af37; letter-spacing:1.5px; margin-bottom:18px;
+}
+.asm-station{
+  font-size:32px; color:#fff; font-weight:700; margin:10px 0;
+  text-shadow:0 0 14px rgba(212,175,55,0.6);
+}
+.asm-score{
+  display:inline-block; padding:4px 14px; border-radius:14px;
+  background:linear-gradient(135deg, #d4af37, #b8941f); color:#1a0a00;
+  font-weight:700; font-size:14px; margin-bottom:20px;
+}
+.asm-text{
+  font-size:14px; line-height:1.6; color:#e0c4ff; margin-bottom:22px;
+}
+.asm-actions{ display:flex; gap:10px; }
+.asm-btn{
+  flex:1; padding:12px 14px; border-radius:24px;
+  font-size:14px; font-weight:700; border:none; cursor:pointer;
+  transition:all 0.15s;
+}
+.asm-btn-primary{
+  background:#1d9bf0; color:#fff;
+  box-shadow:0 3px 10px rgba(29,155,240,0.4);
+}
+.asm-btn-primary:hover{ background:#1a8cd8; transform:translateY(-1px); }
+.asm-btn-secondary{
+  background:rgba(255,255,255,0.12); color:#fff;
+  border:1px solid rgba(255,255,255,0.2);
+}
+.asm-btn-secondary:hover{ background:rgba(255,255,255,0.2); }
+
 </style>
 
 <!-- ステーションカード モーダル -->
@@ -8237,12 +8529,21 @@ async function tryCompleteCheckin() {
         const stationObj = { name: pendingCheckin.stationName, pref: pendingCheckin.stationPref };
         const stKey = window.mmStationKey(stationObj);
         const weatherStr = await window.mmGetWeather(pendingCheckin.stationLat, pendingCheckin.stationLng);
-        await window.mmCloudAddCard(stKey, {
+        // ★Step5: tier抽選（初訪問のみ、再訪問では抽選しない）
+        const rolledTier = isFirstVisit ? (window.mmRollCardTier ? window.mmRollCardTier() : null) : null;
+        const addResult = await window.mmCloudAddCard(stKey, {
           season: window.mmGetSeason(),
           time: window.mmGetTime(),
           weather: weatherStr,
-          type: 'fresh'
+          type: 'fresh',
+          special: rolledTier  // ★Step5: シャイニー/ミシック抽選結果（null=通常）
         });
+        // ミシック出現時はフラッシュ＋自動シェア演出
+        if (rolledTier && rolledTier.startsWith('mythic') && window.mmShowMythicFlash) {
+          setTimeout(() => window.mmShowMythicFlash(rolledTier, pendingCheckin.stationName, score, rankInfo.rank), 100);
+        } else if (rolledTier === 'shiny' && window.mmShowShinyFlash) {
+          setTimeout(() => window.mmShowShinyFlash(), 100);
+        }
       } else {
         console.warn('[Step3] mmCloud関連関数の一部が未準備、カード追加をスキップ');
       }
@@ -8314,6 +8615,13 @@ const STATION_INFO = {"新宿_東京都":{"opened":"1885年","lines_count":12,"r
 async function openStationCard(data) {
   const card = document.getElementById('station-card');
   card.setAttribute('data-rank', data.rank);
+  
+  // ★Step5: tier（シャイニー/ミシック）属性を反映
+  // data.specialもしくはdata.tier から取得（呼び出し元によって異なる）
+  const tier = data.special || data.tier || null;
+  if (window.mmApplyTierToCard) {
+    window.mmApplyTierToCard(card, tier);
+  }
   
   // 駅名
   document.getElementById('sc-station-name').textContent = data.name;
@@ -8684,16 +8992,16 @@ let currentCardStation = null;
 
 window.shareCard = async function() {
   if (!currentCardStation) return;
-  const url = location.href.split('?')[0];
-  const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を訪問！\n街力 ${currentCardStation.score} (${currentCardStation.rank}ランク)\n${url}`;
+  const url = 'https://machimegu.com';
+  const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を訪問！\n街力 ${currentCardStation.score} (${currentCardStation.rank}ランク)\n#街巡まちめぐ #街にでよう`;
   if (navigator.share) {
     try { await navigator.share({title:'街巡-まちめぐ-', text, url}); } catch(e) {}
   } else {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(text + '\n' + url);
       alert('コピーしました！');
     } catch(e) {
-      prompt('コピーしてXに投稿:', text);
+      prompt('コピーしてXに投稿:', text + '\n' + url);
     }
   }
 };
@@ -9108,6 +9416,9 @@ window.renderCardListSorted = () => {
     div.className = 'mp-mini-card';
     const rank = c.firstRank || 'E';
     div.setAttribute('data-rank', rank);
+    // ★Step5: tier反映（c.specialまたはc.tier）
+    const cardTier = c.special || c.tier || null;
+    if (cardTier) div.setAttribute('data-tier', cardTier);
     const visit = (c.visitCount || 1) > 1 ? `${c.visitCount}回` : '初訪問';
     div.innerHTML = `
       <div class="mc-rank-letter">${rank}</div>
@@ -10009,6 +10320,156 @@ window.mmCloudSetRecord = async function(stationKey, record) {
 //  - 既存駅で「全く同じ組み合わせ」のカードが既にある → カード据え置き、訪問回数のみ更新（案B）
 //  - 既存駅で「新しい組み合わせ」 → cards に追加（自然上限64枚、特別な制限なし）
 // 引数 weather = { season, time, weather, type:'fresh' }
+
+// ═══════════════════════════════════════════════════════════════
+// ★Step5: シャイニー/ミシック レアカード抽選システム
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * カード生成時のレア度抽選
+ * - 1/30: シャイニー
+ * - 1/500: ミシック（季節別：4月=春桜/8月=夏花火/11月=秋紅葉/1月=雪）
+ * - その他: 通常
+ * @returns {string} 'shiny' | 'mythic-spring' | 'mythic-summer' | 'mythic-autumn' | 'mythic-winter' | null
+ */
+window.mmRollCardTier = function() {
+  const r = Math.random();
+  if (r < 1/500) {
+    // ミシック：月で季節判定
+    const m = new Date().getMonth() + 1;  // 1〜12
+    if (m === 4) return 'mythic-spring';   // 4月：桜
+    if (m === 8) return 'mythic-summer';   // 8月：花火
+    if (m === 11) return 'mythic-autumn';  // 11月：紅葉
+    if (m === 1) return 'mythic-winter';   // 1月：雪
+    // 季節モチーフ非対応月は一般金箔（春扱い）
+    return 'mythic-spring';
+  }
+  if (r < 1/30 + 1/500) {  // 1/30の確率（ミシック除く）
+    return 'shiny';
+  }
+  return null;  // 通常
+};
+
+/**
+ * tierがレア（シャイニーorミシック）かどうか
+ */
+window.mmIsRareTier = function(tier) {
+  return tier === 'shiny' || (tier && tier.startsWith('mythic'));
+};
+
+/**
+ * tierの表示名
+ */
+window.mmTierLabel = function(tier) {
+  if (!tier) return '';
+  if (tier === 'shiny') return '★ SHINY';
+  if (tier === 'mythic-spring') return '✦ MYTHIC ✦ 桜';
+  if (tier === 'mythic-summer') return '✦ MYTHIC ✦ 花火';
+  if (tier === 'mythic-autumn') return '✦ MYTHIC ✦ 紅葉';
+  if (tier === 'mythic-winter') return '✦ MYTHIC ✦ 雪';
+  return '';
+};
+
+/**
+ * シャイニー出現時の軽い演出
+ */
+window.mmShowShinyFlash = function() {
+  let overlay = document.getElementById('shiny-flash-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'shiny-flash-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.classList.add('open');
+  setTimeout(() => overlay.classList.remove('open'), 1200);
+};
+
+/**
+ * ミシック出現時のフラッシュ演出 + 自動シェアモーダル
+ */
+window.mmShowMythicFlash = function(tier, stationName, score, rank) {
+  // フラッシュオーバーレイ
+  let overlay = document.getElementById('mythic-flash-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'mythic-flash-overlay';
+    overlay.innerHTML = `
+      <div class="mythic-flash-content">
+        <div class="mythic-flash-title">✦ MYTHIC ✦</div>
+        <div class="mythic-flash-sub" id="mythic-flash-sub">伝説のカード出現</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+  // 季節サブテキスト更新
+  const subEl = document.getElementById('mythic-flash-sub');
+  if (subEl) {
+    const label = window.mmTierLabel(tier);
+    subEl.textContent = label.replace('✦', '').replace('MYTHIC', '').trim() + ' / 500分の1の奇跡';
+  }
+  overlay.classList.add('open');
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    // フラッシュ終了後に自動シェアモーダル
+    window.mmShowAutoShareModal(tier, stationName, score, rank);
+  }, 2500);
+};
+
+/**
+ * ミシック取得後の自動シェアモーダル
+ */
+window.mmShowAutoShareModal = function(tier, stationName, score, rank) {
+  let modal = document.getElementById('auto-share-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'auto-share-modal';
+    document.body.appendChild(modal);
+  }
+  const label = window.mmTierLabel(tier);
+  modal.innerHTML = `
+    <div class="asm-box">
+      <div class="asm-sub">${label}</div>
+      <div class="asm-title">伝説のカードを獲得！</div>
+      <div class="asm-station">${stationName}</div>
+      <div class="asm-score">${rank} ${score}</div>
+      <div class="asm-text">500分の1で出現するミシックカード。<br>この瞬間をXでシェアしませんか？</div>
+      <div class="asm-actions">
+        <button class="asm-btn asm-btn-secondary" onclick="document.getElementById('auto-share-modal').classList.remove('open')">あとで</button>
+        <button class="asm-btn asm-btn-primary" onclick="window.mmShareMythic('${tier}','${stationName}',${score},'${rank}')">Xでシェア</button>
+      </div>
+    </div>
+  `;
+  modal.classList.add('open');
+};
+
+/**
+ * ミシック専用のXシェア
+ */
+window.mmShareMythic = function(tier, stationName, score, rank) {
+  const label = window.mmTierLabel(tier);
+  const txt = `✦ ${label} ✦\n「${stationName}駅」のミシックカードを獲得！\n街力 ${score}点（${rank}ランク）\n500分の1の奇跡。\n#街巡まちめぐ #街にでよう`;
+  window.open(
+    'https://twitter.com/intent/tweet?text=' + encodeURIComponent(txt) +
+    '&url=' + encodeURIComponent('https://machimegu.com'),
+    '_blank'
+  );
+  document.getElementById('auto-share-modal').classList.remove('open');
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ★Step5: data-tier属性を既存カード要素に付与する補助関数
+// HTMLは触らず、JSがランタイムで属性を追加するだけ
+// ═══════════════════════════════════════════════════════════════
+window.mmApplyTierToCard = function(cardEl, tier) {
+  if (!cardEl) return;
+  if (tier) {
+    cardEl.setAttribute('data-tier', tier);
+  } else {
+    cardEl.removeAttribute('data-tier');
+  }
+};
+
+
 window.mmCloudAddCard = async function(stationKey, weather) {
   if (!stationKey || !weather) return { status: 'error' };
   if (!mmCollectionCache) mmCollectionCache = { stations: {}, updatedAt: null };
@@ -10038,7 +10499,7 @@ window.mmCloudAddCard = async function(stationKey, weather) {
         weather: weather.weather,
         type: weather.type || 'fresh',
         capturedAt: now,
-        special: null  // 将来用：'first_checkin','new_year','birthday'等のスペシャル判定値
+        special: weather.special || null  // ★Step5: シャイニー/ミシック判定値
       });
       existing.visitCount = (existing.visitCount || 0) + 1;
       existing.lastVisitAt = now;
@@ -10057,7 +10518,7 @@ window.mmCloudAddCard = async function(stationKey, weather) {
         weather: weather.weather,
         type: weather.type || 'fresh',
         capturedAt: now,
-        special: null
+        special: weather.special || null  // ★Step5: シャイニー/ミシック判定値
       }]
     };
     status = 'new_station';
