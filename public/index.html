@@ -4781,6 +4781,116 @@ body.checkin-active #checkin-indicator{
 }
 .asm-btn-secondary:hover{ background:rgba(255,255,255,0.2); }
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+ * In-App Browser警告（Twitter/LINE/Facebook等の内蔵ブラウザ検知）
+ * Googleの disallowed_useragent エラーをユーザーに事前案内
+ * ═══════════════════════════════════════════════════════════════ */
+
+/* 上部固定警告バナー */
+#iab-warning-banner{
+  position:fixed; top:0; left:0; right:0;
+  background:linear-gradient(135deg, #d97706, #b45309);
+  color:#fff;
+  padding:10px 14px;
+  z-index:9500;
+  display:none;
+  font-size:13px;
+  line-height:1.5;
+  box-shadow:0 2px 12px rgba(0,0,0,0.3);
+  font-weight:500;
+}
+#iab-warning-banner.open{ display:block; }
+.iab-banner-content{
+  display:flex; align-items:center; gap:10px;
+  max-width:600px; margin:0 auto;
+}
+.iab-banner-icon{
+  flex-shrink:0; font-size:18px;
+}
+.iab-banner-text{ flex:1; }
+.iab-banner-text strong{
+  display:block;
+  font-size:14px;
+  margin-bottom:2px;
+  letter-spacing:0.3px;
+}
+.iab-banner-action{
+  background:#fff; color:#b45309;
+  border:none; padding:7px 12px; border-radius:18px;
+  font-weight:700; font-size:12px;
+  cursor:pointer; white-space:nowrap;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  transition:all 0.15s;
+}
+.iab-banner-action:hover{ transform:translateY(-1px); }
+.iab-banner-close{
+  background:transparent; border:none; color:#fff;
+  font-size:20px; padding:0 4px; cursor:pointer;
+  opacity:0.85; flex-shrink:0;
+}
+.iab-banner-close:hover{ opacity:1; }
+
+/* iOSとAndroidの安全エリア */
+@supports(top:env(safe-area-inset-top)){
+  #iab-warning-banner{
+    padding-top:calc(10px + env(safe-area-inset-top));
+  }
+}
+
+/* ログイン時の警告モーダル */
+#iab-login-modal{
+  position:fixed; inset:0; z-index:9600;
+  background:rgba(5,12,22,0.92); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  display:none; align-items:center; justify-content:center;
+  padding:20px;
+}
+#iab-login-modal.open{ display:flex; }
+.iab-modal-box{
+  background:#1a2848; color:#fff;
+  border-radius:18px; padding:28px 24px;
+  max-width:380px; width:100%;
+  box-shadow:0 12px 50px rgba(0,0,0,0.5);
+  text-align:center;
+}
+.iab-modal-icon{
+  font-size:42px; margin-bottom:10px;
+}
+.iab-modal-title{
+  font-size:18px; font-weight:700; margin-bottom:10px;
+}
+.iab-modal-text{
+  font-size:14px; line-height:1.7; color:#c4d2e8;
+  margin-bottom:18px;
+}
+.iab-modal-text .iab-emphasis{
+  color:#ffc861; font-weight:700;
+}
+.iab-modal-steps{
+  text-align:left; background:rgba(255,255,255,0.05);
+  padding:12px 14px; border-radius:10px;
+  font-size:13px; line-height:1.8;
+  margin-bottom:18px;
+  border-left:3px solid #ffc861;
+}
+.iab-modal-steps ol{ margin:0; padding-left:18px; }
+.iab-modal-actions{ display:flex; flex-direction:column; gap:8px; }
+.iab-modal-btn{
+  padding:12px 14px; border-radius:24px;
+  font-size:14px; font-weight:700; border:none; cursor:pointer;
+  transition:all 0.15s;
+}
+.iab-modal-btn-primary{
+  background:#1d9bf0; color:#fff;
+  box-shadow:0 3px 10px rgba(29,155,240,0.4);
+}
+.iab-modal-btn-primary:hover{ background:#1a8cd8; }
+.iab-modal-btn-secondary{
+  background:rgba(255,255,255,0.12); color:#fff;
+  border:1px solid rgba(255,255,255,0.2);
+}
+
 </style>
 
 <!-- ステーションカード モーダル -->
@@ -13317,6 +13427,203 @@ if ('serviceWorker' in navigator) {
     localStorage.removeItem(VERSION_KEY);
     setTimeout(() => location.reload(), 500);
   };
+})();
+</script>
+
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// In-App Browser検知（Twitter/LINE/Facebook/Instagram等の内蔵ブラウザ）
+// Googleの disallowed_useragent エラーを事前に防ぐ
+// ═══════════════════════════════════════════════════════════════
+(function(){
+  'use strict';
+  
+  // UAから内蔵ブラウザを検知
+  function detectInAppBrowser(){
+    var ua = (navigator.userAgent || '').toLowerCase();
+    // Twitter
+    if (ua.indexOf('twitter') !== -1) return 'twitter';
+    // LINE
+    if (ua.indexOf('line/') !== -1) return 'line';
+    // Facebook
+    if (ua.indexOf('fban') !== -1 || ua.indexOf('fbav') !== -1 || ua.indexOf('facebook') !== -1) return 'facebook';
+    // Instagram
+    if (ua.indexOf('instagram') !== -1) return 'instagram';
+    // Messenger
+    if (ua.indexOf('messenger') !== -1) return 'messenger';
+    // TikTok
+    if (ua.indexOf('musical_ly') !== -1 || ua.indexOf('bytedance') !== -1) return 'tiktok';
+    // 一般的なWebView判定（iOSのSFSafariViewControllerは除外）
+    // Android WebView
+    if (ua.indexOf('android') !== -1 && ua.indexOf('wv') !== -1) return 'webview';
+    return null;
+  }
+  
+  function getDeviceType(){
+    var ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+    if (/Android/i.test(ua)) return 'android';
+    return 'other';
+  }
+  
+  var iabType = detectInAppBrowser();
+  var deviceType = getDeviceType();
+  
+  // 内蔵ブラウザではない or 既に閉じた → 何もしない
+  if (!iabType) return;
+  if (sessionStorage.getItem('iab_banner_dismissed') === '1') return;
+  
+  // 警告バナーを作成（HTML本体は触らず動的生成）
+  var banner = document.createElement('div');
+  banner.id = 'iab-warning-banner';
+  banner.innerHTML = 
+    '<div class="iab-banner-content">' +
+      '<div class="iab-banner-icon">⚠️</div>' +
+      '<div class="iab-banner-text">' +
+        '<strong>外部ブラウザで開いてください</strong>' +
+        'Googleログインはこのブラウザでは動作しません' +
+      '</div>' +
+      '<button class="iab-banner-action" id="iab-open-btn">開く</button>' +
+      '<button class="iab-banner-close" id="iab-close-btn" aria-label="閉じる">×</button>' +
+    '</div>';
+  document.body.appendChild(banner);
+  
+  // 表示
+  setTimeout(function(){
+    banner.classList.add('open');
+  }, 500);
+  
+  // ボタンイベント
+  document.getElementById('iab-close-btn').addEventListener('click', function(){
+    banner.classList.remove('open');
+    sessionStorage.setItem('iab_banner_dismissed', '1');
+  });
+  
+  document.getElementById('iab-open-btn').addEventListener('click', function(){
+    window.mmOpenExternalBrowser();
+  });
+  
+  // 外部ブラウザで開く（デバイス別の挙動）
+  window.mmOpenExternalBrowser = function(){
+    var url = 'https://machimegu.com' + window.location.pathname + window.location.search;
+    
+    if (deviceType === 'android') {
+      // Android: intentスキームで Chrome を起動
+      window.location.href = 'intent://machimegu.com' + window.location.pathname + '#Intent;scheme=https;package=com.android.chrome;end';
+    } else if (deviceType === 'ios') {
+      // iOS: x-safari-https:// で Safari を起動
+      // ※ iOS 16+ では一部動作しない場合あり、その場合はモーダル案内
+      try {
+        window.location.href = 'x-safari-' + url.replace('https://', 'https://');
+      } catch (e) {}
+      // フォールバック：モーダル表示
+      setTimeout(function(){
+        window.mmShowIabModal();
+      }, 800);
+    } else {
+      // その他：モーダル表示
+      window.mmShowIabModal();
+    }
+  };
+  
+  // 詳しい手順モーダル
+  window.mmShowIabModal = function(){
+    var modal = document.getElementById('iab-login-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'iab-login-modal';
+      
+      var stepsHtml = '';
+      if (iabType === 'twitter') {
+        if (deviceType === 'ios') {
+          stepsHtml = 
+            '<ol>' +
+              '<li>下の青いバーの中央「<strong>共有</strong>」アイコンをタップ</li>' +
+              '<li>「<strong>Safariで開く</strong>」を選択</li>' +
+            '</ol>';
+        } else if (deviceType === 'android') {
+          stepsHtml = 
+            '<ol>' +
+              '<li>右上の「<strong>⋮</strong>」（3点メニュー）をタップ</li>' +
+              '<li>「<strong>ブラウザで開く</strong>」を選択</li>' +
+            '</ol>';
+        } else {
+          stepsHtml = '<ol><li>右上または下部のメニューから「ブラウザで開く」を選択してください</li></ol>';
+        }
+      } else if (iabType === 'line') {
+        if (deviceType === 'ios') {
+          stepsHtml = 
+            '<ol>' +
+              '<li>右上の「<strong>···</strong>」（3点）をタップ</li>' +
+              '<li>「<strong>他のアプリで開く</strong>」→「<strong>Safari</strong>」</li>' +
+            '</ol>';
+        } else {
+          stepsHtml = 
+            '<ol>' +
+              '<li>右上の「<strong>···</strong>」（3点）をタップ</li>' +
+              '<li>「<strong>他のアプリで開く</strong>」を選択</li>' +
+            '</ol>';
+        }
+      } else {
+        stepsHtml = 
+          '<ol>' +
+            '<li>画面上部または下部の「<strong>···</strong>」「<strong>⋮</strong>」などのメニューをタップ</li>' +
+            '<li>「<strong>ブラウザで開く</strong>」「<strong>Safariで開く</strong>」を選択</li>' +
+          '</ol>';
+      }
+      
+      var appName = {
+        twitter: 'Twitter (X)', line: 'LINE', facebook: 'Facebook',
+        instagram: 'Instagram', messenger: 'Messenger', tiktok: 'TikTok', webview: 'アプリ内ブラウザ'
+      }[iabType] || 'アプリ内ブラウザ';
+      
+      modal.innerHTML = 
+        '<div class="iab-modal-box">' +
+          '<div class="iab-modal-icon">🌐</div>' +
+          '<div class="iab-modal-title">外部ブラウザで開いてください</div>' +
+          '<div class="iab-modal-text">' +
+            '現在 <span class="iab-emphasis">' + appName + '</span> の内蔵ブラウザで開いています。' +
+            'Googleログインはセキュリティ上、ここでは動作しません。' +
+          '</div>' +
+          '<div class="iab-modal-steps">' + stepsHtml + '</div>' +
+          '<div class="iab-modal-text" style="font-size:12px;opacity:0.7">' +
+            'URL「machimegu.com」を直接ブラウザに入力してもOK' +
+          '</div>' +
+          '<div class="iab-modal-actions">' +
+            '<button class="iab-modal-btn iab-modal-btn-secondary" id="iab-modal-close">閉じる</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(modal);
+      
+      document.getElementById('iab-modal-close').addEventListener('click', function(){
+        modal.classList.remove('open');
+      });
+    }
+    modal.classList.add('open');
+  };
+  
+  // Googleログインボタン押下時の事前フック
+  // 既存のsignInWithGoogle関数を上書きする前にラップ
+  var checkInterval = setInterval(function(){
+    if (typeof window.signInWithGoogle === 'function' && !window._signInWrapped) {
+      window._signInWrapped = true;
+      var originalSignIn = window.signInWithGoogle;
+      window.signInWithGoogle = async function(){
+        // 内蔵ブラウザならモーダル表示してログインさせない
+        if (detectInAppBrowser()) {
+          window.mmShowIabModal();
+          return;
+        }
+        return originalSignIn.apply(this, arguments);
+      };
+      clearInterval(checkInterval);
+    }
+  }, 200);
+  
+  // 万が一フックが効かない場合の保険：10秒後にクリア
+  setTimeout(function(){ clearInterval(checkInterval); }, 10000);
+  
 })();
 </script>
 
