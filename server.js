@@ -12,6 +12,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 const express = require('express');
+const compression = require('compression');
 const cors    = require('cors');
 const path    = require('path');
 const fs      = require('fs');
@@ -80,6 +81,16 @@ console.log('[起動] 管理者認証: jose方式 (軽量版)');
 console.log('[起動] Admin UIDs:', ADMIN_UIDS);
 
 const app = express();
+
+// ═══════════════════════════════════════════════════════════════
+// gzip圧縮（すべてのレスポンスを自動圧縮）
+// HTMLサイズを約70%削減（1MB→300KB）
+// ═══════════════════════════════════════════════════════════════
+app.use(compression({
+  level: 6,           // 圧縮レベル（1=速度優先, 9=サイズ優先, 6=デフォルト・バランス型）
+  threshold: 1024,    // 1KB未満は圧縮しない（オーバーヘッド回避）
+}));
+
 app.use(cors());
 app.use(express.json());
 
