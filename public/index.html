@@ -605,7 +605,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 /* ★Step修正: bottom値を強化（iPhone Home indicator機種で画面下端見切れ対策）
    旧: calc(20px + env(safe-area-inset-bottom, 0px))  ← Safe Area取れない時20pxしか確保されない
    新: calc(24px + env(safe-area-inset-bottom, 20px)) ← 最低44px、Home indicator機種で58px〜 */
-#checkin-indicator{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 20px));transform:translateX(-50%);
+#checkin-indicator{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom, 20px));transform:translateX(-50%);
   z-index:5500;background:linear-gradient(135deg,rgba(12,24,48,0.96) 0%,rgba(9,16,32,0.96) 100%);
   border:1px solid rgba(125,211,252,0.4);border-radius:14px;
   padding:10px 16px;display:none;align-items:center;gap:12px;
@@ -721,14 +721,19 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   100%{transform:scale(1) rotateY(0);opacity:1}
 }
 @keyframes cardEnterFirst{
-  0%{transform:scale(0.2) rotateY(720deg);opacity:0}
-  20%{opacity:0.5}
-  60%{transform:scale(1.15) rotateY(0);opacity:1}
-  75%{transform:scale(0.95) rotateY(-15deg)}
-  90%{transform:scale(1.05) rotateY(8deg)}
+  0%{transform:scale(0.5) rotateY(360deg);opacity:0}
+  50%{opacity:1}
+  85%{transform:scale(1.05) rotateY(0);opacity:1}
   100%{transform:scale(1) rotateY(0);opacity:1}
 }
-#card-flip-wrap.first-visit{animation:cardEnterFirst 2.4s cubic-bezier(0.34,1.4,0.64,1)!important}
+#card-flip-wrap.first-visit{
+  animation:cardEnterFirst 1.4s cubic-bezier(0.25,0.8,0.35,1)!important;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  transform-style:preserve-3d;
+  -webkit-transform-style:preserve-3d;
+}
 #station-card.first-visit::after{
   content:'';position:absolute;inset:-20px;border-radius:30px;
   background:radial-gradient(circle,var(--card-glow) 0%,transparent 70%);
@@ -1167,14 +1172,19 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   100%{transform:scale(1) rotateY(0);opacity:1}
 }
 @keyframes cardEnterFirst{
-  0%{transform:scale(0.2) rotateY(720deg);opacity:0}
-  20%{opacity:0.5}
-  60%{transform:scale(1.15) rotateY(0);opacity:1}
-  75%{transform:scale(0.95) rotateY(-15deg)}
-  90%{transform:scale(1.05) rotateY(8deg)}
+  0%{transform:scale(0.5) rotateY(360deg);opacity:0}
+  50%{opacity:1}
+  85%{transform:scale(1.05) rotateY(0);opacity:1}
   100%{transform:scale(1) rotateY(0);opacity:1}
 }
-#card-flip-wrap.first-visit{animation:cardEnterFirst 2.4s cubic-bezier(0.34,1.4,0.64,1)!important}
+#card-flip-wrap.first-visit{
+  animation:cardEnterFirst 1.4s cubic-bezier(0.25,0.8,0.35,1)!important;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  transform-style:preserve-3d;
+  -webkit-transform-style:preserve-3d;
+}
 #station-card.first-visit::after{
   content:'';position:absolute;inset:-20px;border-radius:30px;
   background:radial-gradient(circle,var(--card-glow) 0%,transparent 70%);
@@ -8190,7 +8200,7 @@ function getCurrentPos() {
     navigator.geolocation.getCurrentPosition(
       pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
       err => reject(err),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
     );
   });
 }
@@ -9296,18 +9306,98 @@ window.openCardFromPanel = function() {
 // ─── カード内アクション ───
 let currentCardStation = null;
 
+// ★Step7: カードDOM自体を画像化してシェアする実装
+// html2canvasライブラリを動的読み込み（初回シェア時のみ）
+window.mmLoadHtml2Canvas = function() {
+  return new Promise((resolve, reject) => {
+    if (window.html2canvas) { resolve(window.html2canvas); return; }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = () => resolve(window.html2canvas);
+    script.onerror = () => reject(new Error('html2canvas読み込み失敗'));
+    document.head.appendChild(script);
+  });
+};
+
 window.shareCard = async function() {
   if (!currentCardStation) return;
+  
   const url = 'https://machimegu.com';
   const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を訪問！\n街力 ${currentCardStation.score} (${currentCardStation.rank}ランク)\n#街巡まちめぐ #街にでよう`;
-  if (navigator.share) {
-    try { await navigator.share({title:'街巡-まちめぐ-', text, url}); } catch(e) {}
-  } else {
-    try {
-      await navigator.clipboard.writeText(text + '\n' + url);
-      alert('コピーしました！');
-    } catch(e) {
-      prompt('コピーしてXに投稿:', text + '\n' + url);
+  
+  // ボタンを一時的にローディング表示
+  const btn = document.querySelector('.sc-act-btn');
+  const originalHTML = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.innerHTML = '<span style="font-size:11px">画像作成中...</span>';
+    btn.disabled = true;
+  }
+  
+  try {
+    // html2canvas読み込み（初回のみ実行、2回目以降は即返却）
+    await window.mmLoadHtml2Canvas();
+    
+    // カードDOM要素を画像化
+    const cardEl = document.getElementById('station-card');
+    if (!cardEl) throw new Error('カード要素なし');
+    
+    const canvas = await window.html2canvas(cardEl, {
+      backgroundColor: null,
+      scale: 2,  // 高解像度（Retina対応）
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
+    });
+    
+    // Blob化
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 0.95));
+    if (!blob) throw new Error('Blob生成失敗');
+    
+    const file = new File([blob], `machimegu-${currentCardStation.name}.png`, { type: 'image/png' });
+    
+    // navigator.share の画像対応チェック
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      // 画像つきシェア（モバイル本命ルート）
+      await navigator.share({
+        title: '街巡-まちめぐ-',
+        text: text,
+        files: [file]
+      });
+    } else if (navigator.share) {
+      // 画像非対応だが共通シェアはあるブラウザ → テキストのみシェア
+      await navigator.share({ title: '街巡-まちめぐ-', text, url });
+    } else {
+      // 古いブラウザ・PC：画像をダウンロード
+      const dlUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = `machimegu-${currentCardStation.name}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(dlUrl);
+      alert('カード画像をダウンロードしました！\nSNSに投稿してください。');
+    }
+  } catch (e) {
+    console.error('シェアエラー:', e);
+    // フォールバック：テキストのみ
+    if (e.name !== 'AbortError') {  // ユーザーがキャンセルした場合は無視
+      if (navigator.share) {
+        try { await navigator.share({title:'街巡-まちめぐ-', text, url}); } catch(_) {}
+      } else {
+        try {
+          await navigator.clipboard.writeText(text + '\n' + url);
+          alert('テキストをコピーしました！');
+        } catch(_) {
+          prompt('コピーしてXに投稿:', text + '\n' + url);
+        }
+      }
+    }
+  } finally {
+    // ボタンを元に戻す
+    if (btn) {
+      btn.innerHTML = originalHTML;
+      btn.disabled = false;
     }
   }
 };
