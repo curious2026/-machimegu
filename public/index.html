@@ -5049,6 +5049,28 @@ body.checkin-active #checkin-indicator{
 #info-panel:not(.compact) .ip-expand-btn{
   display:none !important;
 }
+
+/* ═══ Step6補強：チェックインメッセージ・路線表示の長短切替 ═══ */
+/* デフォルト（詳細展開時）：フル版表示、ミニ版隠す */
+.ci-msg-mini, .ip-line-mini{ display:none; }
+.ci-msg-full, .ip-line-full{ display:inline; }
+
+/* コンパクトモード時：ミニ版表示、フル版隠す */
+#info-panel.compact .ci-msg-full,
+#info-panel.compact .ip-line-full{ display:none !important; }
+#info-panel.compact .ci-msg-mini,
+#info-panel.compact .ip-line-mini{ display:inline !important; }
+
+/* コンパクトモード時、チェックインメッセージのpaddingをさらに圧縮 */
+#info-panel.compact .ip-ci-status.ip-ci-glow{
+  font-size:11px !important;
+  padding:6px 8px !important;
+  line-height:1.4 !important;
+}
+#info-panel.compact .ip-ci-status.ip-ci-glow strong{
+  font-size:12px !important;
+  margin-top:1px !important;
+}
 </style>
 
 <!-- ステーションカード モーダル -->
@@ -7462,7 +7484,18 @@ function showInfo(st){
   window.currentStation=st;
   const{rank,color}=getRank(st.score);
   document.getElementById('ip-name').textContent=st.name+'駅';
-  document.getElementById('ip-line').textContent=formatLinesDisplay(st.lines)+' · '+st.pref;
+  // ★コンパクト時用に「○○線 ほか」短縮版と詳細版の両方をセット
+  const ipLineEl = document.getElementById('ip-line');
+  const fullLineText = formatLinesDisplay(st.lines)+' · '+st.pref;
+  let miniLineText;
+  if (Array.isArray(st.lines) && st.lines.length > 1) {
+    miniLineText = st.lines[0] + ' ほか · ' + st.pref;
+  } else if (Array.isArray(st.lines) && st.lines.length === 1) {
+    miniLineText = st.lines[0] + ' · ' + st.pref;
+  } else {
+    miniLineText = fullLineText;
+  }
+  ipLineEl.innerHTML = `<span class="ip-line-full">${fullLineText}</span><span class="ip-line-mini">${miniLineText}</span>`;
   const sc=document.getElementById('ip-score');
   sc.textContent=st.score;sc.style.color=color;
   document.getElementById('ip-rank').textContent=rank+'ランク';
@@ -8561,7 +8594,7 @@ window.renderCheckinSection = async function(st) {
     // ランク色を取得（駅マーカーと同じ色）
     const rankInfo = getRank(st.score || 0);
     const rankColor = rankInfo.color || '#3a7bd5';
-    sec.innerHTML = `<div class="ip-ci-status ip-ci-glow" style="--glow-color:${rankColor};--glow-color-soft:${rankColor}44">駅から ${distStr} 離れています<br>500m以内に近づいて<br><strong>ステーションカードGET！</strong></div>
+    sec.innerHTML = `<div class="ip-ci-status ip-ci-glow" style="--glow-color:${rankColor};--glow-color-soft:${rankColor}44"><span class="ci-msg-full">駅から ${distStr} 離れています<br>500m以内に近づいて<br><strong>ステーションカードGET！</strong></span><span class="ci-msg-mini">駅から ${distStr}<br>500m以内で<br><strong>カードGET！</strong></span></div>
       <div class="ip-ci-quota">本日 ${todayCount}/${DAILY_LIMIT}駅</div>`;
     return;
   }
@@ -9306,7 +9339,7 @@ window.openCardFromPanel = function() {
 // ─── カード内アクション ───
 let currentCardStation = null;
 
-// ★Step7: カードDOM自体を画像化してシェアする実装
+// ★Step7改: カードDOM自体を画像化してシェアする実装（固まり対策・クオリティ維持）
 // html2canvasライブラリを動的読み込み（初回シェア時のみ）
 window.mmLoadHtml2Canvas = function() {
   return new Promise((resolve, reject) => {
@@ -9319,6 +9352,15 @@ window.mmLoadHtml2Canvas = function() {
   });
 };
 
+// Promise版 setTimeout（UI更新を待つ）
+const mmDelay = (ms) => new Promise(r => setTimeout(r, ms));
+
+// タイムアウト付きPromise
+const mmTimeout = (promise, ms, errMsg) => Promise.race([
+  promise,
+  new Promise((_, reject) => setTimeout(() => reject(new Error(errMsg || 'タイムアウト')), ms))
+]);
+
 window.shareCard = async function() {
   if (!currentCardStation) return;
   
@@ -9327,30 +9369,53 @@ window.shareCard = async function() {
   
   // ボタンを一時的にローディング表示
   const btn = document.querySelector('.sc-act-btn');
+  const actionsEl = document.querySelector('.sc-actions');
   const originalHTML = btn ? btn.innerHTML : '';
   if (btn) {
     btn.innerHTML = '<span style="font-size:11px">画像作成中...</span>';
     btn.disabled = true;
   }
   
+  // ★ UIが「画像作成中...」表示を描画する時間を確保
+  await mmDelay(50);
+  
+  // ★ 画像化中はボタン領域を完全非表示（visibility:hidden で領域は保持）
+  // visibilityなら他レイアウト崩れない、html2canvasにも確実に効く
+  if (actionsEl) actionsEl.style.visibility = 'hidden';
+  
   try {
     // html2canvas読み込み（初回のみ実行、2回目以降は即返却）
-    await window.mmLoadHtml2Canvas();
+    await mmTimeout(window.mmLoadHtml2Canvas(), 8000, 'ライブラリ読み込みタイムアウト');
+    
+    // ★ もう一度UIに描画機会を与える（ライブラリ読み込み直後）
+    await mmDelay(30);
     
     // カードDOM要素を画像化
     const cardEl = document.getElementById('station-card');
     if (!cardEl) throw new Error('カード要素なし');
     
-    const canvas = await window.html2canvas(cardEl, {
-      backgroundColor: null,
-      scale: 2,  // 高解像度（Retina対応）
-      logging: false,
-      useCORS: true,
-      allowTaint: true,
-    });
+    // ★ scale:2 を維持しつつ、最適化オプションを追加
+    const canvas = await mmTimeout(
+      window.html2canvas(cardEl, {
+        backgroundColor: null,
+        scale: 2,  // 高解像度（Retina対応、クオリティ維持）
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 3000,
+      }),
+      15000,
+      '画像生成タイムアウト'
+    );
     
-    // Blob化
-    const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 0.95));
+    // ★ 画像化完了直後にボタンを再表示（共有シート前にUIを戻す）
+    if (actionsEl) actionsEl.style.visibility = '';
+    
+    // ★ UI更新の機会
+    await mmDelay(20);
+    
+    // Blob化（PNG、高品質）
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1.0));
     if (!blob) throw new Error('Blob生成失敗');
     
     const file = new File([blob], `machimegu-${currentCardStation.name}.png`, { type: 'image/png' });
@@ -9380,8 +9445,14 @@ window.shareCard = async function() {
     }
   } catch (e) {
     console.error('シェアエラー:', e);
+    // ★ 万一の例外でもボタンを必ず復元
+    if (actionsEl) actionsEl.style.visibility = '';
     // フォールバック：テキストのみ
     if (e.name !== 'AbortError') {  // ユーザーがキャンセルした場合は無視
+      const isTimeout = (e.message || '').includes('タイムアウト');
+      if (isTimeout) {
+        alert('画像生成に時間がかかっています。\nテキストのみでシェアします。');
+      }
       if (navigator.share) {
         try { await navigator.share({title:'街巡-まちめぐ-', text, url}); } catch(_) {}
       } else {
@@ -9394,6 +9465,8 @@ window.shareCard = async function() {
       }
     }
   } finally {
+    // ★ ボタン領域の表示を確実に元に戻す（多重保険）
+    if (actionsEl) actionsEl.style.visibility = '';
     // ボタンを元に戻す
     if (btn) {
       btn.innerHTML = originalHTML;
