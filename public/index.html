@@ -752,8 +752,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .sc-bg-glow{
   position:absolute;inset:0;
   background:
-    radial-gradient(circle at 30% 20%, var(--card-soft,rgba(88,168,224,0.18)), transparent 50%),
-    radial-gradient(circle at 70% 80%, var(--card-soft,rgba(88,168,224,0.12)), transparent 50%);
+    radial-gradient(circle at 30% 20%, var(--card-soft,rgba(88,168,224,0.18)), transparent 85%),
+    radial-gradient(circle at 70% 80%, var(--card-soft,rgba(88,168,224,0.12)), transparent 85%);
   pointer-events:none;
 }
 
@@ -4132,6 +4132,52 @@ body.checkin-active #checkin-indicator{
 #station-card[data-mm-season="winter"][data-mm-time="noon"]{ --mm-bg: linear-gradient(165deg,#d8e8f4 0%,#f4f8fc 50%,#cde0e8 100%); }
 #station-card[data-mm-season="winter"][data-mm-time="evening"]{ --mm-bg: linear-gradient(165deg,#3a4080 0%,#7060a0 50%,#c080a8 100%); }
 #station-card[data-mm-season="winter"][data-mm-time="night"]{ --mm-bg: linear-gradient(165deg,#020414 0%,#0a1030 50%,#1a2050 100%); }
+
+/* ═══════════════════════════════════════════════════════════════
+ * Step8: 暗い時間帯（night / evening）でテキスト読みやすさ改善
+ *   - 「開業」「接続」「乗降客/日」「所在地」等のラベル色を明るく
+ *   - 値（1932年、約9万人など）の色も明るく
+ *   - 路線名の色も明るく
+ *   - sc-info-grid のボーダー色も明るく
+ * ═══════════════════════════════════════════════════════════════ */
+
+/* 夜（night）の暗いカードでテキストを明るく */
+#station-card[data-mm-time="night"] .sc-info-lbl,
+#station-card[data-mm-time="night"] .sc-line-text{
+  color: #c5d4e8 !important;
+}
+#station-card[data-mm-time="night"] .sc-info-val{
+  color: #ffffff !important;
+}
+#station-card[data-mm-time="night"] .sc-info-grid{
+  border-top-color: rgba(255,255,255,0.18) !important;
+}
+#station-card[data-mm-time="night"] .sc-score-label{
+  color: #a5b8d8 !important;
+}
+
+/* 夕方（evening）の暗めカードもテキスト明るめに */
+#station-card[data-mm-time="evening"] .sc-info-lbl,
+#station-card[data-mm-time="evening"] .sc-line-text{
+  color: #e0e8f0 !important;
+}
+#station-card[data-mm-time="evening"] .sc-info-val{
+  color: #ffffff !important;
+}
+#station-card[data-mm-time="evening"] .sc-info-grid{
+  border-top-color: rgba(255,255,255,0.25) !important;
+}
+#station-card[data-mm-time="evening"] .sc-score-label{
+  color: #d0d8e8 !important;
+}
+
+/* 秋・冬の夜は更に暗いので、より強い白 */
+#station-card[data-mm-season="autumn"][data-mm-time="night"] .sc-info-lbl,
+#station-card[data-mm-season="autumn"][data-mm-time="night"] .sc-line-text,
+#station-card[data-mm-season="winter"][data-mm-time="night"] .sc-info-lbl,
+#station-card[data-mm-season="winter"][data-mm-time="night"] .sc-line-text{
+  color: #d8e0ec !important;
+}
 
 /* 天気モード有効時：背景をベースで上書き */
 #station-card[data-mm-active="true"]{
@@ -9369,7 +9415,6 @@ window.shareCard = async function() {
   
   // ボタンを一時的にローディング表示
   const btn = document.querySelector('.sc-act-btn');
-  const actionsEl = document.querySelector('.sc-actions');
   const originalHTML = btn ? btn.innerHTML : '';
   if (btn) {
     btn.innerHTML = '<span style="font-size:11px">画像作成中...</span>';
@@ -9379,39 +9424,97 @@ window.shareCard = async function() {
   // ★ UIが「画像作成中...」表示を描画する時間を確保
   await mmDelay(50);
   
-  // ★ 画像化中はボタン領域を完全非表示（visibility:hidden で領域は保持）
-  // visibilityなら他レイアウト崩れない、html2canvasにも確実に効く
-  if (actionsEl) actionsEl.style.visibility = 'hidden';
+  // ★ クローン用の一時コンテナ（finallyで削除）
+  let cloneContainer = null;
   
   try {
-    // html2canvas読み込み（初回のみ実行、2回目以降は即返却）
+    // html2canvas読み込み
     await mmTimeout(window.mmLoadHtml2Canvas(), 8000, 'ライブラリ読み込みタイムアウト');
-    
-    // ★ もう一度UIに描画機会を与える（ライブラリ読み込み直後）
     await mmDelay(30);
     
-    // カードDOM要素を画像化
-    const cardEl = document.getElementById('station-card');
-    if (!cardEl) throw new Error('カード要素なし');
+    const original = document.getElementById('station-card');
+    if (!original) throw new Error('カード要素なし');
     
-    // ★ scale:2 を維持しつつ、最適化オプションを追加
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ★ 根本対策：元のカードを画像化する代わりに、クリーンなクローンを作る
+    //   原因：#card-flip-wrap や #station-card に transform / animation が残っており、
+    //         html2canvasがサイズ計算を誤って画像が崩れる
+    //   対策：transformもanimationもない素のDOMを別領域に作って画像化
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    // 元のカードの実サイズを取得
+    const rect = original.getBoundingClientRect();
+    const cardWidth = rect.width;
+    const cardHeight = rect.height;
+    
+    // クローン用の隔離コンテナを作成（オフスクリーン）
+    cloneContainer = document.createElement('div');
+    cloneContainer.style.cssText = `
+      position: fixed;
+      left: -10000px;
+      top: 0;
+      width: ${cardWidth}px;
+      height: ${cardHeight}px;
+      z-index: -1;
+      pointer-events: none;
+      transform: none !important;
+      animation: none !important;
+    `;
+    
+    // カードを深くクローン
+    const clone = original.cloneNode(true);
+    
+    // クローン内のシェアボタン領域を削除（写り込み防止）
+    const cloneActions = clone.querySelector('.sc-actions');
+    if (cloneActions) cloneActions.remove();
+    
+    // クローン側の transform / animation / transition を全部リセット
+    clone.style.cssText = (clone.getAttribute('style') || '') + `
+      ;transform: none !important
+      ;animation: none !important
+      ;transition: none !important
+      ;width: ${cardWidth}px
+      ;height: ${cardHeight}px
+      ;margin: 0
+      ;position: static
+    `;
+    clone.id = '';  // ID重複回避
+    
+    // クローンコンテナに追加
+    cloneContainer.appendChild(clone);
+    document.body.appendChild(cloneContainer);
+    
+    // 描画機会
+    await mmDelay(50);
+    
+    // ★ クローンを画像化（transformなし状態 = 正確なサイズで描画される）
     const canvas = await mmTimeout(
-      window.html2canvas(cardEl, {
+      window.html2canvas(clone, {
         backgroundColor: null,
         scale: 2,  // 高解像度（Retina対応、クオリティ維持）
         logging: false,
         useCORS: true,
         allowTaint: true,
         imageTimeout: 3000,
+        width: cardWidth,
+        height: cardHeight,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: cardWidth,
+        windowHeight: cardHeight,
       }),
       15000,
       '画像生成タイムアウト'
     );
     
-    // ★ 画像化完了直後にボタンを再表示（共有シート前にUIを戻す）
-    if (actionsEl) actionsEl.style.visibility = '';
+    // クローン削除（すぐ）
+    if (cloneContainer && cloneContainer.parentNode) {
+      cloneContainer.parentNode.removeChild(cloneContainer);
+      cloneContainer = null;
+    }
     
-    // ★ UI更新の機会
     await mmDelay(20);
     
     // Blob化（PNG、高品質）
@@ -9420,16 +9523,20 @@ window.shareCard = async function() {
     
     const file = new File([blob], `machimegu-${currentCardStation.name}.png`, { type: 'image/png' });
     
+    // ★ 共有シートを開く前にボタンを元に戻す（共有シート表示中に「画像作成中…」が残らないように）
+    if (btn) {
+      btn.innerHTML = originalHTML;
+      btn.disabled = false;
+    }
+    
     // navigator.share の画像対応チェック
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      // 画像つきシェア（モバイル本命ルート）
       await navigator.share({
         title: '街巡-まちめぐ-',
         text: text,
         files: [file]
       });
     } else if (navigator.share) {
-      // 画像非対応だが共通シェアはあるブラウザ → テキストのみシェア
       await navigator.share({ title: '街巡-まちめぐ-', text, url });
     } else {
       // 古いブラウザ・PC：画像をダウンロード
@@ -9445,10 +9552,7 @@ window.shareCard = async function() {
     }
   } catch (e) {
     console.error('シェアエラー:', e);
-    // ★ 万一の例外でもボタンを必ず復元
-    if (actionsEl) actionsEl.style.visibility = '';
-    // フォールバック：テキストのみ
-    if (e.name !== 'AbortError') {  // ユーザーがキャンセルした場合は無視
+    if (e.name !== 'AbortError') {
       const isTimeout = (e.message || '').includes('タイムアウト');
       if (isTimeout) {
         alert('画像生成に時間がかかっています。\nテキストのみでシェアします。');
@@ -9465,9 +9569,11 @@ window.shareCard = async function() {
       }
     }
   } finally {
-    // ★ ボタン領域の表示を確実に元に戻す（多重保険）
-    if (actionsEl) actionsEl.style.visibility = '';
-    // ボタンを元に戻す
+    // ★ クローンが残ってたら確実に削除
+    if (cloneContainer && cloneContainer.parentNode) {
+      cloneContainer.parentNode.removeChild(cloneContainer);
+    }
+    // ★ ボタンも復元（多重保険）
     if (btn) {
       btn.innerHTML = originalHTML;
       btn.disabled = false;
