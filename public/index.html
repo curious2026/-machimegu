@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index143 (cache-bust 2026.05.20-13:30) -->
+<!-- VERSION: index144 (cache-bust 2026.05.20-14:30) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -4193,14 +4193,12 @@ body.checkin-active #checkin-indicator{
   font-size: 260px;
   font-weight: 900;
   color: var(--card-color);
-  opacity: 0.06;
+  opacity: 0.08;
   pointer-events: none;
   z-index: 0;
   line-height: 0.8;
   letter-spacing: -10px;
   font-family: inherit;
-  filter: blur(3px);
-  -webkit-filter: blur(3px);
 }
 
 /* 天気オーバーレイ（JS で挿入される div） */
@@ -4217,11 +4215,11 @@ body.checkin-active #checkin-indicator{
 .mm-weather-overlay.sunny::before{
   content: '';
   position: absolute;
-  top: -30%;
-  right: -25%;
-  width: 110%;
-  height: 90%;
-  background: radial-gradient(circle, rgba(255,250,210,0.85) 0%, rgba(255,228,130,0.5) 22%, rgba(255,210,80,0.22) 45%, transparent 70%);
+  top: -50%;
+  right: -40%;
+  width: 180%;
+  height: 180%;
+  background: radial-gradient(circle, rgba(255,250,210,0.85) 0%, rgba(255,228,130,0.45) 15%, rgba(255,210,80,0.2) 32%, rgba(255,200,100,0.08) 55%, transparent 85%);
 }
 .mm-weather-overlay.sunny::after{
   content: '';
