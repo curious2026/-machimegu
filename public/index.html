@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index144 (cache-bust 2026.05.20-14:30) -->
+<!-- VERSION: index146 (cache-bust 2026.05.20-18:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -3774,6 +3774,7 @@ body.checkin-active #checkin-indicator{
       <option value="500" selected>500m</option>
       <option value="800">800m</option>
       <option value="1200">1.2km</option>
+      <option value="checkedin">チェックイン済</option>
     </select>
     <button id="searchBtn" onclick="openSearchModal()" title="駅名で検索" aria-label="駅名検索">🔍</button>
     <span id="statusbar"></span>
@@ -6272,7 +6273,15 @@ function gotoCurrentLocation(){
 // 「街力スコア」を何mの圏内で測るかの定義。変えたい時はこの1行だけ変える。
 const CARD_RADIUS = 500;
 
-function getRadius(){return document.getElementById('radiusSelect').value;}
+function getRadius(){
+  const v = document.getElementById('radiusSelect').value;
+  // 「チェックイン済」モード時は半径500扱い（API・キャッシュキーは数値のまま）
+  if (v === 'checkedin') return '500';
+  return v;
+}
+function isCheckedInOnlyMode(){
+  return document.getElementById('radiusSelect').value === 'checkedin';
+}
 function onRadiusChange(){loadAll();}
 
 // ═══ モーダル ═══
@@ -7391,11 +7400,17 @@ function getFiltered(){
   const pref=document.getElementById('prefSelect').value;
   const line=document.getElementById('lineSelect').value;
   const rank=document.getElementById('rankFilter').value;
+  const checkedInOnly = isCheckedInOnlyMode();
+  const ciSet = window.checkedInStations;
   return stationData.filter(s=>{
     if(!s.score)return false;
     if(pref&&s.pref!==pref)return false;
     if(line&&!s.lines.includes(line))return false;
     if(rank&&getRank(s.score).rank!==rank)return false;
+    // ★ チェックイン済モード：訪問済の駅のみ
+    if(checkedInOnly){
+      if(!ciSet || !ciSet.has(s.name+'_'+s.pref)) return false;
+    }
     return true;
   });
 }
@@ -13908,19 +13923,32 @@ if ('serviceWorker' in navigator) {
   // UAから内蔵ブラウザを検知
   function detectInAppBrowser(){
     var ua = (navigator.userAgent || '').toLowerCase();
-    // Twitter
-    if (ua.indexOf('twitter') !== -1) return 'twitter';
+    
+    // ★最優先チェック：iOS Safari なら絶対に内蔵ブラウザ扱いしない
+    // Safari本体のUAは "version/" + "safari/" を含み、 内蔵ブラウザ系の単語を含まない
+    // 内蔵ブラウザ (Twitter for iPhone等) のUAには "version/" "safari/" が含まれない
+    var isIOSSafariProper = (
+      /iphone|ipad|ipod/.test(ua) &&
+      ua.indexOf('safari/') !== -1 &&
+      ua.indexOf('version/') !== -1 &&
+      ua.indexOf('crios') === -1 &&     // Chrome iOS は除外（Safariじゃない）
+      ua.indexOf('fxios') === -1 &&     // Firefox iOS も除外
+      ua.indexOf('edgios') === -1       // Edge iOS も除外
+    );
+    if (isIOSSafariProper) return null;  // 本物のSafariなら警告出さない
+    
+    // Twitter（"twitter for" のように具体的に判定、誤検知防止）
+    if (ua.indexOf('twitter for') !== -1 || ua.indexOf('twitterandroid') !== -1) return 'twitter';
     // LINE
     if (ua.indexOf('line/') !== -1) return 'line';
     // Facebook
-    if (ua.indexOf('fban') !== -1 || ua.indexOf('fbav') !== -1 || ua.indexOf('facebook') !== -1) return 'facebook';
+    if (ua.indexOf('fban') !== -1 || ua.indexOf('fbav') !== -1) return 'facebook';
     // Instagram
     if (ua.indexOf('instagram') !== -1) return 'instagram';
     // Messenger
     if (ua.indexOf('messenger') !== -1) return 'messenger';
     // TikTok
     if (ua.indexOf('musical_ly') !== -1 || ua.indexOf('bytedance') !== -1) return 'tiktok';
-    // 一般的なWebView判定（iOSのSFSafariViewControllerは除外）
     // Android WebView
     if (ua.indexOf('android') !== -1 && ua.indexOf('wv') !== -1) return 'webview';
     return null;
