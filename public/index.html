@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index154 (cache-bust 2026.05.28-01:00) -->
+<!-- VERSION: index155 (cache-bust 2026.05.28-03:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2266,15 +2266,28 @@ body:not(.splashing) #table-area{
 .cl-back{width:42px !important;height:42px !important;font-size:20px !important}
 
 .bp-section-title{
-  font-size:16px !important;font-weight:900;color:#fff !important;
-  letter-spacing:2.5px;margin:22px 0 14px;
-  display:flex;align-items:center;gap:10px;
-  text-shadow:0 1px 2px rgba(0,0,0,0.4);
+  font-size:18px !important;font-weight:900;color:#fff !important;
+  letter-spacing:3px;margin:24px 0 16px;
+  display:flex;align-items:center;gap:12px;
+  text-shadow:
+    0 2px 4px rgba(0,0,0,0.6),
+    0 0 12px rgba(0,0,0,0.4),
+    0 1px 0 rgba(255,255,255,0.1);
+  position:relative;
+}
+.bp-section-title::before{
+  content:'';width:5px;height:24px;border-radius:3px;
+  background:linear-gradient(180deg,#fbd56a 0%,#f0b840 50%,#a87010 100%);
+  box-shadow:
+    0 0 12px rgba(251,213,106,0.7),
+    inset 0 1px 2px rgba(255,255,255,0.6),
+    inset 0 -1px 2px rgba(0,0,0,0.3);
 }
 .bp-section-title::before{
   content:'';width:4px;height:18px;border-radius:2px;
   background:linear-gradient(180deg,#fbd56a,#d4a020);
   box-shadow:0 0 8px rgba(251,213,106,0.5);
+  display:none;  /* 上位セレクタに置き換えたため非表示 */
 }
 .bp-section-title .bp-section-count{
   font-size:13px;font-weight:700;color:#cfdaee;letter-spacing:1px;margin-left:auto;
@@ -2325,9 +2338,24 @@ body:not(.splashing) #table-area{
 }
 
 /* 路線制覇：六角形 */
+/* 制覇路線：六角形（立体的に強化） */
 .bp-badge-line{
   clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
-  box-shadow:inset 0 -8px 16px rgba(255,255,255,0.18),inset 0 4px 8px rgba(255,255,255,0.28);
+  box-shadow:
+    inset 0 -10px 22px rgba(0,0,0,0.35),
+    inset 0 8px 16px rgba(255,255,255,0.40),
+    inset 0 -2px 4px rgba(255,255,255,0.15),
+    0 4px 12px rgba(0,0,0,0.5);
+  position:relative;
+}
+/* 上半分の鏡面ハイライト */
+.bp-badge-line::before{
+  content:'';
+  position:absolute;
+  top:8%;left:15%;right:15%;height:35%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.45) 0%,rgba(255,255,255,0.08) 70%,transparent 100%);
+  clip-path:polygon(50% 0,100% 35%,100% 100%,0 100%,0 35%);
+  pointer-events:none;
 }
 .bp-badge-line.gold{
   background:linear-gradient(135deg,#fbd56a 0%,#d4a020 60%,#9a6f10 100%);
@@ -2342,11 +2370,53 @@ body:not(.splashing) #table-area{
   color:#2a1408;
 }
 
-/* ランク制覇：円形 */
+/* ランク制覇：円形（立体的に強化） */
 .bp-badge-rank{
   border-radius:50%;
-  box-shadow:inset 0 -6px 14px rgba(255,255,255,0.18),inset 0 3px 8px rgba(255,255,255,0.28),
-    0 0 16px rgba(0,0,0,0.4);
+  box-shadow:
+    inset 0 -10px 22px rgba(0,0,0,0.35),
+    inset 0 8px 16px rgba(255,255,255,0.45),
+    inset 0 -2px 4px rgba(255,255,255,0.18),
+    0 4px 12px rgba(0,0,0,0.5),
+    0 0 24px rgba(0,0,0,0.45),
+    0 0 0 2px rgba(255,255,255,0.08);
+  position:relative;
+}
+/* 上部の鏡面ハイライト（ガラス球風） */
+.bp-badge-rank::before{
+  content:'';
+  position:absolute;
+  top:8%;left:18%;right:18%;height:30%;
+  border-radius:50%;
+  background:radial-gradient(ellipse at center top,rgba(255,255,255,0.55) 0%,rgba(255,255,255,0.15) 50%,transparent 80%);
+  pointer-events:none;
+  filter:blur(1.5px);
+}
+/* 下部の影（球体の底） */
+.bp-badge-rank::after{
+  content:'';
+  position:absolute;
+  bottom:8%;left:22%;right:22%;height:18%;
+  border-radius:50%;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,0.35) 0%,transparent 70%);
+  pointer-events:none;
+  filter:blur(2px);
+}
+/* ランク制覇内のテキスト：他バッジより大きく＆鮮明に */
+.bp-badge-rank .bp-name{
+  font-size:13px !important;
+  font-weight:900;
+  text-shadow:0 2px 4px rgba(0,0,0,0.55),0 0 8px rgba(0,0,0,0.35);
+  position:relative;z-index:2;
+  letter-spacing:0.5px;
+}
+.bp-badge-rank .bp-sub{
+  font-size:14px !important;
+  font-weight:900;
+  text-shadow:0 2px 4px rgba(0,0,0,0.55),0 0 8px rgba(0,0,0,0.35);
+  position:relative;z-index:2;
+  letter-spacing:0.3px;
+  margin-top:3px;
 }
 .bp-badge-rank.S{background:radial-gradient(circle at 35% 30%,#ff7088 0%,#ff2244 50%,#a01428 100%);color:#fff}
 .bp-badge-rank.A{background:radial-gradient(circle at 35% 30%,#ffb060 0%,#ff8800 50%,#a85800 100%);color:#fff}
@@ -2355,8 +2425,9 @@ body:not(.splashing) #table-area{
 .bp-badge-rank.D{background:radial-gradient(circle at 35% 30%,#88c8ff 0%,#44aaff 50%,#1860a8 100%);color:#fff}
 
 /* エリア制覇：シールド形 */
+/* エリア制覇：八角形（立体的） */
 .bp-badge-area{
-  clip-path:polygon(50% 0,100% 12%,100% 65%,50% 100%,0 65%,0 12%);
+  clip-path:polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%);
   background:linear-gradient(180deg,#7d8fae 0%,#4a5878 50%,#2a3450 100%);
   color:#e8f0fa;
   box-shadow:inset 0 -8px 16px rgba(0,0,0,0.25),inset 0 4px 8px rgba(255,255,255,0.18);
@@ -11916,11 +11987,10 @@ window.getAreaBadgeData = function(city){
   };
 };
 
-// SVG動的生成（新宿型・六角形・3行レイアウト）
-// ★index93改修：ともき再フィードバック対応。
-//   1. 漢字78→64に縮小、サブ16→18に拡大（バランス改善、サブが読めるように）
-//   2. 装飾線はテキストの「直下アンダーライン」のみ。上の線は廃止。
-//      強調デコは下に置くのが定石、上下に挟むと窮屈で読めない。
+// SVG動的生成（八角形・3行レイアウト）
+// ★index155改修：
+//   1. 六角形→八角形に変更（路線バッジとの差別化）
+//   2. 漢字1文字はserif維持、県名・市町村はsans-serif系（他バッジと統一）
 let _areaBadgeIdCounter = 0;
 window.renderAreaBadgeSVG = function(b){
   const city = b.city || '';
@@ -11928,12 +11998,20 @@ window.renderAreaBadgeSVG = function(b){
   const kanji = data.kanji;
   const pref  = data.pref || b.pref || '';
   const id = 'ab' + (++_areaBadgeIdCounter);
-  // 漢字フォントサイズ：1文字=82、2文字=66、3文字=52（英語削除分さらに拡大）
+  // 漢字フォントサイズ：1文字=82、2文字=66、3文字=52
   const kanjiLen = kanji.length;
   const kanjiSize = kanjiLen === 1 ? 82 : (kanjiLen === 2 ? 66 : 52);
   // 県・市町村を2段表示：それぞれ単独で大きく表示
-  const prefSize = pref.length <= 3 ? 34 : (pref.length <= 5 ? 30 : 24);
-  const citySize = city.length <= 3 ? 34 : (city.length <= 5 ? 30 : 24);
+  const prefSize = pref.length <= 3 ? 30 : (pref.length <= 5 ? 26 : 22);
+  const citySize = city.length <= 3 ? 30 : (city.length <= 5 ? 26 : 22);
+  // 八角形の頂点座標（240×240、中心120,120、半径110）
+  // 真上から時計回りに：12時方向はカット、1時半・3時・4時半・6時・7時半・9時・10時半
+  // 八角形ポイント（240×240）— 端をきれいに角丸調整
+  const octRim  = '72,8 168,8 232,72 232,168 168,232 72,232 8,168 8,72';
+  const octBg   = '76,18 164,18 222,76 222,164 164,222 76,222 18,164 18,76';
+  const octIn1  = '82,26 158,26 214,82 214,158 158,214 82,214 26,158 26,82';
+  const octIn2  = '88,34 152,34 206,88 206,152 152,206 88,206 34,152 34,88';
+  const octIn3  = '94,44 146,44 196,94 196,146 146,196 94,196 44,146 44,94';
   return `<div class="bp-badge bp-badge-area" style="background:none !important;border:none !important;padding:0;display:block;width:100%;height:auto;aspect-ratio:1/1">
     <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
       <defs>
@@ -11948,18 +12026,18 @@ window.renderAreaBadgeSVG = function(b){
         </radialGradient>
       </defs>
       <ellipse cx="120" cy="120" rx="135" ry="120" fill="url(#${id}-glow)"/>
-      <polygon points="120,8 232,62 232,178 120,232 8,178 8,62" fill="url(#${id}-rim)"/>
-      <polygon points="120,18 224,68 224,172 120,222 16,172 16,68" fill="url(#${id}-bg)"/>
-      <polygon points="120,26 214,72 214,168 120,214 26,168 26,72" fill="none" stroke="#cbd5e1" stroke-width="0.6" opacity="0.7"/>
-      <polygon points="120,34 204,77 204,163 120,206 36,163 36,77" fill="none" stroke="#94a3b8" stroke-width="0.4" opacity="0.5"/>
-      <polygon points="120,44 192,82 192,158 120,196 48,158 48,82" fill="none" stroke="#64748b" stroke-width="0.3" opacity="0.4"/>
-      <!-- 1行目: 漢字（最重要、最大）- 英語削除でできるだけ上に -->
+      <polygon points="${octRim}" fill="url(#${id}-rim)"/>
+      <polygon points="${octBg}" fill="url(#${id}-bg)"/>
+      <polygon points="${octIn1}" fill="none" stroke="#cbd5e1" stroke-width="0.6" opacity="0.7"/>
+      <polygon points="${octIn2}" fill="none" stroke="#94a3b8" stroke-width="0.4" opacity="0.5"/>
+      <polygon points="${octIn3}" fill="none" stroke="#64748b" stroke-width="0.3" opacity="0.4"/>
+      <!-- 1行目: 漢字（最重要、最大）- 明朝系で格調高く -->
       <text x="120" y="110" text-anchor="middle" fill="#fff" font-family="serif" font-size="${kanjiSize}" font-weight="500">${kanji}</text>
       <line x1="50" y1="126" x2="190" y2="126" stroke="#e2e8f0" stroke-width="0.8" opacity="0.7"/>
       <line x1="65" y1="129" x2="175" y2="129" stroke="#94a3b8" stroke-width="0.4" opacity="0.5"/>
-      <!-- 2行目: 県名（1段目） + 3行目: 市町村（2段目） -->
-      ${pref ? `<text x="120" y="160" text-anchor="middle" fill="#e2e8f0" font-family="serif" font-size="${prefSize}" letter-spacing="1.2">${pref}</text>` : ''}
-      <text x="120" y="${pref ? 195 : 175}" text-anchor="middle" fill="#e2e8f0" font-family="serif" font-size="${citySize}" letter-spacing="1.2">${city}</text>
+      <!-- 2行目: 県名・3行目: 市町村 - ゴシック系（他バッジと統一） -->
+      ${pref ? `<text x="120" y="158" text-anchor="middle" fill="#e2e8f0" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" font-size="${prefSize}" font-weight="700" letter-spacing="1.2">${pref}</text>` : ''}
+      <text x="120" y="${pref ? 193 : 175}" text-anchor="middle" fill="#e2e8f0" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" font-size="${citySize}" font-weight="700" letter-spacing="1.2">${city}</text>
       <line x1="60" y1="210" x2="180" y2="210" stroke="#e2e8f0" stroke-width="1.0" opacity="0.85"/>
       <line x1="75" y1="213" x2="165" y2="213" stroke="#94a3b8" stroke-width="0.6" opacity="0.55"/>
     </svg>
@@ -12177,6 +12255,33 @@ window.toggleLineMore = function() {
   }
 };
 
+// 路線名を意味のある位置で2行に分割（カッコ前・「線」の後・中点で改行）
+window.formatLineLabelTwoLines = function(label){
+  if (!label) return '';
+  const len = label.length;
+  // 短い名前（6文字以下）はそのまま
+  if (len <= 6) return escapeHtml(label);
+  // 改行候補：カッコ前、・の後、「線」の後
+  // 1) カッコ「（」の前で割れる場合
+  const parenIdx = label.indexOf('（');
+  if (parenIdx > 0 && parenIdx <= len - 2) {
+    return escapeHtml(label.slice(0, parenIdx)) + '<br>' + escapeHtml(label.slice(parenIdx));
+  }
+  // 2) 中点「・」で割れる場合
+  const dotIdx = label.indexOf('・');
+  if (dotIdx > 0 && dotIdx >= 2 && dotIdx <= len - 2) {
+    return escapeHtml(label.slice(0, dotIdx)) + '<br>' + escapeHtml(label.slice(dotIdx));
+  }
+  // 3) 「線」の直後で割れる場合（その後ろに文字がある時）
+  const lineIdx = label.indexOf('線');
+  if (lineIdx > 0 && lineIdx < len - 1) {
+    return escapeHtml(label.slice(0, lineIdx + 1)) + '<br>' + escapeHtml(label.slice(lineIdx + 1));
+  }
+  // 4) どこでも割れないなら中央付近の自然な位置で割る
+  const mid = Math.ceil(len / 2);
+  return escapeHtml(label.slice(0, mid)) + '<br>' + escapeHtml(label.slice(mid));
+};
+
 function renderLineBadges(lineResults, userBadges) {
   const el = document.getElementById('bp-line');
   if (!el) return;
@@ -12206,18 +12311,20 @@ function renderLineBadges(lineResults, userBadges) {
   
   function renderItem(r){
     const lineShort = r.line.replace('東京メトロ','メトロ').replace(/^都営/,'都営');
+    // 路線名を意味のあるところで2行に分割（最大4文字+残り、または半分）
+    const lineLabel = window.formatLineLabelTwoLines ? window.formatLineLabelTwoLines(lineShort) : lineShort;
     if (r.tier) {
       const id = `line_${r.line}_${r.tier}`;
       const badgeData = userBadges.get(id) || { id, type:'line', line:r.line, tier:r.tier, conquered:r.conquered, total:r.total, name:`${r.line} ${tierJa(r.tier)}`, desc:`${r.line}の駅を制覇` };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
       return `<div class="bp-badge bp-badge-line ${r.tier}" onclick="showBadgeDetail('${enc}')">
-        <div class="bp-name">${lineShort}</div>
+        <div class="bp-name">${lineLabel}</div>
         <div class="bp-sub">${tierJa(r.tier)}</div>
       </div>`;
     } else {
       return `<div class="bp-badge-locked">
         <div class="bp-icon">🚃</div>
-        <div class="bp-name">${lineShort}</div>
+        <div class="bp-name">${lineLabel}</div>
         <div class="bp-progress">${r.conquered}/${r.total}駅</div>
       </div>`;
     }
