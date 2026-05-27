@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index168 (cache-bust 2026.05.29-05:00) -->
+<!-- VERSION: index169 (cache-bust 2026.05.29-07:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -1311,7 +1311,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 #card-flip-wrap{
   width:100%;
   animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
-  transform-style:flat;
+  transform-style:preserve-3d;
+  -webkit-transform-style:preserve-3d;
 }
 #station-card{
   width:100%!important;
@@ -4408,15 +4409,57 @@ body.checkin-active #checkin-indicator{
 <!-- ════════════════════════════════════════════════════════════ -->
 <div id="top-tap-catcher"
      onclick="event.preventDefault();event.stopPropagation();console.log('[TopTap] clicked');if(window.scrollOpenedToTop)window.scrollOpenedToTop();"
+     ontouchend="event.preventDefault();event.stopPropagation();console.log('[TopTap] touchend');if(window.scrollOpenedToTop)window.scrollOpenedToTop();"
      style="position:fixed;top:0;left:0;right:0;
-            height:calc(env(safe-area-inset-top, 0px) + 22px);
-            min-height:22px;
+            height:calc(env(safe-area-inset-top, 0px) + 44px);
+            min-height:44px;
             z-index:2147483647;
             background:transparent;
             pointer-events:auto;
             cursor:pointer;
-            -webkit-tap-highlight-color:transparent;"
+            -webkit-tap-highlight-color:transparent;
+            touch-action:manipulation;"
      aria-label="画面上部をタップしてスクロールトップ"></div>
+
+<script>
+// ═══ TopTap 補強：iOS Safari/PWA で onclick が発火しないケースの保険 ═══
+// 原因：iOS Safari PWAモードでは「画面上部のステータスバーをタップで最上部スクロール」
+//       がOSネイティブで実装されてるが、PWAインストール後はネイティブ機能が無効化される。
+//       かつ position:fixed の touch handler が一部条件で発火しないことがある。
+// 対策：touchend/pointerup を追加、capture phase で確実に捕捉、複数イベント並走
+(function(){
+  function setupTopTap(){
+    const el = document.getElementById('top-tap-catcher');
+    if (!el) return;
+    
+    function handleTap(e){
+      try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
+      console.log('[TopTap] handler fired, event:', e.type);
+      if (window.scrollOpenedToTop) {
+        window.scrollOpenedToTop();
+      } else {
+        // フォールバック：何でもいいから上にスクロール
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(_) { window.scrollTo(0,0); }
+      }
+    }
+    
+    // 複数イベントで捕捉（iOS Safari/PWA でも確実に動かす）
+    el.addEventListener('click', handleTap, { passive: false, capture: true });
+    el.addEventListener('touchend', handleTap, { passive: false, capture: true });
+    el.addEventListener('pointerup', function(e){
+      if (e.pointerType === 'touch' || e.pointerType === 'mouse') handleTap(e);
+    }, { passive: false, capture: true });
+    
+    console.log('[TopTap] enhanced listeners attached on', el);
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupTopTap);
+  } else {
+    setupTopTap();
+  }
+})();
+</script>
 <!-- ═══ 起動スプラッシュアニメーション ═══ -->
 <div id="splash-overlay" onclick="skipSplash()">
   <div class="splash" id="splash-content">
@@ -9716,14 +9759,14 @@ const auth = getAuth(app);
 
 // ═══ Phase E: Firestore IndexedDB 永続化を有効化（オフライン対応） ═══
 // 失敗時は通常の getFirestore() にフォールバック
+// ★ index169修正：tabManager 指定なし（default = single tab）にして
+//   ログインリダイレクト時の IndexedDB lock 競合を回避。多くの場合シングルタブで十分。
 let db;
 try {
   db = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager()
-    })
+    localCache: persistentLocalCache({})
   });
-  console.log('[Firestore] IndexedDB永続化有効、オフライン書き込み対応');
+  console.log('[Firestore] IndexedDB永続化有効（single tab）、オフライン書き込み対応');
 } catch (e) {
   // 既に初期化済み or ブラウザ非対応の場合はフォールバック
   console.warn('[Firestore] 永続化初期化失敗、通常モードにフォールバック:', e.message);
@@ -9861,23 +9904,37 @@ window.signInWithGoogle = async () => {
 };
 
 // ─── Redirectからの戻り処理（モバイル端末用）───
-// ページロード時にURLパラメータをチェックして、Google認証から戻ってきたら処理
+// ★ index169修正：ログインループ対策
+//   原因：getRedirectResult はリダイレクト直後のページロードで auth state が反映されてない
+//         ことがある（特に PWA や In-App Browser 内）。1回だけ呼んで失敗すると、ユーザーは
+//         またログインボタン→Redirect→戻る→失敗 のループに陥る。
+//   対策：onAuthStateChanged で監視しつつ、初回ロード時に getRedirectResult を確実に await。
+//         エラーが出てもユーザーには alert せず、コンソールにだけ残す（ループ抑制）
 (async () => {
   try {
+    console.log('[Auth] getRedirectResult 呼び出し開始');
     const result = await getRedirectResult(auth);
     if (result && result.user) {
       console.log('[Auth] Redirectログイン成功:', result.user.email);
       safeLogEvent('login', { method: 'Google_Redirect' });
+    } else {
+      console.log('[Auth] getRedirectResult: 戻り結果なし（通常起動）');
     }
   } catch (e) {
     console.error('[Auth] Redirect戻り処理エラー:', e);
-    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
-      // 致命的なエラーのみアラート（initial state欠落は無視）
-      if (e.code !== 'auth/missing-or-invalid-nonce' &&
-          !(e.message || '').includes('missing initial state')) {
-        console.warn('[Auth] Redirect戻りエラー（無視可能）:', e.message);
+    // ループを避けるため、致命的エラーでも alert は出さない
+    // ユーザーは onAuthStateChanged 経由でログイン状態を判定できる
+  }
+  
+  // ─── Auth state を能動的に監視（リダイレクト失敗してもログイン状態が後から復元される場合あり）
+  if (typeof onAuthStateChanged === 'function') {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('[Auth] onAuthStateChanged: ログイン状態確認:', user.email);
+      } else {
+        console.log('[Auth] onAuthStateChanged: 未ログイン');
       }
-    }
+    });
   }
 })();
 
@@ -10880,6 +10937,28 @@ async function openStationCard(data) {
   if (window.mmApplyTierToCard) {
     window.mmApplyTierToCard(card, tier);
   }
+  
+  // ★ カード回転アニメ再起動（既にアニメが終わってると2回目以降は動かない問題対策）
+  // 原因：CSS animation はDOMロード時に1回流れて終了。openStationCard で再表示しても、
+  //       要素は既にアニメ完了済みで再生されない。
+  // 対策：animation を一度nullにしてreflow強制、その後復活させると再生される
+  try {
+    const wrap = document.getElementById('card-flip-wrap');
+    if (wrap) {
+      // first-visit クラスを付与（初訪問なら派手アニメ）
+      if (data.isFirstVisit) {
+        wrap.classList.add('first-visit');
+        if (card) card.classList.add('first-visit');
+      } else {
+        wrap.classList.remove('first-visit');
+        if (card) card.classList.remove('first-visit');
+      }
+      // animationリセット → 再生
+      wrap.style.animation = 'none';
+      void wrap.offsetWidth;  // reflow強制（アニメリセットの定番テク）
+      wrap.style.animation = '';
+    }
+  } catch (e) { console.warn('[Card] アニメ再起動エラー:', e); }
   
   // 駅名
   document.getElementById('sc-station-name').textContent = data.name;
