@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index171 (cache-bust 2026.05.29-11:00) -->
+<!-- VERSION: index172 (cache-bust 2026.05.29-13:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -9749,20 +9749,43 @@ try {
 
 const auth = getAuth(app);
 
-// ═══ Phase E: Firestore IndexedDB 永続化を有効化（オフライン対応） ═══
-// 失敗時は通常の getFirestore() にフォールバック
-// ★ index169修正：tabManager 指定なし（default = single tab）にして
-//   ログインリダイレクト時の IndexedDB lock 競合を回避。多くの場合シングルタブで十分。
-let db;
+// ═══ index172緊急修正：Firestore IndexedDB 永続化を完全に外す ═══
+// ★ 経緯：
+//   - index165 (Phase E) で initializeFirestore(persistentLocalCache) 導入
+//   - 「PWAは動くが新規ブラウザではログインループ」の症状が発生
+//   - 原因推定：Safari ITP × IndexedDB 競合、OAuth redirect 後の state 紛失
+// ★ 判断：
+//   - オフライン書き込み機能は諦める（PMF前なので優先度低）
+//   - ログイン安定性を最優先
+//   - 元のシンプルな getFirestore() に戻す
+const db = getFirestore(app);
+console.log('[Firestore] 通常モード（永続化なし、ログイン安定優先）');
+
+// ═══ index172：Phase E時代のFirestore IndexedDB残骸を一度だけ削除（ログインループ救済） ═══
+// localStorageフラグで「クリーン済み」を記録、1ユーザー1回のみ実行
 try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({})
-  });
-  console.log('[Firestore] IndexedDB永続化有効（single tab）、オフライン書き込み対応');
-} catch (e) {
-  // 既に初期化済み or ブラウザ非対応の場合はフォールバック
-  console.warn('[Firestore] 永続化初期化失敗、通常モードにフォールバック:', e.message);
-  db = getFirestore(app);
+  const CLEANUP_KEY = 'mm_fs_cleanup_v172';
+  if (!localStorage.getItem(CLEANUP_KEY)) {
+    const dbs = ['firestore/[DEFAULT]/machi-megu-project/main', 'firestore/[DEFAULT]/machi-megu-project/main/firestoreClients'];
+    dbs.forEach(name => {
+      try { indexedDB.deleteDatabase(name); } catch(_) {}
+    });
+    // Firestoreの全関連IndexedDBをパターンで探して削除（実装によって名前が変わるため）
+    if (indexedDB.databases) {
+      indexedDB.databases().then(list => {
+        list.forEach(d => {
+          if (d.name && (d.name.includes('firestore') || d.name.includes('firebase'))) {
+            console.log('[Firestore] 残骸IndexedDB削除:', d.name);
+            try { indexedDB.deleteDatabase(d.name); } catch(_) {}
+          }
+        });
+      }).catch(()=>{});
+    }
+    localStorage.setItem(CLEANUP_KEY, '1');
+    console.log('[Firestore] IndexedDB残骸クリーンアップ完了（次回以降スキップ）');
+  }
+} catch(e) {
+  console.warn('[Firestore] IndexedDBクリーンアップ失敗（無視）:', e);
 }
 
 const provider = new GoogleAuthProvider();
