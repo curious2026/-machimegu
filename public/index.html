@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index167 (cache-bust 2026.05.29-03:00) -->
+<!-- VERSION: index168 (cache-bust 2026.05.29-05:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -3725,6 +3725,16 @@ body:not(.splashing) #table-area{
   flex:1;min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+.mfi-oshi-count{
+  flex-shrink:0;
+  font-size:10px;font-weight:900;
+  color:#fbd56a;
+  background:rgba(251,213,106,0.15);
+  border:1px solid rgba(251,213,106,0.35);
+  padding:2px 7px;border-radius:10px;
+  letter-spacing:0.3px;
+  margin-right:4px;
+}
 .mp-fav-item .mfi-pos{
   font-size:10px;color:#ffb070;font-weight:900;
   flex-shrink:0;
@@ -6346,6 +6356,11 @@ body.checkin-active #checkin-indicator{
   font-size:11px;font-weight:900;color:#a8b8d0;letter-spacing:2px;
   margin-bottom:8px;text-transform:uppercase;
 }
+.mp-weekly-title{
+  margin-top:14px;
+  color:#fbd56a;
+  text-shadow:0 0 8px rgba(251,213,106,0.3);
+}
 .mp-daily-missions{
   display:flex;flex-direction:column;gap:8px;
 }
@@ -6937,7 +6952,7 @@ body.checkin-active #checkin-indicator{
       </div>
     </div>
     
-    <!-- デイリーパネル（連続日数＋ログインボーナス＋ミッション） -->
+    <!-- デイリー＋ウィークリーパネル -->
     <div class="mp-daily-panel" id="mp-daily-panel" style="display:none">
       <div class="mp-daily-header">
         <div class="mp-daily-streak">
@@ -6953,6 +6968,8 @@ body.checkin-active #checkin-indicator{
       <div id="mp-daily-bonus-row"></div>
       <div class="mp-daily-title">✨ 今日のミッション</div>
       <div class="mp-daily-missions" id="mp-daily-missions"></div>
+      <div class="mp-daily-title mp-weekly-title">🗓️ 今週のミッション</div>
+      <div id="mp-weekly-mission"></div>
     </div>
     
     <!-- プロフィール（D-2.2：左にアカウント+街力ボタン、右に推し街） -->
@@ -6978,20 +6995,7 @@ body.checkin-active #checkin-indicator{
       </div>
     </div>
     
-    <!-- 統計 -->
-    <div class="mp-stats">
-      <div class="mp-stat-grid mp-stat-grid-2">
-        <div class="mp-stat-item">
-          <div class="mp-stat-num" id="mp-st-cards">-</div>
-          <div class="mp-stat-label">獲得カード</div>
-        </div>
-        <div class="mp-stat-item">
-          <div class="mp-stat-num" id="mp-st-checkins">-</div>
-          <div class="mp-stat-label">チェックイン</div>
-        </div>
-      </div>
-      <div class="mp-rank-bar" id="mp-rank-bar"></div>
-    </div>
+    <!-- 統計セクションはカードコレクションページに移動済み（マイページからは削除） -->
     
     <!-- チェックイン履歴セクション -->
     <div class="mp-section" style="padding-bottom:6px">
@@ -7101,6 +7105,22 @@ body.checkin-active #checkin-indicator{
           <div class="cl-score-sub-item">平均 <strong id="cl-score-avg">0</strong></div>
         </div>
       </div>
+      
+      <!-- マイページから移動してきた統計セクション -->
+      <div class="mp-stats" id="cl-stats-section">
+        <div class="mp-stat-grid mp-stat-grid-2">
+          <div class="mp-stat-item">
+            <div class="mp-stat-num" id="mp-st-cards">-</div>
+            <div class="mp-stat-label">獲得カード</div>
+          </div>
+          <div class="mp-stat-item">
+            <div class="mp-stat-num" id="mp-st-checkins">-</div>
+            <div class="mp-stat-label">チェックイン</div>
+          </div>
+        </div>
+        <div class="mp-rank-bar" id="mp-rank-bar"></div>
+      </div>
+      
       <div class="hist-controls" style="margin-bottom:14px">
         <div class="hist-sort-row">
           <span class="hist-sort-label">並び順</span>
@@ -7177,7 +7197,6 @@ body.checkin-active #checkin-indicator{
       
       <div class="bp-tabs" id="bp-tabs">
         <div class="bp-tab active" data-tab="all" onclick="window.setBpTab('all')">すべて</div>
-        <div class="bp-tab" data-tab="mission" onclick="window.setBpTab('mission')">ミッション</div>
         <div class="bp-tab" data-tab="checkin" onclick="window.setBpTab('checkin')">C/I数</div>
         <div class="bp-tab" data-tab="repeat" onclick="window.setBpTab('repeat')">同じ街</div>
         <div class="bp-tab" data-tab="rank" onclick="window.setBpTab('rank')">ランク</div>
@@ -7198,10 +7217,6 @@ body.checkin-active #checkin-indicator{
         </div>
       </div>
       
-      <div class="bp-section-wrap" data-cat="mission">
-        <div class="bp-section-title">今週のミッション</div>
-        <div id="bp-mission"></div>
-      </div>
       <div class="bp-section-wrap" data-cat="checkin">
         <div class="bp-section-title">チェックイン数<span class="bp-section-count" id="bp-checkin-count">0 獲得</span></div>
         <div class="bp-grid" id="bp-checkin"></div>
@@ -7209,10 +7224,6 @@ body.checkin-active #checkin-indicator{
       <div class="bp-section-wrap" data-cat="repeat">
         <div class="bp-section-title">同じ街の称号<span class="bp-section-count" id="bp-repeat-count">0 獲得</span></div>
         <div class="bp-grid" id="bp-repeat"></div>
-      </div>
-      <div class="bp-section-wrap" data-cat="mission">
-        <div class="bp-section-title">週間ミッション達成<span class="bp-mission-total" id="bp-mission-total">累計 0回達成</span><span class="bp-section-count" id="bp-mission-count">0 獲得</span></div>
-        <div class="bp-grid" id="bp-mission-badges"></div>
       </div>
       <div class="bp-section-wrap" data-cat="rank">
         <div class="bp-section-title">ランク制覇<span class="bp-section-count" id="bp-rank-count">0 獲得</span></div>
@@ -12542,6 +12553,11 @@ async function loadMypageData(uid) {
         window.mmRenderDailyPanel(uid).catch(e => console.warn('Dailyパネル更新エラー:', e));
       }
       
+      // ★ ウィークリーミッションをマイページに描画
+      if (window.mpRenderWeeklyMission) {
+        window.mpRenderWeeklyMission(uid, cards, userProfile).catch(e => console.warn('Weeklyパネル更新エラー:', e));
+      }
+      
       // バッジコレクション項目のサブ統計
       let badgeEarned = 0;
       let badgeTotal = 0;
@@ -12692,6 +12708,38 @@ window.openCardListPage = async () => {
     if (ciEl) ciEl.textContent = totalCheckins;
     const avgEl = document.getElementById('cl-score-avg');
     if (avgEl) avgEl.textContent = avgScore;
+    
+    // 統計セクション更新（カード数・C/I数・ランクバー）
+    const mpStCards = document.getElementById('mp-st-cards');
+    if (mpStCards) mpStCards.textContent = cards.length;
+    const mpStCi = document.getElementById('mp-st-checkins');
+    if (mpStCi) mpStCi.textContent = totalCheckins;
+    
+    // ランクバー更新（SABCD分布）
+    const rankCounts = { S:0, A:0, B:0, C:0, D:0 };
+    cards.forEach(c => {
+      const r = c.firstRank || 'D';
+      if (rankCounts[r] !== undefined) rankCounts[r]++;
+    });
+    const rankBar = document.getElementById('mp-rank-bar');
+    if (rankBar) {
+      const rankColors = {S:'#fb7185',A:'#ffb070',B:'#ffd966',C:'#84d49b',D:'#7fb8e0'};
+      const totalCards = cards.length || 1;
+      let barHTML = '<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,0.05);margin-bottom:6px">';
+      ['S','A','B','C','D'].forEach(r => {
+        const w = (rankCounts[r] / totalCards) * 100;
+        if (w > 0) {
+          barHTML += `<div style="width:${w}%;background:${rankColors[r]}" title="${r}: ${rankCounts[r]}枚"></div>`;
+        }
+      });
+      barHTML += '</div>';
+      barHTML += '<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700">';
+      ['S','A','B','C','D'].forEach(r => {
+        barHTML += `<div style="color:${rankColors[r]}"><span style="font-weight:900">${r}</span> <span style="color:#cfdaee">${rankCounts[r]}</span></div>`;
+      });
+      barHTML += '</div>';
+      rankBar.innerHTML = barHTML;
+    }
     
     cardListData = cards;
     cardSortKey = 'date';
@@ -14032,7 +14080,7 @@ function renderBadgeHTML(b, big) {
     const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
     return `<div class="bp-badge bp-badge-rank ${b.rank}${rarityClasses}">
       ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
-      <div class="bp-name">${b.rank}駅</div>
+      <div class="bp-name">rank ${b.rank}</div>
       <div class="bp-sub">${isAll ? '完全制覇' : b.threshold + '駅'}</div>
     </div>`;
   }
@@ -14143,7 +14191,7 @@ window.renderBadgeForShare = function(b){
       <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 4}" fill="url(#${id}-bg)" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
       <ellipse cx="${size/2}" cy="${size*0.30}" rx="${size*0.32}" ry="${size*0.20}" fill="url(#${id}-hi)"/>
       <ellipse cx="${size/2}" cy="${size*0.78}" rx="${size*0.28}" ry="${size*0.10}" fill="url(#${id}-sh)"/>
-      <text x="${size/2}" y="${size*0.46}" text-anchor="middle" fill="${cc.text}" font-size="34" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.55))">${b.rank}駅</text>
+      <text x="${size/2}" y="${size*0.46}" text-anchor="middle" fill="${cc.text}" font-size="26" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.55))">rank ${b.rank}</text>
       <text x="${size/2}" y="${size*0.66}" text-anchor="middle" fill="${cc.text}" font-size="28" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.55))">${subText}</text>
     </svg>`;
   }
@@ -14760,18 +14808,18 @@ function renderRankBadges(rankResults, userBadges) {
       const rarity = window.bpRarityRank(r.rank, th, r.total);
       const rarityClasses = window.bpRarityClasses(rarity);
       if (r.conquered >= th) {
-        const badgeData = userBadges.get(id) || { id, type:'rank', rank:r.rank, threshold:th, conquered:r.conquered, total:r.total, name: isAll ? `${r.rank}駅 完全制覇` : `${r.rank}駅 ${th}駅制覇`, desc:`${r.rank}ランクの駅を${th}駅制覇` };
+        const badgeData = userBadges.get(id) || { id, type:'rank', rank:r.rank, threshold:th, conquered:r.conquered, total:r.total, name: isAll ? `rank ${r.rank} 完全制覇` : `rank ${r.rank} ${th}駅制覇`, desc:`${r.rank}ランクの駅を${th}駅制覇` };
         const enc = encodeURIComponent(JSON.stringify(badgeData));
         html += `<div class="bp-badge bp-badge-rank ${r.rank}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
           ${window.bpStarsHTML(rarity)}
-          <div class="bp-name">${r.rank}駅</div>
+          <div class="bp-name">rank ${r.rank}</div>
           <div class="bp-sub">${isAll ? '完全制覇' : th + '駅'}</div>
         </div>`;
         earnedCount++;
       } else {
         html += `<div class="bp-badge-locked">
           <div class="bp-icon">🏆</div>
-          <div class="bp-name">${r.rank}駅 ${isAll ? '完全' : th+'駅'}</div>
+          <div class="bp-name">rank ${r.rank} ${isAll ? '完全' : th+'駅'}</div>
           <div class="bp-progress">${r.conquered}/${th}</div>
           ${window.bpProgressBar(r.conquered, th)}
         </div>`;
@@ -14903,11 +14951,12 @@ window.bpCalcTotalXP = function(rankResults, lineResults, totalCheckins, userCar
     });
   });
   
-  // 路線制覇
+  // 路線制覇（専用XPテーブル：銅にもしっかり配点、金は最高峰）
+  // 銅=25, 銀=75, 金=300（カード:バッジ ≒ 1:1の整合性を保ちつつ路線への報酬を厚くする）
+  const LINE_XP = { bronze: 25, silver: 75, gold: 300 };
   lineResults.forEach(r => {
     if (r.total === 0 || !r.tier) return;
-    const rarity = window.bpRarityLine(r.tier);
-    total += XP[rarity] || 0;
+    total += LINE_XP[r.tier] || 0;
   });
   
   // チェックイン
@@ -14931,6 +14980,24 @@ window.bpCalcTotalXP = function(rankResults, lineResults, totalCheckins, userCar
       }
     });
   });
+  
+  // ─── スペシャルカードボーナス（シャイニー/ミシック） ───
+  // mmCollectionCache.stations を直接参照（mmCloudGetRecord と同じデータソース）
+  try {
+    if (typeof mmCollectionCache !== 'undefined' && mmCollectionCache && mmCollectionCache.stations) {
+      Object.values(mmCollectionCache.stations).forEach(st => {
+        if (!st || !st.cards) return;
+        st.cards.forEach(card => {
+          if (!card || !card.special) return;
+          if (card.special === 'shiny') {
+            total += 100;  // シャイニー +100 XP
+          } else if (typeof card.special === 'string' && card.special.startsWith('mythic')) {
+            total += 300;  // ミシック +300 XP
+          }
+        });
+      });
+    }
+  } catch (e) { console.warn('スペシャルカードXP集計エラー（無視）:', e); }
   
   return total;
 };
@@ -15412,10 +15479,13 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
         desc:`${r.city}の全${r.total}駅を制覇`
       };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      return `<div class="bp-badge bp-badge-area" onclick="showBadgeDetail('${enc}')">
-        <div class="bp-shield-mark">⌘</div>
-        <div class="bp-name">${r.city}</div>
-        <div class="bp-sub">制覇</div>
+      const rarity = 5;  // エリア制覇は最高レア
+      const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+      // ★ 詳細モーダル側と統一：SVG版バッジ（8角形）を使う
+      const svgInner = window.renderAreaBadgeSVG ? window.renderAreaBadgeSVG(badgeData) : '';
+      return `<div class="bp-badge bp-badge-area-wrap${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')" style="position:relative;padding:0;background:none;border:none;cursor:pointer">
+        ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
+        ${svgInner}
       </div>`;
     } else {
       return `<div class="bp-badge-locked">
@@ -15579,16 +15649,32 @@ async function renderFavStations() {
   }
   
   const favs = await fetchFavStations(user.uid);
+  
+  // 推し駅の他ユーザー含めた登録数を並列取得
+  const oshiCounts = await Promise.all(favs.map(async f => {
+    if (!f || !f.stationId) return 1;
+    try {
+      const snap = await getDoc(doc(db, 'stationStats', f.stationId));
+      if (snap.exists()) {
+        const data = snap.data();
+        return Math.max(1, data.oshiCount || 1);
+      }
+    } catch(e) {}
+    return 1; // 自分は登録してるから最低1
+  }));
+  
   let html = '';
   
   for (let i = 0; i < 3; i++) {
     if (favs[i]) {
       const f = favs[i];
       const rank = f.rank || 'D';
+      const oshiCnt = oshiCounts[i] || 1;
       html += `<div class="mp-fav-item" data-idx="${i}" onclick="openFavStation(${i})">
         <span class="mfi-pos">${i+1}位</span>
         <span class="mfi-rank ${rank}">${rank}</span>
         <span class="mfi-name">${f.stationName || '-'}</span>
+        <span class="mfi-oshi-count" title="推し登録ユーザー数">★${oshiCnt}人</span>
         <div class="mp-fav-item-actions">
           <button class="mp-fav-item-act" onclick="event.stopPropagation();moveFav(${i},-1)" ${i===0?'disabled':''} title="上へ">▲</button>
           <button class="mp-fav-item-act" onclick="event.stopPropagation();moveFav(${i},1)" ${i===favs.length-1?'disabled':''} title="下へ">▼</button>
@@ -15603,7 +15689,6 @@ async function renderFavStations() {
   }
   
   if (favs.length === 0 && !html.includes('mp-fav-add-btn')) {
-    // 念のため
     html = '<div class="mp-fav-empty">制覇した駅から3つまで選べます</div>' + html;
   }
   
@@ -15698,6 +15783,14 @@ window.addFav = async function(stationId) {
   });
   
   await saveFavStations(user.uid, favs);
+  
+  // 推し駅集計カウンタを +1（stationStats/{stationId}.oshiCount）
+  try {
+    await setDoc(doc(db, 'stationStats', stationId), {
+      oshiCount: increment(1)
+    }, { merge: true });
+  } catch(e) { console.warn('推し街カウンタ加算失敗:', e); }
+  
   closeFavPicker();
   renderFavStations();
 };
@@ -15709,8 +15802,19 @@ window.removeFav = async function(idx) {
   
   const favs = await fetchFavStations(user.uid);
   if (idx < 0 || idx >= favs.length) return;
+  const removed = favs[idx];
   favs.splice(idx, 1);
   await saveFavStations(user.uid, favs);
+  
+  // 推し駅集計カウンタを -1
+  try {
+    if (removed && removed.stationId) {
+      await setDoc(doc(db, 'stationStats', removed.stationId), {
+        oshiCount: increment(-1)
+      }, { merge: true });
+    }
+  } catch(e) { console.warn('推し街カウンタ減算失敗:', e); }
+  
   renderFavStations();
 };
 
@@ -15913,8 +16017,13 @@ function getMissionBadgeInfo(missionType) {
   return map[missionType] || { name:'ミッション達成', name2lines:'ミッション\n達成', desc:'週間ミッション達成', icon:'★', color:'gold' };
 }
 
-// ─── 週間ミッション達成判定＋バッジ付与 ───
+// ─── 週間ミッション達成判定＋バッジ付与（廃止：常に空配列を返す） ───
 async function checkAndAwardMissionBadge(uid) {
+  // Phase F: ウィークリーバッジは廃止。ミッション達成はXP付与のみ（マイページ表示）
+  return [];
+}
+
+async function _disabled_checkAndAwardMissionBadge(uid) {
   if (!uid) return [];
   
   try {
@@ -17391,28 +17500,29 @@ if ('serviceWorker' in navigator) {
       }
     }
     
-    // ミッション一覧
+    // ミッション一覧（達成済みは非表示）
     const missionsEl = document.getElementById('mp-daily-missions');
     if (missionsEl && data.todayMissions) {
-      missionsEl.innerHTML = data.todayMissions.missions.map(m => {
-        const pct = Math.min(100, Math.floor((m.progress / m.target) * 100));
-        const isCompleted = m.progress >= m.target;
-        const completedClass = isCompleted ? ' completed' : '';
-        const claimedClass = m.claimed ? ' claimed' : '';
-        return `<div class="mp-daily-mission${completedClass}${claimedClass}">
-          <div class="mp-dm-row">
-            <div class="mp-dm-title">${m.title}</div>
-            <div class="mp-dm-xp">+${m.xp} XP</div>
-          </div>
-          <div class="mp-dm-progress-track">
-            <div class="mp-dm-progress-fill" style="width:${pct}%"></div>
-          </div>
-          <div class="mp-dm-status">
-            <span>${m.progress} / ${m.target}</span>
-            ${isCompleted ? '<span class="completed-mark">✓ 達成</span>' : ''}
-          </div>
-        </div>`;
-      }).join('');
+      const activeMissions = data.todayMissions.missions.filter(m => m.progress < m.target);
+      if (activeMissions.length === 0) {
+        missionsEl.innerHTML = '<div class="mp-daily-mission completed" style="text-align:center;padding:14px"><div style="color:#a8e8b8;font-weight:900">✓ 今日のミッション完了！</div><div style="font-size:11px;color:#a8b8d0;margin-top:4px">明日また新しいミッションが出るよ</div></div>';
+      } else {
+        missionsEl.innerHTML = activeMissions.map(m => {
+          const pct = Math.min(100, Math.floor((m.progress / m.target) * 100));
+          return `<div class="mp-daily-mission">
+            <div class="mp-dm-row">
+              <div class="mp-dm-title">${m.title}</div>
+              <div class="mp-dm-xp">+${m.xp} XP</div>
+            </div>
+            <div class="mp-dm-progress-track">
+              <div class="mp-dm-progress-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="mp-dm-status">
+              <span>${m.progress} / ${m.target}</span>
+            </div>
+          </div>`;
+        }).join('');
+      }
     }
   };
   
@@ -17486,6 +17596,54 @@ if ('serviceWorker' in navigator) {
   window.closeCalendarModal = function(){
     const bg = document.getElementById('mm-calendar-bg');
     if (bg) bg.classList.remove('open');
+  };
+  
+  // ─── マイページ：ウィークリーミッション描画 ───
+  window.mpRenderWeeklyMission = async function(uid, userCards, userProfile){
+    const el = document.getElementById('mp-weekly-mission');
+    if (!el) return;
+    
+    try {
+      if (typeof getThisWeekMission !== 'function') {
+        el.innerHTML = '';
+        return;
+      }
+      const mission = getThisWeekMission(uid);
+      if (!mission) {
+        el.innerHTML = '';
+        return;
+      }
+      
+      // 進捗計算（既存ロジックを利用）
+      let progress = 0;
+      if (typeof calcMissionProgress === 'function' && typeof fetchUserCheckinsThisWeek === 'function') {
+        const weekCheckins = await fetchUserCheckinsThisWeek(uid);
+        progress = calcMissionProgress(mission, weekCheckins, userCards, userProfile);
+      }
+      
+      const done = progress >= mission.target;
+      const pct = Math.min(100, Math.floor((progress / mission.target) * 100));
+      
+      // ウィークリーは難易度高めなのでXP配点も少し上げる（デイリー10〜20 → ウィークリー25〜35）
+      const weeklyXP = 30;
+      
+      el.innerHTML = `<div class="mp-daily-mission${done ? ' completed' : ''}">
+        <div class="mp-dm-row">
+          <div class="mp-dm-title">${mission.title}</div>
+          <div class="mp-dm-xp">+${weeklyXP} XP</div>
+        </div>
+        <div class="mp-dm-progress-track">
+          <div class="mp-dm-progress-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="mp-dm-status">
+          <span>${progress} / ${mission.target}</span>
+          ${done ? '<span class="completed-mark">✓ 達成</span>' : `<span style="font-size:10px;color:#a8b8d0">${typeof formatDeadline === 'function' ? formatDeadline() : ''}</span>`}
+        </div>
+      </div>`;
+    } catch (e) {
+      console.warn('weekly mission render error:', e);
+      el.innerHTML = '';
+    }
   };
 })();
 </script>
