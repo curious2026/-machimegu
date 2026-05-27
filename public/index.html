@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index172 (cache-bust 2026.05.29-13:00) -->
+<!-- VERSION: index173 (cache-bust 2026.05.29-15:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -9900,20 +9900,43 @@ function mmIsMobileDevice() {
 }
 
 window.signInWithGoogle = async () => {
+  console.log('[Auth] ログイン開始, mobile:', mmIsMobileDevice());
   try {
-    // ★モバイル端末はRedirect方式（iOSのpopup-blocked対策）
-    if (mmIsMobileDevice()) {
-      await signInWithRedirect(auth, provider);
-      // ※Redirectは戻り処理がgetRedirectResult側で実行される
+    // ★index172修正：Popup-first方式（iOS Safari ITP対策）
+    //   旧：モバイル=signInWithRedirect → Safari ITP で OAuth戻りのCookie が切られてループ
+    //   新：全環境でまず signInWithPopup を試す → 失敗時のみ Redirect にフォールバック
+    try {
+      console.log('[Auth] signInWithPopup 試行');
+      const result = await signInWithPopup(auth, provider);
+      console.log('[Auth] Popupログイン成功:', result.user?.email);
+      safeLogEvent('login', { method: 'Google_Popup' });
       return;
+    } catch (popupErr) {
+      console.warn('[Auth] Popup失敗:', popupErr.code, popupErr.message);
+      
+      // ユーザーが自分で閉じた → 何もしない
+      if (popupErr.code === 'auth/popup-closed-by-user' || 
+          popupErr.code === 'auth/cancelled-popup-request' ||
+          popupErr.code === 'auth/user-cancelled') {
+        return;
+      }
+      
+      // popupブロックや非対応環境 → Redirectにフォールバック
+      if (popupErr.code === 'auth/popup-blocked' || 
+          popupErr.code === 'auth/operation-not-supported-in-this-environment' ||
+          popupErr.code === 'auth/web-storage-unsupported') {
+        console.log('[Auth] Popupブロック → Redirectにフォールバック');
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      
+      // それ以外のエラー → エラー表示
+      throw popupErr;
     }
-    // PCはPopup方式（既存挙動）
-    await signInWithPopup(auth, provider);
-    safeLogEvent('login', { method: 'Google' });
   } catch (e) {
-    console.error('ログインエラー:', e);
+    console.error('[Auth] ログインエラー:', e.code, e.message);
     if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
-      alert('ログインに失敗しました: ' + e.message);
+      alert('ログインに失敗しました: ' + (e.message || e.code || '不明なエラー'));
     }
   }
 };
