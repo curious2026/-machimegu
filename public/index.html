@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index173 (cache-bust 2026.05.29-15:00) -->
+<!-- VERSION: index174 (cache-bust 2026.05.29-17:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -9761,20 +9761,20 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 console.log('[Firestore] 通常モード（永続化なし、ログイン安定優先）');
 
-// ═══ index172：Phase E時代のFirestore IndexedDB残骸を一度だけ削除（ログインループ救済） ═══
-// localStorageフラグで「クリーン済み」を記録、1ユーザー1回のみ実行
+// ═══ index174緊急修正：Firestore IndexedDBのみクリーンアップ（Authは絶対保持） ═══
+// ★ index172のミス：firebaseを含む全DBを削除していたため、Firebase Authの
+//   ログイン状態を保存している firebaseLocalStorageDb も誤って削除していた
+// ★ 対応：「firestore」を含むDBのみ削除、auth関連は絶対に触らない
 try {
-  const CLEANUP_KEY = 'mm_fs_cleanup_v172';
+  const CLEANUP_KEY = 'mm_fs_cleanup_v174';
   if (!localStorage.getItem(CLEANUP_KEY)) {
-    const dbs = ['firestore/[DEFAULT]/machi-megu-project/main', 'firestore/[DEFAULT]/machi-megu-project/main/firestoreClients'];
-    dbs.forEach(name => {
-      try { indexedDB.deleteDatabase(name); } catch(_) {}
-    });
-    // Firestoreの全関連IndexedDBをパターンで探して削除（実装によって名前が変わるため）
     if (indexedDB.databases) {
       indexedDB.databases().then(list => {
         list.forEach(d => {
-          if (d.name && (d.name.includes('firestore') || d.name.includes('firebase'))) {
+          if (!d.name) return;
+          const name = d.name.toLowerCase();
+          // ★ firestore を含むDBのみ削除（auth, LocalStorageDb 等は絶対残す）
+          if (name.includes('firestore')) {
             console.log('[Firestore] 残骸IndexedDB削除:', d.name);
             try { indexedDB.deleteDatabase(d.name); } catch(_) {}
           }
@@ -9782,7 +9782,7 @@ try {
       }).catch(()=>{});
     }
     localStorage.setItem(CLEANUP_KEY, '1');
-    console.log('[Firestore] IndexedDB残骸クリーンアップ完了（次回以降スキップ）');
+    console.log('[Firestore] IndexedDBクリーンアップ完了（次回以降スキップ）');
   }
 } catch(e) {
   console.warn('[Firestore] IndexedDBクリーンアップ失敗（無視）:', e);
