@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index157 (cache-bust 2026.05.28-07:00) -->
+<!-- VERSION: index158 (cache-bust 2026.05.28-09:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2759,6 +2759,158 @@ body:not(.splashing) #table-area{
 }
 
 /* ═══ Phase 3 end ═══ */
+
+/* ═══ Phase 4：タブ・フィルタ・ソート・次の目標 ═══ */
+
+/* 次の目標ハイライト */
+.bp-next-goal{
+  background:linear-gradient(135deg,rgba(251,213,106,0.15) 0%,rgba(255,144,200,0.10) 100%);
+  border:1px solid rgba(251,213,106,0.35);
+  border-radius:14px;
+  padding:12px 14px;
+  margin:0 0 16px;
+  display:flex;align-items:center;gap:12px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 4px 16px rgba(251,213,106,0.08);
+}
+.bp-next-goal::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at 0% 50%,rgba(251,213,106,0.18),transparent 50%);
+  pointer-events:none;
+}
+.bp-ng-icon{
+  font-size:24px;flex-shrink:0;
+  filter:drop-shadow(0 2px 4px rgba(251,213,106,0.5));
+  position:relative;z-index:2;
+}
+.bp-ng-body{flex:1;min-width:0;position:relative;z-index:2}
+.bp-ng-label{
+  font-size:10px;color:#fbd56a;letter-spacing:2px;font-weight:900;
+  text-transform:uppercase;
+  text-shadow:0 0 6px rgba(251,213,106,0.4);
+  margin-bottom:2px;
+}
+.bp-ng-title{
+  font-size:13px;color:#fff;font-weight:700;line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.bp-ng-progress{
+  font-size:11px;color:#cfdaee;font-weight:700;margin-top:3px;
+  letter-spacing:0.5px;
+}
+.bp-ng-progress strong{color:#fbd56a;font-weight:900}
+
+/* カテゴリタブ */
+.bp-tabs{
+  display:flex;gap:6px;
+  margin:0 0 12px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  padding:2px;
+}
+.bp-tabs::-webkit-scrollbar{display:none}
+.bp-tab{
+  flex-shrink:0;
+  padding:8px 14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(168,184,208,0.15);
+  border-radius:18px;
+  color:#a8b8d0;
+  font-size:12px;font-weight:700;letter-spacing:0.5px;
+  cursor:pointer;
+  transition:all 0.18s ease;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+  white-space:nowrap;
+}
+.bp-tab:hover{
+  background:rgba(255,255,255,0.07);
+  border-color:rgba(168,184,208,0.3);
+}
+.bp-tab.active{
+  background:linear-gradient(135deg,rgba(251,213,106,0.25) 0%,rgba(212,160,32,0.20) 100%);
+  border-color:rgba(251,213,106,0.55);
+  color:#fff;
+  font-weight:900;
+  box-shadow:
+    0 2px 8px rgba(251,213,106,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  text-shadow:0 0 8px rgba(251,213,106,0.5);
+}
+
+/* フィルタチップ＋ソート */
+.bp-controls{
+  display:flex;align-items:center;gap:8px;
+  margin:0 0 16px;
+  flex-wrap:wrap;
+}
+.bp-filter-chips{
+  display:flex;gap:6px;
+  flex:1;
+  flex-wrap:wrap;
+}
+.bp-chip{
+  padding:5px 11px;
+  background:rgba(0,0,0,0.25);
+  border:1px solid rgba(168,184,208,0.12);
+  border-radius:12px;
+  color:#a8b8d0;
+  font-size:11px;font-weight:700;letter-spacing:0.5px;
+  cursor:pointer;
+  transition:all 0.15s ease;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+  white-space:nowrap;
+}
+.bp-chip:hover{background:rgba(0,0,0,0.4);color:#cfdaee}
+.bp-chip.active{
+  background:linear-gradient(135deg,#3a5478 0%,#1e3754 100%);
+  border-color:rgba(93,184,236,0.5);
+  color:#fff;
+  box-shadow:0 2px 6px rgba(93,184,236,0.2);
+}
+.bp-sort-btn{
+  padding:5px 10px;
+  background:rgba(0,0,0,0.25);
+  border:1px solid rgba(168,184,208,0.12);
+  border-radius:12px;
+  color:#a8b8d0;
+  font-size:11px;font-weight:700;
+  cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+  white-space:nowrap;
+  transition:all 0.15s ease;
+}
+.bp-sort-btn:hover{background:rgba(0,0,0,0.4);color:#cfdaee}
+.bp-sort-btn.recent{
+  background:linear-gradient(135deg,rgba(168,232,184,0.2) 0%,rgba(32,112,64,0.15) 100%);
+  border-color:rgba(168,232,184,0.4);
+  color:#fff;
+}
+
+/* セクション表示制御（タブで非表示） */
+.bp-section-wrap{}
+.bp-section-wrap.hidden{display:none}
+
+/* バッジ表示制御（フィルタで非表示） */
+.bp-badge.filtered-out,
+.bp-badge-locked.filtered-out{display:none}
+
+/* セクションが空になった時のメッセージ */
+.bp-empty-msg{
+  grid-column:1/-1;
+  padding:24px 14px;
+  text-align:center;
+  color:#7a96b6;font-size:12px;line-height:1.6;
+  background:rgba(0,0,0,0.15);
+  border-radius:12px;
+  border:1px dashed rgba(168,184,208,0.15);
+}
+
+/* ═══ Phase 4 end ═══ */
 
 /* チェックイン数：スクエア */
 .bp-badge-checkin{
@@ -5802,20 +5954,67 @@ body.checkin-active #checkin-indicator{
         <div class="bp-cs-bar"><div class="bp-cs-bar-fill" id="bp-cs-bar-fill" style="width:0%"></div></div>
         <div class="bp-cs-categories" id="bp-cs-categories"></div>
       </div>
-      <div class="bp-section-title">今週のミッション</div>
-      <div id="bp-mission"></div>
-      <div class="bp-section-title">チェックイン数<span class="bp-section-count" id="bp-checkin-count">0 獲得</span></div>
-      <div class="bp-grid" id="bp-checkin"></div>
-      <div class="bp-section-title">同じ街の称号<span class="bp-section-count" id="bp-repeat-count">0 獲得</span></div>
-      <div class="bp-grid" id="bp-repeat"></div>
-      <div class="bp-section-title">週間ミッション達成<span class="bp-mission-total" id="bp-mission-total">累計 0回達成</span><span class="bp-section-count" id="bp-mission-count">0 獲得</span></div>
-      <div class="bp-grid" id="bp-mission-badges"></div>
-      <div class="bp-section-title">ランク制覇<span class="bp-section-count" id="bp-rank-count">0 獲得</span></div>
-      <div class="bp-grid" id="bp-rank"></div>
-      <div class="bp-section-title">路線制覇<span class="bp-section-count" id="bp-line-count">0 獲得</span></div>
-      <div class="bp-grid" id="bp-line"></div>
-      <div class="bp-section-title">エリア制覇<span class="bp-section-count" id="bp-area-count">0 獲得</span></div>
-      <div class="bp-grid" id="bp-area"></div>
+      
+      <div id="bp-next-goal" class="bp-next-goal" style="display:none">
+        <div class="bp-ng-icon">🎯</div>
+        <div class="bp-ng-body">
+          <div class="bp-ng-label">次の目標</div>
+          <div class="bp-ng-title" id="bp-ng-title">—</div>
+          <div class="bp-ng-progress" id="bp-ng-progress"></div>
+        </div>
+      </div>
+      
+      <div class="bp-tabs" id="bp-tabs">
+        <div class="bp-tab active" data-tab="all" onclick="window.setBpTab('all')">すべて</div>
+        <div class="bp-tab" data-tab="mission" onclick="window.setBpTab('mission')">ミッション</div>
+        <div class="bp-tab" data-tab="checkin" onclick="window.setBpTab('checkin')">C/I数</div>
+        <div class="bp-tab" data-tab="repeat" onclick="window.setBpTab('repeat')">同じ街</div>
+        <div class="bp-tab" data-tab="rank" onclick="window.setBpTab('rank')">ランク</div>
+        <div class="bp-tab" data-tab="line" onclick="window.setBpTab('line')">路線</div>
+        <div class="bp-tab" data-tab="area" onclick="window.setBpTab('area')">エリア</div>
+      </div>
+      
+      <div class="bp-controls">
+        <div class="bp-filter-chips">
+          <div class="bp-chip active" data-filter="all" onclick="window.setBpFilter('all')">全て</div>
+          <div class="bp-chip" data-filter="earned" onclick="window.setBpFilter('earned')">獲得済</div>
+          <div class="bp-chip" data-filter="progress" onclick="window.setBpFilter('progress')">進行中</div>
+          <div class="bp-chip" data-filter="locked" onclick="window.setBpFilter('locked')">未獲得</div>
+        </div>
+        <div class="bp-sort-btn" id="bp-sort-btn" onclick="window.toggleBpSort()">
+          <span id="bp-sort-label">表示順</span>
+          <span style="font-size:9px">▼</span>
+        </div>
+      </div>
+      
+      <div class="bp-section-wrap" data-cat="mission">
+        <div class="bp-section-title">今週のミッション</div>
+        <div id="bp-mission"></div>
+      </div>
+      <div class="bp-section-wrap" data-cat="checkin">
+        <div class="bp-section-title">チェックイン数<span class="bp-section-count" id="bp-checkin-count">0 獲得</span></div>
+        <div class="bp-grid" id="bp-checkin"></div>
+      </div>
+      <div class="bp-section-wrap" data-cat="repeat">
+        <div class="bp-section-title">同じ街の称号<span class="bp-section-count" id="bp-repeat-count">0 獲得</span></div>
+        <div class="bp-grid" id="bp-repeat"></div>
+      </div>
+      <div class="bp-section-wrap" data-cat="mission">
+        <div class="bp-section-title">週間ミッション達成<span class="bp-mission-total" id="bp-mission-total">累計 0回達成</span><span class="bp-section-count" id="bp-mission-count">0 獲得</span></div>
+        <div class="bp-grid" id="bp-mission-badges"></div>
+      </div>
+      <div class="bp-section-wrap" data-cat="rank">
+        <div class="bp-section-title">ランク制覇<span class="bp-section-count" id="bp-rank-count">0 獲得</span></div>
+        <div class="bp-grid" id="bp-rank"></div>
+      </div>
+      <div class="bp-section-wrap" data-cat="line">
+        <div class="bp-section-title">路線制覇<span class="bp-section-count" id="bp-line-count">0 獲得</span></div>
+        <div class="bp-grid" id="bp-line"></div>
+      </div>
+      <div class="bp-section-wrap" data-cat="area">
+        <div class="bp-section-title">エリア制覇<span class="bp-section-count" id="bp-area-count">0 獲得</span></div>
+        <div class="bp-grid" id="bp-area"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -12650,6 +12849,10 @@ window.openBadgePage = async () => {
   
   // ─── Phase 3: コンプリート率パネル更新 ───
   window.updateCollectionStats(rankResults, lineResults, totalCheckins, userCards);
+  
+  // ─── Phase 4: 次の目標＆タブ/フィルタ適用 ───
+  window.updateNextGoal(rankResults, lineResults, totalCheckins);
+  window.applyBpFilter();
 };
 
 // ─── 同駅リピート称号バッジ描画 ───
@@ -13077,6 +13280,202 @@ window.updateCollectionStats = function(rankResults, lineResults, totalCheckins,
   updateCounter('bp-rank-count', rankEarned, rankTotalSlots);
   updateCounter('bp-line-count', lineEarned, lineTotalSlots);
   updateCounter('bp-checkin-count', checkinEarned, checkinTotalSlots);
+};
+
+// ─── Phase 4: タブ・フィルタ・ソート・次の目標 ───
+window.bpUiState = {
+  tab: 'all',           // all | mission | checkin | repeat | rank | line | area
+  filter: 'all',        // all | earned | progress | locked
+  sort: 'default',      // default | recent
+};
+
+// タブ切替：data-cat と一致するセクションだけ表示
+window.setBpTab = function(tab){
+  window.bpUiState.tab = tab;
+  // タブUI更新
+  document.querySelectorAll('.bp-tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+  // セクション表示制御
+  document.querySelectorAll('.bp-section-wrap').forEach(sec => {
+    const cat = sec.dataset.cat;
+    sec.classList.toggle('hidden', tab !== 'all' && cat !== tab);
+  });
+  // フィルタも再適用（タブ切替で復活させる）
+  window.applyBpFilter();
+};
+
+// フィルタ切替：獲得済/進行中/未獲得
+window.setBpFilter = function(filter){
+  window.bpUiState.filter = filter;
+  document.querySelectorAll('.bp-chip').forEach(el => {
+    el.classList.toggle('active', el.dataset.filter === filter);
+  });
+  window.applyBpFilter();
+};
+
+window.applyBpFilter = function(){
+  const f = window.bpUiState.filter;
+  // 全グリッド内のバッジを判定
+  document.querySelectorAll('.bp-grid').forEach(grid => {
+    // 既存の空メッセージは削除
+    grid.querySelectorAll('.bp-empty-msg').forEach(el => el.remove());
+    
+    const allItems = grid.querySelectorAll('.bp-badge, .bp-badge-locked, .bp-line-more-btn');
+    let visibleCount = 0;
+    allItems.forEach(el => {
+      const isLocked = el.classList.contains('bp-badge-locked');
+      const isEarned = el.classList.contains('bp-badge');
+      const isMoreBtn = el.classList.contains('bp-line-more-btn');
+      
+      // 「もっと見る」ボタンは常に表示
+      if (isMoreBtn) {
+        el.classList.remove('filtered-out');
+        visibleCount++;
+        return;
+      }
+      
+      let show = false;
+      if (f === 'all') {
+        show = true;
+      } else if (f === 'earned') {
+        show = isEarned;
+      } else if (f === 'locked') {
+        // 進捗0の未獲得バッジのみ
+        if (isLocked) {
+          const bar = el.querySelector('.bp-progress-bar-fill');
+          const pct = bar ? parseFloat(bar.style.width) || 0 : 0;
+          show = pct === 0;
+        }
+      } else if (f === 'progress') {
+        // 進捗0より大きいlocked
+        if (isLocked) {
+          const bar = el.querySelector('.bp-progress-bar-fill');
+          const pct = bar ? parseFloat(bar.style.width) || 0 : 0;
+          show = pct > 0 && pct < 100;
+        }
+      }
+      el.classList.toggle('filtered-out', !show);
+      if (show) visibleCount++;
+    });
+    
+    // 全部消えた場合のメッセージ
+    if (visibleCount === 0 && allItems.length > 0) {
+      const msg = document.createElement('div');
+      msg.className = 'bp-empty-msg';
+      const filterLabels = {all:'', earned:'獲得済みの', progress:'進行中の', locked:'未獲得の'};
+      msg.textContent = `${filterLabels[f] || ''}バッジはありません`;
+      grid.appendChild(msg);
+    }
+  });
+};
+
+// ソート切替（既定 / 獲得日順）
+window.toggleBpSort = function(){
+  const newSort = window.bpUiState.sort === 'default' ? 'recent' : 'default';
+  window.bpUiState.sort = newSort;
+  const btn = document.getElementById('bp-sort-btn');
+  const lbl = document.getElementById('bp-sort-label');
+  if (btn) btn.classList.toggle('recent', newSort === 'recent');
+  if (lbl) lbl.textContent = newSort === 'recent' ? '獲得日順' : '表示順';
+  window.applyBpSort();
+};
+
+window.applyBpSort = function(){
+  if (window.bpUiState.sort !== 'recent') return;
+  // 獲得済みバッジを各グリッド内でearnedAt降順に並べ替え
+  // userBadgesは外部スコープなので、DOMから直接判定する
+  // → onclick内のbadgeJsonからearnedAtを抽出して並べ替え
+  document.querySelectorAll('.bp-grid').forEach(grid => {
+    const items = Array.from(grid.querySelectorAll('.bp-badge'));
+    if (items.length < 2) return;
+    items.sort((a, b) => {
+      const getTime = (el) => {
+        const oc = el.getAttribute('onclick') || '';
+        const m = oc.match(/showBadgeDetail\('([^']+)'\)/);
+        if (!m) return 0;
+        try {
+          const b = JSON.parse(decodeURIComponent(m[1]));
+          if (b.earnedAt) {
+            return b.earnedAt.toMillis ? b.earnedAt.toMillis() : (b.earnedAt.seconds || 0) * 1000;
+          }
+        } catch(e) {}
+        return 0;
+      };
+      return getTime(b) - getTime(a); // 新しい順
+    });
+    items.forEach(el => grid.appendChild(el));
+  });
+};
+
+// 次の目標を計算：未獲得バッジで進捗率が最も高いものを抽出
+window.updateNextGoal = function(rankResults, lineResults, totalCheckins){
+  const candidates = [];
+  
+  // ランク制覇の未獲得閾値
+  rankResults.forEach(r => {
+    if (r.total === 0) return;
+    r.thresholds.forEach(th => {
+      if (r.conquered < th) {
+        const ratio = r.conquered / th;
+        candidates.push({
+          ratio,
+          title: `${r.rank}ランク ${th === r.total ? '完全制覇' : th + '駅制覇'}`,
+          current: r.conquered, target: th, unit: '駅',
+        });
+      }
+    });
+  });
+  
+  // 路線制覇の未獲得tier
+  lineResults.forEach(r => {
+    if (r.total === 0 || r.tier === 'gold') return;
+    const nextThreshold = !r.tier ? Math.ceil(r.total * 0.3) :
+                         r.tier === 'bronze' ? Math.ceil(r.total * 0.6) :
+                         r.total;
+    const nextLabel = !r.tier ? '銅' :
+                     r.tier === 'bronze' ? '銀' : '制覇';
+    if (r.conquered < nextThreshold) {
+      const ratio = r.conquered / nextThreshold;
+      const lineShort = r.line.replace('東京メトロ','メトロ').replace(/^都営/,'都営');
+      candidates.push({
+        ratio,
+        title: `${lineShort} ${nextLabel}`,
+        current: r.conquered, target: nextThreshold, unit: '駅',
+      });
+    }
+  });
+  
+  // チェックイン回数の次のマイルストーン
+  const milestones = [10, 50, 100, 500, 1000, 5000];
+  for (const m of milestones) {
+    if (totalCheckins < m) {
+      candidates.push({
+        ratio: totalCheckins / m,
+        title: `累計 ${m} チェックイン`,
+        current: totalCheckins, target: m, unit: '回',
+      });
+      break; // 次の1つだけ
+    }
+  }
+  
+  if (candidates.length === 0) {
+    const el = document.getElementById('bp-next-goal');
+    if (el) el.style.display = 'none';
+    return;
+  }
+  
+  // 進捗率が最も高い（=次の目標）を選ぶ
+  candidates.sort((a, b) => b.ratio - a.ratio);
+  const top = candidates[0];
+  
+  const el = document.getElementById('bp-next-goal');
+  if (!el) return;
+  el.style.display = '';
+  document.getElementById('bp-ng-title').textContent = top.title;
+  const remain = Math.max(0, top.target - top.current);
+  document.getElementById('bp-ng-progress').innerHTML = 
+    `あと <strong>${remain}${top.unit}</strong>（${top.current}/${top.target}）`;
 };
 
 function renderCheckinBadges(total, userBadges) {
