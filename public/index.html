@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index169 (cache-bust 2026.05.29-07:00) -->
+<!-- VERSION: index171 (cache-bust 2026.05.29-11:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -4407,59 +4407,12 @@ body.checkin-active #checkin-indicator{
 <!-- (3) ontouchstart + onclick の二重発火でスクロール処理が暴れていた  -->
 <!-- (4) デバッグログがなく原因究明ができなかった→残す                -->
 <!-- ════════════════════════════════════════════════════════════ -->
-<div id="top-tap-catcher"
-     onclick="event.preventDefault();event.stopPropagation();console.log('[TopTap] clicked');if(window.scrollOpenedToTop)window.scrollOpenedToTop();"
-     ontouchend="event.preventDefault();event.stopPropagation();console.log('[TopTap] touchend');if(window.scrollOpenedToTop)window.scrollOpenedToTop();"
-     style="position:fixed;top:0;left:0;right:0;
-            height:calc(env(safe-area-inset-top, 0px) + 44px);
-            min-height:44px;
-            z-index:2147483647;
-            background:transparent;
-            pointer-events:auto;
-            cursor:pointer;
-            -webkit-tap-highlight-color:transparent;
-            touch-action:manipulation;"
-     aria-label="画面上部をタップしてスクロールトップ"></div>
-
-<script>
-// ═══ TopTap 補強：iOS Safari/PWA で onclick が発火しないケースの保険 ═══
-// 原因：iOS Safari PWAモードでは「画面上部のステータスバーをタップで最上部スクロール」
-//       がOSネイティブで実装されてるが、PWAインストール後はネイティブ機能が無効化される。
-//       かつ position:fixed の touch handler が一部条件で発火しないことがある。
-// 対策：touchend/pointerup を追加、capture phase で確実に捕捉、複数イベント並走
-(function(){
-  function setupTopTap(){
-    const el = document.getElementById('top-tap-catcher');
-    if (!el) return;
-    
-    function handleTap(e){
-      try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
-      console.log('[TopTap] handler fired, event:', e.type);
-      if (window.scrollOpenedToTop) {
-        window.scrollOpenedToTop();
-      } else {
-        // フォールバック：何でもいいから上にスクロール
-        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(_) { window.scrollTo(0,0); }
-      }
-    }
-    
-    // 複数イベントで捕捉（iOS Safari/PWA でも確実に動かす）
-    el.addEventListener('click', handleTap, { passive: false, capture: true });
-    el.addEventListener('touchend', handleTap, { passive: false, capture: true });
-    el.addEventListener('pointerup', function(e){
-      if (e.pointerType === 'touch' || e.pointerType === 'mouse') handleTap(e);
-    }, { passive: false, capture: true });
-    
-    console.log('[TopTap] enhanced listeners attached on', el);
-  }
-  
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupTopTap);
-  } else {
-    setupTopTap();
-  }
-})();
-</script>
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- ★index170修正：「最上部タップ→スクロールトップ」をフローティング↑ボタンに置換 -->
+<!-- 過去の失敗：透明 catcher div 方式は iOS PWA で OS がステータスバータップを -->
+<!-- 握ってるため永遠に動かない＋ヘッダーボタンを覆い隠す害悪。完全廃止。       -->
+<!-- 新方式：画面右下にフローティング「↑」ボタン、スクロール時のみ出現         -->
+<!-- ════════════════════════════════════════════════════════════ -->
 <!-- ═══ 起動スプラッシュアニメーション ═══ -->
 <div id="splash-overlay" onclick="skipSplash()">
   <div class="splash" id="splash-content">
@@ -6654,6 +6607,53 @@ body.checkin-active #checkin-indicator{
 }
 #mm-online-toast .ot-icon{font-size:16px}
 
+/* ═══ index170：フローティング「↑トップへ」ボタン ═══ */
+/* iOS PWAでステータスバータップが効かない問題の現実解：画面右下に常駐ボタン */
+#mm-scroll-top-btn{
+  position:fixed;
+  bottom:calc(90px + env(safe-area-inset-bottom, 0px));
+  right:18px;
+  width:50px;height:50px;
+  border-radius:50%;
+  background:linear-gradient(135deg,rgba(20,32,52,0.85) 0%,rgba(10,18,30,0.92) 100%);
+  border:2px solid rgba(255,176,112,0.6);
+  color:#ffb070;
+  font-size:24px;font-weight:900;line-height:1;
+  cursor:pointer;
+  z-index:9970;
+  box-shadow:
+    0 6px 16px rgba(0,0,0,0.5),
+    0 0 12px rgba(255,176,112,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;
+  transform:translateY(20px) scale(0.7);
+  pointer-events:none;
+  transition:opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  padding:0;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+}
+#mm-scroll-top-btn.visible{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  pointer-events:auto;
+}
+#mm-scroll-top-btn:active{
+  transform:translateY(0) scale(0.92);
+  box-shadow:0 3px 10px rgba(0,0,0,0.5),0 0 16px rgba(255,176,112,0.5);
+}
+/* スマホ位置調整：ナビバーやセーフエリアと干渉しない */
+@media (max-width:600px){
+  #mm-scroll-top-btn{
+    bottom:calc(80px + env(safe-area-inset-bottom, 0px));
+    right:14px;
+    width:46px;height:46px;
+    font-size:22px;
+  }
+}
+
 /* ═══ シェア用カードレプリカ（実機準拠の見た目を完全再現） ═══ */
 .mc-share-card{
   width:360px;
@@ -6966,6 +6966,29 @@ body.checkin-active #checkin-indicator{
       </div>
     </div>
     
+    <!-- プロフィール（最上段：アカウント情報・街力算出方法・トリセツ・推し街） -->
+    <div class="mp-profile">
+      <!-- 左：アカウント情報＋街力の算出方法 -->
+      <div class="mp-profile-left">
+        <div class="mp-avatar-wrap" id="mp-avatar-wrap-btn">
+          <img id="mp-avatar" class="mp-avatar" src="" alt="">
+        </div>
+        <div class="mp-handle" id="mp-handle">-</div>
+        <div class="mp-meta" id="mp-meta">-</div>
+        <button class="mp-formula-link" type="button" onclick="closeMypageForce();setTimeout(()=>{const m=document.getElementById('modal-bg');if(m)m.classList.add('open');document.body.style.overflow='hidden';},250)">街力の<br>算出方法</button>
+        <button class="mp-formula-link mp-torisetsu-link" type="button" onclick="openTorisetsuModal()">トリセツ</button>
+      </div>
+      <!-- 右：推し街3枠（カラム全体を使う） -->
+      <div class="mp-profile-right">
+        <div class="mp-fav-block">
+          <div class="mp-fav-title"><span class="mp-fav-title-text">★ 推し街</span><button class="mp-fav-edit-btn" id="mp-fav-edit-btn" type="button" onclick="toggleFavEdit()">編集</button></div>
+          <div class="mp-fav-list" id="mp-fav-list">
+            <div class="mp-fav-empty">読み込み中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- 街めぐマスターパネル（カード+バッジ統合の総合レベル） -->
     <div class="mp-master-panel" id="mp-master-panel">
       <div class="mp-master-label">
@@ -7015,30 +7038,20 @@ body.checkin-active #checkin-indicator{
       <div id="mp-weekly-mission"></div>
     </div>
     
-    <!-- プロフィール（D-2.2：左にアカウント+街力ボタン、右に推し街） -->
-    <div class="mp-profile">
-      <!-- 左：アカウント情報＋街力の算出方法 -->
-      <div class="mp-profile-left">
-        <div class="mp-avatar-wrap" id="mp-avatar-wrap-btn">
-          <img id="mp-avatar" class="mp-avatar" src="" alt="">
+    <!-- 統計セクション（カード枚数/チェックイン数/SABCD） -->
+    <div class="mp-stats">
+      <div class="mp-stat-grid mp-stat-grid-2">
+        <div class="mp-stat-item">
+          <div class="mp-stat-num" id="mp-st-cards">-</div>
+          <div class="mp-stat-label">獲得カード</div>
         </div>
-        <div class="mp-handle" id="mp-handle">-</div>
-        <div class="mp-meta" id="mp-meta">-</div>
-        <button class="mp-formula-link" type="button" onclick="closeMypageForce();setTimeout(()=>{const m=document.getElementById('modal-bg');if(m)m.classList.add('open');document.body.style.overflow='hidden';},250)">街力の<br>算出方法</button>
-        <button class="mp-formula-link mp-torisetsu-link" type="button" onclick="openTorisetsuModal()">トリセツ</button>
-      </div>
-      <!-- 右：推し街3枠（カラム全体を使う） -->
-      <div class="mp-profile-right">
-        <div class="mp-fav-block">
-          <div class="mp-fav-title"><span class="mp-fav-title-text">★ 推し街</span><button class="mp-fav-edit-btn" id="mp-fav-edit-btn" type="button" onclick="toggleFavEdit()">編集</button></div>
-          <div class="mp-fav-list" id="mp-fav-list">
-            <div class="mp-fav-empty">読み込み中...</div>
-          </div>
+        <div class="mp-stat-item">
+          <div class="mp-stat-num" id="mp-st-checkins">-</div>
+          <div class="mp-stat-label">チェックイン</div>
         </div>
       </div>
+      <div class="mp-rank-bar" id="mp-rank-bar"></div>
     </div>
-    
-    <!-- 統計セクションはカードコレクションページに移動済み（マイページからは削除） -->
     
     <!-- チェックイン履歴セクション -->
     <div class="mp-section" style="padding-bottom:6px">
@@ -7142,26 +7155,6 @@ body.checkin-active #checkin-indicator{
           <span>獲得Score</span>
         </div>
         <div class="cl-score-value" id="cl-score-value">0</div>
-        <div class="cl-score-sub">
-          <div class="cl-score-sub-item"><strong id="cl-score-cards">0</strong> 枚</div>
-          <div class="cl-score-sub-item"><strong id="cl-score-checkins">0</strong> チェックイン</div>
-          <div class="cl-score-sub-item">平均 <strong id="cl-score-avg">0</strong></div>
-        </div>
-      </div>
-      
-      <!-- マイページから移動してきた統計セクション -->
-      <div class="mp-stats" id="cl-stats-section">
-        <div class="mp-stat-grid mp-stat-grid-2">
-          <div class="mp-stat-item">
-            <div class="mp-stat-num" id="mp-st-cards">-</div>
-            <div class="mp-stat-label">獲得カード</div>
-          </div>
-          <div class="mp-stat-item">
-            <div class="mp-stat-num" id="mp-st-checkins">-</div>
-            <div class="mp-stat-label">チェックイン</div>
-          </div>
-        </div>
-        <div class="mp-rank-bar" id="mp-rank-bar"></div>
       </div>
       
       <div class="hist-controls" style="margin-bottom:14px">
@@ -7211,7 +7204,6 @@ body.checkin-active #checkin-indicator{
       <div id="bp-level-panel" class="bp-level-panel" style="display:none">
         <div class="bp-lv-header">
           <span class="bp-lv-badge">🎖 バッジ達成 LV.<span id="bp-lv-number-inline">1</span></span>
-          <span class="bp-lv-tier" id="bp-lv-tier">初心者市民</span>
         </div>
         <div class="bp-lv-xp-row">
           <span><strong id="bp-lv-xp-current">0</strong> バッジXP</span>
@@ -12775,50 +12767,10 @@ window.openCardListPage = async () => {
     
     // 獲得Scoreバナーを更新
     const totalPower = cards.reduce((s, c) => s + (c.firstScore || 0), 0);
-    const totalCheckins = cards.reduce((s, c) => s + (c.visitCount || 1), 0);
-    const avgScore = cards.length > 0 ? Math.round(totalPower / cards.length) : 0;
     const banner = document.getElementById('cl-score-banner');
     if (banner) banner.style.display = '';
     const scoreValEl = document.getElementById('cl-score-value');
     if (scoreValEl) scoreValEl.textContent = totalPower.toLocaleString();
-    const cardsEl = document.getElementById('cl-score-cards');
-    if (cardsEl) cardsEl.textContent = cards.length;
-    const ciEl = document.getElementById('cl-score-checkins');
-    if (ciEl) ciEl.textContent = totalCheckins;
-    const avgEl = document.getElementById('cl-score-avg');
-    if (avgEl) avgEl.textContent = avgScore;
-    
-    // 統計セクション更新（カード数・C/I数・ランクバー）
-    const mpStCards = document.getElementById('mp-st-cards');
-    if (mpStCards) mpStCards.textContent = cards.length;
-    const mpStCi = document.getElementById('mp-st-checkins');
-    if (mpStCi) mpStCi.textContent = totalCheckins;
-    
-    // ランクバー更新（SABCD分布）
-    const rankCounts = { S:0, A:0, B:0, C:0, D:0 };
-    cards.forEach(c => {
-      const r = c.firstRank || 'D';
-      if (rankCounts[r] !== undefined) rankCounts[r]++;
-    });
-    const rankBar = document.getElementById('mp-rank-bar');
-    if (rankBar) {
-      const rankColors = {S:'#fb7185',A:'#ffb070',B:'#ffd966',C:'#84d49b',D:'#7fb8e0'};
-      const totalCards = cards.length || 1;
-      let barHTML = '<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,0.05);margin-bottom:6px">';
-      ['S','A','B','C','D'].forEach(r => {
-        const w = (rankCounts[r] / totalCards) * 100;
-        if (w > 0) {
-          barHTML += `<div style="width:${w}%;background:${rankColors[r]}" title="${r}: ${rankCounts[r]}枚"></div>`;
-        }
-      });
-      barHTML += '</div>';
-      barHTML += '<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700">';
-      ['S','A','B','C','D'].forEach(r => {
-        barHTML += `<div style="color:${rankColors[r]}"><span style="font-weight:900">${r}</span> <span style="color:#cfdaee">${rankCounts[r]}</span></div>`;
-      });
-      barHTML += '</div>';
-      rankBar.innerHTML = barHTML;
-    }
     
     cardListData = cards;
     cardSortKey = 'date';
@@ -14655,6 +14607,12 @@ function renderRepeatBadges(userCards, userBadges) {
   }).join('');
 }
 
+async // ★ index171修正：モジュール内関数をwindow公開（mpRenderWeeklyMissionから呼べるように）
+if (typeof getThisWeekMission === 'function') window.getThisWeekMission = getThisWeekMission;
+if (typeof calcMissionProgress === 'function') window.calcMissionProgress = calcMissionProgress;
+if (typeof fetchUserCheckinsThisWeek === 'function') window.fetchUserCheckinsThisWeek = fetchUserCheckinsThisWeek;
+if (typeof formatDeadline === 'function') window.formatDeadline = formatDeadline;
+
 async function renderWeeklyMission(uid, userCards, userProfile) {
   const el = document.getElementById('bp-mission');
   if (!el) return;
@@ -15091,7 +15049,9 @@ window.updateLevelPanel = function(rankResults, lineResults, totalCheckins, user
   panel.style.display = '';
   
   document.getElementById('bp-lv-number-inline').textContent = info.level;
-  document.getElementById('bp-lv-tier').textContent = info.tierName;
+  // 階級名表示は削除済み（マイページのマスターパネルにのみ表示）
+  const tierEl = document.getElementById('bp-lv-tier');
+  if (tierEl) tierEl.textContent = info.tierName;
   document.getElementById('bp-lv-xp-current').textContent = info.totalXP.toLocaleString();
   
   const nextEl = document.getElementById('bp-lv-next');
@@ -17683,27 +17643,34 @@ if ('serviceWorker' in navigator) {
     if (!el) return;
     
     try {
-      if (typeof getThisWeekMission !== 'function') {
+      // モジュール内関数を window 経由で呼ぶ（IIFE スコープ外からアクセス）
+      const getMission = window.getThisWeekMission || (typeof getThisWeekMission === 'function' ? getThisWeekMission : null);
+      const calcProgress = window.calcMissionProgress || (typeof calcMissionProgress === 'function' ? calcMissionProgress : null);
+      const fetchWeekCi = window.fetchUserCheckinsThisWeek || (typeof fetchUserCheckinsThisWeek === 'function' ? fetchUserCheckinsThisWeek : null);
+      const fmtDeadline = window.formatDeadline || (typeof formatDeadline === 'function' ? formatDeadline : null);
+      
+      if (!getMission) {
+        console.warn('[Weekly] getThisWeekMission関数が見つからない');
         el.innerHTML = '';
         return;
       }
-      const mission = getThisWeekMission(uid);
+      const mission = getMission(uid);
       if (!mission) {
         el.innerHTML = '';
         return;
       }
       
-      // 進捗計算（既存ロジックを利用）
+      // 進捗計算
       let progress = 0;
-      if (typeof calcMissionProgress === 'function' && typeof fetchUserCheckinsThisWeek === 'function') {
-        const weekCheckins = await fetchUserCheckinsThisWeek(uid);
-        progress = calcMissionProgress(mission, weekCheckins, userCards, userProfile);
+      if (calcProgress && fetchWeekCi) {
+        try {
+          const weekCheckins = await fetchWeekCi(uid);
+          progress = calcProgress(mission, weekCheckins, userCards, userProfile);
+        } catch(e) { console.warn('[Weekly] 進捗計算エラー:', e); }
       }
       
       const done = progress >= mission.target;
       const pct = Math.min(100, Math.floor((progress / mission.target) * 100));
-      
-      // ウィークリーは難易度高めなのでXP配点も少し上げる（デイリー10〜20 → ウィークリー25〜35）
       const weeklyXP = 30;
       
       el.innerHTML = `<div class="mp-daily-mission${done ? ' completed' : ''}">
@@ -17716,7 +17683,7 @@ if ('serviceWorker' in navigator) {
         </div>
         <div class="mp-dm-status">
           <span>${progress} / ${mission.target}</span>
-          ${done ? '<span class="completed-mark">✓ 達成</span>' : `<span style="font-size:10px;color:#a8b8d0">${typeof formatDeadline === 'function' ? formatDeadline() : ''}</span>`}
+          ${done ? '<span class="completed-mark">✓ 達成</span>' : `<span style="font-size:10px;color:#a8b8d0">${fmtDeadline ? fmtDeadline() : ''}</span>`}
         </div>
       </div>`;
     } catch (e) {
@@ -17987,6 +17954,81 @@ if ('serviceWorker' in navigator) {
   <span class="ot-icon">✓</span>
   <span>オンラインに復帰</span>
 </div>
+
+<!-- ═══ index170：フローティング「↑トップへ」ボタン ═══ -->
+<button id="mm-scroll-top-btn" 
+        type="button"
+        aria-label="一番上へスクロール"
+        onclick="if(window.scrollOpenedToTop)window.scrollOpenedToTop()">↑</button>
+
+<script>
+// ═══ index170：フローティング「↑」ボタンの表示制御 ═══
+// 開いてるモーダル or window のスクロール量を監視、200px超で表示
+(function(){
+  let btn = null;
+  const SCROLL_THRESHOLD = 200;
+  
+  // 監視対象のモーダル ID 一覧（z-index 降順 = 上に重なる順）
+  const MODAL_IDS = [
+    'cardversion-bg',
+    'card-modal-bg',
+    'cardlist-bg',
+    'mypage-bg',
+    'history-bg',
+    'fav-picker-bg',
+    'badge-detail-bg',
+    'mm-calendar-bg'
+  ];
+  
+  function getActiveScrollTarget() {
+    for (const id of MODAL_IDS) {
+      const el = document.getElementById(id);
+      if (el && el.classList.contains('open')) {
+        return el;
+      }
+    }
+    return null;
+  }
+  
+  function checkScrollPosition() {
+    if (!btn) return;
+    const target = getActiveScrollTarget();
+    let scrollY;
+    if (target) {
+      scrollY = target.scrollTop;
+    } else {
+      scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    }
+    if (scrollY > SCROLL_THRESHOLD) {
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+    }
+  }
+  
+  function setup() {
+    btn = document.getElementById('mm-scroll-top-btn');
+    if (!btn) return;
+    
+    // window スクロール監視
+    window.addEventListener('scroll', checkScrollPosition, { passive: true });
+    
+    // モーダル内スクロール監視（capture phaseで全要素を捕捉）
+    document.addEventListener('scroll', checkScrollPosition, { passive: true, capture: true });
+    
+    // モーダル開閉時のチェック（DOM変更フォールバック）
+    setInterval(checkScrollPosition, 700);
+    
+    console.log('[ScrollTop] フローティング↑ボタン初期化完了');
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup);
+  } else {
+    setup();
+  }
+})();
+</script>
 
 <script>
 // ═══ Phase E：オフライン検知＆同期 ═══
