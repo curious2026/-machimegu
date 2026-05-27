@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index158 (cache-bust 2026.05.28-09:00) -->
+<!-- VERSION: index159 (cache-bust 2026.05.28-11:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2911,6 +2911,89 @@ body:not(.splashing) #table-area{
 }
 
 /* ═══ Phase 4 end ═══ */
+
+/* ═══ Phase 5：レベル＋階級＋シェアSVG ═══ */
+
+/* レベル＆階級表示（コンプリート率パネル内に追加） */
+.bp-level-panel{
+  background:linear-gradient(135deg,rgba(40,60,90,0.5) 0%,rgba(15,25,45,0.7) 100%);
+  border:1px solid rgba(168,184,208,0.18);
+  border-radius:16px;
+  padding:16px 18px;
+  margin:0 0 14px;
+  position:relative;
+  overflow:hidden;
+}
+.bp-level-panel::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 15% 20%,rgba(251,213,106,0.10),transparent 50%),
+    radial-gradient(circle at 85% 80%,rgba(255,144,200,0.08),transparent 50%);
+  pointer-events:none;
+}
+.bp-lv-header{
+  display:flex;align-items:baseline;gap:10px;margin-bottom:6px;
+  position:relative;z-index:2;
+}
+.bp-lv-badge{
+  font-size:11px;font-weight:900;
+  background:linear-gradient(135deg,#fbd56a 0%,#d4a020 100%);
+  color:#1a1408;letter-spacing:1px;
+  padding:3px 8px;border-radius:8px;
+  box-shadow:0 2px 6px rgba(251,213,106,0.4),inset 0 1px 0 rgba(255,255,255,0.5);
+}
+.bp-lv-number{
+  font-size:28px;font-weight:900;
+  background:linear-gradient(135deg,#ffe890,#fbd56a,#d4a020);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:-1px;
+  text-shadow:0 0 12px rgba(251,213,106,0.4);
+  line-height:1;
+}
+.bp-lv-tier{
+  font-size:16px;font-weight:900;color:#fff;letter-spacing:1.5px;
+  text-shadow:0 2px 4px rgba(0,0,0,0.5);
+}
+.bp-lv-xp-row{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;color:#a8b8d0;letter-spacing:0.5px;
+  margin:0 0 4px;font-weight:700;
+  position:relative;z-index:2;
+}
+.bp-lv-xp-row strong{color:#fbd56a;font-weight:900}
+.bp-lv-next{font-size:10px;color:#7a96b6}
+.bp-lv-bar{
+  height:6px;
+  background:rgba(255,255,255,0.06);
+  border-radius:3px;overflow:hidden;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);
+  position:relative;z-index:2;
+}
+.bp-lv-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,#fbd56a 0%,#ffe890 50%,#fbd56a 100%);
+  border-radius:3px;
+  box-shadow:0 0 8px rgba(251,213,106,0.6);
+  transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative;
+}
+.bp-lv-bar-fill::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.4) 50%,transparent 100%);
+  background-size:200% 100%;
+  animation:bp-progress-shimmer 2.5s linear infinite;
+}
+/* 階級MAX(LV.100到達)はピンク～紫～金色のレジェンドカラー */
+.bp-lv-bar-fill.legendary{
+  background:linear-gradient(90deg,#ff90c8 0%,#fbd56a 50%,#ff90c8 100%);
+  box-shadow:0 0 10px rgba(255,144,200,0.8);
+}
+
+/* ═══ Phase 5 end ═══ */
 
 /* チェックイン数：スクエア */
 .bp-badge-checkin{
@@ -5945,6 +6028,17 @@ body.checkin-active #checkin-indicator{
       <div style="width:36px"></div>
     </div>
     <div class="cl-body" id="bp-body">
+      <div id="bp-level-panel" class="bp-level-panel" style="display:none">
+        <div class="bp-lv-header">
+          <span class="bp-lv-badge">LV.<span id="bp-lv-number-inline">1</span></span>
+          <span class="bp-lv-tier" id="bp-lv-tier">初心者市民</span>
+        </div>
+        <div class="bp-lv-xp-row">
+          <span><strong id="bp-lv-xp-current">0</strong> XP</span>
+          <span class="bp-lv-next" id="bp-lv-next">次のレベルまで 100 XP</span>
+        </div>
+        <div class="bp-lv-bar"><div class="bp-lv-bar-fill" id="bp-lv-bar-fill" style="width:0%"></div></div>
+      </div>
       <div id="bp-collection-stats" class="bp-collection-stats" style="display:none">
         <div class="bp-cs-title">📒 バッジコレクション</div>
         <div class="bp-cs-main">
@@ -12664,6 +12758,173 @@ window.closeBadgeDetail = () => {
   document.getElementById('badge-detail-bg').classList.remove('open');
 };
 
+// ─── Phase 5: シェア画像用バッジSVG生成 ───
+// html2canvasがclip-pathをサポートしないため、各バッジをSVGで完全再構築する
+// 既存renderBadgeHTMLとは別に「画像化用の」見た目を一致させた版を作る
+window.renderBadgeForShare = function(b){
+  const size = 200;  // SVG表示サイズ
+  // 共通：ホロ箔は静止画像化なのでスキップ、グローは外側に薄く反映
+  
+  if (b.type === 'rank') {
+    // ランク制覇：円形＋ラジアルグラデ＋上部ハイライト＋テキスト
+    const isAll = b.threshold === b.total;
+    const subText = isAll ? '完全制覇' : (b.threshold + '駅');
+    const colors = {
+      S: { c1:'#ff7088', c2:'#ff2244', c3:'#a01428', text:'#fff' },
+      A: { c1:'#ffb060', c2:'#ff8800', c3:'#a85800', text:'#fff' },
+      B: { c1:'#ffe890', c2:'#ffd700', c3:'#a08000', text:'#3a2800' },
+      C: { c1:'#80e0a8', c2:'#44cc88', c3:'#207040', text:'#fff' },
+      D: { c1:'#88c8ff', c2:'#44aaff', c3:'#1860a8', text:'#fff' },
+    };
+    const cc = colors[b.rank] || colors.D;
+    const id = 'shrr' + Math.random().toString(36).slice(2,7);
+    return `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:${size}px;height:${size}px;display:block">
+      <defs>
+        <radialGradient id="${id}-bg" cx="0.35" cy="0.30" r="0.85">
+          <stop offset="0%" stop-color="${cc.c1}"/>
+          <stop offset="50%" stop-color="${cc.c2}"/>
+          <stop offset="100%" stop-color="${cc.c3}"/>
+        </radialGradient>
+        <radialGradient id="${id}-hi" cx="0.5" cy="0.18" r="0.45">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.6)"/>
+          <stop offset="60%" stop-color="rgba(255,255,255,0.15)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </radialGradient>
+        <radialGradient id="${id}-sh" cx="0.5" cy="0.95" r="0.35">
+          <stop offset="0%" stop-color="rgba(0,0,0,0.4)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+        </radialGradient>
+      </defs>
+      <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 4}" fill="url(#${id}-bg)" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
+      <ellipse cx="${size/2}" cy="${size*0.30}" rx="${size*0.32}" ry="${size*0.20}" fill="url(#${id}-hi)"/>
+      <ellipse cx="${size/2}" cy="${size*0.78}" rx="${size*0.28}" ry="${size*0.10}" fill="url(#${id}-sh)"/>
+      <text x="${size/2}" y="${size*0.46}" text-anchor="middle" fill="${cc.text}" font-size="34" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.55))">${b.rank}駅</text>
+      <text x="${size/2}" y="${size*0.66}" text-anchor="middle" fill="${cc.text}" font-size="28" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.55))">${subText}</text>
+    </svg>`;
+  }
+  
+  if (b.type === 'line') {
+    // 路線制覇：六角形＋線形グラデ＋テキスト＋鏡面ハイライト
+    const lineShort = (b.line || '').replace('東京メトロ','メトロ').replace(/^都営/,'都営');
+    const colors = {
+      gold:   { c1:'#fbd56a', c2:'#d4a020', c3:'#9a6f10', text:'#3a2810' },
+      silver: { c1:'#e8eef4', c2:'#a8b0b8', c3:'#686e74', text:'#1a2028' },
+      bronze: { c1:'#e09848', c2:'#a8682a', c3:'#7a4818', text:'#2a1408' },
+    };
+    const cc = colors[b.tier] || colors.bronze;
+    const id = 'shrl' + Math.random().toString(36).slice(2,7);
+    // 六角形ポイント（縦長）
+    const cx = size/2, cy = size/2;
+    const hex = `${cx},4 ${size-4},${size*0.25} ${size-4},${size*0.75} ${cx},${size-4} 4,${size*0.75} 4,${size*0.25}`;
+    // 改行処理：「線」の後ろや「（」の前で割る
+    let line1 = lineShort, line2 = '';
+    if (lineShort.length > 5) {
+      const parenIdx = lineShort.indexOf('（');
+      const lineIdx = lineShort.indexOf('線');
+      if (parenIdx > 0 && parenIdx <= lineShort.length - 2) {
+        line1 = lineShort.slice(0, parenIdx);
+        line2 = lineShort.slice(parenIdx);
+      } else if (lineIdx > 0 && lineIdx < lineShort.length - 1) {
+        line1 = lineShort.slice(0, lineIdx + 1);
+        line2 = lineShort.slice(lineIdx + 1);
+      } else {
+        const mid = Math.ceil(lineShort.length / 2);
+        line1 = lineShort.slice(0, mid);
+        line2 = lineShort.slice(mid);
+      }
+    }
+    const subLabel = b.tier === 'gold' ? '制覇' : b.tier === 'silver' ? '銀' : '銅';
+    return `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:${size}px;height:${size}px;display:block">
+      <defs>
+        <linearGradient id="${id}-bg" x1="0" y1="0" x2="0.7" y2="1">
+          <stop offset="0%" stop-color="${cc.c1}"/>
+          <stop offset="60%" stop-color="${cc.c2}"/>
+          <stop offset="100%" stop-color="${cc.c3}"/>
+        </linearGradient>
+        <linearGradient id="${id}-hi" x1="0.5" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+          <stop offset="50%" stop-color="rgba(255,255,255,0.05)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </linearGradient>
+      </defs>
+      <polygon points="${hex}" fill="url(#${id}-bg)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+      <polygon points="${cx},10 ${size-10},${size*0.27} ${size-10},${size*0.55} ${cx},${size*0.5} 10,${size*0.55} 10,${size*0.27}" fill="url(#${id}-hi)"/>
+      ${line2 ? `
+        <text x="${cx}" y="${size*0.42}" text-anchor="middle" fill="${cc.text}" font-size="20" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${escapeHtml(line1)}</text>
+        <text x="${cx}" y="${size*0.58}" text-anchor="middle" fill="${cc.text}" font-size="20" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${escapeHtml(line2)}</text>
+      ` : `
+        <text x="${cx}" y="${size*0.52}" text-anchor="middle" fill="${cc.text}" font-size="22" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${escapeHtml(line1)}</text>
+      `}
+      <text x="${cx}" y="${size*0.78}" text-anchor="middle" fill="${cc.text}" font-size="22" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${subLabel}</text>
+    </svg>`;
+  }
+  
+  if (b.type === 'area') {
+    // 既存のrenderAreaBadgeSVGを使う（既にSVGで完璧）
+    return window.renderAreaBadgeSVG ? window.renderAreaBadgeSVG(b) : '';
+  }
+  
+  if (b.type === 'checkin') {
+    // チェックイン：角丸正方形＋数字＋ラベル
+    const id = 'shrc' + Math.random().toString(36).slice(2,7);
+    return `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:${size}px;height:${size}px;display:block">
+      <defs>
+        <linearGradient id="${id}-bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#22d3ee"/>
+          <stop offset="60%" stop-color="#3a8ac4"/>
+          <stop offset="100%" stop-color="#1e4a78"/>
+        </linearGradient>
+        <linearGradient id="${id}-hi" x1="0.5" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.35)"/>
+          <stop offset="50%" stop-color="rgba(255,255,255,0)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0.25)"/>
+        </linearGradient>
+      </defs>
+      <rect x="4" y="4" width="${size-8}" height="${size-8}" rx="20" fill="url(#${id}-bg)" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+      <rect x="6" y="6" width="${size-12}" height="${size-12}" rx="18" fill="url(#${id}-hi)"/>
+      <text x="${size/2}" y="${size*0.52}" text-anchor="middle" fill="#fff" font-size="44" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))">${b.count}</text>
+      <text x="${size/2}" y="${size*0.73}" text-anchor="middle" fill="#fff" font-size="14" font-weight="800" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" letter-spacing="2" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">CHECKINS</text>
+    </svg>`;
+  }
+  
+  if (b.type === 'repeat') {
+    // リピート：角丸正方形＋絵文字＋駅名＋称号
+    const tierColors = {
+      jouren:    { c1:'#92733a', c2:'#6a5230', c3:'#4a3820', label:'常連',    emoji:'☕' },
+      mania:     { c1:'#e84d3c', c2:'#c0341e', c3:'#902614', label:'マニア',  emoji:'🔥' },
+      ikijibiki: { c1:'#4a90c8', c2:'#2e6ba0', c3:'#1e4a78', label:'生き字引', emoji:'📚' },
+      kami:      { c1:'#fbd56a', c2:'#e0b04a', c3:'#a8821e', label:'神',     emoji:'⛩' },
+    };
+    const cc = tierColors[b.tier] || tierColors.jouren;
+    const id = 'shrp' + Math.random().toString(36).slice(2,7);
+    const stationName = b.stationName || b.name || '';
+    const nameLen = stationName.length;
+    const nameSize = nameLen >= 6 ? 16 : (nameLen >= 4 ? 18 : 22);
+    const textColor = b.tier === 'kami' ? '#3a2810' : '#fff';
+    return `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:${size}px;height:${size}px;display:block">
+      <defs>
+        <linearGradient id="${id}-bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${cc.c1}"/>
+          <stop offset="60%" stop-color="${cc.c2}"/>
+          <stop offset="100%" stop-color="${cc.c3}"/>
+        </linearGradient>
+        <linearGradient id="${id}-hi" x1="0.5" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.35)"/>
+          <stop offset="50%" stop-color="rgba(255,255,255,0)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0.2)"/>
+        </linearGradient>
+      </defs>
+      <rect x="4" y="4" width="${size-8}" height="${size-8}" rx="20" fill="url(#${id}-bg)" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+      <rect x="6" y="6" width="${size-12}" height="${size-12}" rx="18" fill="url(#${id}-hi)"/>
+      <text x="${size/2}" y="${size*0.42}" text-anchor="middle" font-size="44" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4))">${cc.emoji}</text>
+      <text x="${size/2}" y="${size*0.66}" text-anchor="middle" fill="${textColor}" font-size="${nameSize}" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">${escapeHtml(stationName)}</text>
+      <text x="${size/2}" y="${size*0.85}" text-anchor="middle" fill="${textColor}" font-size="18" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" letter-spacing="2" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${cc.label}</text>
+    </svg>`;
+  }
+  
+  return '';
+};
+
 // ─── Phase 3: バッジのSNSシェア画像生成 ───
 window.shareBadge = async function(){
   const b = window._currentDetailBadge;
@@ -12715,7 +12976,7 @@ window.shareBadge = async function(){
         <div class="bp-share-logo">街巡 - まちめぐ -</div>
         <div class="bp-share-tagline">街にでよう</div>
       </div>
-      <div class="bp-share-badge-zone">${renderBadgeHTML(b)}</div>
+      <div class="bp-share-badge-zone">${window.renderBadgeForShare(b)}</div>
       <div class="bp-share-name">${escapeHtml(b.name || '')}</div>
       <div class="bp-share-desc">${escapeHtml(b.desc || '')}</div>
       <div class="bp-share-cta"><strong>バッジ獲得!</strong> 君の街力も測ろう</div>
@@ -12849,6 +13110,9 @@ window.openBadgePage = async () => {
   
   // ─── Phase 3: コンプリート率パネル更新 ───
   window.updateCollectionStats(rankResults, lineResults, totalCheckins, userCards);
+  
+  // ─── Phase 5: レベル＋階級パネル更新 ───
+  window.updateLevelPanel(rankResults, lineResults, totalCheckins, userCards);
   
   // ─── Phase 4: 次の目標＆タブ/フィルタ適用 ───
   window.updateNextGoal(rankResults, lineResults, totalCheckins);
@@ -13199,6 +13463,146 @@ function renderAreaBadges(userBadges) {
   if (counter) counter.textContent = '0 獲得';
 }
 
+// ─── Phase 5: レベル＋階級＋XPシステム ───
+// 10階級 × 10レベル = LV.100まで
+window.BP_TIER_NAMES = [
+  '初心者市民',   // LV.1-9
+  '街めぐビギナー', // LV.10-19
+  '街角ウォッチャー', // LV.20-29
+  'エリアスカウト', // LV.30-39
+  'ジモティ',     // LV.40-49
+  '街通',         // LV.50-59
+  'エリアマスター', // LV.60-69
+  '街巡求道者',   // LV.70-79
+  '街めぐレジェンド', // LV.80-89
+  '街マスター',   // LV.90-100
+];
+// 各階級開始時の累計XP（10階級分の起点 + 終端）
+window.BP_TIER_XP_THRESHOLDS = [0, 500, 1500, 3500, 6500, 11000, 17000, 25000, 35000, 47000, 60000];
+// レアリティごとのXP獲得量
+window.BP_XP_BY_RARITY = { 1: 10, 2: 30, 3: 60, 4: 120, 5: 250 };
+
+// 各レベルの開始XPを計算（階級内で等分配）
+window.bpLevelStartXP = function(level){
+  if (level <= 1) return 0;
+  if (level >= 100) {
+    return window.BP_TIER_XP_THRESHOLDS[10]; // 最終
+  }
+  const t = Math.floor((level - 1) / 10);
+  const p = (level - 1) % 10;
+  const start = window.BP_TIER_XP_THRESHOLDS[t];
+  const end = window.BP_TIER_XP_THRESHOLDS[t + 1];
+  return Math.floor(start + (end - start) * p / 10);
+};
+
+// totalXPからレベル情報取得
+window.bpGetLevelInfo = function(totalXP){
+  if (totalXP < 0) totalXP = 0;
+  // 線形探索で良い（100回ループのみ）
+  let level = 100;
+  for (let i = 100; i >= 1; i--) {
+    if (totalXP >= window.bpLevelStartXP(i)) {
+      level = i;
+      break;
+    }
+  }
+  const tier = Math.floor((level - 1) / 10);
+  const lvStart = window.bpLevelStartXP(level);
+  const lvEnd = level < 100 ? window.bpLevelStartXP(level + 1) : window.bpLevelStartXP(100);
+  const progressInLv = totalXP - lvStart;
+  const needForNextLv = Math.max(1, lvEnd - lvStart);
+  const isMax = level >= 100;
+  return {
+    level,
+    tier,
+    tierName: window.BP_TIER_NAMES[Math.min(tier, 9)],
+    totalXP,
+    progressInLv,
+    needForNextLv,
+    progressPct: isMax ? 100 : Math.min(100, Math.floor((progressInLv / needForNextLv) * 100)),
+    isMax,
+  };
+};
+
+// バッジ全体からXP合計を計算
+window.bpCalcTotalXP = function(rankResults, lineResults, totalCheckins, userCards){
+  const XP = window.BP_XP_BY_RARITY;
+  let total = 0;
+  
+  // ランク制覇
+  rankResults.forEach(r => {
+    if (r.total === 0) return;
+    r.thresholds.forEach(th => {
+      if (r.conquered >= th) {
+        const rarity = window.bpRarityRank(r.rank, th, r.total);
+        total += XP[rarity] || 0;
+      }
+    });
+  });
+  
+  // 路線制覇
+  lineResults.forEach(r => {
+    if (r.total === 0 || !r.tier) return;
+    const rarity = window.bpRarityLine(r.tier);
+    total += XP[rarity] || 0;
+  });
+  
+  // チェックイン
+  [10,50,100,500,1000,5000].forEach(m => {
+    if (totalCheckins >= m) {
+      const rarity = window.bpRarityCheckin(m);
+      total += XP[rarity] || 0;
+    }
+  });
+  
+  // リピート
+  userCards.forEach(c => {
+    const vc = c.visitCount || 1;
+    [10,30,60,100].forEach(t => {
+      if (vc >= t) {
+        let rarity = 2;
+        if (t >= 100) rarity = 5;
+        else if (t >= 60) rarity = 4;
+        else if (t >= 30) rarity = 3;
+        total += XP[rarity] || 0;
+      }
+    });
+  });
+  
+  return total;
+};
+
+// レベルパネル表示更新
+window.updateLevelPanel = function(rankResults, lineResults, totalCheckins, userCards){
+  const totalXP = window.bpCalcTotalXP(rankResults, lineResults, totalCheckins, userCards);
+  const info = window.bpGetLevelInfo(totalXP);
+  
+  const panel = document.getElementById('bp-level-panel');
+  if (!panel) return;
+  panel.style.display = '';
+  
+  document.getElementById('bp-lv-number-inline').textContent = info.level;
+  document.getElementById('bp-lv-tier').textContent = info.tierName;
+  document.getElementById('bp-lv-xp-current').textContent = info.totalXP.toLocaleString();
+  
+  const nextEl = document.getElementById('bp-lv-next');
+  if (info.isMax) {
+    nextEl.textContent = '☆ MAX LEVEL ☆';
+  } else {
+    const remain = info.needForNextLv - info.progressInLv;
+    nextEl.textContent = `次のレベルまで ${remain.toLocaleString()} XP`;
+  }
+  
+  // バーアニメ（少し遅延）
+  setTimeout(() => {
+    const bar = document.getElementById('bp-lv-bar-fill');
+    if (bar) {
+      bar.style.width = info.progressPct + '%';
+      bar.classList.toggle('legendary', info.isMax);
+    }
+  }, 150);
+};
+
 // ─── Phase 3: コンプリート率（図鑑モード）統計更新 ───
 window.updateCollectionStats = function(rankResults, lineResults, totalCheckins, userCards){
   // ランク制覇：閾値ごとに集計
@@ -13226,6 +13630,10 @@ window.updateCollectionStats = function(rankResults, lineResults, totalCheckins,
   let checkinEarned = checkinMilestones.filter(m => totalCheckins >= m).length;
   let checkinTotalSlots = checkinMilestones.length;
   
+  // エリア制覇（プレースホルダー段階：27エリア×1tier）
+  const areaTotalSlots = 27;
+  const areaEarned = 0;  // 本実装まで0
+  
   // リピート：ユーザーカード×4tier の中で何個達成したか
   const repeatTiers = [10, 30, 60, 100];
   let repeatEarned = 0;
@@ -13236,9 +13644,9 @@ window.updateCollectionStats = function(rankResults, lineResults, totalCheckins,
   // リピートは「集めうる総数」が変動的なため、最低でも常に4スロット保証
   const repeatTotalSlots = Math.max(4, repeatEarned + (repeatEarned === 0 ? 4 : 4));
   
-  // 全体集計（リピートはダイナミックなので合計には含めるが、率計算は明示）
-  const totalEarned = rankEarned + lineEarned + checkinEarned + repeatEarned;
-  const totalSlots = rankTotalSlots + lineTotalSlots + checkinTotalSlots + repeatTotalSlots;
+  // 全体集計（エリアも含めて）
+  const totalEarned = rankEarned + lineEarned + checkinEarned + repeatEarned + areaEarned;
+  const totalSlots = rankTotalSlots + lineTotalSlots + checkinTotalSlots + repeatTotalSlots + areaTotalSlots;
   const pct = totalSlots > 0 ? Math.floor((totalEarned / totalSlots) * 100) : 0;
   
   // パネル表示
@@ -13259,6 +13667,7 @@ window.updateCollectionStats = function(rankResults, lineResults, totalCheckins,
   const categories = [
     { label: 'ランク', earned: rankEarned, total: rankTotalSlots },
     { label: '路線',   earned: lineEarned, total: lineTotalSlots },
+    { label: 'エリア', earned: areaEarned, total: areaTotalSlots },
     { label: 'C/I',    earned: checkinEarned, total: checkinTotalSlots },
     { label: '常連',   earned: repeatEarned, total: repeatTotalSlots },
   ];
@@ -13280,6 +13689,7 @@ window.updateCollectionStats = function(rankResults, lineResults, totalCheckins,
   updateCounter('bp-rank-count', rankEarned, rankTotalSlots);
   updateCounter('bp-line-count', lineEarned, lineTotalSlots);
   updateCounter('bp-checkin-count', checkinEarned, checkinTotalSlots);
+  updateCounter('bp-area-count', areaEarned, areaTotalSlots);
 };
 
 // ─── Phase 4: タブ・フィルタ・ソート・次の目標 ───
