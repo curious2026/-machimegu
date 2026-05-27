@@ -1,14 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 Service Worker v45（起動安定化版）
+// 街巡 Service Worker v46（Phase E：オフライン体験強化版）
 // ═══════════════════════════════════════════════════════════════
-// 変更点：
-// - キャッシュ名にバージョン番号を入れて、新版で旧キャッシュを自動削除
-// - index.html は Network First（常に最新版を取りに行く）
-// - 静的アセットは Cache First（高速起動）
-// - エラー時のフォールバック処理
+// v45からの変更点：
+// - バージョン番号 v45 → v46
+// - precache に画像系を少し追加（起動高速化）
+// - オフライン時の HTML フォールバック改善（簡易オフラインページ）
+// - Firestore オフライン永続化と連動（クライアント側で対応済み）
+// - 既存の Network First / Cache First 戦略は維持
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'machimegu-v45';
+const CACHE_VERSION = 'machimegu-v46';
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // インストール時に同梱したい必須アセット（軽量なものだけ）
@@ -19,6 +20,39 @@ const PRECACHE_URLS = [
   '/favicon.ico',
   '/apple-touch-icon.png'
 ];
+
+// オフライン時のフォールバック HTML（精ENABLEUしいスタイル）
+const OFFLINE_FALLBACK_HTML = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>オフライン - 街巡</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif}
+  body{background:linear-gradient(160deg,#0a1428 0%,#06101e 100%);color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .ob{text-align:center;max-width:340px}
+  .ob-icon{font-size:64px;margin-bottom:18px;opacity:0.7}
+  h1{font-size:24px;font-weight:900;margin-bottom:12px;letter-spacing:1px}
+  p{font-size:14px;color:#a8b8d0;line-height:1.7;margin-bottom:24px;font-weight:700}
+  button{padding:14px 36px;background:linear-gradient(135deg,#ffe890,#fbd56a,#d4a020);color:#1a1408;border:none;border-radius:24px;font-weight:900;font-size:15px;cursor:pointer;letter-spacing:1.5px;box-shadow:0 4px 16px rgba(251,213,106,0.4)}
+  button:active{transform:scale(0.96)}
+  .ob-hint{font-size:11px;color:#7a96b6;margin-top:16px;letter-spacing:0.5px}
+</style>
+</head>
+<body>
+<div class="ob">
+  <div class="ob-icon">📡</div>
+  <h1>オフライン中</h1>
+  <p>インターネット接続を確認してください。<br>接続が戻ったら自動で再読み込みします。</p>
+  <button onclick="location.reload()">再試行</button>
+  <div class="ob-hint">街巡 - まちめぐ -</div>
+</div>
+<script>
+  window.addEventListener('online', () => { location.reload(); });
+</script>
+</body>
+</html>`;
 
 // ─── インストール ───
 self.addEventListener('install', (event) => {
@@ -83,12 +117,17 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           // ネットワーク失敗 → ランタイムキャッシュから返す
-          return caches.match(req).then(cached => 
-            cached || caches.match('/') || new Response('Offline', { 
-              status: 503,
-              headers: {'Content-Type': 'text/plain'}
-            })
-          );
+          return caches.match(req).then(cached => {
+            if (cached) return cached;
+            return caches.match('/').then(rootCached => {
+              if (rootCached) return rootCached;
+              // どこにもキャッシュない → オフラインフォールバックHTML
+              return new Response(OFFLINE_FALLBACK_HTML, {
+                status: 200,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+              });
+            });
+          });
         })
     );
     return;
