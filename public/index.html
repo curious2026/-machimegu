@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index161 (cache-bust 2026.05.28-15:00) -->
+<!-- VERSION: index163 (cache-bust 2026.05.28-19:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -5903,6 +5903,383 @@ body.checkin-active #checkin-indicator{
   font-size:12px !important;
   margin-top:1px !important;
 }
+
+/* ═══ Phase A：オンボーディング ═══ */
+#mm-onboarding{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#0a1428 0%,#06101e 100%);
+  display:none;
+  overflow:hidden;
+}
+#mm-onboarding.open{display:block}
+#mm-onboarding::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 15% 15%,rgba(251,213,106,0.10),transparent 50%),
+    radial-gradient(circle at 85% 85%,rgba(255,144,200,0.08),transparent 50%),
+    radial-gradient(circle at 50% 60%,rgba(93,184,236,0.06),transparent 60%);
+  pointer-events:none;
+}
+.mm-ob-slides{
+  position:relative;
+  width:100%;height:100%;
+  overflow:hidden;
+}
+.mm-ob-slide{
+  position:absolute;
+  inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 24px 140px;
+  text-align:center;
+  opacity:0;
+  transform:translateX(40px);
+  transition:opacity 0.5s ease, transform 0.5s ease;
+  pointer-events:none;
+}
+.mm-ob-slide.active{
+  opacity:1;transform:translateX(0);
+  pointer-events:auto;
+}
+.mm-ob-slide.exit{
+  opacity:0;transform:translateX(-40px);
+}
+.mm-ob-visual{
+  width:240px;height:240px;
+  margin-bottom:32px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+@media (max-width:480px){
+  .mm-ob-visual{width:200px;height:200px;margin-bottom:24px}
+}
+.mm-ob-title{
+  font-size:28px;font-weight:900;
+  color:#fff;letter-spacing:1px;line-height:1.3;
+  margin-bottom:16px;
+  text-shadow:0 2px 8px rgba(0,0,0,0.5);
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+}
+@media (max-width:480px){
+  .mm-ob-title{font-size:24px;margin-bottom:14px}
+}
+.mm-ob-subtitle{
+  font-size:15px;font-weight:700;
+  color:#a8b8d0;letter-spacing:0.5px;line-height:1.7;
+  max-width:320px;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+}
+.mm-ob-subtitle strong{
+  color:#fbd56a;font-weight:900;
+}
+
+/* オンボーディング画面1：サンプルカード */
+.mm-ob-sample-card{
+  width:200px;height:200px;border-radius:24px;
+  background:radial-gradient(circle at 35% 30%,#ff7088 0%,#ff2244 50%,#a01428 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:
+    inset 0 -10px 22px rgba(0,0,0,0.35),
+    inset 0 8px 16px rgba(255,255,255,0.45),
+    0 8px 24px rgba(0,0,0,0.5),
+    0 0 32px rgba(255,68,68,0.35);
+  color:#fff;
+  position:relative;
+  animation:mm-ob-card-float 3s ease-in-out infinite;
+}
+@keyframes mm-ob-card-float{
+  0%,100% { transform:translateY(0) rotate(-2deg) }
+  50%    { transform:translateY(-8px) rotate(2deg) }
+}
+.mm-ob-sample-card::before{
+  content:'';
+  position:absolute;
+  top:8%;left:18%;right:18%;height:30%;
+  border-radius:50%;
+  background:radial-gradient(ellipse at center top,rgba(255,255,255,0.55) 0%,rgba(255,255,255,0.15) 50%,transparent 80%);
+  pointer-events:none;
+  filter:blur(1.5px);
+}
+.mm-ob-card-rank{
+  font-size:64px;font-weight:900;
+  text-shadow:0 4px 8px rgba(0,0,0,0.5);
+  line-height:1;
+  position:relative;z-index:2;
+}
+.mm-ob-card-name{
+  font-size:18px;font-weight:900;
+  margin-top:8px;
+  text-shadow:0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing:1px;
+  position:relative;z-index:2;
+}
+.mm-ob-card-score{
+  font-size:22px;font-weight:900;
+  margin-top:4px;
+  text-shadow:0 2px 4px rgba(0,0,0,0.5);
+  font-variant-numeric:tabular-nums;
+  position:relative;z-index:2;
+}
+.mm-ob-card-score::after{
+  content:' 点';
+  font-size:14px;font-weight:700;
+}
+
+/* オンボーディング画面2：マップアイコン */
+.mm-ob-map-visual{
+  width:220px;height:220px;border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(93,184,236,0.25) 0%,rgba(15,40,70,0.5) 60%,rgba(5,12,22,0.8) 100%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:
+    inset 0 0 40px rgba(93,184,236,0.2),
+    0 8px 24px rgba(0,0,0,0.4),
+    0 0 32px rgba(93,184,236,0.2);
+  position:relative;
+  animation:mm-ob-pulse 2.5s ease-in-out infinite;
+}
+@keyframes mm-ob-pulse{
+  0%,100% { transform:scale(1) }
+  50%    { transform:scale(1.04) }
+}
+/* オレンジ pin-icon（トップページ右上と統一） */
+.mm-ob-orange-pin{
+  display:inline-block;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 30'%3E%3Cpath d='M12 1.6 C7 1.6 3 5.6 3 10.4 C3 17.5 12 28.4 12 28.4 C12 28.4 21 17.5 21 10.4 C21 5.6 17 1.6 12 1.6 Z' fill='%23ff7300'/%3E%3Ccircle cx='12' cy='10.6' r='3.4' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  filter:drop-shadow(0 4px 8px rgba(255,115,0,0.4)) drop-shadow(0 0 12px rgba(255,115,0,0.3));
+}
+.mm-ob-map-visual .mm-ob-orange-pin-center{
+  width:80px;height:100px;
+}
+.mm-ob-map-visual .mm-ob-pin-1,
+.mm-ob-map-visual .mm-ob-pin-2,
+.mm-ob-map-visual .mm-ob-pin-3{
+  position:absolute;
+  width:32px;height:40px;
+  animation:mm-ob-pin-bounce 1.5s ease-in-out infinite;
+}
+.mm-ob-map-visual .mm-ob-pin-1{top:25%;left:18%;animation-delay:0s}
+.mm-ob-map-visual .mm-ob-pin-2{top:30%;right:18%;animation-delay:0.5s}
+.mm-ob-map-visual .mm-ob-pin-3{bottom:22%;left:50%;transform:translateX(-50%);animation-delay:1s}
+@keyframes mm-ob-pin-bounce{
+  0%,100% { transform:translateY(0) }
+  50%    { transform:translateY(-10px) }
+}
+.mm-ob-map-visual .mm-ob-pin-3{
+  animation-name:mm-ob-pin-bounce-center;
+}
+@keyframes mm-ob-pin-bounce-center{
+  0%,100% { transform:translateX(-50%) translateY(0) }
+  50%    { transform:translateX(-50%) translateY(-10px) }
+}
+
+/* オンボーディング画面3：レベルバッジ */
+.mm-ob-lv-visual{
+  width:220px;height:220px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 30%,rgba(251,213,106,0.25) 0%,rgba(15,25,45,0.6) 60%,transparent 100%);
+  border-radius:50%;
+  position:relative;
+}
+.mm-ob-lv-crown{
+  font-size:48px;
+  animation:mm-ob-crown-float 2s ease-in-out infinite;
+}
+@keyframes mm-ob-crown-float{
+  0%,100% { transform:translateY(0) }
+  50%    { transform:translateY(-8px) }
+}
+.mm-ob-lv-text{
+  font-size:42px;font-weight:900;
+  background:linear-gradient(135deg,#ffe890,#fbd56a,#d4a020);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:-1px;line-height:1;margin-top:8px;
+  text-shadow:0 0 16px rgba(251,213,106,0.5);
+}
+.mm-ob-lv-tier{
+  font-size:14px;font-weight:900;color:#fff;
+  margin-top:6px;letter-spacing:2px;
+  text-shadow:0 0 8px rgba(251,213,106,0.4);
+}
+
+/* オンボーディングのフッター（ドット＋ボタン） */
+.mm-ob-footer{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  padding:24px;
+  background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.4) 100%);
+}
+.mm-ob-dots{
+  display:flex;justify-content:center;gap:8px;
+  margin-bottom:18px;
+}
+.mm-ob-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(168,184,208,0.3);
+  transition:all 0.3s ease;
+}
+.mm-ob-dot.active{
+  background:#fbd56a;
+  box-shadow:0 0 8px rgba(251,213,106,0.6);
+  width:24px;border-radius:4px;
+}
+.mm-ob-buttons{
+  display:flex;justify-content:space-between;align-items:center;
+  max-width:400px;margin:0 auto;
+}
+.mm-ob-skip{
+  font-size:14px;font-weight:700;color:#7a96b6;
+  background:none;border:none;cursor:pointer;
+  padding:12px 8px;letter-spacing:0.5px;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+}
+.mm-ob-skip:active{color:#cfdaee}
+.mm-ob-next{
+  font-size:16px;font-weight:900;color:#1a1408;
+  background:linear-gradient(135deg,#ffe890,#fbd56a,#d4a020);
+  border:none;border-radius:24px;cursor:pointer;
+  padding:14px 36px;letter-spacing:1.5px;
+  box-shadow:
+    0 4px 16px rgba(251,213,106,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+  transition:transform 0.15s ease;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+}
+.mm-ob-next:active{transform:scale(0.96)}
+
+/* ═══ Phase A：LV.アップ祝福モーダル ═══ */
+#mm-levelup-bg{
+  position:fixed;inset:0;z-index:9998;
+  background:rgba(5,12,22,0.92);
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);
+  padding:20px;
+}
+#mm-levelup-bg.open{display:flex}
+.mm-lu-modal{
+  width:100%;max-width:380px;
+  background:
+    radial-gradient(circle at 30% 20%,rgba(251,213,106,0.18),transparent 60%),
+    radial-gradient(circle at 70% 80%,rgba(255,144,200,0.12),transparent 60%),
+    linear-gradient(180deg,#1a2538 0%,#0d1827 60%,#050a14 100%);
+  border:2px solid rgba(251,213,106,0.5);
+  border-radius:24px;
+  padding:36px 28px 24px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  box-shadow:
+    0 8px 40px rgba(251,213,106,0.3),
+    0 0 80px rgba(255,144,200,0.15);
+  animation:mm-lu-enter 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes mm-lu-enter{
+  0%   { transform:scale(0.3) rotate(-10deg); opacity:0 }
+  60%  { transform:scale(1.1) rotate(3deg); opacity:1 }
+  100% { transform:scale(1) rotate(0); opacity:1 }
+}
+.mm-lu-label{
+  font-size:14px;font-weight:900;letter-spacing:6px;
+  background:linear-gradient(135deg,#fbd56a,#ff90c8);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  margin-bottom:12px;
+  animation:mm-lu-label-pulse 1.5s ease-in-out infinite;
+  text-shadow:0 0 24px rgba(251,213,106,0.5);
+  position:relative;z-index:2;
+}
+@keyframes mm-lu-label-pulse{
+  0%,100% { letter-spacing:6px;opacity:1 }
+  50%    { letter-spacing:9px;opacity:0.85 }
+}
+.mm-lu-lv{
+  font-size:64px;font-weight:900;line-height:1;
+  background:linear-gradient(135deg,#ffe890,#fbd56a,#d4a020);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:-2px;
+  text-shadow:0 0 32px rgba(251,213,106,0.6);
+  margin-bottom:8px;
+  position:relative;z-index:2;
+}
+.mm-lu-arrow{
+  font-size:32px;
+  background:linear-gradient(135deg,#ff90c8,#fbd56a);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  margin:8px 0;
+  animation:mm-lu-arrow 1s ease-in-out infinite;
+  position:relative;z-index:2;
+}
+@keyframes mm-lu-arrow{
+  0%,100% { transform:translateY(0) }
+  50%    { transform:translateY(6px) }
+}
+.mm-lu-tier-new{
+  font-size:32px;font-weight:900;color:#fff;
+  letter-spacing:2px;margin-bottom:6px;
+  text-shadow:
+    0 2px 8px rgba(0,0,0,0.5),
+    0 0 16px rgba(251,213,106,0.4);
+  position:relative;z-index:2;
+}
+.mm-lu-tier-label{
+  font-size:13px;font-weight:900;color:#a8b8d0;
+  letter-spacing:3px;margin-bottom:20px;
+  position:relative;z-index:2;
+}
+.mm-lu-message{
+  font-size:13px;color:#cfdaee;font-weight:700;line-height:1.6;
+  padding:14px 16px;
+  background:rgba(0,0,0,0.3);
+  border-radius:14px;
+  border:1px solid rgba(168,184,208,0.15);
+  margin-bottom:20px;
+  position:relative;z-index:2;
+}
+.mm-lu-message strong{color:#fbd56a}
+.mm-lu-buttons{
+  display:flex;gap:10px;
+  position:relative;z-index:2;
+}
+.mm-lu-share-btn{
+  flex:1;padding:14px 16px;
+  background:linear-gradient(135deg,#1d9bf0 0%,#1681c4 100%);
+  color:#fff;font-weight:900;font-size:14px;letter-spacing:0.5px;
+  border:none;border-radius:14px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 12px rgba(29,155,240,0.4),inset 0 1px 0 rgba(255,255,255,0.3);
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+}
+.mm-lu-share-btn:active{transform:scale(0.97)}
+.mm-lu-share-btn svg{width:14px;height:14px;fill:currentColor}
+.mm-lu-close-btn{
+  flex:1;padding:14px 16px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(168,184,208,0.2);
+  color:#cfdaee;font-weight:900;font-size:14px;
+  border-radius:14px;cursor:pointer;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+}
+.mm-lu-close-btn:active{transform:scale(0.97);background:rgba(255,255,255,0.1)}
+
+/* ホロ箔（LV.99 MAX用） */
+.mm-lu-modal.legendary{
+  border-color:rgba(255,144,200,0.7);
+  box-shadow:
+    0 8px 40px rgba(255,144,200,0.5),
+    0 0 80px rgba(255,144,200,0.25);
+}
+.mm-lu-modal.legendary::after{
+  content:'';
+  position:absolute;
+  inset:-50%;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,0.18) 38%,rgba(255,200,255,0.30) 43%,rgba(180,220,255,0.30) 47%,rgba(255,255,180,0.30) 51%,rgba(255,200,255,0.30) 55%,rgba(255,255,255,0.18) 60%,transparent 70%);
+  background-size:200% 200%;
+  animation:bp-holo-shift 3.5s ease-in-out infinite;
+  pointer-events:none;
+  z-index:1;
+}
 </style>
 
 <!-- ステーションカード モーダル -->
@@ -11500,6 +11877,13 @@ async function loadMypageData(uid) {
         }
       }, 200);
       
+      // ★ LV.アップチェック（階級境界を跨いだら祝福モーダル）
+      if (window.mmCheckLevelUp) {
+        setTimeout(() => {
+          window.mmCheckLevelUp(info.level, info.tierName);
+        }, 800);
+      }
+      
       // バッジコレクション項目のサブ統計
       let badgeEarned = 0;
       let badgeTotal = 0;
@@ -15812,6 +16196,273 @@ if ('serviceWorker' in navigator) {
     await clearAllCaches();
     localStorage.removeItem(VERSION_KEY);
     setTimeout(() => location.reload(), 500);
+  };
+})();
+</script>
+
+<!-- ═══ Phase A：オンボーディング ═══ -->
+<div id="mm-onboarding">
+  <div class="mm-ob-slides">
+    <!-- 画面1：あなたの街、何点？ -->
+    <div class="mm-ob-slide active" data-idx="0">
+      <div class="mm-ob-visual">
+        <div class="mm-ob-sample-card">
+          <div class="mm-ob-card-rank">S</div>
+          <div class="mm-ob-card-name">新宿</div>
+          <div class="mm-ob-card-score">947</div>
+        </div>
+      </div>
+      <div class="mm-ob-title">あなたの街、何点？</div>
+      <div class="mm-ob-subtitle">
+        駅の周辺には<strong>飲食・商業・生活・医療・文化</strong>の点数がある。<br>
+        その合計が、その街の<strong>「街力」</strong>。
+      </div>
+    </div>
+    <!-- 画面2：街にでよう -->
+    <div class="mm-ob-slide" data-idx="1">
+      <div class="mm-ob-visual">
+        <div class="mm-ob-map-visual">
+          <span class="mm-ob-orange-pin mm-ob-orange-pin-center"></span>
+          <span class="mm-ob-orange-pin mm-ob-pin-1"></span>
+          <span class="mm-ob-orange-pin mm-ob-pin-2"></span>
+          <span class="mm-ob-orange-pin mm-ob-pin-3"></span>
+        </div>
+      </div>
+      <div class="mm-ob-title">街にでよう</div>
+      <div class="mm-ob-subtitle">
+        ふと、行ったことない街に行きたくなる。<br>
+        <strong>関東1,747駅</strong>から、あなたの<strong>推し街</strong>を見つけよう。
+      </div>
+    </div>
+    <!-- 画面3：街めぐマスター -->
+    <div class="mm-ob-slide" data-idx="2">
+      <div class="mm-ob-visual">
+        <div class="mm-ob-lv-visual">
+          <div class="mm-ob-lv-crown">👑</div>
+          <div class="mm-ob-lv-text">LV.99</div>
+          <div class="mm-ob-lv-tier">街マスター</div>
+        </div>
+      </div>
+      <div class="mm-ob-title">街めぐマスターへ</div>
+      <div class="mm-ob-subtitle">
+        駅を訪れて<strong>カード</strong>を集め、<strong>バッジ</strong>を獲得。<br>
+        いつしか、あなたも<strong>街めぐマスター</strong>。
+      </div>
+    </div>
+  </div>
+  <div class="mm-ob-footer">
+    <div class="mm-ob-dots">
+      <div class="mm-ob-dot active" data-idx="0"></div>
+      <div class="mm-ob-dot" data-idx="1"></div>
+      <div class="mm-ob-dot" data-idx="2"></div>
+    </div>
+    <div class="mm-ob-buttons">
+      <button class="mm-ob-skip" onclick="window.mmOnboardingSkip()" type="button">スキップ</button>
+      <button class="mm-ob-next" id="mm-ob-next-btn" onclick="window.mmOnboardingNext()" type="button">つぎへ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Phase A：LV.アップ祝福モーダル ═══ -->
+<div id="mm-levelup-bg" onclick="if(event.target.id==='mm-levelup-bg')window.mmLevelUpClose()">
+  <div class="mm-lu-modal" id="mm-lu-modal" onclick="event.stopPropagation()">
+    <div class="mm-lu-label">✦ LEVEL UP ✦</div>
+    <div class="mm-lu-lv">LV.<span id="mm-lu-new-lv">10</span></div>
+    <div class="mm-lu-arrow">▼</div>
+    <div class="mm-lu-tier-new" id="mm-lu-tier-new">街めぐビギナー</div>
+    <div class="mm-lu-tier-label">新しい称号を獲得！</div>
+    <div class="mm-lu-message" id="mm-lu-message">
+      累計 <strong>500 XP</strong> 達成<br>
+      次の称号「街角ウォッチャー」まであと <strong>1000 XP</strong>
+    </div>
+    <div class="mm-lu-buttons">
+      <button class="mm-lu-share-btn" onclick="window.mmLevelUpShare()" type="button">
+        <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        Xで自慢
+      </button>
+      <button class="mm-lu-close-btn" onclick="window.mmLevelUpClose()" type="button">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ Phase A：オンボーディングロジック ═══
+(function(){
+  const ONBOARD_KEY = 'mm_onboarded_v1';
+  const TOTAL_SLIDES = 3;
+  let currentSlide = 0;
+  
+  function showSlide(idx){
+    const slides = document.querySelectorAll('.mm-ob-slide');
+    const dots = document.querySelectorAll('.mm-ob-dot');
+    const nextBtn = document.getElementById('mm-ob-next-btn');
+    
+    slides.forEach((s, i) => {
+      s.classList.remove('active', 'exit');
+      if (i === idx) {
+        s.classList.add('active');
+      } else if (i < idx) {
+        s.classList.add('exit');
+      }
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    
+    // 最後のスライドなら「はじめる」ボタンに
+    if (nextBtn) {
+      nextBtn.textContent = (idx >= TOTAL_SLIDES - 1) ? 'はじめる' : 'つぎへ';
+    }
+    currentSlide = idx;
+  }
+  
+  window.mmOnboardingNext = function(){
+    if (currentSlide >= TOTAL_SLIDES - 1) {
+      window.mmOnboardingFinish();
+    } else {
+      showSlide(currentSlide + 1);
+    }
+  };
+  
+  window.mmOnboardingSkip = function(){
+    window.mmOnboardingFinish();
+  };
+  
+  window.mmOnboardingFinish = function(){
+    try { localStorage.setItem(ONBOARD_KEY, '1'); } catch(e) {}
+    const el = document.getElementById('mm-onboarding');
+    if (el) {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity 0.4s ease';
+      setTimeout(() => {
+        el.classList.remove('open');
+        el.style.opacity = '';
+        el.style.transition = '';
+      }, 400);
+    }
+    // Analytics
+    if (window.safeLogEvent) window.safeLogEvent('onboarding_complete', {});
+  };
+  
+  // 設定からの再表示用
+  window.mmOnboardingShow = function(){
+    currentSlide = 0;
+    showSlide(0);
+    const el = document.getElementById('mm-onboarding');
+    if (el) el.classList.add('open');
+  };
+  
+  // 初回起動時に表示
+  function checkAndShowOnboarding(){
+    let shown = false;
+    try { shown = localStorage.getItem(ONBOARD_KEY) === '1'; } catch(e) {}
+    if (!shown) {
+      // 少し遅延させる（スプラッシュ消えてから）
+      setTimeout(() => {
+        window.mmOnboardingShow();
+      }, 800);
+    }
+  }
+  
+  // スプラッシュが消えた後（DOMContentLoadedより少し後）にチェック
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkAndShowOnboarding);
+  } else {
+    checkAndShowOnboarding();
+  }
+})();
+
+// ═══ Phase A：LV.アップ祝福ロジック ═══
+(function(){
+  const LAST_LV_KEY = 'mm_last_master_lv_v1';
+  
+  // 階級ごとのメッセージ
+  const TIER_MESSAGES = {
+    10: '街めぐビギナーとして本格スタート。これからが楽しい！',
+    20: '街角を見る目が変わってきた。観察眼を磨こう。',
+    30: 'エリアの全体感が見えてきた。深掘り開始！',
+    40: 'もう立派なジモティ。地元愛が深まる頃。',
+    50: '街通の称号。あなたは街を知り尽くしている。',
+    60: 'エリアマスターに認定。複数エリアを制覇しよう。',
+    70: '街巡求道者。極限の探究心がここに。',
+    80: '街めぐレジェンド。あなたの足跡が伝説に。',
+    90: '街マスターに到達！残るは完全制覇のみ。',
+    99: 'おめでとう！街めぐ世界の頂点に立った。'
+  };
+  
+  // 階級が上がった瞬間を検知（LV.10, 20, 30, ..., 90, 99）
+  function getTierMilestone(level){
+    // tierが変わるレベル：10, 20, 30, ..., 90
+    // 99は別途特別扱い
+    if (level >= 99) return 99;
+    if (level >= 10 && level % 10 === 0) return level;
+    return null;
+  }
+  
+  // マスターLVをチェックして、上がってたら祝福
+  window.mmCheckLevelUp = function(currentLevel, tierName){
+    if (!currentLevel || currentLevel < 1) return;
+    let lastLv = 0;
+    try {
+      const v = localStorage.getItem(LAST_LV_KEY);
+      lastLv = v ? parseInt(v, 10) : 0;
+    } catch(e) {}
+    
+    // 初回（lastLv=0）は記録だけして祝福しない
+    if (lastLv === 0) {
+      try { localStorage.setItem(LAST_LV_KEY, String(currentLevel)); } catch(e) {}
+      return;
+    }
+    
+    // 階級境界を跨いだか確認（lastLv < milestone <= currentLevel）
+    const milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 99];
+    const crossed = milestones.find(m => lastLv < m && currentLevel >= m);
+    
+    if (crossed) {
+      // 祝福モーダル表示
+      showLevelUpModal(crossed, tierName);
+    }
+    
+    // 記録更新
+    try { localStorage.setItem(LAST_LV_KEY, String(currentLevel)); } catch(e) {}
+  };
+  
+  function showLevelUpModal(milestone, tierName){
+    const modal = document.getElementById('mm-lu-modal');
+    if (!modal) return;
+    
+    document.getElementById('mm-lu-new-lv').textContent = milestone;
+    document.getElementById('mm-lu-tier-new').textContent = tierName || window.BP_TIER_NAMES[Math.floor(milestone/10)] || '';
+    document.getElementById('mm-lu-message').innerHTML = TIER_MESSAGES[milestone] || '次の階級を目指そう！';
+    
+    modal.classList.toggle('legendary', milestone >= 99);
+    
+    document.getElementById('mm-levelup-bg').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    
+    // 現在のmilestoneを記憶（シェア用）
+    window._mmCurrentLevelUp = { milestone, tierName };
+    
+    // Analytics
+    if (window.safeLogEvent) window.safeLogEvent('level_up', { level: milestone });
+  }
+  
+  window.mmLevelUpClose = function(){
+    const bg = document.getElementById('mm-levelup-bg');
+    if (bg) bg.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+  
+  window.mmLevelUpShare = function(){
+    const data = window._mmCurrentLevelUp;
+    if (!data) return;
+    const tier = data.tierName || window.BP_TIER_NAMES[Math.floor(data.milestone/10)] || '';
+    const text = `街巡-まちめぐ- ${tier} LV.${data.milestone} に到達！\n#街巡まちめぐ #街にでよう`;
+    const url = 'https://machimegu.com';
+    
+    if (navigator.share) {
+      navigator.share({ title: '街巡-まちめぐ-', text, url }).catch(()=>{});
+    } else {
+      window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank');
+    }
   };
 })();
 </script>
