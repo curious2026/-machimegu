@@ -1599,8 +1599,14 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .mp-link:hover{color:#58a8e0}
 .mp-link:hover{color:#7fbce8;text-decoration:underline}
 .mp-badge-preview{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px;
+  /* ★index176: auto-fillだと端列が余って虫食いに見えるので auto-fit + 4列上限で詰める */
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(72px, 1fr));
+  gap:10px;
   min-height:80px;
+}
+@media (min-width: 480px){
+  .mp-badge-preview{ grid-template-columns:repeat(4, 1fr); }
 }
 .mp-badge-preview .mp-empty{grid-column:1/-1;padding:30px 20px;font-size:13px}
 
@@ -12626,7 +12632,7 @@ async function loadMypageData(uid) {
       const rankResults = calcRankConquest(cards, rankTotals);
       
       const badgeXP = window.bpCalcTotalXP(rankResults, lineResults, realCheckins, cards);
-      const cardXP = Math.floor((totalPower || 0) / 100);  // 案A: score ÷ 100
+      const cardXP = Math.floor((totalPower || 0) / 50);  // ★index178: 案A改訂 score ÷ 50（カード収集をXPの主軸に、関東制覇でLV.90+届くライン）
       const masterXP = cardXP + badgeXP;
       
       const info = window.bpGetLevelInfo(masterXP);
@@ -12695,7 +12701,7 @@ async function loadMypageData(uid) {
         else if (r.tier === 'bronze') badgeEarned += 1;
       });
       // チェックイン
-      [10, 50, 100, 500, 1000, 5000].forEach(m => {
+      [10, 50, 100, 500, 1000, 5000, 10000, 30000].forEach(m => {
         badgeTotal++;
         if (realCheckins >= m) badgeEarned++;
       });
@@ -13771,7 +13777,7 @@ async function checkAndAwardBadges(uid) {
     const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
       const total = userDoc.data().totalCheckins || 0;
-      const milestones = [10, 50, 100, 500, 1000, 5000];
+      const milestones = [10, 50, 100, 500, 1000, 5000, 10000, 30000];
       milestones.forEach(m => {
         if (total >= m) {
           const id = `checkin_${m}`;
@@ -14732,6 +14738,9 @@ window.bpRarityLine = function(tier){
 
 // チェックイン回数のレアリティ
 window.bpRarityCheckin = function(count){
+  // ★index177: 30000/10000閾値追加（ヘビーユーザー天井解放）。最大rarity 5 を維持
+  if (count >= 30000) return 5;
+  if (count >= 10000) return 5;
   if (count >= 5000) return 5;
   if (count >= 1000) return 5;
   if (count >= 500)  return 4;
@@ -15035,16 +15044,17 @@ window.bpCalcTotalXP = function(rankResults, lineResults, totalCheckins, userCar
     });
   });
   
-  // 路線制覇（専用XPテーブル：銅にもしっかり配点、金は最高峰）
-  // 銅=25, 銀=75, 金=300（カード:バッジ ≒ 1:1の整合性を保ちつつ路線への報酬を厚くする）
-  const LINE_XP = { bronze: 25, silver: 75, gold: 300 };
+  // 路線制覇（専用XPテーブル）
+  // ★index177: 段差再設計 bronze:silver:gold = 1:2.5:5 = 40:100:200
+  //   旧 25:75:300 はgold突出（rarity5の250を超えてた）、silver割を食ってた
+  const LINE_XP = { bronze: 40, silver: 100, gold: 200 };
   lineResults.forEach(r => {
     if (r.total === 0 || !r.tier) return;
     total += LINE_XP[r.tier] || 0;
   });
   
   // チェックイン
-  [10,50,100,500,1000,5000].forEach(m => {
+  [10,50,100,500,1000,5000,10000,30000].forEach(m => {
     if (totalCheckins >= m) {
       const rarity = window.bpRarityCheckin(m);
       total += XP[rarity] || 0;
@@ -15052,9 +15062,11 @@ window.bpCalcTotalXP = function(rankResults, lineResults, totalCheckins, userCar
   });
   
   // リピート
+  // ★index177: 閾値拡張 [10,30,60,100] → [10,30,60,100,200]
+  //   バッジ表示は「神」(100回)が天井のままだが、200回到達で追加 +250 XP（ヘビーユーザーの天井解放）
   userCards.forEach(c => {
     const vc = c.visitCount || 1;
-    [10,30,60,100].forEach(t => {
+    [10,30,60,100,200].forEach(t => {
       if (vc >= t) {
         let rarity = 2;
         if (t >= 100) rarity = 5;
@@ -15074,9 +15086,9 @@ window.bpCalcTotalXP = function(rankResults, lineResults, totalCheckins, userCar
         st.cards.forEach(card => {
           if (!card || !card.special) return;
           if (card.special === 'shiny') {
-            total += 100;  // シャイニー +100 XP
+            total += 30;  // ★index177: シャイニー +30 XP（旧+100、運要素抑制）
           } else if (typeof card.special === 'string' && card.special.startsWith('mythic')) {
-            total += 300;  // ミシック +300 XP
+            total += 100;  // ★index177: ミシック +100 XP（旧+300、運要素抑制）
           }
         });
       });
@@ -15142,7 +15154,7 @@ window.updateCollectionStats = function(rankResults, lineResults, totalCheckins,
   });
   
   // チェックイン：6マイルストーン
-  const checkinMilestones = [10, 50, 100, 500, 1000, 5000];
+  const checkinMilestones = [10, 50, 100, 500, 1000, 5000, 10000, 30000];
   let checkinEarned = checkinMilestones.filter(m => totalCheckins >= m).length;
   let checkinTotalSlots = checkinMilestones.length;
   
@@ -15373,7 +15385,7 @@ window.updateNextGoal = function(rankResults, lineResults, totalCheckins){
   });
   
   // チェックイン回数の次のマイルストーン
-  const milestones = [10, 50, 100, 500, 1000, 5000];
+  const milestones = [10, 50, 100, 500, 1000, 5000, 10000, 30000];
   for (const m of milestones) {
     if (totalCheckins < m) {
       candidates.push({
@@ -15407,7 +15419,7 @@ window.updateNextGoal = function(rankResults, lineResults, totalCheckins){
 function renderCheckinBadges(total, userBadges) {
   const el = document.getElementById('bp-checkin');
   if (!el) return;
-  const milestones = [10, 50, 100, 500, 1000, 5000];
+  const milestones = [10, 50, 100, 500, 1000, 5000, 10000, 30000];
   let html = '';
   let earnedCount = 0;
   milestones.forEach(m => {
@@ -16029,7 +16041,12 @@ async function renderMypageBadgePreview() {
     }
     
     // 最新獲得順（earnedAt降順）でソートして上位8個
-    const arr = [...userBadges.values()].sort((a, b) => {
+    // ★index176: 週間ミッション系（mission / mission_milestone）はマイページプレビューから除外
+    //   理由：マイページのバッジコレクションは「街」「路線」「ランク」「エリア」「チェックイン」「同じ街」を見せる場。
+    //         ミッション達成バッジはバッジページ専用セクションで完結させる。
+    const arr = [...userBadges.values()]
+      .filter(b => b.type !== 'mission' && b.type !== 'mission_milestone')
+      .sort((a, b) => {
       const ta = a.earnedAt && a.earnedAt.toMillis ? a.earnedAt.toMillis() : 
                  (a.earnedAt && a.earnedAt.seconds ? a.earnedAt.seconds*1000 : 0);
       const tb = b.earnedAt && b.earnedAt.toMillis ? b.earnedAt.toMillis() : 
@@ -16854,42 +16871,49 @@ if ('serviceWorker' in navigator) {
       return scrollToTopSafe(cmBg);
     }
 
-    // 3. マイカード一覧
+    // 3. バッジページ（z-index 7900、★index176追加）
+    const bpBg = document.getElementById('badgepage-bg');
+    if (bpBg && bpBg.classList.contains('open')) {
+      console.log('[TopTap] target: badgepage-bg');
+      return scrollToTopSafe(bpBg);
+    }
+
+    // 4. マイカード一覧
     const clBg = document.getElementById('cardlist-bg');
     if (clBg && clBg.classList.contains('open')) {
       console.log('[TopTap] target: cardlist-bg');
       return scrollToTopSafe(clBg);
     }
 
-    // 4. マイページ
+    // 5. マイページ
     const mpBg = document.getElementById('mypage-bg');
     if (mpBg && mpBg.classList.contains('open')) {
       console.log('[TopTap] target: mypage-bg');
       return scrollToTopSafe(mpBg);
     }
 
-    // 5. 履歴
+    // 6. 履歴
     const hsBg = document.getElementById('history-bg');
     if (hsBg && hsBg.classList.contains('open')) {
       console.log('[TopTap] target: history-bg');
       return scrollToTopSafe(hsBg);
     }
 
-    // 6. ボーナス内訳モーダル（もしあれば）
+    // 7. ボーナス内訳モーダル（もしあれば）
     const bnBg = document.getElementById('bonus-detail-bg');
     if (bnBg && isVisible(bnBg) && bnBg.classList.contains('open')) {
       console.log('[TopTap] target: bonus-detail-bg');
       return scrollToTopSafe(bnBg);
     }
 
-    // 7. 街力ランキング（地図画面右の rank-list）
+    // 8. 街力ランキング（地図画面右の rank-list）
     const rankList = document.getElementById('rank-list');
     if (rankList && isVisible(rankList) && rankList.scrollTop > 0) {
       console.log('[TopTap] target: rank-list');
       return scrollToTopSafe(rankList);
     }
 
-    // 8. デフォルト：windowをスクロール
+    // 9. デフォルト：windowをスクロール
     console.log('[TopTap] target: window (default)');
     try {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -17460,22 +17484,44 @@ if ('serviceWorker' in navigator) {
   };
   
   // ボーナス受け取り
+  // ★index176: 受取できない問題の調査用にデバッグログ追加＋pendingBonusXPフォールバック強化
   window.mmClaimLoginBonus = async function(){
-    const user = auth.currentUser;
-    if (!user) return;
-    const state = await window.mmGetDailyState(user.uid);
-    if (!state || state.bonusClaimedToday) return;
-    
-    await window.mmSetDailyState(user.uid, { bonusClaimedToday: true });
-    
-    // UI更新
-    const bonusRow = document.getElementById('mp-daily-bonus-row');
-    if (bonusRow) {
-      bonusRow.innerHTML = `<div class="mp-daily-bonus claimed"><span>✓</span> ログインボーナス +${state.pendingBonusXP || 0} XP 受取済み</div>`;
+    try {
+      console.log('[Bonus] claim開始');
+      const user = auth.currentUser;
+      if (!user) { console.warn('[Bonus] auth.currentUser=null'); return; }
+      console.log('[Bonus] uid=', user.uid);
+      const state = await window.mmGetDailyState(user.uid);
+      console.log('[Bonus] state=', state);
+      if (!state) { console.warn('[Bonus] state=null（mmGetDailyState失敗）'); return; }
+      if (state.bonusClaimedToday) { 
+        console.warn('[Bonus] already claimed today、UIだけ更新'); 
+        // 表示と実データの乖離が起きてるケース：UI側を「受取済み」に直す
+        const bonusRowFix = document.getElementById('mp-daily-bonus-row');
+        if (bonusRowFix) {
+          bonusRowFix.innerHTML = `<div class="mp-daily-bonus claimed"><span>✓</span> ログインボーナス +${state.pendingBonusXP || state.lastBonusXP || 0} XP 受取済み</div>`;
+        }
+        return;
+      }
+      
+      // 保存（bonusClaimedToday=true）
+      await window.mmSetDailyState(user.uid, { bonusClaimedToday: true });
+      console.log('[Bonus] 受取完了 Firestore保存');
+      
+      // UI更新（pendingBonusXP が無ければ lastBonusXP / 既定値 にフォールバック）
+      const xp = state.pendingBonusXP || state.lastBonusXP || 10;
+      const bonusRow = document.getElementById('mp-daily-bonus-row');
+      if (bonusRow) {
+        bonusRow.innerHTML = `<div class="mp-daily-bonus claimed"><span>✓</span> ログインボーナス +${xp} XP 受取済み</div>`;
+      }
+      
+      // トースト
+      if (typeof window.mmShowMissionToast === 'function') {
+        window.mmShowMissionToast(`ログインボーナス`, xp);
+      }
+    } catch (e) {
+      console.error('[Bonus] claim中に例外:', e);
     }
-    
-    // トースト
-    window.mmShowMissionToast(`ログインボーナス`, state.pendingBonusXP || 0);
   };
   
   // ミッション達成トースト表示
@@ -18002,6 +18048,47 @@ if ('serviceWorker' in navigator) {
   <span>オンラインに復帰</span>
 </div>
 
+<!-- ═══ index176：マイページ統計セクション(獲得カード/チェックイン/SABCD)を
+     カードコレクションページの「獲得Score」直下に物理移動 ═══ -->
+<script>
+(function(){
+  function mmRelocateMpStatsToCardList(){
+    try {
+      const stats = document.querySelector('#mypage-bg .mp-stats');
+      const clBanner = document.getElementById('cl-score-banner');
+      if (!stats || !clBanner) return false;
+      // 二重移動防止
+      if (stats.dataset.mmRelocated === '1') return true;
+      // cl-score-bannerの直後（hist-controlsの直前）に移動
+      const parent = clBanner.parentNode;
+      if (!parent) return false;
+      parent.insertBefore(stats, clBanner.nextSibling);
+      stats.dataset.mmRelocated = '1';
+      // cl-bodyの世界観に合わせて余白調整（細部）
+      stats.style.borderBottom = 'none';
+      stats.style.paddingTop = '14px';
+      stats.style.paddingBottom = '4px';
+      console.log('[Relocate] mp-stats → cl-score-banner直下に移動完了');
+      return true;
+    } catch (e) {
+      console.warn('[Relocate] mp-stats移動エラー:', e);
+      return false;
+    }
+  }
+  function setup(){
+    // 即時1回 + 遅延フォールバック（モジュールスクリプト読み込み後）
+    if (mmRelocateMpStatsToCardList()) return;
+    setTimeout(mmRelocateMpStatsToCardList, 300);
+    setTimeout(mmRelocateMpStatsToCardList, 1500);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup);
+  } else {
+    setup();
+  }
+})();
+</script>
+
 <!-- ═══ index170：フローティング「↑トップへ」ボタン ═══ -->
 <button id="mm-scroll-top-btn" 
         type="button"
@@ -18016,9 +18103,11 @@ if ('serviceWorker' in navigator) {
   const SCROLL_THRESHOLD = 200;
   
   // 監視対象のモーダル ID 一覧（z-index 降順 = 上に重なる順）
+  // ★index176: badgepage-bg 追加。バッジページで↑ボタンが出ない問題の修正。
   const MODAL_IDS = [
     'cardversion-bg',
     'card-modal-bg',
+    'badgepage-bg',
     'cardlist-bg',
     'mypage-bg',
     'history-bg',
@@ -18033,6 +18122,12 @@ if ('serviceWorker' in navigator) {
       if (el && el.classList.contains('open')) {
         return el;
       }
+    }
+    // ★index176: モーダルが開いてないが、地図画面の街力ランキング(rank-list)が
+    //   見えていてスクロールされてる場合はそれを対象にする
+    const rankList = document.getElementById('rank-list');
+    if (rankList && rankList.offsetParent !== null && rankList.scrollTop > 0) {
+      return rankList;
     }
     return null;
   }
