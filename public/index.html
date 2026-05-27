@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index159 (cache-bust 2026.05.28-11:00) -->
+<!-- VERSION: index161 (cache-bust 2026.05.28-15:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -953,6 +953,162 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 @media (max-width:480px){
   .mp-score-banner{padding:18px 16px 14px}
   .mp-score-value{font-size:36px}
+}
+
+/* ═══ 街めぐマスターパネル（マイページ最上部） ═══ */
+.mp-master-panel{
+  padding:20px 20px 18px;
+  border-bottom:1px solid rgba(120,150,210,0.15);
+  background:
+    radial-gradient(circle at 20% 20%,rgba(251,213,106,0.12),transparent 50%),
+    radial-gradient(circle at 80% 80%,rgba(255,144,200,0.08),transparent 50%),
+    linear-gradient(180deg,rgba(45,60,100,0.25) 0%,rgba(15,25,45,0.4) 100%);
+  position:relative;
+  overflow:hidden;
+}
+.mp-master-panel::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#fbd56a 0%,#ff90c8 50%,#5db8ec 100%);
+  opacity:0.85;
+}
+.mp-master-label{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:900;color:#a8b8d0;
+  letter-spacing:2.5px;margin-bottom:10px;
+  text-transform:uppercase;
+}
+.mp-master-emoji{
+  font-size:18px;
+  filter:drop-shadow(0 0 6px rgba(251,213,106,0.5));
+}
+.mp-master-header{
+  display:flex;align-items:baseline;gap:12px;
+  margin-bottom:8px;
+}
+.mp-master-lv-badge{
+  font-size:13px;font-weight:900;
+  background:linear-gradient(135deg,#fbd56a 0%,#d4a020 100%);
+  color:#1a1408;letter-spacing:1px;
+  padding:4px 10px;border-radius:9px;
+  box-shadow:0 2px 8px rgba(251,213,106,0.5),inset 0 1px 0 rgba(255,255,255,0.5);
+}
+.mp-master-tier{
+  font-size:20px;font-weight:900;color:#fff;letter-spacing:1.5px;
+  text-shadow:0 2px 6px rgba(0,0,0,0.5);
+}
+.mp-master-xp-row{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:#cfdaee;letter-spacing:0.5px;
+  font-weight:700;margin-bottom:6px;
+}
+.mp-master-xp-total{color:#fff}
+.mp-master-xp-total strong{
+  color:#fbd56a;font-weight:900;font-size:14px;
+  text-shadow:0 0 6px rgba(251,213,106,0.3);
+}
+.mp-master-next{font-size:11px;color:#a8b8d0}
+.mp-master-bar{
+  height:8px;
+  background:rgba(255,255,255,0.06);
+  border-radius:4px;overflow:hidden;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);
+  margin-bottom:10px;
+}
+.mp-master-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,#fbd56a 0%,#ffe890 50%,#fbd56a 100%);
+  border-radius:4px;
+  box-shadow:0 0 8px rgba(251,213,106,0.6);
+  transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative;
+}
+.mp-master-bar-fill::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.4) 50%,transparent 100%);
+  background-size:200% 100%;
+  animation:bp-progress-shimmer 2.5s linear infinite;
+}
+.mp-master-bar-fill.legendary{
+  background:linear-gradient(90deg,#ff90c8 0%,#fbd56a 50%,#ff90c8 100%);
+  box-shadow:0 0 12px rgba(255,144,200,0.8);
+}
+.mp-master-breakdown{
+  display:flex;gap:10px;
+  font-size:11px;color:#a8b8d0;font-weight:700;
+}
+.mp-master-bd-item{
+  flex:1;
+  background:rgba(0,0,0,0.2);
+  padding:6px 10px;border-radius:8px;
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+}
+.mp-master-bd-item span:first-child{
+  display:inline-flex;align-items:center;gap:4px;
+}
+.mp-master-bd-item strong{
+  color:#fff;font-weight:900;
+}
+@media (max-width:480px){
+  .mp-master-panel{padding:18px 16px 14px}
+  .mp-master-tier{font-size:18px}
+}
+
+/* カード・バッジコレクション項目のサブ情報 */
+.mp-section-substat{
+  font-size:11px;color:#9fb8d8;font-weight:700;
+  letter-spacing:0.5px;margin-top:2px;
+}
+.mp-section-substat strong{
+  color:#fbd56a;font-weight:900;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ═══ カードコレクションページ：獲得Scoreバナー ═══ */
+.cl-score-banner{
+  padding:20px 18px 18px;
+  text-align:center;
+  background:
+    radial-gradient(circle at 30% 30%,rgba(93,184,236,0.12),transparent 50%),
+    linear-gradient(180deg,rgba(45,95,122,0.18) 0%,rgba(15,40,70,0.25) 100%);
+  border-bottom:1px solid rgba(120,150,210,0.15);
+  position:relative;
+  overflow:hidden;
+}
+.cl-score-banner::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#22d3ee 0%,#5db8ec 50%,#22d3ee 100%);
+  opacity:0.7;
+}
+.cl-score-label{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:900;color:#9fb8d8;
+  letter-spacing:3px;margin-bottom:6px;
+  text-transform:uppercase;
+}
+.cl-score-value{
+  font-size:42px;font-weight:900;
+  background:linear-gradient(135deg,#90d4f8 0%,#22d3ee 50%,#5db8ec 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:1px;line-height:1.1;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 2px 12px rgba(34,211,238,0.4);
+  margin-bottom:6px;
+}
+.cl-score-sub{
+  display:flex;justify-content:center;gap:14px;
+  font-size:11px;color:#a8b8d0;font-weight:700;
+  letter-spacing:0.5px;
+}
+.cl-score-sub-item strong{
+  color:#fff;font-weight:900;font-size:13px;
+}
+@media (max-width:480px){
+  .cl-score-banner{padding:16px 14px 14px}
+  .cl-score-value{font-size:36px}
 }
 
 .mp-profile{
@@ -5851,10 +6007,33 @@ body.checkin-active #checkin-indicator{
       </div>
     </div>
     
-    <!-- 獲得Scoreバナー -->
-    <div class="mp-score-banner">
-      <div class="mp-score-label">獲得Score</div>
-      <div class="mp-score-value" id="mp-acquired-score">0</div>
+    <!-- 街めぐマスターパネル（カード+バッジ統合の総合レベル） -->
+    <div class="mp-master-panel" id="mp-master-panel">
+      <div class="mp-master-label">
+        <span class="mp-master-emoji">🎴</span>
+        <span>街めぐマスター</span>
+      </div>
+      <div class="mp-master-header">
+        <span class="mp-master-lv-badge">LV.<span id="mp-master-lv">1</span></span>
+        <span class="mp-master-tier" id="mp-master-tier">初心者市民</span>
+      </div>
+      <div class="mp-master-xp-row">
+        <span class="mp-master-xp-total"><strong id="mp-master-xp-current">0</strong> XP</span>
+        <span class="mp-master-next" id="mp-master-next">次のレベルまで - XP</span>
+      </div>
+      <div class="mp-master-bar">
+        <div class="mp-master-bar-fill" id="mp-master-bar-fill" style="width:0%"></div>
+      </div>
+      <div class="mp-master-breakdown">
+        <div class="mp-master-bd-item">
+          <span>💎 カード</span>
+          <strong id="mp-master-card-xp">0</strong>
+        </div>
+        <div class="mp-master-bd-item">
+          <span>🎖 バッジ</span>
+          <strong id="mp-master-badge-xp">0</strong>
+        </div>
+      </div>
     </div>
     
     <!-- プロフィール（D-2.2：左にアカウント+街力ボタン、右に推し街） -->
@@ -5906,7 +6085,10 @@ body.checkin-active #checkin-indicator{
     <!-- カードコレクション（マイページ内プレビュー：6枚まで） -->
     <div class="mp-section">
       <div class="mp-section-title">
-        <span>カードコレクション</span>
+        <span>
+          カードコレクション
+          <div class="mp-section-substat">💎 獲得Score <strong id="mp-card-substat-score">0</strong></div>
+        </span>
         <div style="display:flex;align-items:center;gap:10px">
           <span class="mp-section-count" id="mp-card-count">0枚</span>
           <button class="mp-link" onclick="openCardListPage()">全部見る →</button>
@@ -5920,7 +6102,10 @@ body.checkin-active #checkin-indicator{
     <!-- バッジコレクション -->
     <div class="mp-section">
       <div class="mp-section-title">
-        <span>バッジコレクション</span>
+        <span>
+          バッジコレクション
+          <div class="mp-section-substat">🎖 <strong id="mp-badge-substat-earned">0</strong> / <span id="mp-badge-substat-total">0</span> 獲得</div>
+        </span>
         <div style="display:flex;align-items:center;gap:10px">
           <span class="mp-section-count" id="mp-badge-count">0個</span>
           <button class="mp-link" onclick="openBadgePage()">全部見る →</button>
@@ -5984,6 +6169,19 @@ body.checkin-active #checkin-indicator{
       <div style="width:36px"></div>
     </div>
     <div class="cl-body">
+      <!-- 獲得Scoreバナー（カード派の聖地） -->
+      <div class="cl-score-banner" id="cl-score-banner">
+        <div class="cl-score-label">
+          <span>💎</span>
+          <span>獲得Score</span>
+        </div>
+        <div class="cl-score-value" id="cl-score-value">0</div>
+        <div class="cl-score-sub">
+          <div class="cl-score-sub-item"><strong id="cl-score-cards">0</strong> 枚</div>
+          <div class="cl-score-sub-item"><strong id="cl-score-checkins">0</strong> チェックイン</div>
+          <div class="cl-score-sub-item">平均 <strong id="cl-score-avg">0</strong></div>
+        </div>
+      </div>
       <div class="hist-controls" style="margin-bottom:14px">
         <div class="hist-sort-row">
           <span class="hist-sort-label">並び順</span>
@@ -6030,12 +6228,12 @@ body.checkin-active #checkin-indicator{
     <div class="cl-body" id="bp-body">
       <div id="bp-level-panel" class="bp-level-panel" style="display:none">
         <div class="bp-lv-header">
-          <span class="bp-lv-badge">LV.<span id="bp-lv-number-inline">1</span></span>
+          <span class="bp-lv-badge">🎖 バッジ達成 LV.<span id="bp-lv-number-inline">1</span></span>
           <span class="bp-lv-tier" id="bp-lv-tier">初心者市民</span>
         </div>
         <div class="bp-lv-xp-row">
-          <span><strong id="bp-lv-xp-current">0</strong> XP</span>
-          <span class="bp-lv-next" id="bp-lv-next">次のレベルまで 100 XP</span>
+          <span><strong id="bp-lv-xp-current">0</strong> バッジXP</span>
+          <span class="bp-lv-next" id="bp-lv-next">次のレベルまで - XP</span>
         </div>
         <div class="bp-lv-bar"><div class="bp-lv-bar-fill" id="bp-lv-bar-fill" style="width:0%"></div></div>
       </div>
@@ -11252,9 +11450,96 @@ async function loadMypageData(uid) {
     document.getElementById('mp-st-cards').textContent = cards.length;
     document.getElementById('mp-st-checkins').textContent = totalCheckins;
     
-    // 獲得Score表示（各駅初訪問時のスコア合計）
-    const scoreEl = document.getElementById('mp-acquired-score');
-    if (scoreEl) scoreEl.textContent = (totalPower || 0).toLocaleString();
+    // 獲得Score（カード由来）= カード由来XPの元になる数値
+    const cardSubstat = document.getElementById('mp-card-substat-score');
+    if (cardSubstat) cardSubstat.textContent = (totalPower || 0).toLocaleString();
+    
+    // ─── 街めぐマスター LV.X 計算（カード+バッジ統合） ───
+    try {
+      // バッジXPを計算するため、バッジ・ランク・路線データも取得
+      const userBadges = await fetchUserBadges(uid);
+      const userDocSnap = await getDoc(doc(db, 'users', uid));
+      const userProfile = userDocSnap.exists() ? userDocSnap.data() : null;
+      const realCheckins = userProfile ? (userProfile.totalCheckins || totalCheckins) : totalCheckins;
+      
+      const lineMaster = buildLineMaster();
+      const lineResults = calcLineConquest(lineMaster, cards);
+      const rankTotals = buildRankTotals();
+      const rankResults = calcRankConquest(cards, rankTotals);
+      
+      const badgeXP = window.bpCalcTotalXP(rankResults, lineResults, realCheckins, cards);
+      const cardXP = Math.floor((totalPower || 0) / 100);  // 案A: score ÷ 100
+      const masterXP = cardXP + badgeXP;
+      
+      const info = window.bpGetLevelInfo(masterXP);
+      
+      // マスターパネル更新
+      const lvEl = document.getElementById('mp-master-lv');
+      const tierEl = document.getElementById('mp-master-tier');
+      const xpCurEl = document.getElementById('mp-master-xp-current');
+      const nextEl = document.getElementById('mp-master-next');
+      const barFill = document.getElementById('mp-master-bar-fill');
+      const cardXpEl = document.getElementById('mp-master-card-xp');
+      const badgeXpEl = document.getElementById('mp-master-badge-xp');
+      
+      if (lvEl) lvEl.textContent = info.level;
+      if (tierEl) tierEl.textContent = info.tierName;
+      if (xpCurEl) xpCurEl.textContent = info.totalXP.toLocaleString();
+      if (nextEl) {
+        nextEl.textContent = info.isMax ? '☆ MAX LEVEL ☆' : 
+          `次のレベルまで ${(info.needForNextLv - info.progressInLv).toLocaleString()} XP`;
+      }
+      if (cardXpEl) cardXpEl.textContent = cardXP.toLocaleString();
+      if (badgeXpEl) badgeXpEl.textContent = badgeXP.toLocaleString();
+      
+      // バーアニメ
+      setTimeout(() => {
+        if (barFill) {
+          barFill.style.width = info.progressPct + '%';
+          barFill.classList.toggle('legendary', info.isMax);
+        }
+      }, 200);
+      
+      // バッジコレクション項目のサブ統計
+      let badgeEarned = 0;
+      let badgeTotal = 0;
+      // ランク
+      rankResults.forEach(r => {
+        if (r.total === 0) return;
+        r.thresholds.forEach(th => {
+          badgeTotal++;
+          if (r.conquered >= th) badgeEarned++;
+        });
+      });
+      // 路線（3スロットずつ：bronze/silver/gold）
+      lineResults.forEach(r => {
+        if (r.total === 0) return;
+        badgeTotal += 3;
+        if (r.tier === 'gold') badgeEarned += 3;
+        else if (r.tier === 'silver') badgeEarned += 2;
+        else if (r.tier === 'bronze') badgeEarned += 1;
+      });
+      // チェックイン
+      [10, 50, 100, 500, 1000, 5000].forEach(m => {
+        badgeTotal++;
+        if (realCheckins >= m) badgeEarned++;
+      });
+      // エリア
+      badgeTotal += 27;
+      // リピート（動的だが目安として）
+      cards.forEach(c => {
+        const vc = c.visitCount || 1;
+        [10, 30, 60, 100].forEach(t => { if (vc >= t) badgeEarned++; });
+      });
+      
+      const badgeSubEarned = document.getElementById('mp-badge-substat-earned');
+      const badgeSubTotal = document.getElementById('mp-badge-substat-total');
+      if (badgeSubEarned) badgeSubEarned.textContent = badgeEarned;
+      if (badgeSubTotal) badgeSubTotal.textContent = badgeTotal;
+      
+    } catch (lvErr) {
+      console.warn('マスターLV計算エラー（無視）:', lvErr);
+    }
     
     // ランクバー
     const rankColors = {S:'#fb7185',A:'#ffb070',B:'#ffd966',C:'#84d49b',D:'#7fb8e0',E:'#a0b0c0'};
@@ -11345,8 +11630,26 @@ window.openCardListPage = async () => {
     
     if (cards.length === 0) {
       grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1">まだカードを獲得していません</div>';
+      // バナーもゼロにする
+      const banner = document.getElementById('cl-score-banner');
+      if (banner) banner.style.display = 'none';
       return;
     }
+    
+    // 獲得Scoreバナーを更新
+    const totalPower = cards.reduce((s, c) => s + (c.firstScore || 0), 0);
+    const totalCheckins = cards.reduce((s, c) => s + (c.visitCount || 1), 0);
+    const avgScore = cards.length > 0 ? Math.round(totalPower / cards.length) : 0;
+    const banner = document.getElementById('cl-score-banner');
+    if (banner) banner.style.display = '';
+    const scoreValEl = document.getElementById('cl-score-value');
+    if (scoreValEl) scoreValEl.textContent = totalPower.toLocaleString();
+    const cardsEl = document.getElementById('cl-score-cards');
+    if (cardsEl) cardsEl.textContent = cards.length;
+    const ciEl = document.getElementById('cl-score-checkins');
+    if (ciEl) ciEl.textContent = totalCheckins;
+    const avgEl = document.getElementById('cl-score-avg');
+    if (avgEl) avgEl.textContent = avgScore;
     
     cardListData = cards;
     cardSortKey = 'date';
@@ -13482,36 +13785,55 @@ window.BP_TIER_XP_THRESHOLDS = [0, 500, 1500, 3500, 6500, 11000, 17000, 25000, 3
 // レアリティごとのXP獲得量
 window.BP_XP_BY_RARITY = { 1: 10, 2: 30, 3: 60, 4: 120, 5: 250 };
 
-// 各レベルの開始XPを計算（階級内で等分配）
+// 各レベルの開始XPを計算（10で次の称号、MAX LV.99）
+// LV.1-9: 階級0 初心者市民（9レベル）
+// LV.10-19: 階級1 街めぐビギナー（10レベル）... 
+// LV.90-99: 階級9 街マスター（10レベル）
 window.bpLevelStartXP = function(level){
   if (level <= 1) return 0;
-  if (level >= 100) {
-    return window.BP_TIER_XP_THRESHOLDS[10]; // 最終
+  if (level >= 99) {
+    // LV.99 = 最終階級の最後のレベル開始XP
+    // 階級9（LV.90-99）= 47000〜60000、10レベル分、LV.99開始 = 47000 + 13000*9/10
+    return Math.floor(window.BP_TIER_XP_THRESHOLDS[9] + 
+      (window.BP_TIER_XP_THRESHOLDS[10] - window.BP_TIER_XP_THRESHOLDS[9]) * 9 / 10);
   }
-  const t = Math.floor((level - 1) / 10);
-  const p = (level - 1) % 10;
+  const t = Math.floor(level / 10);  // 階級番号（LV.10で t=1 になる）
   const start = window.BP_TIER_XP_THRESHOLDS[t];
   const end = window.BP_TIER_XP_THRESHOLDS[t + 1];
-  return Math.floor(start + (end - start) * p / 10);
+  
+  if (t === 0) {
+    // LV.1-9 は9レベル分割
+    return Math.floor(start + (end - start) * (level - 1) / 9);
+  } else {
+    // LV.10-19, LV.20-29, ... は10レベル分割
+    const inTierPos = level - t * 10;  // 0〜9
+    return Math.floor(start + (end - start) * inTierPos / 10);
+  }
 };
 
 // totalXPからレベル情報取得
 window.bpGetLevelInfo = function(totalXP){
   if (totalXP < 0) totalXP = 0;
-  // 線形探索で良い（100回ループのみ）
-  let level = 100;
-  for (let i = 100; i >= 1; i--) {
+  // 線形探索（LV.99から下に）
+  let level = 99;
+  for (let i = 99; i >= 1; i--) {
     if (totalXP >= window.bpLevelStartXP(i)) {
       level = i;
       break;
     }
   }
-  const tier = Math.floor((level - 1) / 10);
+  const tier = Math.floor(level / 10);  // 10で次の階級
   const lvStart = window.bpLevelStartXP(level);
-  const lvEnd = level < 100 ? window.bpLevelStartXP(level + 1) : window.bpLevelStartXP(100);
+  // 次のレベル開始XP（LV.99だとそのレベルの「終わり」を計算）
+  let lvEnd;
+  if (level >= 99) {
+    lvEnd = window.BP_TIER_XP_THRESHOLDS[10]; // 60000
+  } else {
+    lvEnd = window.bpLevelStartXP(level + 1);
+  }
   const progressInLv = totalXP - lvStart;
   const needForNextLv = Math.max(1, lvEnd - lvStart);
-  const isMax = level >= 100;
+  const isMax = level >= 99 && totalXP >= window.BP_TIER_XP_THRESHOLDS[10];
   return {
     level,
     tier,
