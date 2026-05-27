@@ -14653,7 +14653,8 @@ function renderRepeatBadges(userCards, userBadges) {
   }).join('');
 }
 
-async // ★ index171修正：モジュール内関数をwindow公開（mpRenderWeeklyMissionから呼べるように）
+// ★ index175修正：孤立asyncキーワード削除（ReferenceErrorで scriptブロック後半が全死亡してた致命バグ）
+// ★ index171修正：モジュール内関数をwindow公開（mpRenderWeeklyMissionから呼べるように）
 if (typeof getThisWeekMission === 'function') window.getThisWeekMission = getThisWeekMission;
 if (typeof calcMissionProgress === 'function') window.calcMissionProgress = calcMissionProgress;
 if (typeof fetchUserCheckinsThisWeek === 'function') window.fetchUserCheckinsThisWeek = fetchUserCheckinsThisWeek;
