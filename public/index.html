@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index155 (cache-bust 2026.05.28-03:00) -->
+<!-- VERSION: index156 (cache-bust 2026.05.28-05:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2436,6 +2436,140 @@ body:not(.splashing) #table-area{
   font-size:18px;margin-bottom:2px;color:#fbd56a;
   text-shadow:0 0 6px rgba(251,213,106,0.6);
 }
+
+/* ═══ Phase 2：レアリティ・ホロ・アニメ・進捗バー ═══ */
+
+/* レアリティ★（右上に小さく） */
+.bp-rarity{
+  position:absolute;
+  top:4px;right:4px;
+  font-size:8px;
+  letter-spacing:-0.5px;
+  color:#fbd56a;
+  text-shadow:0 0 4px rgba(0,0,0,0.8),0 1px 2px rgba(0,0,0,0.7);
+  z-index:5;
+  pointer-events:none;
+  font-weight:900;
+}
+.bp-rarity.r1{color:#a8b8d0}
+.bp-rarity.r2{color:#90d4f8}
+.bp-rarity.r3{color:#a8e8b8}
+.bp-rarity.r4{color:#fbd56a;text-shadow:0 0 6px rgba(251,213,106,0.8),0 1px 2px rgba(0,0,0,0.7)}
+.bp-rarity.r5{
+  color:#ff90c8;
+  text-shadow:
+    0 0 6px rgba(255,144,200,0.9),
+    0 0 12px rgba(255,144,200,0.5),
+    0 1px 2px rgba(0,0,0,0.7);
+}
+
+/* バッジ自体に position:relative を確保（★を絶対配置するため） */
+.bp-badge{position:relative}
+
+/* レアリティに応じた外周グロー */
+.bp-glow-4{filter:drop-shadow(0 0 4px rgba(251,213,106,0.4))}
+.bp-glow-5{filter:drop-shadow(0 0 8px rgba(255,144,200,0.55)) drop-shadow(0 0 16px rgba(255,144,200,0.3))}
+
+/* ホロ箔エフェクト（★5バッジに付与、回転する虹色レイヤー） */
+.bp-badge.bp-holo{position:relative;overflow:hidden}
+.bp-badge.bp-holo::after{
+  content:'';
+  position:absolute;
+  inset:-50%;
+  background:linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255,255,255,0.18) 38%,
+    rgba(255,200,255,0.30) 43%,
+    rgba(180,220,255,0.30) 47%,
+    rgba(255,255,180,0.30) 51%,
+    rgba(255,200,255,0.30) 55%,
+    rgba(255,255,255,0.18) 60%,
+    transparent 70%
+  );
+  background-size:200% 200%;
+  animation:bp-holo-shift 3.5s ease-in-out infinite;
+  pointer-events:none;
+  z-index:1;
+  /* clip-pathは親要素のものに従う（line/areaバッジで多角形カット維持） */
+}
+@keyframes bp-holo-shift{
+  0%   { background-position:200% 0% }
+  50%  { background-position:-100% 100% }
+  100% { background-position:200% 0% }
+}
+/* ホロ箔の中身（テキスト）は前面に */
+.bp-badge.bp-holo > *{position:relative;z-index:2}
+
+/* タップ時のカチッと回転アニメ */
+.bp-badge{
+  transition:transform 0.18s cubic-bezier(0.34,1.56,0.64,1);
+}
+.bp-badge:active{
+  transform:scale(0.94) rotate(-3deg);
+}
+.bp-badge.bp-tap-pulse{
+  animation:bp-tap-pulse 0.45s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes bp-tap-pulse{
+  0%   { transform:scale(1) rotate(0deg) }
+  40%  { transform:scale(1.08) rotate(4deg) }
+  70%  { transform:scale(0.97) rotate(-2deg) }
+  100% { transform:scale(1) rotate(0deg) }
+}
+
+/* 獲得直後のキラキラパーティクル */
+.bp-badge.bp-just-earned{
+  animation:bp-just-earned 1.4s ease-out;
+}
+@keyframes bp-just-earned{
+  0%   { transform:scale(0.3) rotate(-180deg); opacity:0; filter:brightness(2) }
+  30%  { transform:scale(1.2) rotate(20deg); opacity:1; filter:brightness(1.6) }
+  60%  { transform:scale(0.95) rotate(-5deg); opacity:1; filter:brightness(1.2) }
+  100% { transform:scale(1) rotate(0deg); opacity:1; filter:brightness(1) }
+}
+.bp-badge.bp-just-earned::before,
+.bp-badge.bp-just-earned::after{
+  /* 既存擬似要素を上書きしないよう注意。獲得時の輝きはfilterで出す */
+}
+
+/* 未獲得バッジの進捗バー */
+.bp-progress-bar{
+  width:80%;
+  height:6px;
+  background:rgba(255,255,255,0.08);
+  border-radius:3px;
+  margin:6px auto 0;
+  overflow:hidden;
+  position:relative;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.3);
+}
+.bp-progress-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,#5db8ec 0%,#90d4f8 50%,#5db8ec 100%);
+  border-radius:3px;
+  box-shadow:0 0 6px rgba(93,184,236,0.6);
+  transition:width 0.6s ease-out;
+  position:relative;
+}
+.bp-progress-bar-fill::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.4) 50%,transparent 100%);
+  background-size:200% 100%;
+  animation:bp-progress-shimmer 2.5s linear infinite;
+}
+@keyframes bp-progress-shimmer{
+  0%   { background-position:200% 0 }
+  100% { background-position:-200% 0 }
+}
+.bp-progress-bar-fill.near-complete{
+  background:linear-gradient(90deg,#fbd56a 0%,#ffe890 50%,#fbd56a 100%);
+  box-shadow:0 0 8px rgba(251,213,106,0.8);
+}
+
+/* ═══ Phase 2 end ═══ */
 
 /* チェックイン数：スクエア */
 .bp-badge-checkin{
@@ -12047,14 +12181,21 @@ window.renderAreaBadgeSVG = function(b){
 function renderBadgeHTML(b, big) {
   if (b.type === 'line') {
     const lineShort = b.line.replace('東京メトロ','メトロ').replace(/^都営/,'都営');
-    return `<div class="bp-badge bp-badge-line ${b.tier}">
-      <div class="bp-name">${lineShort}</div>
+    const lineLabel = window.formatLineLabelTwoLines ? window.formatLineLabelTwoLines(lineShort) : lineShort;
+    const rarity = window.bpRarityLine ? window.bpRarityLine(b.tier) : 0;
+    const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+    return `<div class="bp-badge bp-badge-line ${b.tier}${rarityClasses}">
+      ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
+      <div class="bp-name">${lineLabel}</div>
       <div class="bp-sub">${tierJa(b.tier)}</div>
     </div>`;
   }
   if (b.type === 'rank') {
     const isAll = b.threshold === b.total;
-    return `<div class="bp-badge bp-badge-rank ${b.rank}">
+    const rarity = window.bpRarityRank ? window.bpRarityRank(b.rank, b.threshold, b.total) : 0;
+    const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+    return `<div class="bp-badge bp-badge-rank ${b.rank}${rarityClasses}">
+      ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
       <div class="bp-name">${b.rank}駅</div>
       <div class="bp-sub">${isAll ? '完全制覇' : b.threshold + '駅'}</div>
     </div>`;
@@ -12064,7 +12205,10 @@ function renderBadgeHTML(b, big) {
     return window.renderAreaBadgeSVG(b);
   }
   if (b.type === 'checkin') {
-    return `<div class="bp-badge bp-badge-checkin">
+    const rarity = window.bpRarityCheckin ? window.bpRarityCheckin(b.count) : 0;
+    const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+    return `<div class="bp-badge bp-badge-checkin${rarityClasses}">
+      ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
       <div class="bp-num">${b.count}</div>
       <div class="bp-num-label">CHECKINS</div>
     </div>`;
@@ -12080,7 +12224,14 @@ function renderBadgeHTML(b, big) {
     const nm = b.stationName || b.name || '';
     const nameLen = nm.length;
     const lenClass = nameLen >= 6 ? 'xlong-name' : (nameLen >= 4 ? 'long-name' : '');
-    return `<div class="bp-badge bp-badge-repeat bp-repeat-${b.tier} ${lenClass}">
+    // レアリティ：常連=2, マニア=3, 生き字引=4, 神=5
+    let rarity = 2;
+    if (b.tier === 'kami') rarity = 5;
+    else if (b.tier === 'ikijibiki') rarity = 4;
+    else if (b.tier === 'mania') rarity = 3;
+    const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+    return `<div class="bp-badge bp-badge-repeat bp-repeat-${b.tier} ${lenClass}${rarityClasses}">
+      ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
       <div class="bp-repeat-emoji">${t.emoji}</div>
       <div class="bp-name">${nm}</div>
       <div class="bp-sub">${t.label}</div>
@@ -12211,7 +12362,14 @@ function renderRepeatBadges(userCards, userBadges) {
     const enc = encodeURIComponent(JSON.stringify(b));
     const nameLen = (b.stationName || '').length;
     const lenClass = nameLen >= 6 ? 'xlong-name' : (nameLen >= 4 ? 'long-name' : '');
-    return `<div class="bp-badge bp-badge-repeat bp-repeat-${b.tier} ${lenClass}" onclick="showBadgeDetail('${enc}')">
+    // レアリティ：常連10=★2, マニア30=★3, 生き字引60=★4, 神100=★5(ホロ)
+    let rarity = 2;
+    if (b.count >= 100) rarity = 5;
+    else if (b.count >= 60) rarity = 4;
+    else if (b.count >= 30) rarity = 3;
+    const rarityClasses = window.bpRarityClasses(rarity);
+    return `<div class="bp-badge bp-badge-repeat bp-repeat-${b.tier} ${lenClass}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
+      ${window.bpStarsHTML(rarity)}
       <div class="bp-repeat-emoji">${b.emoji}</div>
       <div class="bp-name">${b.stationName}</div>
       <div class="bp-sub">${b.label}</div>
@@ -12253,6 +12411,74 @@ window.toggleLineMore = function() {
   if (window._lastLineResults && window._lastLineBadges) {
     renderLineBadges(window._lastLineResults, window._lastLineBadges);
   }
+};
+
+// ─── Phase 2: レアリティ判定 & ★HTML & 進捗バーヘルパー ───
+// レアリティレベル：1〜5。★5のみホロ箔・最高グロー
+window.bpStarsHTML = function(level){
+  if (!level || level < 1) return '';
+  const stars = '★'.repeat(level);
+  return `<div class="bp-rarity r${level}">${stars}</div>`;
+};
+
+// ランク制覇のレアリティ判定（閾値の位置で判定）
+// S駅: 5→★1, 10→★2, 25→★3, 全部→★5
+// A-D駅: 10→★1, 25→★2, 50→★3, 100→★4, 150→★4, 全部→★5
+window.bpRarityRank = function(rank, threshold, total){
+  const isAll = threshold === total;
+  if (isAll) return 5;
+  if (rank === 'S'){
+    if (threshold <= 5) return 1;
+    if (threshold <= 10) return 2;
+    return 3;
+  } else {
+    if (threshold <= 10) return 1;
+    if (threshold <= 25) return 2;
+    if (threshold <= 50) return 3;
+    return 4;
+  }
+};
+
+// 路線制覇のレアリティ：bronze=1, silver=3, gold=5
+window.bpRarityLine = function(tier){
+  if (tier === 'gold') return 5;
+  if (tier === 'silver') return 3;
+  if (tier === 'bronze') return 1;
+  return 0;
+};
+
+// チェックイン回数のレアリティ
+window.bpRarityCheckin = function(count){
+  if (count >= 5000) return 5;
+  if (count >= 1000) return 5;
+  if (count >= 500)  return 4;
+  if (count >= 100)  return 3;
+  if (count >= 50)   return 2;
+  return 1;
+};
+
+// 進捗バーHTML（未獲得バッジ用）
+window.bpProgressBar = function(current, target){
+  if (!target || target <= 0) return '';
+  const pct = Math.min(100, Math.max(0, Math.floor((current / target) * 100)));
+  const nearComplete = pct >= 80 ? ' near-complete' : '';
+  return `<div class="bp-progress-bar"><div class="bp-progress-bar-fill${nearComplete}" style="width:${pct}%"></div></div>`;
+};
+
+// レアリティ→グロー＆ホロCSSクラス
+window.bpRarityClasses = function(level){
+  if (level === 5) return ' bp-glow-5 bp-holo';
+  if (level === 4) return ' bp-glow-4';
+  return '';
+};
+
+// バッジタップ時のカチッ回転アニメ（CSSのbp-tap-pulseクラスを一瞬付与）
+window.bpTapPulse = function(el){
+  if (!el) return;
+  el.classList.remove('bp-tap-pulse');
+  void el.offsetWidth; // reflow強制
+  el.classList.add('bp-tap-pulse');
+  setTimeout(() => el.classList.remove('bp-tap-pulse'), 500);
 };
 
 // 路線名を意味のある位置で2行に分割（カッコ前・「線」の後・中点で改行）
@@ -12315,17 +12541,23 @@ function renderLineBadges(lineResults, userBadges) {
     const lineLabel = window.formatLineLabelTwoLines ? window.formatLineLabelTwoLines(lineShort) : lineShort;
     if (r.tier) {
       const id = `line_${r.line}_${r.tier}`;
+      const rarity = window.bpRarityLine(r.tier);
+      const rarityClasses = window.bpRarityClasses(rarity);
       const badgeData = userBadges.get(id) || { id, type:'line', line:r.line, tier:r.tier, conquered:r.conquered, total:r.total, name:`${r.line} ${tierJa(r.tier)}`, desc:`${r.line}の駅を制覇` };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      return `<div class="bp-badge bp-badge-line ${r.tier}" onclick="showBadgeDetail('${enc}')">
+      return `<div class="bp-badge bp-badge-line ${r.tier}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
+        ${window.bpStarsHTML(rarity)}
         <div class="bp-name">${lineLabel}</div>
         <div class="bp-sub">${tierJa(r.tier)}</div>
       </div>`;
     } else {
+      // 未獲得：進捗バー追加（bronze閾値=30%が次の目標）
+      const nextTarget = Math.max(1, Math.ceil(r.total * 0.3));
       return `<div class="bp-badge-locked">
         <div class="bp-icon">🚃</div>
         <div class="bp-name">${lineLabel}</div>
         <div class="bp-progress">${r.conquered}/${r.total}駅</div>
+        ${window.bpProgressBar(r.conquered, nextTarget)}
       </div>`;
     }
   }
@@ -12374,10 +12606,13 @@ function renderRankBadges(rankResults, userBadges) {
     r.thresholds.forEach(th => {
       const isAll = th === r.total;
       const id = `rank_${r.rank}_${th}`;
+      const rarity = window.bpRarityRank(r.rank, th, r.total);
+      const rarityClasses = window.bpRarityClasses(rarity);
       if (r.conquered >= th) {
         const badgeData = userBadges.get(id) || { id, type:'rank', rank:r.rank, threshold:th, conquered:r.conquered, total:r.total, name: isAll ? `${r.rank}駅 完全制覇` : `${r.rank}駅 ${th}駅制覇`, desc:`${r.rank}ランクの駅を${th}駅制覇` };
         const enc = encodeURIComponent(JSON.stringify(badgeData));
-        html += `<div class="bp-badge bp-badge-rank ${r.rank}" onclick="showBadgeDetail('${enc}')">
+        html += `<div class="bp-badge bp-badge-rank ${r.rank}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
+          ${window.bpStarsHTML(rarity)}
           <div class="bp-name">${r.rank}駅</div>
           <div class="bp-sub">${isAll ? '完全制覇' : th + '駅'}</div>
         </div>`;
@@ -12387,6 +12622,7 @@ function renderRankBadges(rankResults, userBadges) {
           <div class="bp-icon">🏆</div>
           <div class="bp-name">${r.rank}駅 ${isAll ? '完全' : th+'駅'}</div>
           <div class="bp-progress">${r.conquered}/${th}</div>
+          ${window.bpProgressBar(r.conquered, th)}
         </div>`;
       }
     });
@@ -12412,6 +12648,7 @@ function renderAreaBadges(userBadges) {
       <div class="bp-icon">🛡️</div>
       <div class="bp-name">${area}</div>
       <div class="bp-progress">準備中</div>
+      ${window.bpProgressBar(0, 1)}
     </div>
   `).join('');
   
@@ -12427,10 +12664,13 @@ function renderCheckinBadges(total, userBadges) {
   let earnedCount = 0;
   milestones.forEach(m => {
     const id = `checkin_${m}`;
+    const rarity = window.bpRarityCheckin(m);
+    const rarityClasses = window.bpRarityClasses(rarity);
     if (total >= m) {
       const badgeData = userBadges.get(id) || { id, type:'checkin', count:m, name:`累計${m}チェックイン`, desc:`累計${m}回のチェックインを達成` };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      html += `<div class="bp-badge bp-badge-checkin" onclick="showBadgeDetail('${enc}')">
+      html += `<div class="bp-badge bp-badge-checkin${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
+        ${window.bpStarsHTML(rarity)}
         <div class="bp-num">${m}</div>
         <div class="bp-num-label">CHECKINS</div>
       </div>`;
@@ -12440,6 +12680,7 @@ function renderCheckinBadges(total, userBadges) {
         <span class="pin-icon" style="font-size:30px;margin-bottom:4px;opacity:0.55"></span>
         <div class="bp-name">${m}回</div>
         <div class="bp-progress">${total}/${m}</div>
+        ${window.bpProgressBar(total, m)}
       </div>`;
     }
   });
