@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index156 (cache-bust 2026.05.28-05:00) -->
+<!-- VERSION: index157 (cache-bust 2026.05.28-07:00) -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2569,7 +2569,196 @@ body:not(.splashing) #table-area{
   box-shadow:0 0 8px rgba(251,213,106,0.8);
 }
 
-/* ═══ Phase 2 end ═══ */
+/* ═══ Phase 3：シェアボタン・図鑑モード ═══ */
+
+/* バッジ詳細モーダルのシェアボタン */
+.bdm-share-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  margin:14px auto 0;padding:10px 22px;
+  background:linear-gradient(135deg,#1d9bf0 0%,#1681c4 100%);
+  color:#fff;font-weight:900;font-size:14px;letter-spacing:0.5px;
+  border:none;border-radius:24px;cursor:pointer;
+  box-shadow:0 4px 12px rgba(29,155,240,0.4),inset 0 1px 0 rgba(255,255,255,0.3);
+  transition:transform 0.15s ease, box-shadow 0.15s ease;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+}
+.bdm-share-btn:active{
+  transform:scale(0.96);
+  box-shadow:0 2px 6px rgba(29,155,240,0.4),inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.bdm-share-btn:disabled{
+  opacity:0.6;cursor:not-allowed;
+}
+.bdm-share-btn svg{width:16px;height:16px;fill:currentColor}
+
+/* シェア画像生成用の隔離コンテナ */
+.bp-share-card{
+  width:560px;
+  background:linear-gradient(135deg,#1a2538 0%,#0d1827 60%,#050a14 100%);
+  padding:36px 32px 28px;
+  border-radius:24px;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+  position:relative;
+  overflow:hidden;
+  box-sizing:border-box;
+}
+.bp-share-card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 10%,rgba(255,144,200,0.12),transparent 50%),
+    radial-gradient(circle at 80% 90%,rgba(93,184,236,0.10),transparent 50%);
+  pointer-events:none;
+}
+.bp-share-header{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:24px;position:relative;z-index:2;
+}
+.bp-share-logo{
+  font-size:18px;font-weight:900;letter-spacing:1.5px;
+  background:linear-gradient(135deg,#ffe890,#fbd56a,#d4a020);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 12px rgba(251,213,106,0.3);
+}
+.bp-share-tagline{
+  font-size:11px;color:#a8b8d0;letter-spacing:1px;
+}
+.bp-share-badge-zone{
+  display:flex;justify-content:center;
+  margin:8px 0 24px;
+  position:relative;z-index:2;
+}
+.bp-share-badge-zone > div{
+  width:200px !important;height:200px !important;
+  aspect-ratio:1 !important;
+}
+.bp-share-name{
+  font-size:22px;font-weight:900;
+  text-align:center;
+  margin:0 0 6px;
+  color:#fff;
+  text-shadow:0 2px 6px rgba(0,0,0,0.4);
+  position:relative;z-index:2;
+}
+.bp-share-desc{
+  font-size:12px;color:#a8b8d0;text-align:center;
+  line-height:1.5;margin:0 0 18px;
+  position:relative;z-index:2;
+}
+.bp-share-cta{
+  text-align:center;font-size:12px;color:#cfdaee;
+  letter-spacing:1.5px;font-weight:700;
+  padding-top:14px;border-top:1px solid rgba(168,184,208,0.18);
+  position:relative;z-index:2;
+}
+.bp-share-cta strong{color:#fbd56a}
+
+/* ═══ 図鑑モード：コンプリート率パネル ═══ */
+.bp-collection-stats{
+  background:linear-gradient(135deg,rgba(29,40,60,0.6) 0%,rgba(15,25,40,0.7) 100%);
+  border:1px solid rgba(168,184,208,0.15);
+  border-radius:16px;
+  padding:16px 18px;
+  margin:0 0 20px;
+  position:relative;
+  overflow:hidden;
+}
+.bp-collection-stats::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#fbd56a 0%,#ff90c8 50%,#5db8ec 100%);
+  opacity:0.7;
+}
+.bp-cs-title{
+  font-size:11px;font-weight:700;color:#a8b8d0;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:8px;
+}
+.bp-cs-main{
+  display:flex;align-items:baseline;gap:8px;margin-bottom:14px;
+}
+.bp-cs-percentage{
+  font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px;
+  text-shadow:0 2px 4px rgba(0,0,0,0.4);
+  background:linear-gradient(135deg,#fbd56a 0%,#ff90c8 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.bp-cs-fraction{
+  font-size:14px;color:#cfdaee;font-weight:700;
+}
+.bp-cs-bar{
+  height:8px;
+  background:rgba(255,255,255,0.06);
+  border-radius:4px;overflow:hidden;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);
+  margin-bottom:14px;
+}
+.bp-cs-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,#fbd56a 0%,#ff90c8 50%,#5db8ec 100%);
+  border-radius:4px;
+  box-shadow:0 0 10px rgba(255,144,200,0.4);
+  transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+}
+.bp-cs-categories{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px;
+}
+.bp-cs-cat{
+  text-align:center;padding:6px 4px;
+  background:rgba(0,0,0,0.2);border-radius:8px;
+}
+.bp-cs-cat-label{
+  font-size:9px;color:#a8b8d0;letter-spacing:0.5px;margin-bottom:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.bp-cs-cat-value{
+  font-size:13px;font-weight:900;color:#fff;
+}
+.bp-cs-cat.complete .bp-cs-cat-value{color:#fbd56a;text-shadow:0 0 6px rgba(251,213,106,0.5)}
+
+/* セクションタイトルに「○/○」進捗を併記 */
+.bp-section-count{
+  font-size:13px;font-weight:700;color:#cfdaee;letter-spacing:1px;margin-left:auto;
+}
+.bp-section-count.complete{
+  color:#fbd56a;text-shadow:0 0 6px rgba(251,213,106,0.5);
+}
+
+/* ═══ 未獲得バッジのシルエット化 ═══ */
+.bp-badge-locked{
+  position:relative;
+  background:linear-gradient(135deg,rgba(45,60,90,0.4) 0%,rgba(20,30,50,0.5) 100%) !important;
+  border:1px dashed rgba(120,150,210,0.25) !important;
+  overflow:hidden;
+}
+.bp-badge-locked::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 30% 30%,rgba(168,184,208,0.06) 0%,transparent 50%),
+    radial-gradient(circle at 70% 70%,rgba(120,150,210,0.04) 0%,transparent 50%);
+  pointer-events:none;
+}
+.bp-badge-locked .bp-icon{
+  opacity:0.3;
+  filter:blur(0.5px);
+}
+.bp-badge-locked .bp-name{
+  opacity:0.7;
+  font-size:10px !important;
+  color:#7a96b6 !important;
+}
+.bp-badge-locked .bp-progress{
+  opacity:0.85;
+  font-size:9px !important;
+  color:#a8b8d0;
+  font-weight:700;
+}
+
+/* ═══ Phase 3 end ═══ */
 
 /* チェックイン数：スクエア */
 .bp-badge-checkin{
@@ -5604,6 +5793,15 @@ body.checkin-active #checkin-indicator{
       <div style="width:36px"></div>
     </div>
     <div class="cl-body" id="bp-body">
+      <div id="bp-collection-stats" class="bp-collection-stats" style="display:none">
+        <div class="bp-cs-title">📒 バッジコレクション</div>
+        <div class="bp-cs-main">
+          <span class="bp-cs-percentage" id="bp-cs-percentage">0%</span>
+          <span class="bp-cs-fraction" id="bp-cs-fraction">0 / 0</span>
+        </div>
+        <div class="bp-cs-bar"><div class="bp-cs-bar-fill" id="bp-cs-bar-fill" style="width:0%"></div></div>
+        <div class="bp-cs-categories" id="bp-cs-categories"></div>
+      </div>
       <div class="bp-section-title">今週のミッション</div>
       <div id="bp-mission"></div>
       <div class="bp-section-title">チェックイン数<span class="bp-section-count" id="bp-checkin-count">0 獲得</span></div>
@@ -12241,9 +12439,11 @@ function renderBadgeHTML(b, big) {
 }
 
 // ─── バッジ詳細モーダル ───
+window._currentDetailBadge = null;
 window.showBadgeDetail = (badgeJson) => {
   let b;
   try { b = JSON.parse(decodeURIComponent(badgeJson)); } catch(e) { return; }
+  window._currentDetailBadge = b;
   document.getElementById('bdm-badge-wrap').innerHTML = renderBadgeHTML(b);
   document.getElementById('bdm-name').textContent = b.name || '';
   document.getElementById('bdm-desc').textContent = b.desc || '';
@@ -12256,10 +12456,147 @@ window.showBadgeDetail = (badgeJson) => {
     } catch(e) {}
   }
   document.getElementById('bdm-earned').textContent = earnedStr;
+  // シェアボタン：獲得済みのみ表示
+  const shareBtn = document.getElementById('bdm-share-btn');
+  if (shareBtn) shareBtn.style.display = earnedStr ? '' : 'inline-flex';
   document.getElementById('badge-detail-bg').classList.add('open');
 };
 window.closeBadgeDetail = () => {
   document.getElementById('badge-detail-bg').classList.remove('open');
+};
+
+// ─── Phase 3: バッジのSNSシェア画像生成 ───
+window.shareBadge = async function(){
+  const b = window._currentDetailBadge;
+  if (!b) return;
+  
+  const url = 'https://machimegu.com';
+  // バッジ種類別のシェアテキスト
+  let text = '';
+  if (b.type === 'rank') {
+    const isAll = b.threshold === b.total;
+    text = `街巡-まちめぐ- ${b.rank}ランクの駅を${isAll ? '全制覇' : b.threshold + '駅制覇'}！\n#街巡まちめぐ #街にでよう`;
+  } else if (b.type === 'line') {
+    text = `街巡-まちめぐ- ${b.line}を${tierJa(b.tier)}！\n#街巡まちめぐ #街にでよう`;
+  } else if (b.type === 'area') {
+    text = `街巡-まちめぐ- ${b.city || b.name}を制覇！\n#街巡まちめぐ #街にでよう`;
+  } else if (b.type === 'checkin') {
+    text = `街巡-まちめぐ- 累計${b.count}回チェックイン達成！\n#街巡まちめぐ #街にでよう`;
+  } else if (b.type === 'repeat') {
+    text = `街巡-まちめぐ- ${b.name}の称号獲得！\n#街巡まちめぐ #街にでよう`;
+  } else {
+    text = `街巡-まちめぐ- バッジ「${b.name}」獲得！\n#街巡まちめぐ #街にでよう`;
+  }
+  
+  const btn = document.getElementById('bdm-share-btn');
+  const originalHTML = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.innerHTML = '<span>画像作成中...</span>';
+    btn.disabled = true;
+  }
+  await mmDelay(50);
+  
+  let shareContainer = null;
+  try {
+    await mmTimeout(window.mmLoadHtml2Canvas(), 8000, 'ライブラリ読み込みタイムアウト');
+    await mmDelay(30);
+    
+    // シェア画像用カードを構築
+    const cardWidth = 560;
+    shareContainer = document.createElement('div');
+    shareContainer.style.cssText = `
+      position:fixed;left:-10000px;top:0;
+      width:${cardWidth}px;
+      z-index:-1;pointer-events:none;
+    `;
+    const card = document.createElement('div');
+    card.className = 'bp-share-card';
+    card.innerHTML = `
+      <div class="bp-share-header">
+        <div class="bp-share-logo">街巡 - まちめぐ -</div>
+        <div class="bp-share-tagline">街にでよう</div>
+      </div>
+      <div class="bp-share-badge-zone">${renderBadgeHTML(b)}</div>
+      <div class="bp-share-name">${escapeHtml(b.name || '')}</div>
+      <div class="bp-share-desc">${escapeHtml(b.desc || '')}</div>
+      <div class="bp-share-cta"><strong>バッジ獲得!</strong> 君の街力も測ろう</div>
+    `;
+    shareContainer.appendChild(card);
+    document.body.appendChild(shareContainer);
+    
+    // ホロアニメをoffに（画像化用に動きを止める）
+    card.querySelectorAll('.bp-holo').forEach(el => {
+      el.style.animation = 'none';
+    });
+    
+    await mmDelay(80);
+    
+    const canvas = await mmTimeout(
+      window.html2canvas(card, {
+        backgroundColor: null,
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 3000,
+        width: cardWidth,
+        height: card.offsetHeight,
+      }),
+      15000,
+      '画像生成タイムアウト'
+    );
+    
+    if (shareContainer && shareContainer.parentNode) {
+      shareContainer.parentNode.removeChild(shareContainer);
+      shareContainer = null;
+    }
+    await mmDelay(20);
+    
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1.0));
+    if (!blob) throw new Error('Blob生成失敗');
+    const fileName = (b.name || 'badge').replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g,'_');
+    const file = new File([blob], `machimegu-${fileName}.png`, { type: 'image/png' });
+    
+    if (btn) {
+      btn.innerHTML = originalHTML;
+      btn.disabled = false;
+    }
+    
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ title: '街巡-まちめぐ-', text, files: [file] });
+    } else if (navigator.share) {
+      await navigator.share({ title: '街巡-まちめぐ-', text, url });
+    } else {
+      // 古いブラウザ・PC：画像ダウンロード＋X intent
+      const dlUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = `machimegu-${fileName}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(dlUrl);
+      // X投稿画面を別タブで開く
+      window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank');
+    }
+  } catch (e) {
+    console.error('バッジシェアエラー:', e);
+    if (e.name !== 'AbortError') {
+      if (navigator.share) {
+        try { await navigator.share({ title: '街巡-まちめぐ-', text, url }); } catch(_) {}
+      } else {
+        window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank');
+      }
+    }
+  } finally {
+    if (shareContainer && shareContainer.parentNode) {
+      shareContainer.parentNode.removeChild(shareContainer);
+    }
+    if (btn) {
+      btn.innerHTML = originalHTML;
+      btn.disabled = false;
+    }
+  }
 };
 
 // ─── バッジページ完全置換版 ───
@@ -12310,6 +12647,9 @@ window.openBadgePage = async () => {
   
   // 同駅リピート称号バッジ
   renderRepeatBadges(userCards, userBadges);
+  
+  // ─── Phase 3: コンプリート率パネル更新 ───
+  window.updateCollectionStats(rankResults, lineResults, totalCheckins, userCards);
 };
 
 // ─── 同駅リピート称号バッジ描画 ───
@@ -12655,6 +12995,89 @@ function renderAreaBadges(userBadges) {
   const counter = document.getElementById('bp-area-count');
   if (counter) counter.textContent = '0 獲得';
 }
+
+// ─── Phase 3: コンプリート率（図鑑モード）統計更新 ───
+window.updateCollectionStats = function(rankResults, lineResults, totalCheckins, userCards){
+  // ランク制覇：閾値ごとに集計
+  let rankEarned = 0, rankTotalSlots = 0;
+  rankResults.forEach(r => {
+    if (r.total === 0) return;
+    r.thresholds.forEach(th => {
+      rankTotalSlots++;
+      if (r.conquered >= th) rankEarned++;
+    });
+  });
+  
+  // 路線制覇：路線ごとに 3 tier 分のスロット（bronze/silver/gold）
+  let lineEarned = 0, lineTotalSlots = 0;
+  lineResults.forEach(r => {
+    if (r.total === 0) return;
+    lineTotalSlots += 3;
+    if (r.tier === 'gold') lineEarned += 3;
+    else if (r.tier === 'silver') lineEarned += 2;
+    else if (r.tier === 'bronze') lineEarned += 1;
+  });
+  
+  // チェックイン：6マイルストーン
+  const checkinMilestones = [10, 50, 100, 500, 1000, 5000];
+  let checkinEarned = checkinMilestones.filter(m => totalCheckins >= m).length;
+  let checkinTotalSlots = checkinMilestones.length;
+  
+  // リピート：ユーザーカード×4tier の中で何個達成したか
+  const repeatTiers = [10, 30, 60, 100];
+  let repeatEarned = 0;
+  userCards.forEach(card => {
+    const vc = card.visitCount || 1;
+    repeatTiers.forEach(t => { if (vc >= t) repeatEarned++; });
+  });
+  // リピートは「集めうる総数」が変動的なため、最低でも常に4スロット保証
+  const repeatTotalSlots = Math.max(4, repeatEarned + (repeatEarned === 0 ? 4 : 4));
+  
+  // 全体集計（リピートはダイナミックなので合計には含めるが、率計算は明示）
+  const totalEarned = rankEarned + lineEarned + checkinEarned + repeatEarned;
+  const totalSlots = rankTotalSlots + lineTotalSlots + checkinTotalSlots + repeatTotalSlots;
+  const pct = totalSlots > 0 ? Math.floor((totalEarned / totalSlots) * 100) : 0;
+  
+  // パネル表示
+  const panel = document.getElementById('bp-collection-stats');
+  if (!panel) return;
+  panel.style.display = '';
+  
+  document.getElementById('bp-cs-percentage').textContent = pct + '%';
+  document.getElementById('bp-cs-fraction').textContent = `${totalEarned} / ${totalSlots} 獲得`;
+  
+  // バーアニメーション（少し遅延させて発動感を出す）
+  setTimeout(() => {
+    const bar = document.getElementById('bp-cs-bar-fill');
+    if (bar) bar.style.width = pct + '%';
+  }, 100);
+  
+  // カテゴリ別バー
+  const categories = [
+    { label: 'ランク', earned: rankEarned, total: rankTotalSlots },
+    { label: '路線',   earned: lineEarned, total: lineTotalSlots },
+    { label: 'C/I',    earned: checkinEarned, total: checkinTotalSlots },
+    { label: '常連',   earned: repeatEarned, total: repeatTotalSlots },
+  ];
+  document.getElementById('bp-cs-categories').innerHTML = categories.map(c => {
+    const isComplete = c.total > 0 && c.earned >= c.total;
+    return `<div class="bp-cs-cat${isComplete ? ' complete' : ''}">
+      <div class="bp-cs-cat-label">${c.label}</div>
+      <div class="bp-cs-cat-value">${c.earned}/${c.total}</div>
+    </div>`;
+  }).join('');
+  
+  // セクションタイトル横の「○ 獲得」を「○/○ 獲得」に拡張
+  const updateCounter = (id, earned, total) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = `${earned}/${total} 獲得`;
+    el.classList.toggle('complete', total > 0 && earned >= total);
+  };
+  updateCounter('bp-rank-count', rankEarned, rankTotalSlots);
+  updateCounter('bp-line-count', lineEarned, lineTotalSlots);
+  updateCounter('bp-checkin-count', checkinEarned, checkinTotalSlots);
+};
 
 function renderCheckinBadges(total, userBadges) {
   const el = document.getElementById('bp-checkin');
@@ -13709,6 +14132,10 @@ if ('serviceWorker' in navigator) {
     <div class="bdm-name" id="bdm-name"></div>
     <div class="bdm-desc" id="bdm-desc"></div>
     <div class="bdm-earned" id="bdm-earned"></div>
+    <button id="bdm-share-btn" class="bdm-share-btn" onclick="window.shareBadge()" type="button">
+      <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      <span>Xに投稿</span>
+    </button>
   </div>
 </div>
 
