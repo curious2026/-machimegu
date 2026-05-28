@@ -4785,7 +4785,7 @@ body.checkin-active #checkin-indicator{
     <div class="tori-section">
       <div class="tori-h">4. チェックインのコツ</div>
       <div class="tori-notes">
-        <div class="tori-notes-item">駅から<strong style="color:#a8e0c8">半径500m以内＋5分滞在</strong>でチェックイン成立（スコア計算半径800mとは別物なので注意）</div>
+        <div class="tori-notes-item">駅から<strong style="color:#a8e0c8">半径500m以内＋5分滞在</strong>でチェックイン成立</div>
         <div class="tori-notes-item">途中で離れても、戻れば<strong style="color:#a8e0c8">5分以内なら自動で再開</strong>される</div>
         <div class="tori-notes-item">同じ駅は<strong style="color:#a8e0c8">1日1回まで</strong>（日本時間0時にリセット）</div>
         <div class="tori-notes-item">何度も訪問するとカードの<strong style="color:#a8e0c8">訪問回数</strong>がカウントアップ</div>
@@ -4817,7 +4817,7 @@ body.checkin-active #checkin-indicator{
         <div class="tori-notes-item">🛡 <strong style="color:#a8e0c8">エリア制覇</strong>：同じ市区町村の駅を一定数で獲得</div>
         <div class="tori-notes-item">📍 <strong style="color:#a8e0c8">チェックイン数</strong>：累計10/50/100/500/1000…で獲得</div>
         <div class="tori-notes-item">☕ <strong style="color:#a8e0c8">同じ街リピート</strong>：1駅に何度も通うと「常連→マニア→生き字引→神」</div>
-        <div class="tori-notes-item">🏆 <strong style="color:#a8e0c8">週間ミッション達成</strong>：毎週変わるお題をクリアで獲得</div>
+        
       </div>
     </div>
 
@@ -4829,7 +4829,7 @@ body.checkin-active #checkin-indicator{
       <div class="tori-notes" style="margin-top:6px">
         <div class="tori-notes-item">10レベルごとに称号が変わる（初心者市民 → 街めぐビギナー → … → 街マスター）</div>
         <div class="tori-notes-item">関東をやり込んで全国にも足を伸ばすと LV.99 に届く設計</div>
-        <div class="tori-notes-item">急いで上げる必要はなし。5年くらいかけてのんびり育てる感覚で</div>
+        <div class="tori-notes-item">急いで上げる必要はなし。5年10年くらいかけてのんびり育てる感覚で</div>
       </div>
     </div>
 
@@ -4884,7 +4884,7 @@ body.checkin-active #checkin-indicator{
       <div class="tori-faq-a">ともきまで連絡を。追加リクエスト受付中。今は関東1都6県中心ですが、PMFが見えたら全国展開予定。</div>
       
       <div class="tori-faq-q">Q. スコアと自分の実感がズレる</div>
-      <div class="tori-faq-a">街巡は「商業活力」だけ見てるので、神社仏閣・大学・閑静な住宅街の魅力は反映しづらいです。そこは街コメントで補ってます！</div>
+      <div class="tori-faq-a">街巡は主に「商業活力」を見てるので、神社仏閣・大学・閑静な住宅街の魅力は反映しづらいです。そこは街コメントで補ってます！</div>
       
       <div class="tori-faq-q">Q. シャイニー／ミシックって何？</div>
       <div class="tori-faq-a">同じ駅でもまれに出現する<strong style="color:#fbd56a">光るレアカード</strong>。シャイニーは控えめにキラキラ、ミシックはド派手にホログラム発光。コレクター心くすぐる仕掛け。</div>
@@ -6734,6 +6734,19 @@ body.checkin-active #checkin-indicator{
 /* ★index188: 天気SVG(z-index:0)より手前にコンテンツを出す（白い光がテキストに被らないように） */
 .mc-share-card > .mcs-weather{ z-index:0; }
 .mc-share-card > *:not(.mcs-weather){ position:relative; z-index:1; }
+
+/* ★index189: レアカード(shiny/mythic)の文字色。実物 .sc-card[data-tier] をカンコピ。
+   背景が暗い紺/紫なので、駅名は白発光、info系も明るく。五角形は白地のまま維持（実物準拠）。 */
+.mc-share-card.mcs-rare .mcs-name{ color:#ffffff; text-shadow:0 0 14px rgba(125,180,255,0.7),0 0 4px rgba(125,180,255,0.5); }
+.mc-share-card.mcs-rare .mcs-score-num{ color:#ffffff; filter:drop-shadow(0 0 8px rgba(125,180,255,0.6)); }
+.mc-share-card.mcs-rare .mcs-checkin-date{ color:#ffffff; }
+.mc-share-card.mcs-rare .mcs-info-val{ color:#ffffff; }
+.mc-share-card.mcs-rare .mcs-info-lbl{ color:rgba(255,255,255,0.7); }
+.mc-share-card.mcs-rare .mcs-line-text{ color:rgba(255,255,255,0.8); }
+.mc-share-card.mcs-rare .mcs-info-grid{ border-top-color:rgba(255,255,255,0.2); }
+/* mythicは金系の発光に */
+.mc-share-card.mcs-rare .mcs-brand{ color:rgba(255,255,255,0.75); }
+.mc-share-card.mcs-rare .mcs-brand strong{ color:#ffffff; }
 /* ランク別グラデ背景＋グロー */
 .mc-share-card.rank-S{
   --mcs-color:#fb7185;
@@ -8460,6 +8473,7 @@ const LINE_DATA={
     '東武日光線':['板倉東洋大前','藤岡'],
   },
 };
+window.LINE_DATA = LINE_DATA; /* ★index190: module内のミッション進捗計算から路線逆引きに使うため公開 */
 
 const ALL_LINES={};
 Object.values(LINE_DATA).forEach(lines=>{Object.entries(lines).forEach(([l,s])=>{ALL_LINES[l]=s;});});
@@ -11461,7 +11475,55 @@ const mmTimeout = (promise, ms, errMsg) => Promise.race([
 // ─── シェア用カードレプリカ生成（html2canvas で確実に再現できるHTML） ───
 // ★index183: シェア用カードの5軸ダイヤをSVGで描画（html2canvasがtransform入れ子で崩すのを回避）
 // ★index188: 天気の白い光をSVGで描く（mm-cloud-blob等をカンコピ）。html2canvasが確実に描けるSVG方式。
-window.mmShareWeatherSVG = function(weather){
+// ★index189: レアカード(shiny/mythic-*)の背景と装飾SVGを返す。実物 .sc-card[data-tier] をカンコピ。
+window.mmShareTierStyle = function(tier){
+  if (!tier) return null;
+  const t = String(tier);
+  // 背景グラデ（実物の data-tier 背景定義）
+  const BG = {
+    'shiny':         'radial-gradient(circle at 30% 20%, #1e3a7a 0%, #0a1238 60%, #040818 100%)',
+    'mythic-spring': 'linear-gradient(160deg, #3d1f4a 0%, #2a1538 50%, #1a0830 100%)',
+    'mythic-summer': 'linear-gradient(180deg, #1a0040 0%, #2a1052 40%, #0a0828 100%)',
+    'mythic-autumn': 'linear-gradient(160deg, #4a1f1f 0%, #2f1010 50%, #1a0808 100%)',
+    'mythic-winter': 'linear-gradient(180deg, #1a2848 0%, #0e1a38 50%, #050a20 100%)'
+  };
+  const bg = BG[t] || (t.indexOf('mythic')===0 ? BG['mythic-spring'] : null);
+  if (!bg) return null;
+
+  // 装飾SVG（viewBox 0 0 100 100, preserveAspectRatio none）
+  let inner = '';
+  if (t === 'shiny') {
+    // 星屑（白〜青の点を散らす）
+    const stars = [[22,18,1.0],[78,35,0.9],[15,62,0.7],[68,78,0.9],[45,12,0.6],[88,55,0.8],[32,42,0.7],[58,28,0.6],[8,30,0.6],[92,80,0.7],[40,68,0.8],[72,15,0.7]];
+    inner = stars.map(([x,y,r],i) => {
+      const col = (i%2===0) ? 'rgb(255,255,255)' : 'rgb(125,180,255)';
+      return `<circle cx="${x}" cy="${y}" r="${r}" fill="${col}" opacity="0.9"/>`;
+    }).join('');
+  } else if (t === 'mythic-spring') {
+    const p = [[22,22,'255,183,197'],[78,38,'255,200,210'],[18,72,'255,183,197'],[88,78,'255,200,210'],[45,15,'255,190,205'],[60,60,'255,183,197']];
+    inner = p.map(([x,y,c]) => `<ellipse cx="${x}" cy="${y}" rx="2.2" ry="3" fill="rgba(${c},0.7)"/>`).join('');
+  } else if (t === 'mythic-summer') {
+    const p = [[25,30,'255,180,80'],[75,45,'120,180,255'],[50,75,'255,230,100']];
+    let defs = '<defs>' + p.map(([x,y,c],i)=>`<radialGradient id="mmFw${i}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgb(${c})" stop-opacity="0.5"/><stop offset="100%" stop-color="rgb(${c})" stop-opacity="0"/></radialGradient>`).join('') + '</defs>';
+    inner = defs + p.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="14" fill="url(#mmFw${i})"/>`).join('');
+  } else if (t === 'mythic-autumn') {
+    const p = [[22,28,'232,140,60'],[78,22,'220,80,40'],[30,70,'255,180,80'],[75,80,'232,140,60'],[50,45,'220,100,50']];
+    inner = p.map(([x,y,c]) => `<ellipse cx="${x}" cy="${y}" rx="2.4" ry="1.9" fill="rgba(${c},0.7)" transform="rotate(35 ${x} ${y})"/>`).join('');
+  } else if (t === 'mythic-winter') {
+    const p = [[22,25],[78,38],[35,68],[65,80],[88,18],[15,55],[50,30],[60,90]];
+    inner = p.map(([x,y],i) => `<circle cx="${x}" cy="${y}" r="${0.8+(i%2)*0.5}" fill="rgb(255,255,255)" opacity="0.85"/>`).join('');
+  }
+  // mythic共通：斜めの金箔シマー
+  if (t.indexOf('mythic')===0) {
+    inner += '<rect x="0" y="0" width="100" height="100" fill="rgba(212,175,55,0.06)"/>';
+  }
+  const svg = `<svg class="mcs-weather" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:18px;">${inner}</svg>`;
+  // レアカードは枠も金色に
+  const border = (t.indexOf('mythic')===0) ? '#d4af37' : '#7db4ff';
+  return { bg, svg, border, isRare:true };
+};
+
+window.mmShareWeatherSVG = function(weather, stationName){
   if (!weather || weather === 'sunny' || weather === 'clear') return '';
   // カード基準サイズ（renderCardForShareの幅360 + border等。viewBox比率で配置するので実寸非依存）
   const W = 100, H = 100; // パーセント座標系として扱う（preserveAspectRatio none）
@@ -11485,13 +11547,46 @@ window.mmShareWeatherSVG = function(weather){
       return `<ellipse cx="${cx}" cy="${cy}" rx="${c.w/2}" ry="${c.h/2}" fill="url(#mmCloudG)"/>`;
     }).join('');
   } else if (weather === 'snowy') {
-    // 薄い白オーバーレイ＋雪の点（簡易・実物の結晶配置に近い散らし）
-    const pts = [[22,18],[78,30],[35,55],[65,68],[15,40],[88,15],[50,80],[28,72],[72,48],[45,28]];
-    inner = '<rect x="0" y="0" width="100" height="100" fill="rgb(255,255,255)" opacity="0.06"/>'
-      + pts.map(([x,y],i) => `<circle cx="${x}" cy="${y}" r="${1.2 + (i%3)*0.4}" fill="rgb(255,255,255)" opacity="0.8"/>`).join('');
+    // 実物カンコピ：薄い青白オーバーレイ + 雪結晶12個（駅名seedで決定論配置＝実物と同じ）
+    //   実物CSS: overlay::before linear-gradient(180deg, rgba(220,235,250,0.28)→rgba(200,220,240,0.16))
+    //            .mm-snowflake をseed配置、MM_SNOWFLAKE_SVG（白線の結晶）
+    const seed = (function(s){ let h=0; for(let i=0;i<s.length;i++){ h=((h<<5)-h)+s.charCodeAt(i); h|=0;} return Math.abs(h); })(stationName || 'station');
+    let flakes = '';
+    for (let i=0;i<12;i++){
+      const sx = ((seed*(i+7))%88) + (i*2%5);
+      const sy = ((seed*(i+11))%92) + (i*3%4);
+      const sz = (11 + ((seed*(i+13))%9)) / 3.6; // px→viewBox100座標へ縮尺
+      const cx = sx + sz/2, cy = sy + sz/2, r = sz/2;
+      // 結晶：6本の線（簡略化した雪印）を白で
+      flakes += `<g transform="translate(${cx},${cy})" stroke="white" stroke-width="${(r*0.14).toFixed(2)}" stroke-linecap="round" opacity="0.9" filter="url(#mmSnowGlow)">`
+        + `<line x1="0" y1="${-r}" x2="0" y2="${r}"/>`
+        + `<line x1="${-r}" y1="0" x2="${r}" y2="0"/>`
+        + `<line x1="${(-r*0.7).toFixed(1)}" y1="${(-r*0.7).toFixed(1)}" x2="${(r*0.7).toFixed(1)}" y2="${(r*0.7).toFixed(1)}"/>`
+        + `<line x1="${(-r*0.7).toFixed(1)}" y1="${(r*0.7).toFixed(1)}" x2="${(r*0.7).toFixed(1)}" y2="${(-r*0.7).toFixed(1)}"/>`
+        + `</g>`;
+    }
+    const defs = '<defs><filter id="mmSnowGlow"><feGaussianBlur stdDeviation="0.3"/></filter></defs>';
+    inner = defs
+      + '<rect x="0" y="0" width="100" height="100" fill="rgb(210,227,245)" opacity="0.22"/>'
+      + flakes;
   } else if (weather === 'rainy') {
-    // 窓の雨：薄い斜めグラデ＋水滴
-    inner = '<rect x="0" y="0" width="100" height="100" fill="rgb(125,165,205)" opacity="0.05"/>';
+    // 実物カンコピ：斜めの雨筋 + 窓の水滴5個（実物 .rainy::before / ::after を再現）
+    //   水滴位置: 18%22% / 68%30% / 38%55% / 82%65% / 25%85%
+    const drops = [[18,22,4],[68,30,5],[38,55,4],[82,65,5],[25,85,4]];
+    let defs = '<defs>'
+      + '<radialGradient id="mmDropG" cx="50%" cy="50%" r="50%">'
+      + '<stop offset="0%" stop-color="rgb(175,210,240)" stop-opacity="0.6"/>'
+      + '<stop offset="55%" stop-color="rgb(175,210,240)" stop-opacity="0.18"/>'
+      + '<stop offset="100%" stop-color="rgb(175,210,240)" stop-opacity="0"/>'
+      + '</radialGradient>'
+      + '<pattern id="mmRainLines" width="6" height="9" patternTransform="rotate(5)" patternUnits="userSpaceOnUse">'
+      + '<rect x="0" y="0" width="0.4" height="5" fill="rgb(125,165,205)" opacity="0.3"/>'
+      + '</pattern></defs>';
+    const dropsSVG = drops.map(([x,y,r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#mmDropG)"/>`).join('');
+    inner = defs
+      + '<rect x="0" y="0" width="100" height="100" fill="url(#mmRainLines)"/>'
+      + '<rect x="0" y="0" width="100" height="100" fill="rgb(105,145,190)" opacity="0.06"/>'
+      + dropsSVG;
   }
   if (!inner) return '';
   return `<svg class="mcs-weather" width="100%" height="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:18px;">${inner}</svg>`;
@@ -11659,6 +11754,9 @@ window.shareCard = async function() {
       mmTime = realCard.getAttribute('data-mm-time') || '';
       isDark = (mmTime === 'night' || mmTime === 'evening');
     }
+    // ★index189: レア度(data-tier)を取得。shiny/mythic-* はカード背景ごと専用デザインに置換する
+    let cardTier = '';
+    if (realCard) cardTier = realCard.getAttribute('data-tier') || '';
     // ★index188: 天気を取得し、白い雲などをSVGで自前描画する（html2canvas依存を増やさない）。
     //   「上部のところどころ白い光」の正体は .mm-cloud-blob（白い楕円のradial-gradient）。
     //   HTMLコピーではなく、五角形で実証済みのSVG方式で確実に再現する。
@@ -11719,28 +11817,40 @@ window.shareCard = async function() {
 
     const cardEl = shareContainer.firstElementChild;
 
-    // ★index188: 天気の白い光をSVGで自前描画してカード先頭に挿入（五角形と同じ確実な手法）
-    const weatherSVG = window.mmShareWeatherSVG(mmWeather);
-    if (weatherSVG) {
-      cardEl.insertAdjacentHTML('afterbegin', weatherSVG);
+    // ★index189: レアカード(shiny/mythic)判定。レアなら専用背景＋装飾、通常なら天気背景。
+    const tierStyle = window.mmShareTierStyle(cardTier);
+
+    if (tierStyle && tierStyle.isRare) {
+      // ── レアカード：背景ごと専用デザインに置換 ──
+      cardEl.style.backgroundImage = tierStyle.bg;
+      cardEl.style.backgroundColor = '#0a1020';
+      cardEl.style.backgroundSize = 'cover';
+      cardEl.style.borderColor = tierStyle.border;
+      cardEl.insertAdjacentHTML('afterbegin', tierStyle.svg);
       cardEl.style.position = 'relative';
       cardEl.style.overflow = 'hidden';
+      // レアカードは暗背景：駅名・五角形以外の文字を明るく（shiny/mythicは全体に明るい文字）
+      cardEl.classList.add('mcs-dark', 'mcs-rare');
+    } else {
+      // ── 通常カード：天気の白い光をSVGで描画＋天気背景グラデ ──
+      const weatherSVG = window.mmShareWeatherSVG(mmWeather, (currentCardStation && currentCardStation.name) || "");
+      if (weatherSVG) {
+        cardEl.insertAdjacentHTML('afterbegin', weatherSVG);
+        cardEl.style.position = 'relative';
+        cardEl.style.overflow = 'hidden';
+      }
+      // 実物の天気背景グラデ(--mm-bg)を固定背景として貼る
+      if (mmBgGrad) {
+        cardEl.style.backgroundImage = mmBgGrad;
+        cardEl.style.backgroundColor = bgColor || 'transparent';
+        cardEl.style.backgroundSize = 'cover';
+        cardEl.style.backgroundPosition = 'center';
+        cardEl.style.backgroundRepeat = 'no-repeat';
+      } else if (bgColor) {
+        cardEl.style.background = bgColor;
+      }
+      if (isDark) cardEl.classList.add('mcs-dark');
     }
-
-    // ★実物の背景を貼る（インラインで class CSS を上書き）
-    //   index186: --mm-bgグラデを固定背景として貼る。background-sizeは指定せず（=auto/100%）、
-    //   グラデはカードの実高さ全体に角度165degで自然に効く＝実物モーダルと同じ濃淡配分になる。
-    if (mmBgGrad) {
-      cardEl.style.backgroundImage = mmBgGrad;
-      cardEl.style.backgroundColor = bgColor || 'transparent';
-      cardEl.style.backgroundSize = 'cover';
-      cardEl.style.backgroundPosition = 'center';
-      cardEl.style.backgroundRepeat = 'no-repeat';
-    } else if (bgColor) {
-      cardEl.style.background = bgColor;
-    }
-    // ★暗背景なら文字を白系に
-    if (isDark) cardEl.classList.add('mcs-dark');
 
     await mmDelay(80);
     // ★index186: border(3px)込みの実寸で撮る。offsetWidth/Heightは枠線を含む＝角の見切れ防止
@@ -17629,8 +17739,11 @@ if ('serviceWorker' in navigator) {
     
     // 今日のミッションを生成（無ければ）
     let todayMissions = state.todayMissions;
+    let missionsNewlyGenerated = false;
     if (!todayMissions || todayMissions.date !== today) {
-      // ランダム2つ選ぶ（重複なし）
+      // ★index190: その日初めての生成。生成したら必ず保存する（isFirstTodayに依存しない）。
+      //   従来は isFirstToday の時しか保存されず、マイページを開くたびに mmProcessLoginBonus が
+      //   走ってランダム再生成→「立ち上げるたびにミッションが変わる」バグになっていた。
       const shuffled = [...DAILY_MISSION_POOL].sort(() => Math.random() - 0.5);
       const picked = shuffled.slice(0, 2);
       todayMissions = {
@@ -17640,6 +17753,7 @@ if ('serviceWorker' in navigator) {
           progress: 0, claimed: false
         }))
       };
+      missionsNewlyGenerated = true;
     }
     
     const newState = {
@@ -17652,7 +17766,8 @@ if ('serviceWorker' in navigator) {
       lastBonusXP: isFirstToday ? bonusXP : (state.lastBonusXP || 0),
     };
     
-    if (isFirstToday) {
+    // ★index190: 初ログイン時 or ミッションを新規生成した時は必ず保存（後者がバグ修正の肝）
+    if (isFirstToday || missionsNewlyGenerated) {
       await window.mmSetDailyState(uid, newState);
     }
     
@@ -17764,9 +17879,19 @@ if ('serviceWorker' in navigator) {
             const dStr = jst.toISOString().slice(0,10);
             if (dStr === today) {
               count++;
-              // 路線取得
-              if (window.STATION_LINES && window.STATION_LINES[data.stationId]) {
-                window.STATION_LINES[data.stationId].forEach(l => lineSet.add(l));
+              // ★index190: 路線取得。未定義のSTATION_LINESではなくLINE_DATAから逆引きする。
+              //   stationId形式は「駅名_県名」、LINE_DATAは 県名→路線→駅名配列。
+              //   これがバグの真因：「違う路線を2つ」が常に0/2だったのはSTATION_LINESがundefinedだったため。
+              const sid = data.stationId || (data.stationName && data.stationPref ? (data.stationName + '_' + data.stationPref) : '');
+              const sName = data.stationName || (sid.includes('_') ? sid.split('_')[0] : sid);
+              const sPref = data.stationPref || (sid.includes('_') ? sid.split('_').slice(1).join('_') : '');
+              if (window.LINE_DATA && sPref && window.LINE_DATA[sPref]) {
+                const linesInPref = window.LINE_DATA[sPref];
+                Object.keys(linesInPref).forEach(lineName => {
+                  if (Array.isArray(linesInPref[lineName]) && linesInPref[lineName].includes(sName)) {
+                    lineSet.add(lineName);
+                  }
+                });
               }
             }
           });
