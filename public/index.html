@@ -6413,13 +6413,12 @@ body.checkin-active #checkin-indicator{
 
 /* デイリーミッション */
 .mp-daily-title{
-  font-size:11px;font-weight:900;color:#a8b8d0;letter-spacing:2px;
+  font-size:11px;font-weight:900;color:#fbd56a;letter-spacing:2px;
   margin-bottom:8px;text-transform:uppercase;
+  text-shadow:0 0 8px rgba(251,213,106,0.3);
 }
 .mp-weekly-title{
   margin-top:14px;
-  color:#fbd56a;
-  text-shadow:0 0 8px rgba(251,213,106,0.3);
 }
 .mp-daily-missions{
   display:flex;flex-direction:column;gap:8px;
@@ -7055,10 +7054,6 @@ body.checkin-active #checkin-indicator{
     
     <!-- 街めぐマスターパネル（カード+バッジ統合の総合レベル） -->
     <div class="mp-master-panel" id="mp-master-panel">
-      <div class="mp-master-label">
-        <span class="mp-master-emoji">🎴</span>
-        <span>街めぐマスター</span>
-      </div>
       <div class="mp-master-header">
         <span class="mp-master-lv-badge">LV.<span id="mp-master-lv">1</span></span>
         <span class="mp-master-tier" id="mp-master-tier">初心者市民</span>
@@ -11534,10 +11529,16 @@ window.renderCardForShare = function(stationData){
 
 window.shareCard = async function() {
   if (!currentCardStation) return;
-  
+
   const url = 'https://machimegu.com';
-  const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を訪問！\n街力 ${currentCardStation.score} (${currentCardStation.rank}ランク)\n#街巡まちめぐ #街にでよう`;
-  
+
+  // スコア・ランクは表示中のDOMから読む（カード基準スコアと完全一致させる）
+  const scoreEl = document.getElementById('sc-score-num');
+  const scoreText = scoreEl ? scoreEl.textContent.trim().replace(/[^0-9]/g, '') : (currentCardStation.score || '');
+  const rankEl = document.getElementById('sc-rank-badge');
+  const rankText = rankEl ? rankEl.textContent.trim() : (currentCardStation.rank || '');
+  const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を訪問！\n街力 ${scoreText} (${rankText}ランク)\n#街巡まちめぐ #街にでよう`;
+
   // ボタンを一時的にローディング表示
   const btn = document.querySelector('.sc-act-btn');
   const originalHTML = btn ? btn.innerHTML : '';
@@ -11545,92 +11546,51 @@ window.shareCard = async function() {
     btn.innerHTML = '<span style="font-size:11px">画像作成中...</span>';
     btn.disabled = true;
   }
-  
+
   await mmDelay(50);
-  
-  let shareContainer = null;
-  
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ★index181：案A＝実物カードDOMをそのまま html2canvas で撮影
+  //   過去の失敗原因：cloneNode するとIDセレクタ #station-card[data-mm-...] が
+  //   複製要素に当たらず、天気背景(--mm-bg)が消えてベージュの白背景になっていた。
+  //   対策：複製せず、本物の #station-card 要素を直接撮る。
+  //         data-mm-season / data-mm-time / data-tier / data-rank が
+  //         全て付いた本物なので、紫グラデも shiny/mythic も実物通りに写る。
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const cardEl = document.getElementById('station-card');
+  if (!cardEl) {
+    if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
+    return;
+  }
+
+  // 撮影時に「写したくない/写ると不自然な」要素を一時退避
+  const hidden = [];
+  const hideEl = (sel) => {
+    const el = cardEl.querySelector(sel);
+    if (el) { hidden.push([el, el.style.visibility]); el.style.visibility = 'hidden'; }
+  };
+  // シェアボタン本体は画像に入れない
+  hideEl('.sc-actions');
+  // メモが空ならプレースホルダが写るので、空のときだけメモ欄を隠す
+  const memoEl = cardEl.querySelector('#sc-memo-content');
+  const memoWrap = cardEl.querySelector('.sc-memo');
+  let memoHiddenState = null;
+  if (memoEl && memoWrap) {
+    const memoText = (memoEl.textContent || '').trim();
+    if (!memoText) {
+      memoHiddenState = memoWrap.style.display;
+      memoWrap.style.display = 'none';
+    }
+  }
+
+  // アニメーション（first-visit glow 等）を一時停止して撮影を安定させる
+  const prevAnim = cardEl.style.animation;
+  cardEl.style.animation = 'none';
+
   try {
     await mmTimeout(window.mmLoadHtml2Canvas(), 8000, 'ライブラリ読み込みタイムアウト');
-    await mmDelay(30);
-    
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // ★ Phase F：シェア用カードレプリカを純HTMLで生成
-    //   問題：cloneNode方式では複雑なCSS（filter, ::before/::after の glow, animation）が
-    //         html2canvasで再現できず、背景色や色味が全然違う画像になる
-    //   対策：renderCardForShareで html2canvas が確実に処理できるシンプルなHTMLを構築
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
-    // 駅情報を補完
-    const cardData = Object.assign({}, currentCardStation);
-    
-    // チェックイン日付を「YYYY.MM.DD」形式で整形
-    if (currentCardStation.checkinDate) {
-      cardData.checkinDate = currentCardStation.checkinDate;
-    } else {
-      const dateEl = document.getElementById('sc-checkin-date');
-      if (dateEl) cardData.checkinDate = dateEl.textContent.trim();
-    }
-    
-    // 初訪問判定（DOM側から取得）
-    const visitEl = document.getElementById('sc-visit-count');
-    if (visitEl) {
-      const visitTxt = visitEl.textContent.trim();
-      cardData.isFirstVisit = visitTxt === '初訪問';
-      // 訪問回数（"3回目" → 3）
-      const m = visitTxt.match(/(\d+)回目/);
-      if (m) cardData.visitCount = parseInt(m[1], 10);
-    }
-    
-    // 路線名
-    const lineEl = document.getElementById('sc-line-text');
-    if (lineEl) cardData.line = lineEl.textContent.trim();
-    
-    // 駅情報
-    const get = id => { const el = document.getElementById(id); return el ? el.textContent.trim() : '-'; };
-    cardData.opened = get('sc-info-opened');
-    cardData.riders = get('sc-info-riders');
-    cardData.transfers = get('sc-info-lines');
-    cardData.location = get('sc-info-loc');
-    
-    // 特徴（DOM側から取得、3つまで）
-    const featEls = document.querySelectorAll('#sc-features .sc-feat-text, #sc-features .sc-feature');
-    if (featEls.length > 0) {
-      cardData.features = Array.from(featEls).slice(0, 3).map(e => {
-        // 星マークを除外、本文だけ取得
-        return e.textContent.replace(/^[★☆\s]+/, '').trim();
-      });
-    } else {
-      // フォールバック：sc-features直下の子要素のテキストを使う
-      const featContainer = document.getElementById('sc-features');
-      if (featContainer) {
-        cardData.features = Array.from(featContainer.children).slice(0, 3).map(el => {
-          return el.textContent.replace(/^[★☆\s]+/, '').trim();
-        });
-      }
-    }
-    
-    // レプリカHTML生成
-    const cardWidth = 360;
-    shareContainer = document.createElement('div');
-    shareContainer.style.cssText = `
-      position: fixed;
-      left: -10000px;
-      top: 0;
-      width: ${cardWidth}px;
-      z-index: -1;
-      pointer-events: none;
-    `;
-    shareContainer.innerHTML = window.renderCardForShare(cardData);
-    document.body.appendChild(shareContainer);
-    
-    // glow がはみ出すぶんの padding を確保
-    const cardEl = shareContainer.firstElementChild;
-    
-    await mmDelay(80);
-    
-    const renderedHeight = cardEl.offsetHeight;
-    
+    await mmDelay(60);  // スタイル反映待ち
+
     const canvas = await mmTimeout(
       window.html2canvas(cardEl, {
         backgroundColor: null,
@@ -11639,51 +11599,50 @@ window.shareCard = async function() {
         useCORS: true,
         allowTaint: true,
         imageTimeout: 3000,
-        width: cardWidth,
-        height: renderedHeight,
+        // glow(box-shadow)が外にはみ出すぶんを少し含める
+        width: cardEl.offsetWidth,
+        height: cardEl.offsetHeight,
+        windowWidth: document.documentElement.offsetWidth,
       }),
       15000,
       '画像生成タイムアウト'
     );
-    
-    if (shareContainer && shareContainer.parentNode) {
-      shareContainer.parentNode.removeChild(shareContainer);
-      shareContainer = null;
-    }
-    
+
+    // 退避した要素を即復元（画像化は完了済み）
+    hidden.forEach(([el, v]) => { el.style.visibility = v; });
+    if (memoHiddenState !== null && memoWrap) memoWrap.style.display = memoHiddenState;
+    cardEl.style.animation = prevAnim;
+
     await mmDelay(20);
-    
+
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1.0));
     if (!blob) throw new Error('Blob生成失敗');
-    
-    const file = new File([blob], `machimegu-${currentCardStation.name}.png`, { type: 'image/png' });
-    
-    if (btn) {
-      btn.innerHTML = originalHTML;
-      btn.disabled = false;
-    }
-    
+
+    const fileName = `machimegu-${(currentCardStation.name || 'card').replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/g, '')}.png`;
+    const file = new File([blob], fileName, { type: 'image/png' });
+
+    if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
+
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        title: '街巡-まちめぐ-',
-        text: text,
-        files: [file]
-      });
+      await navigator.share({ title: '街巡-まちめぐ-', text, files: [file] });
     } else if (navigator.share) {
       await navigator.share({ title: '街巡-まちめぐ-', text, url });
     } else {
       const dlUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = dlUrl;
-      a.download = `machimegu-${currentCardStation.name}.png`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(dlUrl);
-      alert('カード画像をダウンロードしました！\nSNSに投稿してください。');
+      setTimeout(() => URL.revokeObjectURL(dlUrl), 1000);
     }
   } catch (e) {
     console.error('シェアエラー:', e);
+    // 失敗時も必ず退避要素を復元
+    hidden.forEach(([el, v]) => { el.style.visibility = v; });
+    if (memoHiddenState !== null && memoWrap) memoWrap.style.display = memoHiddenState;
+    cardEl.style.animation = prevAnim;
     if (e.name !== 'AbortError') {
       const isTimeout = (e.message || '').includes('タイムアウト');
       if (isTimeout) {
@@ -11701,16 +11660,12 @@ window.shareCard = async function() {
       }
     }
   } finally {
-    if (shareContainer && shareContainer.parentNode) {
-      shareContainer.parentNode.removeChild(shareContainer);
-    }
     if (btn) {
       btn.innerHTML = originalHTML;
       btn.disabled = false;
     }
   }
 };
-
 
 // ─── メモ機能 ───
 let memoSaveTimer = null;
@@ -14763,9 +14718,9 @@ window.toggleLineMore = function() {
 // ─── Phase 2: レアリティ判定 & ★HTML & 進捗バーヘルパー ───
 // レアリティレベル：1〜5。★5のみホロ箔・最高グロー
 window.bpStarsHTML = function(level){
-  if (!level || level < 1) return '';
-  const stars = '★'.repeat(level);
-  return `<div class="bp-rarity r${level}">${stars}</div>`;
+  // ★index181: ともき要望でバッジ右上の星マークを廃止
+  //   理由：中途半端に付いていて意味が伝わりにくい。レア度は背景色(bp-rarity-*)で表現継続。
+  return '';
 };
 
 // ランク制覇のレアリティ判定（閾値の位置で判定）
@@ -17549,9 +17504,18 @@ if ('serviceWorker' in navigator) {
       const user = auth.currentUser;
       if (!user) { console.warn('[Bonus] auth.currentUser=null'); return; }
       console.log('[Bonus] uid=', user.uid);
-      const state = await window.mmGetDailyState(user.uid);
+      let state = await window.mmGetDailyState(user.uid);
       console.log('[Bonus] state=', state);
-      if (!state) { console.warn('[Bonus] state=null（mmGetDailyState失敗）'); return; }
+      // ★index181: state未生成（初回 or 取得失敗）なら mmProcessLoginBonus で生成してから再取得
+      if (!state) {
+        console.warn('[Bonus] state=null → mmProcessLoginBonusで初期化を試行');
+        try { await window.mmProcessLoginBonus(user.uid); } catch(_) {}
+        state = await window.mmGetDailyState(user.uid);
+      }
+      if (!state) {
+        console.warn('[Bonus] state=null（初期化後も取得失敗、Firestore権限を確認）');
+        return;
+      }
       if (state.bonusClaimedToday) { 
         console.warn('[Bonus] already claimed today、UIだけ更新'); 
         // 表示と実データの乖離が起きてるケース：UI側を「受取済み」に直す
