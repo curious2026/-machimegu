@@ -6731,6 +6731,9 @@ body.checkin-active #checkin-indicator{
   display:flex;
   flex-direction:column;
 }
+/* ★index188: 天気SVG(z-index:0)より手前にコンテンツを出す（白い光がテキストに被らないように） */
+.mc-share-card > .mcs-weather{ z-index:0; }
+.mc-share-card > *:not(.mcs-weather){ position:relative; z-index:1; }
 /* ランク別グラデ背景＋グロー */
 .mc-share-card.rank-S{
   --mcs-color:#fb7185;
@@ -11457,6 +11460,43 @@ const mmTimeout = (promise, ms, errMsg) => Promise.race([
 
 // ─── シェア用カードレプリカ生成（html2canvas で確実に再現できるHTML） ───
 // ★index183: シェア用カードの5軸ダイヤをSVGで描画（html2canvasがtransform入れ子で崩すのを回避）
+// ★index188: 天気の白い光をSVGで描く（mm-cloud-blob等をカンコピ）。html2canvasが確実に描けるSVG方式。
+window.mmShareWeatherSVG = function(weather){
+  if (!weather || weather === 'sunny' || weather === 'clear') return '';
+  // カード基準サイズ（renderCardForShareの幅360 + border等。viewBox比率で配置するので実寸非依存）
+  const W = 100, H = 100; // パーセント座標系として扱う（preserveAspectRatio none）
+  let inner = '';
+
+  if (weather === 'cloudy') {
+    // 実物 .mm-cloud-blob の配置（top/left/width/height %）と radial-gradient を再現
+    //   grad: rgba(255,255,255,0.85) 0% → rgba(245,245,250,0.45) 40% → transparent 75%
+    const clouds = [
+      { x:-15, y:6,  w:60, h:30 },
+      { x:35,  y:14, w:55, h:22 },
+      { x:60,  y:2,  w:50, h:18 }
+    ];
+    let defs = '<defs><radialGradient id="mmCloudG" cx="50%" cy="50%" r="50%">'
+      + '<stop offset="0%" stop-color="rgb(255,255,255)" stop-opacity="0.85"/>'
+      + '<stop offset="40%" stop-color="rgb(245,245,250)" stop-opacity="0.45"/>'
+      + '<stop offset="75%" stop-color="rgb(245,245,250)" stop-opacity="0"/>'
+      + '</radialGradient></defs>';
+    inner = defs + clouds.map(c => {
+      const cx = c.x + c.w/2, cy = c.y + c.h/2;
+      return `<ellipse cx="${cx}" cy="${cy}" rx="${c.w/2}" ry="${c.h/2}" fill="url(#mmCloudG)"/>`;
+    }).join('');
+  } else if (weather === 'snowy') {
+    // 薄い白オーバーレイ＋雪の点（簡易・実物の結晶配置に近い散らし）
+    const pts = [[22,18],[78,30],[35,55],[65,68],[15,40],[88,15],[50,80],[28,72],[72,48],[45,28]];
+    inner = '<rect x="0" y="0" width="100" height="100" fill="rgb(255,255,255)" opacity="0.06"/>'
+      + pts.map(([x,y],i) => `<circle cx="${x}" cy="${y}" r="${1.2 + (i%3)*0.4}" fill="rgb(255,255,255)" opacity="0.8"/>`).join('');
+  } else if (weather === 'rainy') {
+    // 窓の雨：薄い斜めグラデ＋水滴
+    inner = '<rect x="0" y="0" width="100" height="100" fill="rgb(125,165,205)" opacity="0.05"/>';
+  }
+  if (!inner) return '';
+  return `<svg class="mcs-weather" width="100%" height="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:18px;">${inner}</svg>`;
+};
+
 window.mmShareAxesSVG = function(axes){
   // ★index184: 実物 .sc-ax（50×50正方形を45°回転＝対角70.7px, border2px, margin -6pxで重なり）をカンコピ
   const half = 35;             // 半対角（実物 50/√2 ≒ 35.4 → 35）
@@ -11619,6 +11659,17 @@ window.shareCard = async function() {
       mmTime = realCard.getAttribute('data-mm-time') || '';
       isDark = (mmTime === 'night' || mmTime === 'evening');
     }
+    // ★index188: 天気を取得し、白い雲などをSVGで自前描画する（html2canvas依存を増やさない）。
+    //   「上部のところどころ白い光」の正体は .mm-cloud-blob（白い楕円のradial-gradient）。
+    //   HTMLコピーではなく、五角形で実証済みのSVG方式で確実に再現する。
+    let mmWeather = '';
+    if (realCard) {
+      const ov = realCard.querySelector('.mm-weather-overlay');
+      if (ov) {
+        // class名から天気種別を抽出（mm-weather-overlay cloudy / snowy / rainy / sunny ...）
+        mmWeather = (ov.className.replace('mm-weather-overlay', '').trim().split(/\s+/)[0]) || '';
+      }
+    }
 
     // カードデータ組み立て（スコア軸はDOM実値）
     const cardData = Object.assign({}, currentCardStation);
@@ -11667,6 +11718,14 @@ window.shareCard = async function() {
     document.body.appendChild(shareContainer);
 
     const cardEl = shareContainer.firstElementChild;
+
+    // ★index188: 天気の白い光をSVGで自前描画してカード先頭に挿入（五角形と同じ確実な手法）
+    const weatherSVG = window.mmShareWeatherSVG(mmWeather);
+    if (weatherSVG) {
+      cardEl.insertAdjacentHTML('afterbegin', weatherSVG);
+      cardEl.style.position = 'relative';
+      cardEl.style.overflow = 'hidden';
+    }
 
     // ★実物の背景を貼る（インラインで class CSS を上書き）
     //   index186: --mm-bgグラデを固定背景として貼る。background-sizeは指定せず（=auto/100%）、
