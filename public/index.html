@@ -6720,7 +6720,7 @@ body.checkin-active #checkin-indicator{
 /* ═══ シェア用カードレプリカ（実機準拠の見た目を完全再現） ═══ */
 .mc-share-card{
   width:360px;
-  min-height:660px;
+  min-height:740px;
   padding:18px 18px 26px;
   border-radius:20px;
   border:3px solid var(--mcs-color,#ff8c44);
@@ -6845,7 +6845,7 @@ body.checkin-active #checkin-indicator{
   display:flex;justify-content:center;align-items:center;
   margin:0 0 16px 0;
 }
-.mcs-axes svg{ display:block; width:100%; height:auto; }
+.mcs-axes svg{ display:block; height:auto; margin:0 auto; }
 .mcs-ax{
   width:50px;height:50px;
   background:#fff;
@@ -6912,6 +6912,17 @@ body.checkin-active #checkin-indicator{
   color:var(--mcs-color,#ff8c44);font-size:12px;
   flex-shrink:0;
 }
+.mcs-spacer{ flex:1 1 auto; min-height:12px; }
+.mcs-brand{
+  text-align:center;
+  font-size:11px;font-weight:700;
+  color:#8a9bb5;
+  letter-spacing:1px;
+  padding-top:10px;
+}
+.mcs-brand strong{ color:#5a7290; }
+.mc-share-card.mcs-dark .mcs-brand{ color:rgba(255,255,255,0.7); }
+.mc-share-card.mcs-dark .mcs-brand strong{ color:#ffffff; }
 
 /* ★index182改：暗背景（night/evening）時の文字色。実物の天気CSSに準拠。
    駅名(#1a2030黒)・五角形(白地)・カプセル(白地)は固定のまま。info系/路線名/スコアラベルのみ明るく。 */
@@ -11543,6 +11554,8 @@ window.renderCardForShare = function(stationData){
       <div class="mcs-info-item"><div class="mcs-info-val">${escapeHtml(String(loc))}</div><div class="mcs-info-lbl">所在地</div></div>
     </div>
     ${featuresHTML ? `<div class="mcs-features">${featuresHTML}</div>` : ''}
+    <div class="mcs-spacer"></div>
+    <div class="mcs-brand">街にでよう ー <strong>街巡-まちめぐ-</strong></div>
   </div>`;
 };
 
