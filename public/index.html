@@ -6720,12 +6720,16 @@ body.checkin-active #checkin-indicator{
 /* ═══ シェア用カードレプリカ（実機準拠の見た目を完全再現） ═══ */
 .mc-share-card{
   width:360px;
-  padding:24px 22px 22px;
-  border-radius:24px;
+  min-height:660px;
+  padding:18px 18px 26px;
+  border-radius:20px;
+  border:3px solid var(--mcs-color,#ff8c44);
   font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
   position:relative;
   box-sizing:border-box;
   overflow:hidden;
+  display:flex;
+  flex-direction:column;
 }
 /* ランク別グラデ背景＋グロー */
 .mc-share-card.rank-S{
@@ -11443,19 +11447,23 @@ const mmTimeout = (promise, ms, errMsg) => Promise.race([
 // ─── シェア用カードレプリカ生成（html2canvas で確実に再現できるHTML） ───
 // ★index183: シェア用カードの5軸ダイヤをSVGで描画（html2canvasがtransform入れ子で崩すのを回避）
 window.mmShareAxesSVG = function(axes){
-  const W = 360, H = 96, d = 34, cy = 48;
-  const cxs = [50, 112, 174, 236, 298];  // 中心x（間隔62px・対角68pxで6px重なる＝実物準拠）
+  // ★index184: 実物 .sc-ax（50×50正方形を45°回転＝対角70.7px, border2px, margin -6pxで重なり）をカンコピ
+  const half = 35;             // 半対角（実物 50/√2 ≒ 35.4 → 35）
+  const gap = 59;              // 中心間隔（70.7 - 12 ≒ 58.7 → 59）
+  const x0 = 38;               // 左端の中心x（左に余白35確保）
+  const cy = 46;               // 中心y
+  const H = 92;                // 高さ（半対角×2 + 余白）
+  const cxs = [0,1,2,3,4].map(i => x0 + i*gap);
+  const W = x0 + 4*gap + 38;   // 右にも余白
   let shapes = '';
-  // 左が上に重なる（実物準拠）ため、右端から描画して左を後勝ち＝最前面に
+  // 左が前面（実物準拠）→ 右から先に描き左を後勝ちに
   for (let i = axes.length - 1; i >= 0; i--) {
     const a = axes[i], cx = cxs[i];
-    const nm = String(a.name);
-    const vl = String(a.val);
-    shapes += `<polygon points="${cx},${cy-d} ${cx+d},${cy} ${cx},${cy+d} ${cx-d},${cy}" fill="#ffffff" stroke="${a.color}" stroke-width="2"/>`
-      + `<text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="9" font-weight="700" fill="${a.color}" font-family="-apple-system,BlinkMacSystemFont,sans-serif">${nm}</text>`
-      + `<text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="15" font-weight="900" fill="${a.color}" font-family="-apple-system,BlinkMacSystemFont,sans-serif">${vl}</text>`;
+    shapes += `<polygon points="${cx},${cy-half} ${cx+half},${cy} ${cx},${cy+half} ${cx-half},${cy}" fill="#ffffff" stroke="${a.color}" stroke-width="2"/>`
+      + `<text x="${cx}" y="${cy-3}" text-anchor="middle" font-size="10" font-weight="700" fill="${a.color}" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif">${String(a.name)}</text>`
+      + `<text x="${cx}" y="${cy+15}" text-anchor="middle" font-size="16" font-weight="900" fill="${a.color}" font-family="-apple-system,BlinkMacSystemFont,sans-serif">${String(a.val)}</text>`;
   }
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${shapes}</svg>`;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">${shapes}</svg>`;
 };
 
 window.renderCardForShare = function(stationData){
@@ -11640,10 +11648,12 @@ window.shareCard = async function() {
     const cardEl = shareContainer.firstElementChild;
 
     // ★実物の背景を貼る（インラインで class CSS を上書き）
+    //   index184: min-heightで縦に伸ばすぶん、グラデを要素全体に引き伸ばして実物の濃淡を再現
     if (bgImage) {
       cardEl.style.backgroundImage = bgImage;
       cardEl.style.backgroundColor = bgColor || 'transparent';
-      cardEl.style.backgroundSize = 'cover';
+      cardEl.style.backgroundSize = '100% 100%';
+      cardEl.style.backgroundRepeat = 'no-repeat';
     } else if (bgColor) {
       cardEl.style.background = bgColor;
     }
