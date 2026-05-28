@@ -6729,219 +6729,193 @@ body.checkin-active #checkin-indicator{
 }
 /* ランク別グラデ背景＋グロー */
 .mc-share-card.rank-S{
+  --mcs-color:#fb7185;
   background:linear-gradient(160deg,#ffd0d8 0%,#ffe4e8 40%,#fff0f4 100%);
   box-shadow:0 0 0 1px rgba(255,68,80,0.2),0 0 48px rgba(255,80,100,0.4),0 0 80px rgba(255,60,80,0.3);
 }
 .mc-share-card.rank-A{
+  --mcs-color:#ff8c44;
   background:linear-gradient(160deg,#ffd9b8 0%,#ffe6ce 40%,#fff0e0 100%);
   box-shadow:0 0 0 1px rgba(255,140,32,0.2),0 0 48px rgba(255,140,40,0.4),0 0 80px rgba(255,120,20,0.3);
 }
 .mc-share-card.rank-B{
+  --mcs-color:#d4a017;
   background:linear-gradient(160deg,#fff0b0 0%,#fff5ce 40%,#fffae6 100%);
   box-shadow:0 0 0 1px rgba(232,192,0,0.2),0 0 48px rgba(232,192,0,0.35),0 0 80px rgba(220,180,0,0.25);
 }
 .mc-share-card.rank-C{
+  --mcs-color:#3aa46c;
   background:linear-gradient(160deg,#c8e8d4 0%,#dff0e4 40%,#eef8ee 100%);
   box-shadow:0 0 0 1px rgba(62,184,120,0.2),0 0 48px rgba(62,184,120,0.35),0 0 80px rgba(50,160,100,0.25);
 }
 .mc-share-card.rank-D{
+  --mcs-color:#3a8ac4;
   background:linear-gradient(160deg,#c0dcf2 0%,#d8e8f5 40%,#ecf2f8 100%);
   box-shadow:0 0 0 1px rgba(58,154,224,0.2),0 0 48px rgba(58,154,224,0.35),0 0 80px rgba(40,130,200,0.25);
 }
 
 /* 上部：ランクバッジ + チェックイン情報 + 初訪問バッジ */
 .mcs-top{
-  display:flex;align-items:flex-start;gap:14px;
-  margin-bottom:14px;
+  display:flex;align-items:flex-start;gap:10px;
+  margin-bottom:8px;
 }
 .mcs-rank{
-  font-size:64px;font-weight:900;line-height:0.85;
-  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
-  margin:0;
+  font-size:62px;font-weight:900;line-height:0.85;
+  font-family:'Inter','Noto Sans JP',-apple-system,sans-serif;
+  letter-spacing:-3px;
+  color:var(--mcs-color,#ff8c44);
+  flex-shrink:0;margin-top:-2px;
 }
-.mcs-rank.S{color:#ff2244;text-shadow:0 2px 4px rgba(255,68,80,0.25)}
-.mcs-rank.A{color:#ff8800;text-shadow:0 2px 4px rgba(255,140,40,0.25)}
-.mcs-rank.B{color:#d4a020;text-shadow:0 2px 4px rgba(232,192,0,0.25)}
-.mcs-rank.C{color:#44cc88;text-shadow:0 2px 4px rgba(62,184,120,0.25)}
-.mcs-rank.D{color:#44aaff;text-shadow:0 2px 4px rgba(58,154,224,0.25)}
 .mcs-checkin{
   flex:1;display:flex;flex-direction:column;align-items:center;
-  padding-top:6px;
+  padding-top:4px;
 }
 .mcs-checkin-label{
-  font-size:9px;font-weight:900;letter-spacing:2.5px;color:rgba(20,30,50,0.5);
+  font-size:10px;font-weight:900;letter-spacing:3px;color:#7a96b6;
 }
 .mcs-checkin-date{
-  font-size:14px;font-weight:900;color:rgba(20,30,50,0.85);
-  letter-spacing:0.5px;margin-top:2px;
+  font-size:15px;font-weight:900;color:#1a2030;
+  letter-spacing:0.5px;margin-top:1px;
 }
 .mcs-visit{
-  margin-top:4px;
-  padding:3px 12px;border-radius:14px;
-  font-size:11px;font-weight:900;
-  background:linear-gradient(135deg,#ff8800,#ff6600);
+  margin-top:6px;
+  padding:5px 14px;border-radius:14px;
+  font-size:13px;font-weight:900;
+  background:var(--mcs-color,#ff8c44);
   color:#fff;
-  box-shadow:0 2px 4px rgba(255,100,0,0.3);
-  letter-spacing:0.5px;
+  letter-spacing:0.5px;white-space:nowrap;
 }
 .mcs-logo{
-  padding-top:8px;
-  font-size:9px;font-weight:900;
-  color:rgba(20,30,50,0.55);
+  padding-top:4px;
+  font-size:9px;font-weight:700;
+  color:#7a96b6;
   letter-spacing:1px;
   text-align:right;
   line-height:1.3;
-  max-width:84px;
+  max-width:90px;
 }
 .mcs-logo strong{
   display:block;font-size:10px;
-  color:rgba(20,30,50,0.75);
-  letter-spacing:0.5px;
+  color:#5a7290;
+  letter-spacing:0.3px;
 }
-
-/* 駅名 */
 .mcs-name{
-  font-size:30px;font-weight:900;
-  color:#0a1428;letter-spacing:1px;
-  line-height:1.2;
-  margin:6px 0 10px;
-  text-shadow:0 1px 2px rgba(255,255,255,0.5);
+  font-size:42px;font-weight:900;
+  color:#1a2030;letter-spacing:5px;
+  line-height:1.1;
+  text-align:left;
+  margin:8px 0 10px;
 }
-.mcs-name.long{font-size:24px}
-.mcs-name.vlong{font-size:20px}
-
-/* 紫の線 */
+.mcs-name.long{font-size:34px;letter-spacing:3px}
+.mcs-name.vlong{font-size:27px;letter-spacing:2px}
 .mcs-line-bar{
-  height:4px;border-radius:2px;
+  height:8px;border-radius:4px;
   background:linear-gradient(90deg,#9933cc 0%,#cc44ff 50%,#9933cc 100%);
-  box-shadow:0 0 4px rgba(180,68,220,0.5);
   margin-bottom:10px;
 }
-
-/* 路線名 */
 .mcs-line-text{
-  font-size:12px;font-weight:700;
-  color:rgba(20,30,50,0.65);
-  letter-spacing:1px;
+  font-size:11px;font-weight:600;
+  color:#3a4658;
+  line-height:1.5;
   margin-bottom:14px;
 }
-
-/* スコア */
 .mcs-score-row{
   display:flex;align-items:flex-end;gap:10px;
-  margin-bottom:18px;
+  margin-bottom:16px;
 }
 .mcs-score-num{
-  font-size:72px;font-weight:900;line-height:0.9;
+  font-size:64px;font-weight:900;line-height:0.95;
   font-variant-numeric:tabular-nums;
-  letter-spacing:-3px;
+  letter-spacing:-2px;
+  color:var(--mcs-color,#ff8c44);
 }
-.mcs-share-card.rank-S .mcs-score-num{color:#ff2244;text-shadow:0 2px 6px rgba(255,68,80,0.3)}
-.mcs-share-card.rank-A .mcs-score-num{color:#ff8800;text-shadow:0 2px 6px rgba(255,140,40,0.3)}
-.mcs-share-card.rank-B .mcs-score-num{color:#d4a020;text-shadow:0 2px 6px rgba(232,192,0,0.3)}
-.mcs-share-card.rank-C .mcs-score-num{color:#44cc88;text-shadow:0 2px 6px rgba(62,184,120,0.3)}
-.mcs-share-card.rank-D .mcs-score-num{color:#44aaff;text-shadow:0 2px 6px rgba(58,154,224,0.3)}
 .mcs-score-label{
-  font-size:10px;font-weight:900;letter-spacing:1.5px;
-  color:rgba(20,30,50,0.5);
-  line-height:1.3;
-  padding-bottom:8px;
+  font-size:11px;font-weight:900;letter-spacing:2px;
+  color:#7a96b6;
+  line-height:1.2;
+  padding-bottom:6px;
 }
-
-/* 5軸ダイヤモンド */
 .mcs-axes{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:18px;
-  padding:0 2px;
+  display:flex;justify-content:center;align-items:center;
+  margin:0 0 16px 0;
 }
 .mcs-ax{
-  width:54px;height:54px;
-  background:transparent;
-  border:2.5px solid;
+  width:50px;height:50px;
+  background:#fff;
+  border:2px solid;
   transform:rotate(45deg);
   display:flex;align-items:center;justify-content:center;
   position:relative;
-  border-radius:3px;
+  margin:10px -4px;
+  flex-shrink:0;
 }
 .mcs-ax-inner{
   transform:rotate(-45deg);
   text-align:center;line-height:1.05;
 }
 .mcs-ax-name{
-  display:block;font-size:9px;font-weight:900;letter-spacing:0.3px;
+  display:block;font-size:9px;font-weight:700;letter-spacing:-0.3px;
   margin-bottom:1px;
 }
 .mcs-ax-val{
-  display:block;font-size:15px;font-weight:900;
+  display:block;font-size:14px;font-weight:900;
   font-variant-numeric:tabular-nums;
 }
-.mcs-ax-food{border-color:#ff4488}
-.mcs-ax-food .mcs-ax-name,.mcs-ax-food .mcs-ax-val{color:#ff4488}
-.mcs-ax-com{border-color:#a040d8}
-.mcs-ax-com .mcs-ax-name,.mcs-ax-com .mcs-ax-val{color:#a040d8}
-.mcs-ax-life{border-color:#4488ff}
-.mcs-ax-life .mcs-ax-name,.mcs-ax-life .mcs-ax-val{color:#4488ff}
-.mcs-ax-med{border-color:#f08040}
-.mcs-ax-med .mcs-ax-name,.mcs-ax-med .mcs-ax-val{color:#f08040}
+.mcs-ax-food{border-color:#ff4466}
+.mcs-ax-food .mcs-ax-name,.mcs-ax-food .mcs-ax-val{color:#ff4466}
+.mcs-ax-com{border-color:#9070ff}
+.mcs-ax-com .mcs-ax-name,.mcs-ax-com .mcs-ax-val{color:#9070ff}
+.mcs-ax-life{border-color:#3aa0ff}
+.mcs-ax-life .mcs-ax-name,.mcs-ax-life .mcs-ax-val{color:#3aa0ff}
+.mcs-ax-med{border-color:#f09030}
+.mcs-ax-med .mcs-ax-name,.mcs-ax-med .mcs-ax-val{color:#f09030}
 .mcs-ax-bonus{border-color:#d4a020}
 .mcs-ax-bonus .mcs-ax-name,.mcs-ax-bonus .mcs-ax-val{color:#d4a020}
-
-/* 駅情報 */
 .mcs-info-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;
-  padding:12px 0 14px;
-  border-top:1px solid rgba(20,30,50,0.1);
+  display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;
+  padding-top:12px;
+  border-top:1px solid #ccd5e0;
   margin-bottom:14px;
 }
 .mcs-info-item{
-  display:flex;align-items:baseline;gap:8px;
-  font-size:11px;
+  display:flex;align-items:baseline;gap:6px;
 }
 .mcs-info-val{
-  font-weight:900;color:#0a1428;letter-spacing:0.3px;
-  font-size:13px;
+  font-weight:900;color:#1a2030;
+  font-size:14px;line-height:1;min-width:54px;
 }
 .mcs-info-lbl{
-  color:rgba(20,30,50,0.55);font-weight:700;
-  font-size:10px;letter-spacing:0.3px;
+  color:#3a4658;font-weight:700;
+  font-size:11px;letter-spacing:0.3px;
 }
-
-/* 特徴 */
 .mcs-features{
   display:flex;flex-direction:column;gap:6px;
 }
 .mcs-feat{
-  background:rgba(255,255,255,0.7);
-  border:1.5px solid rgba(20,30,50,0.08);
+  background:#fff;
+  border:1px solid var(--mcs-color,#ff8c44);
   border-radius:14px;
-  padding:8px 14px;
-  font-size:12px;font-weight:700;
-  color:#0a1428;
-  display:flex;align-items:center;gap:8px;
-  letter-spacing:0.3px;
+  padding:7px 12px;
+  font-size:11px;font-weight:600;
+  color:#1a2030;
+  display:flex;align-items:center;gap:6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .mcs-feat-star{
-  color:#ff8800;font-size:13px;
-  text-shadow:0 1px 2px rgba(255,140,40,0.3);
+  color:var(--mcs-color,#ff8c44);font-size:12px;
   flex-shrink:0;
 }
 
-/* ★index182：案C 暗背景（night/evening）時の文字色を白系に */
-.mc-share-card.mcs-dark .mcs-name{color:#ffffff;text-shadow:0 1px 3px rgba(0,0,0,0.4)}
-.mc-share-card.mcs-dark .mcs-checkin-label{color:rgba(255,255,255,0.7)}
-.mc-share-card.mcs-dark .mcs-checkin-date{color:rgba(255,255,255,0.95)}
-.mc-share-card.mcs-dark .mcs-line-text{color:rgba(255,255,255,0.8)}
-.mc-share-card.mcs-dark .mcs-score-label{color:rgba(255,255,255,0.7)}
-.mc-share-card.mcs-dark .mcs-logo{color:rgba(255,255,255,0.7)}
-.mc-share-card.mcs-dark .mcs-logo strong{color:rgba(255,255,255,0.9)}
+/* ★index182改：暗背景（night/evening）時の文字色。実物の天気CSSに準拠。
+   駅名(#1a2030黒)・五角形(白地)・カプセル(白地)は固定のまま。info系/路線名/スコアラベルのみ明るく。 */
+.mc-share-card.mcs-dark .mcs-line-text{color:#c5d4e8}
+.mc-share-card.mcs-dark .mcs-score-label{color:#a5b8d8}
+.mc-share-card.mcs-dark .mcs-checkin-label{color:#a5b8d8}
 .mc-share-card.mcs-dark .mcs-info-val{color:#ffffff}
-.mc-share-card.mcs-dark .mcs-info-lbl{color:rgba(255,255,255,0.65)}
-.mc-share-card.mcs-dark .mcs-info-grid{border-top-color:rgba(255,255,255,0.2)}
-.mc-share-card.mcs-dark .mcs-feat{
-  background:rgba(255,255,255,0.14);
-  border-color:rgba(255,255,255,0.22);
-  color:#ffffff;
-}
+.mc-share-card.mcs-dark .mcs-info-lbl{color:#c5d4e8}
+.mc-share-card.mcs-dark .mcs-info-grid{border-top-color:rgba(255,255,255,0.18)}
+.mc-share-card.mcs-dark .mcs-logo{color:#a5b8d8}
+.mc-share-card.mcs-dark .mcs-logo strong{color:#c5d4e8}
 </style>
 
 <!-- ステーションカード モーダル -->
@@ -16398,6 +16372,16 @@ if (typeof startWatchPosition === 'function') window.startWatchPosition = startW
 if (typeof getDistanceM === 'function') window.getDistanceM = getDistanceM;
 if (typeof showInfo === 'function') window.showInfo = showInfo;
 
+// ★index182: module外の普通<script>（ログボ・ミッション関数群）からfirestoreを使えるようwindow公開
+//   原因：それらの関数は type="module" の外にあり、import した doc/getDoc/setDoc 等が見えず
+//         「Can't find variable: doc」で落ちていた。db は既に公開済み(window.db)。
+Object.assign(window, {
+  fsDoc: doc, fsGetDoc: getDoc, fsSetDoc: setDoc, fsGetDocs: getDocs,
+  fsCollection: collection, fsQuery: query, fsWhere: where,
+  fsUpdateDoc: updateDoc, fsDeleteDoc: deleteDoc, fsAddDoc: addDoc,
+  fsServerTimestamp: serverTimestamp, fsIncrement: increment,
+  fsArrayUnion: arrayUnion, fsArrayRemove: arrayRemove, fsTimestamp: Timestamp
+});
 
 </script>
 <script>
@@ -17462,8 +17446,8 @@ if ('serviceWorker' in navigator) {
   // 日次状態の取得・更新（Firestore）
   window.mmGetDailyState = async function(uid){
     try {
-      const ref = doc(db, 'users', uid, 'dailyState', 'current');
-      const snap = await getDoc(ref);
+      const ref = window.fsDoc(window.db, 'users', uid, 'dailyState', 'current');
+      const snap = await window.fsGetDoc(ref);
       window._lastDailyError = null;
       if (snap.exists()) return snap.data();
       // ★index182: ドキュメント未作成は「正常（権限はある）」→ 空オブジェクトを返す。
@@ -17478,8 +17462,8 @@ if ('serviceWorker' in navigator) {
   
   window.mmSetDailyState = async function(uid, data){
     try {
-      const ref = doc(db, 'users', uid, 'dailyState', 'current');
-      await setDoc(ref, data, { merge: true });
+      const ref = window.fsDoc(window.db, 'users', uid, 'dailyState', 'current');
+      await window.fsSetDoc(ref, data, { merge: true });
       window._lastDailyError = null;
       return true;
     } catch(e) {
@@ -17648,8 +17632,8 @@ if ('serviceWorker' in navigator) {
       if (m.type === 'count_today' || m.type === 'count_distinct_lines_today') {
         // 今日のチェックイン総数を再計算（全数）
         try {
-          const checkinsRef = collection(db, 'users', uid, 'checkins');
-          const snap = await getDocs(checkinsRef);
+          const checkinsRef = window.fsCollection(window.db, 'users', uid, 'checkins');
+          const snap = await window.fsGetDocs(checkinsRef);
           const today = todayJST();
           let count = 0;
           const lineSet = new Set();
@@ -17775,8 +17759,8 @@ if ('serviceWorker' in navigator) {
     // 今月のチェックイン日を取得
     const checkinDates = new Set();
     try {
-      const ref = collection(db, 'users', user.uid, 'checkins');
-      const snap = await getDocs(ref);
+      const ref = window.fsCollection(window.db, 'users', user.uid, 'checkins');
+      const snap = await window.fsGetDocs(ref);
       snap.forEach(d => {
         const data = d.data();
         if (!data.checkedInAt) return;
