@@ -6925,6 +6925,23 @@ body.checkin-active #checkin-indicator{
   text-shadow:0 1px 2px rgba(255,140,40,0.3);
   flex-shrink:0;
 }
+
+/* ★index182：案C 暗背景（night/evening）時の文字色を白系に */
+.mc-share-card.mcs-dark .mcs-name{color:#ffffff;text-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.mc-share-card.mcs-dark .mcs-checkin-label{color:rgba(255,255,255,0.7)}
+.mc-share-card.mcs-dark .mcs-checkin-date{color:rgba(255,255,255,0.95)}
+.mc-share-card.mcs-dark .mcs-line-text{color:rgba(255,255,255,0.8)}
+.mc-share-card.mcs-dark .mcs-score-label{color:rgba(255,255,255,0.7)}
+.mc-share-card.mcs-dark .mcs-logo{color:rgba(255,255,255,0.7)}
+.mc-share-card.mcs-dark .mcs-logo strong{color:rgba(255,255,255,0.9)}
+.mc-share-card.mcs-dark .mcs-info-val{color:#ffffff}
+.mc-share-card.mcs-dark .mcs-info-lbl{color:rgba(255,255,255,0.65)}
+.mc-share-card.mcs-dark .mcs-info-grid{border-top-color:rgba(255,255,255,0.2)}
+.mc-share-card.mcs-dark .mcs-feat{
+  background:rgba(255,255,255,0.14);
+  border-color:rgba(255,255,255,0.22);
+  color:#ffffff;
+}
 </style>
 
 <!-- ステーションカード モーダル -->
@@ -9767,7 +9784,7 @@ import { initializeAppCheck, ReCaptchaEnterpriseProvider }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app-check.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, reauthenticateWithPopup, deleteUser }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, serverTimestamp, increment, Timestamp }
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, serverTimestamp, increment, arrayUnion, arrayRemove, Timestamp }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { getAnalytics, logEvent, setAnalyticsCollectionEnabled }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
@@ -11532,64 +11549,112 @@ window.shareCard = async function() {
 
   const url = 'https://machimegu.com';
 
-  // スコア・ランクは表示中のDOMから読む（カード基準スコアと完全一致させる）
-  const scoreEl = document.getElementById('sc-score-num');
-  const scoreText = scoreEl ? scoreEl.textContent.trim().replace(/[^0-9]/g, '') : (currentCardStation.score || '');
+  // ── スコア・ランク・5軸を「表示中のDOM」から実値で読む（カード基準と完全一致） ──
+  const readNum = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    const n = parseInt((el.textContent || '').replace(/[^0-9]/g, ''), 10);
+    return isNaN(n) ? 0 : n;
+  };
+  const scoreVal = readNum('sc-score-num');
   const rankEl = document.getElementById('sc-rank-badge');
-  const rankText = rankEl ? rankEl.textContent.trim() : (currentCardStation.rank || '');
-  const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を訪問！\n街力 ${scoreText} (${rankText}ランク)\n#街巡まちめぐ #街にでよう`;
+  const rankText = rankEl ? rankEl.textContent.trim() : (currentCardStation.rank || 'D');
 
-  // ボタンを一時的にローディング表示
+  const text = `街巡-まちめぐ- 「${currentCardStation.name}駅」を訪問！\n街力 ${scoreVal} (${rankText}ランク)\n#街巡まちめぐ #街にでよう`;
+
+  // ボタンをローディング表示
   const btn = document.querySelector('.sc-act-btn');
   const originalHTML = btn ? btn.innerHTML : '';
   if (btn) {
     btn.innerHTML = '<span style="font-size:11px">画像作成中...</span>';
     btn.disabled = true;
   }
-
   await mmDelay(50);
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // ★index181：案A＝実物カードDOMをそのまま html2canvas で撮影
-  //   過去の失敗原因：cloneNode するとIDセレクタ #station-card[data-mm-...] が
-  //   複製要素に当たらず、天気背景(--mm-bg)が消えてベージュの白背景になっていた。
-  //   対策：複製せず、本物の #station-card 要素を直接撮る。
-  //         data-mm-season / data-mm-time / data-tier / data-rank が
-  //         全て付いた本物なので、紫グラデも shiny/mythic も実物通りに写る。
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const cardEl = document.getElementById('station-card');
-  if (!cardEl) {
-    if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
-    return;
-  }
-
-  // 撮影時に「写したくない/写ると不自然な」要素を一時退避
-  const hidden = [];
-  const hideEl = (sel) => {
-    const el = cardEl.querySelector(sel);
-    if (el) { hidden.push([el, el.style.visibility]); el.style.visibility = 'hidden'; }
-  };
-  // シェアボタン本体は画像に入れない
-  hideEl('.sc-actions');
-  // メモが空ならプレースホルダが写るので、空のときだけメモ欄を隠す
-  const memoEl = cardEl.querySelector('#sc-memo-content');
-  const memoWrap = cardEl.querySelector('.sc-memo');
-  let memoHiddenState = null;
-  if (memoEl && memoWrap) {
-    const memoText = (memoEl.textContent || '').trim();
-    if (!memoText) {
-      memoHiddenState = memoWrap.style.display;
-      memoWrap.style.display = 'none';
-    }
-  }
-
-  // アニメーション（first-visit glow 等）を一時停止して撮影を安定させる
-  const prevAnim = cardEl.style.animation;
-  cardEl.style.animation = 'none';
+  let shareContainer = null;
 
   try {
     await mmTimeout(window.mmLoadHtml2Canvas(), 8000, 'ライブラリ読み込みタイムアウト');
-    await mmDelay(60);  // スタイル反映待ち
+    await mmDelay(30);
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ★index182：案C＝シンプルHTMLは維持しつつ、背景と文字色を実物から吸い出す
+    //   ・レイアウト：renderCardForShare のシンプルHTML（html2canvasが崩さない実績）
+    //   ・背景：本物 #station-card の computed background を取得して貼る
+    //          → 天気/季節/時間帯/レア度がどう変わっても実物と一致
+    //   ・文字色：data-mm-time が night/evening（暗背景）なら白系に切替
+    //   ・スコア：DOMから読んだ実値
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    // 実物カードから背景・時間帯を吸い出す
+    const realCard = document.getElementById('station-card');
+    let bgImage = '', bgColor = '', mmTime = '', isDark = false;
+    if (realCard) {
+      const cs = getComputedStyle(realCard);
+      bgImage = cs.backgroundImage && cs.backgroundImage !== 'none' ? cs.backgroundImage : '';
+      bgColor = cs.backgroundColor || '';
+      mmTime = realCard.getAttribute('data-mm-time') || '';
+      isDark = (mmTime === 'night' || mmTime === 'evening');
+    }
+
+    // カードデータ組み立て（スコア軸はDOM実値）
+    const cardData = Object.assign({}, currentCardStation);
+    cardData.score = scoreVal;
+    cardData.rank = rankText;
+    cardData.details = {
+      '飲食':   { pts: readNum('sc-ax-food') },
+      '商業':   { pts: readNum('sc-ax-com') },
+      '生活':   { pts: readNum('sc-ax-life') },
+      '医療':   { pts: readNum('sc-ax-med') },
+      'ボーナス': { pts: readNum('sc-ax-bonus') },
+    };
+    // 日付・初訪問・路線・駅情報・特徴をDOMから補完
+    const getText = id => { const el = document.getElementById(id); return el ? el.textContent.trim() : '-'; };
+    const dateEl = document.getElementById('sc-checkin-date');
+    if (dateEl) cardData.checkinDate = dateEl.textContent.trim();
+    const visitEl = document.getElementById('sc-visit-count');
+    if (visitEl) {
+      const vt = visitEl.textContent.trim();
+      cardData.isFirstVisit = (vt === '初訪問');
+      const vm = vt.match(/(\d+)回目/);
+      if (vm) cardData.visitCount = parseInt(vm[1], 10);
+    }
+    const lineEl = document.getElementById('sc-line-text');
+    if (lineEl) cardData.line = lineEl.textContent.trim();
+    cardData.opened = getText('sc-info-opened');
+    cardData.riders = getText('sc-info-riders');
+    cardData.transfers = getText('sc-info-lines');
+    cardData.location = getText('sc-info-loc');
+    const featEls = document.querySelectorAll('#sc-features .sc-feat-text, #sc-features .sc-feature');
+    if (featEls.length > 0) {
+      cardData.features = Array.from(featEls).slice(0, 3).map(e => e.textContent.replace(/^[★☆\s]+/, '').trim());
+    } else {
+      const fc = document.getElementById('sc-features');
+      if (fc) cardData.features = Array.from(fc.children).slice(0, 3).map(el => el.textContent.replace(/^[★☆\s]+/, '').trim());
+    }
+
+    // シンプルHTMLを生成
+    const cardWidth = 360;
+    shareContainer = document.createElement('div');
+    shareContainer.style.cssText = `position:fixed;left:-10000px;top:0;width:${cardWidth}px;z-index:-1;pointer-events:none;`;
+    shareContainer.innerHTML = window.renderCardForShare(cardData);
+    document.body.appendChild(shareContainer);
+
+    const cardEl = shareContainer.firstElementChild;
+
+    // ★実物の背景を貼る（インラインで class CSS を上書き）
+    if (bgImage) {
+      cardEl.style.backgroundImage = bgImage;
+      cardEl.style.backgroundColor = bgColor || 'transparent';
+      cardEl.style.backgroundSize = 'cover';
+    } else if (bgColor) {
+      cardEl.style.background = bgColor;
+    }
+    // ★暗背景なら文字を白系に
+    if (isDark) cardEl.classList.add('mcs-dark');
+
+    await mmDelay(80);
+    const renderedHeight = cardEl.offsetHeight;
 
     const canvas = await mmTimeout(
       window.html2canvas(cardEl, {
@@ -11599,20 +11664,17 @@ window.shareCard = async function() {
         useCORS: true,
         allowTaint: true,
         imageTimeout: 3000,
-        // glow(box-shadow)が外にはみ出すぶんを少し含める
-        width: cardEl.offsetWidth,
-        height: cardEl.offsetHeight,
-        windowWidth: document.documentElement.offsetWidth,
+        width: cardWidth,
+        height: renderedHeight,
       }),
       15000,
       '画像生成タイムアウト'
     );
 
-    // 退避した要素を即復元（画像化は完了済み）
-    hidden.forEach(([el, v]) => { el.style.visibility = v; });
-    if (memoHiddenState !== null && memoWrap) memoWrap.style.display = memoHiddenState;
-    cardEl.style.animation = prevAnim;
-
+    if (shareContainer && shareContainer.parentNode) {
+      shareContainer.parentNode.removeChild(shareContainer);
+      shareContainer = null;
+    }
     await mmDelay(20);
 
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1.0));
@@ -11630,40 +11692,25 @@ window.shareCard = async function() {
     } else {
       const dlUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = dlUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      a.href = dlUrl; a.download = fileName;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(dlUrl), 1000);
     }
   } catch (e) {
     console.error('シェアエラー:', e);
-    // 失敗時も必ず退避要素を復元
-    hidden.forEach(([el, v]) => { el.style.visibility = v; });
-    if (memoHiddenState !== null && memoWrap) memoWrap.style.display = memoHiddenState;
-    cardEl.style.animation = prevAnim;
     if (e.name !== 'AbortError') {
       const isTimeout = (e.message || '').includes('タイムアウト');
-      if (isTimeout) {
-        alert('画像生成に時間がかかっています。\nテキストのみでシェアします。');
-      }
+      if (isTimeout) alert('画像生成に時間がかかっています。\nテキストのみでシェアします。');
       if (navigator.share) {
         try { await navigator.share({title:'街巡-まちめぐ-', text, url}); } catch(_) {}
       } else {
-        try {
-          await navigator.clipboard.writeText(text + '\n' + url);
-          alert('テキストをコピーしました！');
-        } catch(_) {
-          prompt('コピーしてXに投稿:', text + '\n' + url);
-        }
+        try { await navigator.clipboard.writeText(text + '\n' + url); alert('テキストをコピーしました！'); }
+        catch(_) { prompt('コピーしてXに投稿:', text + '\n' + url); }
       }
     }
   } finally {
-    if (btn) {
-      btn.innerHTML = originalHTML;
-      btn.disabled = false;
-    }
+    if (shareContainer && shareContainer.parentNode) shareContainer.parentNode.removeChild(shareContainer);
+    if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
   }
 };
 
@@ -15762,12 +15809,17 @@ async function renderFavStations() {
   const favs = await fetchFavStations(user.uid);
   
   // 推し駅の他ユーザー含めた登録数を並列取得
+  // ★index182: oshiUids配列の長さでカウント（旧oshiCount数値方式から変更）
   const oshiCounts = await Promise.all(favs.map(async f => {
     if (!f || !f.stationId) return 1;
     try {
       const snap = await getDoc(doc(db, 'stationStats', f.stationId));
       if (snap.exists()) {
         const data = snap.data();
+        // 新方式：oshiUids配列の長さ。旧データ（oshiCount数値）も後方互換で読む
+        if (Array.isArray(data.oshiUids)) {
+          return Math.max(1, data.oshiUids.length);
+        }
         return Math.max(1, data.oshiCount || 1);
       }
     } catch(e) {}
@@ -15895,12 +15947,18 @@ window.addFav = async function(stationId) {
   
   await saveFavStations(user.uid, favs);
   
-  // 推し駅集計カウンタを +1（stationStats/{stationId}.oshiCount）
+  // ★index182: 推し街カウンタをIDリスト方式に変更
+  //   旧: oshiCount: increment(1) → 「外して入れ直す」で-1+1=0になるバグ＋過去分未記録
+  //   新: oshiUids配列にUIDを追加（arrayUnion）→ 重複なし・正確にカウント可能
   try {
     await setDoc(doc(db, 'stationStats', stationId), {
-      oshiCount: increment(1)
+      oshiUids: arrayUnion(user.uid)
     }, { merge: true });
-  } catch(e) { console.warn('推し街カウンタ加算失敗:', e); }
+  } catch(e) {
+    console.warn('推し街カウンタ加算失敗:', e);
+    // ★一時デバッグ：書き込み失敗をその場で可視化（原因切り分け用）
+    alert('推し街の登録カウントに失敗しました\n' + (e.code || e.message || e));
+  }
   
   closeFavPicker();
   renderFavStations();
@@ -15917,11 +15975,11 @@ window.removeFav = async function(idx) {
   favs.splice(idx, 1);
   await saveFavStations(user.uid, favs);
   
-  // 推し駅集計カウンタを -1
+  // ★index182: IDリストから自分のUIDを除去（arrayRemove）
   try {
     if (removed && removed.stationId) {
       await setDoc(doc(db, 'stationStats', removed.stationId), {
-        oshiCount: increment(-1)
+        oshiUids: arrayRemove(user.uid)
       }, { merge: true });
     }
   } catch(e) { console.warn('推し街カウンタ減算失敗:', e); }
@@ -17406,18 +17464,27 @@ if ('serviceWorker' in navigator) {
     try {
       const ref = doc(db, 'users', uid, 'dailyState', 'current');
       const snap = await getDoc(ref);
+      window._lastDailyError = null;
       if (snap.exists()) return snap.data();
-    } catch(e) { console.warn('dailyState取得エラー:', e); }
-    return null;
+      // ★index182: ドキュメント未作成は「正常（権限はある）」→ 空オブジェクトを返す。
+      //   権限エラー（catch）と区別するため null ではなく {} を返すのが重要。
+      return {};
+    } catch(e) {
+      console.warn('dailyState取得エラー:', e);
+      window._lastDailyError = e;  // ★index182: 実機切り分け用にエラー保持
+      return null;  // 権限エラー等は null（呼び出し側で異常として扱う）
+    }
   };
   
   window.mmSetDailyState = async function(uid, data){
     try {
       const ref = doc(db, 'users', uid, 'dailyState', 'current');
       await setDoc(ref, data, { merge: true });
+      window._lastDailyError = null;
       return true;
     } catch(e) {
       console.warn('dailyState保存エラー:', e);
+      window._lastDailyError = e;  // ★index182: 実機切り分け用にエラー保持
       return false;
     }
   };
@@ -17514,6 +17581,9 @@ if ('serviceWorker' in navigator) {
       }
       if (!state) {
         console.warn('[Bonus] state=null（初期化後も取得失敗、Firestore権限を確認）');
+        // ★index182: 実機切り分け用。何のエラーで取れないか画面に出す
+        const err = window._lastDailyError;
+        alert('ログボ取得に失敗\n' + (err ? (err.code || err.message || err) : 'データ未生成（権限拒否の可能性）'));
         return;
       }
       if (state.bonusClaimedToday) { 
@@ -17527,8 +17597,14 @@ if ('serviceWorker' in navigator) {
       }
       
       // 保存（bonusClaimedToday=true）
-      await window.mmSetDailyState(user.uid, { bonusClaimedToday: true });
-      console.log('[Bonus] 受取完了 Firestore保存');
+      const saveOk = await window.mmSetDailyState(user.uid, { bonusClaimedToday: true });
+      console.log('[Bonus] 受取完了 Firestore保存', saveOk);
+      // ★index182: 保存失敗をその場で可視化
+      if (!saveOk) {
+        const err = window._lastDailyError;
+        alert('ログボ保存に失敗\n' + (err ? (err.code || err.message || err) : '不明なエラー'));
+        return;
+      }
       
       // UI更新（pendingBonusXP が無ければ lastBonusXP / 既定値 にフォールバック）
       const xp = state.pendingBonusXP || state.lastBonusXP || 10;
