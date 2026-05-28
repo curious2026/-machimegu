@@ -6809,10 +6809,12 @@ body.checkin-active #checkin-indicator{
 .mcs-name.long{font-size:34px;letter-spacing:3px}
 .mcs-name.vlong{font-size:27px;letter-spacing:2px}
 .mcs-line-bar{
-  height:8px;border-radius:4px;
-  background:linear-gradient(90deg,#9933cc 0%,#cc44ff 50%,#9933cc 100%);
+  display:flex;height:8px;border-radius:4px;overflow:hidden;
+  gap:2px;
+  background:#e8edf3;
   margin-bottom:10px;
 }
+.mcs-line-bar > div{ flex:1; }
 .mcs-line-text{
   font-size:11px;font-weight:600;
   color:#3a4658;
@@ -6839,6 +6841,7 @@ body.checkin-active #checkin-indicator{
   display:flex;justify-content:center;align-items:center;
   margin:0 0 16px 0;
 }
+.mcs-axes svg{ display:block; width:100%; height:auto; }
 .mcs-ax{
   width:50px;height:50px;
   background:#fff;
@@ -11438,6 +11441,23 @@ const mmTimeout = (promise, ms, errMsg) => Promise.race([
 ]);
 
 // ─── シェア用カードレプリカ生成（html2canvas で確実に再現できるHTML） ───
+// ★index183: シェア用カードの5軸ダイヤをSVGで描画（html2canvasがtransform入れ子で崩すのを回避）
+window.mmShareAxesSVG = function(axes){
+  const W = 360, H = 96, d = 34, cy = 48;
+  const cxs = [50, 112, 174, 236, 298];  // 中心x（間隔62px・対角68pxで6px重なる＝実物準拠）
+  let shapes = '';
+  // 左が上に重なる（実物準拠）ため、右端から描画して左を後勝ち＝最前面に
+  for (let i = axes.length - 1; i >= 0; i--) {
+    const a = axes[i], cx = cxs[i];
+    const nm = String(a.name);
+    const vl = String(a.val);
+    shapes += `<polygon points="${cx},${cy-d} ${cx+d},${cy} ${cx},${cy+d} ${cx-d},${cy}" fill="#ffffff" stroke="${a.color}" stroke-width="2"/>`
+      + `<text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="9" font-weight="700" fill="${a.color}" font-family="-apple-system,BlinkMacSystemFont,sans-serif">${nm}</text>`
+      + `<text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="15" font-weight="900" fill="${a.color}" font-family="-apple-system,BlinkMacSystemFont,sans-serif">${vl}</text>`;
+  }
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${shapes}</svg>`;
+};
+
 window.renderCardForShare = function(stationData){
   const d = stationData || {};
   const rank = d.rank || 'D';
@@ -11495,19 +11515,19 @@ window.renderCardForShare = function(stationData){
       </div>
     </div>
     <div class="mcs-name ${nameClass}">${escapeHtml(name)}</div>
-    <div class="mcs-line-bar"></div>
+    <div class="mcs-line-bar">${d.lineBarHTML || ''}</div>
     <div class="mcs-line-text">${escapeHtml(line || '\u00a0')}</div>
     <div class="mcs-score-row">
       <div class="mcs-score-num">${score}</div>
       <div class="mcs-score-label">MACHI<br>SCORE</div>
     </div>
-    <div class="mcs-axes">
-      <div class="mcs-ax mcs-ax-food"><div class="mcs-ax-inner"><span class="mcs-ax-name">飲食</span><span class="mcs-ax-val">${v.food}</span></div></div>
-      <div class="mcs-ax mcs-ax-com"><div class="mcs-ax-inner"><span class="mcs-ax-name">商業</span><span class="mcs-ax-val">${v.com}</span></div></div>
-      <div class="mcs-ax mcs-ax-life"><div class="mcs-ax-inner"><span class="mcs-ax-name">生活</span><span class="mcs-ax-val">${v.life}</span></div></div>
-      <div class="mcs-ax mcs-ax-med"><div class="mcs-ax-inner"><span class="mcs-ax-name">医療</span><span class="mcs-ax-val">${v.med}</span></div></div>
-      <div class="mcs-ax mcs-ax-bonus"><div class="mcs-ax-inner"><span class="mcs-ax-name">ボーナス</span><span class="mcs-ax-val">${v.bonus}</span></div></div>
-    </div>
+    <div class="mcs-axes">${window.mmShareAxesSVG([
+      {name:'飲食', val:v.food, color:'#ff4466'},
+      {name:'商業', val:v.com, color:'#9070ff'},
+      {name:'生活', val:v.life, color:'#3aa0ff'},
+      {name:'医療', val:v.med, color:'#f09030'},
+      {name:'ボーナス', val:v.bonus, color:'#d4a020'}
+    ])}</div>
     <div class="mcs-info-grid">
       <div class="mcs-info-item"><div class="mcs-info-val">${escapeHtml(String(opened))}</div><div class="mcs-info-lbl">開業</div></div>
       <div class="mcs-info-item"><div class="mcs-info-val">${escapeHtml(String(riders))}</div><div class="mcs-info-lbl">乗降客/日</div></div>
@@ -11595,6 +11615,9 @@ window.shareCard = async function() {
     }
     const lineEl = document.getElementById('sc-line-text');
     if (lineEl) cardData.line = lineEl.textContent.trim();
+    // ★index183: 路線色帯を実物からそのままコピー（複数路線の色を再現）
+    const lineBarEl = document.getElementById('sc-line-bar');
+    if (lineBarEl) cardData.lineBarHTML = lineBarEl.innerHTML;
     cardData.opened = getText('sc-info-opened');
     cardData.riders = getText('sc-info-riders');
     cardData.transfers = getText('sc-info-lines');
