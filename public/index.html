@@ -6720,7 +6720,7 @@ body.checkin-active #checkin-indicator{
 /* ═══ シェア用カードレプリカ（実機準拠の見た目を完全再現） ═══ */
 .mc-share-card{
   width:360px;
-  min-height:740px;
+  min-height:700px;
   padding:18px 18px 26px;
   border-radius:20px;
   border:3px solid var(--mcs-color,#ff8c44);
@@ -11602,11 +11602,19 @@ window.shareCard = async function() {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     // 実物カードから背景・時間帯を吸い出す
+    // ★index186: CSS変数 --mm-bg のグラデ定義そのものを取得（computedのbackground-imageは
+    //   描画サイズに依存して角度がズレるため、定義値を直接使い固定グラデとして貼る）
     const realCard = document.getElementById('station-card');
-    let bgImage = '', bgColor = '', mmTime = '', isDark = false;
+    let mmBgGrad = '', bgColor = '', mmTime = '', isDark = false;
     if (realCard) {
       const cs = getComputedStyle(realCard);
-      bgImage = cs.backgroundImage && cs.backgroundImage !== 'none' ? cs.backgroundImage : '';
+      // --mm-bg 変数（例: "linear-gradient(165deg,#3a1a58 0%,...)"）を直接読む
+      mmBgGrad = (cs.getPropertyValue('--mm-bg') || '').trim();
+      // 変数が空なら computed background-image にフォールバック
+      if (!mmBgGrad) {
+        const bi = cs.backgroundImage;
+        if (bi && bi !== 'none') mmBgGrad = bi;
+      }
       bgColor = cs.backgroundColor || '';
       mmTime = realCard.getAttribute('data-mm-time') || '';
       isDark = (mmTime === 'night' || mmTime === 'evening');
@@ -11654,18 +11662,20 @@ window.shareCard = async function() {
     // シンプルHTMLを生成
     const cardWidth = 360;
     shareContainer = document.createElement('div');
-    shareContainer.style.cssText = `position:fixed;left:-10000px;top:0;width:${cardWidth}px;z-index:-1;pointer-events:none;`;
+    shareContainer.style.cssText = `position:fixed;left:-10000px;top:0;width:${cardWidth + 8}px;z-index:-1;pointer-events:none;`;
     shareContainer.innerHTML = window.renderCardForShare(cardData);
     document.body.appendChild(shareContainer);
 
     const cardEl = shareContainer.firstElementChild;
 
     // ★実物の背景を貼る（インラインで class CSS を上書き）
-    //   index184: min-heightで縦に伸ばすぶん、グラデを要素全体に引き伸ばして実物の濃淡を再現
-    if (bgImage) {
-      cardEl.style.backgroundImage = bgImage;
+    //   index186: --mm-bgグラデを固定背景として貼る。background-sizeは指定せず（=auto/100%）、
+    //   グラデはカードの実高さ全体に角度165degで自然に効く＝実物モーダルと同じ濃淡配分になる。
+    if (mmBgGrad) {
+      cardEl.style.backgroundImage = mmBgGrad;
       cardEl.style.backgroundColor = bgColor || 'transparent';
-      cardEl.style.backgroundSize = '100% 100%';
+      cardEl.style.backgroundSize = 'cover';
+      cardEl.style.backgroundPosition = 'center';
       cardEl.style.backgroundRepeat = 'no-repeat';
     } else if (bgColor) {
       cardEl.style.background = bgColor;
@@ -11674,7 +11684,9 @@ window.shareCard = async function() {
     if (isDark) cardEl.classList.add('mcs-dark');
 
     await mmDelay(80);
-    const renderedHeight = cardEl.offsetHeight;
+    // ★index186: border(3px)込みの実寸で撮る。offsetWidth/Heightは枠線を含む＝角の見切れ防止
+    const capW = cardEl.offsetWidth;
+    const capH = cardEl.offsetHeight;
 
     const canvas = await mmTimeout(
       window.html2canvas(cardEl, {
@@ -11684,8 +11696,10 @@ window.shareCard = async function() {
         useCORS: true,
         allowTaint: true,
         imageTimeout: 3000,
-        width: cardWidth,
-        height: renderedHeight,
+        width: capW,
+        height: capH,
+        windowWidth: capW,
+        windowHeight: capH,
       }),
       15000,
       '画像生成タイムアウト'
