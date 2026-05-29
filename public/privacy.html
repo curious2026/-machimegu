@@ -40,6 +40,7 @@
     border-bottom: 1px solid var(--line);
     padding-bottom: 24px;
     margin-bottom: 40px;
+    padding-right: 56px; /* ★index192: 右上✕ボタンの分のスペース */
   }
   .site-logo {
     display: flex;
@@ -166,24 +167,12 @@
     margin-top: 8px;
   }
   .footer-meta dd { margin: 0 0 4px; }
-  .footer-nav {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-top: 24px;
-  }
-  .footer-nav a {
-    color: var(--accent);
-    text-decoration: none;
-    border-bottom: 1px solid currentColor;
-    padding-bottom: 1px;
-  }
-  .footer-nav a:hover { color: var(--ink); }
   a.contact {
     color: var(--accent);
     text-decoration: none;
     border-bottom: 1px solid currentColor;
   }
+  a.contact:hover { color: var(--ink); }
   /* レスポンシブ */
   @media (max-width: 600px) {
     body { font-size: 15px; }
@@ -194,10 +183,111 @@
     .subtitle { font-size: 18px; }
     table { font-size: 14px; }
     th, td { padding: 8px 10px; }
+    .site-header { padding-right: 50px; }
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ★index192：補助ページ共通UI（右上✕／右下↑トップ／最下部「閉じる」） */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+  .page-x-btn {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    padding: 0;
+  }
+  .page-x-btn:hover { background: var(--accent-soft); color: var(--accent); }
+  .page-x-btn:active { transform: scale(0.94); }
+
+  .page-scroll-top {
+    position: fixed;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    right: 18px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(45,95,122,0.35);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+    font-family: inherit;
+    padding: 0;
+  }
+  .page-scroll-top.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  .page-scroll-top:active { transform: translateY(0) scale(0.92); }
+
+  .page-close-btn {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 40px auto 0;
+    padding: 14px 20px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    font-family: inherit;
+    box-shadow: 0 2px 8px rgba(45,95,122,0.25);
+    transition: background 0.15s;
+  }
+  .page-close-btn:hover { background: #245068; }
+  .page-close-btn:active { transform: translateY(1px); }
+
+  @media (max-width: 600px) {
+    .page-x-btn { width: 36px; height: 36px; top: 10px; right: 10px; font-size: 20px; }
+    .page-scroll-top {
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      right: 14px;
+      width: 46px;
+      height: 46px;
+      font-size: 20px;
+    }
+    .page-close-btn { font-size: 15px; padding: 12px 18px; }
   }
 </style>
 </head>
 <body>
+
+<!-- ★index192: 右上「✕」ボタン -->
+<button class="page-x-btn" type="button" onclick="closeOrBack()" aria-label="閉じる" title="閉じる">✕</button>
+
 <div class="container">
 
 <header class="site-header">
@@ -402,12 +492,49 @@
     <dt>最終更新日</dt>
     <dd>2026年5月19日</dd>
   </dl>
-  <nav class="footer-nav">
-    <a href="/">街巡-まちめぐ-トップへ戻る</a>
-    <a href="/terms.html">利用規約</a>
-  </nav>
 </div>
 
+<!-- ★index192: 最下部「閉じる」ボタン -->
+<button class="page-close-btn" type="button" onclick="closeOrBack()">閉じる</button>
+
 </div>
+
+<!-- ★index192: 右下「↑トップ」フローティングボタン -->
+<button class="page-scroll-top" type="button" id="page-scroll-top" onclick="scrollToTopPage()" aria-label="一番上へ" title="一番上へ">↑</button>
+
+<script>
+// スクロール量で↑ボタンの表示制御
+(function(){
+  var btn = document.getElementById('page-scroll-top');
+  if (!btn) return;
+  function check() {
+    var y = window.scrollY || document.documentElement.scrollTop || 0;
+    if (y > 300) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+  }
+  window.addEventListener('scroll', check, { passive: true });
+  check();
+})();
+
+// ↑トップへスムーズスクロール
+function scrollToTopPage() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 「閉じる」「✕」共通：タブを閉じる→失敗時は履歴を戻る→最終的にトップへ
+function closeOrBack() {
+  try { window.close(); } catch(e) {}
+  setTimeout(function() {
+    if (document.visibilityState === 'visible') {
+      if (history.length > 1) {
+        history.back();
+      } else {
+        location.href = '/';
+      }
+    }
+  }, 150);
+}
+</script>
+
 </body>
 </html>
