@@ -202,8 +202,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   background:rgba(255,255,255,0.05);
   color:#7a96b6;border:1px solid rgba(120,150,210,0.25);
   border-radius:12px;
-  /* ★index192：3つを揃えて目立たせる。padding 6→9pxで高さを上げる */
-  padding:9px 11px;cursor:pointer;
+  /* ★index194：マイページが2行だった頃の高さに3つとも揃える（フォントは変えず縦paddingを増やす） */
+  padding:13px 11px;cursor:pointer;
   transition:all 0.15s;
   display:flex;align-items:center;justify-content:center;
   font-family:inherit;font-weight:900;
@@ -236,10 +236,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   .view-tabs{display:flex;gap:2px!important;flex-shrink:0}
   #header{height:64px;padding:0 6px 0 4px!important;gap:4px!important}
   #header{padding-left:max(4px,env(safe-area-inset-left))!important;padding-right:max(6px,env(safe-area-inset-right))!important}
-  .vtab{padding:7px 7px!important;min-width:36px!important;border-radius:8px!important}
+  .vtab{padding:11px 7px!important;min-width:36px!important;border-radius:8px!important}
   .vtab-label{font-size:11px!important;letter-spacing:0.3px!important}
-  /* ★index192：マイページボタンもMAP/RANKと完全同寸に揃える */
-  .user-mypage-link{padding:7px 9px!important;font-size:11px!important;letter-spacing:0.5px!important;border-radius:8px!important;min-width:36px!important}
+  /* ★index194：マイページボタンも縦長で揃える（2行時代と同じ高さ） */
+  .user-mypage-link{padding:11px 9px!important;font-size:11px!important;letter-spacing:0.5px!important;border-radius:8px!important;min-width:36px!important}
   #header-right{flex-direction:column!important;gap:2px!important;flex-shrink:0}
   .info-btn{font-size:9px!important;padding:2px 5px!important}
   .user-avatar{width:26px!important;height:26px!important}
@@ -1010,7 +1010,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   color:#fbd56a;font-weight:900;font-size:14px;
   text-shadow:0 0 6px rgba(251,213,106,0.3);
 }
-.mp-master-next{font-size:11px;color:#a8b8d0}
+.mp-master-next{font-size:12px;color:#a8b8d0}
 .mp-master-bar{
   height:8px;
   background:rgba(255,255,255,0.06);
@@ -1040,7 +1040,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .mp-master-breakdown{
   display:flex;gap:10px;
-  font-size:11px;color:#a8b8d0;font-weight:700;
+  font-size:12px;color:#a8b8d0;font-weight:700;
 }
 .mp-master-bd-item{
   flex:1;
@@ -1061,7 +1061,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 /* カード・バッジコレクション項目のサブ情報 */
 .mp-section-substat{
-  font-size:11px;color:#9fb8d8;font-weight:700;
+  font-size:12px;color:#9fb8d8;font-weight:700;
   letter-spacing:0.5px;margin-top:2px;
 }
 .mp-section-substat strong{
@@ -1151,11 +1151,11 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .mp-stat-item:hover{transform:translateY(-2px);border-color:rgba(88,168,224,0.3)}
 .mp-stat-num{font-size:32px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-1px;text-shadow:0 0 12px rgba(88,168,224,0.4)}
-.mp-stat-label{font-size:11px;color:#cfdaee;margin-top:6px;letter-spacing:0.8px;font-weight:700}
+.mp-stat-label{font-size:12px;color:#cfdaee;margin-top:6px;letter-spacing:0.8px;font-weight:700}
 
 .mp-rank-bar{
   display:flex;gap:8px;margin-top:8px;
-  font-size:11px;
+  font-size:12px;
 }
 .mp-rank-bar .mprb-cell{
   flex:1;text-align:center;padding:10px 4px;border-radius:10px;
@@ -1266,13 +1266,13 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   opacity:0.75;
 }
 
-/* ─── マイページリンク（★index192：MAP/RANKと同じ高さで横並び、1行表示） ─── */
+/* ─── マイページリンク（★index194：MAP/RANKと同じ高さで横並び、1行表示、2行時代の縦サイズ） ─── */
 .user-mypage-link{
   display:none;
   background:linear-gradient(135deg,#58a8e0,#3a8ac4);
   color:#fff;font-weight:900;font-size:13px;letter-spacing:1px;
-  /* ★index192：.vtab と完全に同じpadding/border-radius で高さを揃える */
-  padding:9px 11px;border-radius:12px;border:1px solid #58a8e0;
+  /* ★index194：.vtab と完全に同じpadding/border-radius で高さを揃える（2行時代の高さに戻す） */
+  padding:13px 11px;border-radius:12px;border:1px solid #58a8e0;
   cursor:pointer;
   box-shadow:0 2px 8px rgba(88,168,224,0.35);
   transition:transform 0.12s;
@@ -6400,7 +6400,7 @@ body.checkin-active #checkin-indicator{
   font-size:12px;color:#a8b8d0;font-weight:700;
 }
 .mp-daily-calendar-btn{
-  font-size:11px;font-weight:700;color:#a8b8d0;
+  font-size:12px;font-weight:700;color:#a8b8d0;
   background:rgba(0,0,0,0.25);
   border:1px solid rgba(168,184,208,0.15);
   padding:6px 12px;border-radius:14px;cursor:pointer;
@@ -6409,7 +6409,7 @@ body.checkin-active #checkin-indicator{
 }
 .mp-daily-calendar-btn:active{background:rgba(0,0,0,0.4)}
 .mp-daily-bonus{
-  font-size:11px;color:#fbd56a;font-weight:700;margin-bottom:12px;
+  font-size:12px;color:#fbd56a;font-weight:700;margin-bottom:12px;
   padding:6px 10px;
   background:rgba(251,213,106,0.08);border:1px solid rgba(251,213,106,0.2);
   border-radius:10px;
@@ -6450,13 +6450,15 @@ body.checkin-active #checkin-indicator{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   margin-bottom:6px;
 }
+/* ★index192：ミッション本文の主張を控えめに（13→12, weight 700→600, 行間 1.4→1.3） */
 .mp-dm-title{
-  font-size:13px;font-weight:700;color:#fff;
+  font-size:12px;font-weight:600;color:#fff;
   flex:1;min-width:0;
-  line-height:1.4;
+  line-height:1.3;
 }
+/* ★index192：小要素を11→12pxに底上げ */
 .mp-dm-xp{
-  font-size:11px;font-weight:900;color:#fbd56a;
+  font-size:12px;font-weight:900;color:#fbd56a;
   background:rgba(251,213,106,0.15);
   padding:3px 8px;border-radius:8px;
   letter-spacing:0.3px;
@@ -6483,7 +6485,7 @@ body.checkin-active #checkin-indicator{
   box-shadow:0 0 8px rgba(168,232,184,0.6);
 }
 .mp-dm-status{
-  font-size:11px;color:#a8b8d0;font-weight:700;
+  font-size:12px;color:#a8b8d0;font-weight:700;
   display:flex;justify-content:space-between;
 }
 .mp-dm-status .completed-mark{color:#a8e8b8;font-weight:900}
@@ -12977,36 +12979,36 @@ async function loadMypageData(uid) {
       }
       
       // バッジコレクション項目のサブ統計
+      // ★index192：earnedは mp-badge-count と同じ実数（ミッション系除外）で統一。
+      //   旧ロジックではエリア獲得数が加算されておらず、磯バッジ等を取っても反映されなかった。
       let badgeEarned = 0;
       let badgeTotal = 0;
+      // total側は引き続き理論最大値を集計
       // ランク
       rankResults.forEach(r => {
         if (r.total === 0) return;
         r.thresholds.forEach(th => {
           badgeTotal++;
-          if (r.conquered >= th) badgeEarned++;
         });
       });
       // 路線（3スロットずつ：bronze/silver/gold）
       lineResults.forEach(r => {
         if (r.total === 0) return;
         badgeTotal += 3;
-        if (r.tier === 'gold') badgeEarned += 3;
-        else if (r.tier === 'silver') badgeEarned += 2;
-        else if (r.tier === 'bronze') badgeEarned += 1;
       });
       // チェックイン
       [10, 50, 100, 500, 1000, 5000, 10000, 30000].forEach(m => {
         badgeTotal++;
-        if (realCheckins >= m) badgeEarned++;
       });
       // エリア
       badgeTotal += 27;
-      // リピート（動的だが目安として）
-      cards.forEach(c => {
-        const vc = c.visitCount || 1;
-        [10, 30, 60, 100].forEach(t => { if (vc >= t) badgeEarned++; });
-      });
+      // earned側は userBadges の実数（ミッション系除く）— プレビュー表示の「N個」と完全に一致
+      try {
+        const filteredBadges = [...userBadges.values()].filter(
+          b => b && b.type !== 'mission' && b.type !== 'mission_milestone'
+        );
+        badgeEarned = filteredBadges.length;
+      } catch(_) { badgeEarned = 0; }
       
       const badgeSubEarned = document.getElementById('mp-badge-substat-earned');
       const badgeSubTotal = document.getElementById('mp-badge-substat-total');
@@ -15132,10 +15134,20 @@ function renderLineBadges(lineResults, userBadges) {
       const rarityClasses = window.bpRarityClasses(rarity);
       const badgeData = userBadges.get(id) || { id, type:'line', line:r.line, tier:r.tier, conquered:r.conquered, total:r.total, name:`${r.line} ${tierJa(r.tier)}`, desc:`${r.line}の駅を制覇` };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
+      // ★index194：銅/銀取得後も次のtierまでのバーを残す（金取得時のみ非表示）
+      //   閾値：bronze=30%, silver=60%, gold=100%
+      let nextBar = '';
+      if (r.tier === 'bronze') {
+        const silverTarget = Math.max(1, Math.ceil(r.total * 0.6));
+        nextBar = `<div class="bp-progress" style="font-size:10px;color:#c0c8d4;margin-top:4px">銀まで ${r.conquered}/${silverTarget}駅</div>${window.bpProgressBar ? window.bpProgressBar(r.conquered, silverTarget) : ''}`;
+      } else if (r.tier === 'silver') {
+        nextBar = `<div class="bp-progress" style="font-size:10px;color:#c0c8d4;margin-top:4px">金まで ${r.conquered}/${r.total}駅</div>${window.bpProgressBar ? window.bpProgressBar(r.conquered, r.total) : ''}`;
+      }
       return `<div class="bp-badge bp-badge-line ${r.tier}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
         ${window.bpStarsHTML(rarity)}
         <div class="bp-name">${lineLabel}</div>
         <div class="bp-sub">${tierJa(r.tier)}</div>
+        ${nextBar}
       </div>`;
     } else {
       // 未獲得：進捗バー追加（bronze閾値=30%が次の目標）
@@ -15881,10 +15893,13 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
         ${svgInner}
       </div>`;
     } else {
+      // ★index194: エリアバッジにも進捗バーを表示（他のバッジと統一）
+      const nextTarget = r.total;  // エリアは全駅制覇が唯一の閾値
       return `<div class="bp-badge-locked">
         <div class="bp-icon">🛡️</div>
         <div class="bp-name">${r.city}</div>
         <div class="bp-progress">${r.conquered}/${r.total}駅</div>
+        ${window.bpProgressBar ? window.bpProgressBar(r.conquered, nextTarget) : ''}
       </div>`;
     }
   }
@@ -16361,6 +16376,11 @@ async function renderMypageBadgePreview() {
     });
     
     if (cnt) cnt.textContent = `${arr.length}個`;
+    // ★index194: バッジ獲得サブ統計（N/504）も同じ場で同じ値で更新する。
+    //   これで「6個」と「N/504」が論理的に絶対一致。
+    //   別関数（loadMypageData内）の事前計算で何が来ても、この上書きが最後に走るので問題ない。
+    const subEarned = document.getElementById('mp-badge-substat-earned');
+    if (subEarned) subEarned.textContent = arr.length;
     
     const preview = arr.slice(0, 8);
     let html = '';
@@ -18469,12 +18489,14 @@ if ('serviceWorker' in navigator) {
   
   // 監視対象のモーダル ID 一覧（z-index 降順 = 上に重なる順）
   // ★index176: badgepage-bg 追加。バッジページで↑ボタンが出ない問題の修正。
+  // ★index194: torisetsu-modal-bg 追加。トリセツで↑ボタンが出ない問題の修正。
   const MODAL_IDS = [
     'cardversion-bg',
     'card-modal-bg',
     'badgepage-bg',
     'cardlist-bg',
     'mypage-bg',
+    'torisetsu-modal-bg',
     'history-bg',
     'fav-picker-bg',
     'badge-detail-bg',
@@ -18592,6 +18614,14 @@ if ('serviceWorker' in navigator) {
   // 公開：他のモジュールから状態を参照可能に
   window.mmIsOnline = () => isOnline;
 })();
+</script>
+
+<!-- ★index195: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
+<!--   反映されてれば「v195」が見える。「v193」「v194」のままなら配信されているHTMLが古い。 -->
+<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v195</div>
+<script>
+  console.log('%c[街巡] index version: 195', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('[街巡] このページが index195 でなければ、ブラウザ/Service Workerに古いHTMLがキャッシュされている可能性');
 </script>
 
 </body>
