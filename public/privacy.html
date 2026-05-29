@@ -18616,5 +18616,13 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
+<!-- ★index195: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
+<!--   反映されてれば「v195」が見える。「v193」「v194」のままなら配信されているHTMLが古い。 -->
+<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v195</div>
+<script>
+  console.log('%c[街巡] index version: 195', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('[街巡] このページが index195 でなければ、ブラウザ/Service Workerに古いHTMLがキャッシュされている可能性');
+</script>
+
 </body>
 </html>
