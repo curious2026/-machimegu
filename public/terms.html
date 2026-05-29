@@ -40,6 +40,7 @@
     border-bottom: 1px solid var(--line);
     padding-bottom: 24px;
     margin-bottom: 40px;
+    padding-right: 56px; /* ★index192: 右上✕ボタンの分のスペース */
   }
   .site-logo {
     display: flex;
@@ -140,24 +141,12 @@
     margin-top: 8px;
   }
   .footer-meta dd { margin: 0 0 4px; }
-  .footer-nav {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-top: 24px;
-  }
-  .footer-nav a {
-    color: var(--accent);
-    text-decoration: none;
-    border-bottom: 1px solid currentColor;
-    padding-bottom: 1px;
-  }
-  .footer-nav a:hover { color: var(--ink); }
   a.contact {
     color: var(--accent);
     text-decoration: none;
     border-bottom: 1px solid currentColor;
   }
+  a.contact:hover { color: var(--ink); }
   /* レスポンシブ */
   @media (max-width: 600px) {
     body { font-size: 15px; }
@@ -165,10 +154,114 @@
     h1 { font-size: 26px; }
     h2 { font-size: 18px; margin: 36px 0 12px; padding-top: 12px; }
     .subtitle { font-size: 18px; }
+    .site-header { padding-right: 50px; }
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ★index192：補助ページ共通UI（右上✕／右下↑トップ／最下部「閉じる」） */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+  /* 右上「✕」ボタン */
+  .page-x-btn {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    padding: 0;
+  }
+  .page-x-btn:hover { background: var(--accent-soft); color: var(--accent); }
+  .page-x-btn:active { transform: scale(0.94); }
+
+  /* 右下「↑トップ」フローティングボタン */
+  .page-scroll-top {
+    position: fixed;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    right: 18px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(45,95,122,0.35);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+    font-family: inherit;
+    padding: 0;
+  }
+  .page-scroll-top.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  .page-scroll-top:active { transform: translateY(0) scale(0.92); }
+
+  /* 最下部「閉じる」ボタン */
+  .page-close-btn {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 40px auto 0;
+    padding: 14px 20px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    font-family: inherit;
+    box-shadow: 0 2px 8px rgba(45,95,122,0.25);
+    transition: background 0.15s;
+  }
+  .page-close-btn:hover { background: #245068; }
+  .page-close-btn:active { transform: translateY(1px); }
+
+  @media (max-width: 600px) {
+    .page-x-btn { width: 36px; height: 36px; top: 10px; right: 10px; font-size: 20px; }
+    .page-scroll-top {
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      right: 14px;
+      width: 46px;
+      height: 46px;
+      font-size: 20px;
+    }
+    .page-close-btn { font-size: 15px; padding: 12px 18px; }
   }
 </style>
 </head>
 <body>
+
+<!-- ★index192: 右上「✕」ボタン -->
+<button class="page-x-btn" type="button" onclick="closeOrBack()" aria-label="閉じる" title="閉じる">✕</button>
+
 <div class="container">
 
 <header class="site-header">
@@ -203,7 +296,7 @@
   <li>「統計データ」とは、利用者情報を統計的に加工し、特定の個人を識別できない形にした情報をいいます。</li>
 </ol>
 
-<h2>第3条（アカウント登録・削除）</h2>
+<h2>第3条(アカウント登録・削除)</h2>
 <ol class="numbered">
   <li>本サービスの一部機能の利用にあたり、利用者はGoogleアカウントによる認証を行うものとします。</li>
   <li>利用者は、登録情報に変更があった場合、速やかに当方の定める方法により変更内容を反映するものとします。</li>
@@ -257,7 +350,7 @@
 
 <h2>第8条（広告・トラッキング・データ売買について）</h2>
 <ol class="numbered">
-  <li>本サービスは、運営継続のため、広告（バナー広告、ターゲティング広告、アフィリエイトリンク等）を表示する場合があります。広告配信に伴う情報の取扱いの詳細については、別途定める <a href="/privacy.html" class="contact">プライバシーポリシー</a> をご確認ください。</li>
+  <li>本サービスは、運営継続のため、広告(バナー広告、ターゲティング広告、アフィリエイトリンク等)を表示する場合があります。広告配信に伴う情報の取扱いの詳細については、別途定める <a href="/privacy.html" class="contact">プライバシーポリシー</a> をご確認ください。</li>
   <li>利用者は、本サービスに表示される広告のクリック等により遷移した第三者ウェブサイトまたはアプリケーションでの取引、その他のトラブル等について、当方が一切の責任を負わないことを了承するものとします。</li>
   <li>当方は、特定の個人を識別できる情報を、本サービスの目的外で第三者に売買することはありません。ただし、統計データ（個人を特定できない情報）の第三者提供は、プライバシーポリシーに定めるところに従い行うことがあります。</li>
 </ol>
@@ -305,12 +398,49 @@
     <dt>最終更新日</dt>
     <dd>2026年5月19日</dd>
   </dl>
-  <nav class="footer-nav">
-    <a href="/">街巡-まちめぐ-トップへ戻る</a>
-    <a href="/privacy.html">プライバシーポリシー</a>
-  </nav>
 </div>
 
+<!-- ★index192: 最下部「閉じる」ボタン -->
+<button class="page-close-btn" type="button" onclick="closeOrBack()">閉じる</button>
+
 </div>
+
+<!-- ★index192: 右下「↑トップ」フローティングボタン -->
+<button class="page-scroll-top" type="button" id="page-scroll-top" onclick="scrollToTopPage()" aria-label="一番上へ" title="一番上へ">↑</button>
+
+<script>
+// スクロール量で↑ボタンの表示制御
+(function(){
+  var btn = document.getElementById('page-scroll-top');
+  if (!btn) return;
+  function check() {
+    var y = window.scrollY || document.documentElement.scrollTop || 0;
+    if (y > 300) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+  }
+  window.addEventListener('scroll', check, { passive: true });
+  check();
+})();
+
+// ↑トップへスムーズスクロール
+function scrollToTopPage() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 「閉じる」「✕」共通：タブを閉じる→失敗時は履歴を戻る→最終的にトップへ
+function closeOrBack() {
+  try { window.close(); } catch(e) {}
+  setTimeout(function() {
+    if (document.visibilityState === 'visible') {
+      if (history.length > 1) {
+        history.back();
+      } else {
+        location.href = '/';
+      }
+    }
+  }, 150);
+}
+</script>
+
 </body>
 </html>
