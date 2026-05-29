@@ -11524,7 +11524,7 @@ window.mmShareTierStyle = function(tier){
 };
 
 window.mmShareWeatherSVG = function(weather, stationName){
-  if (!weather || weather === 'sunny' || weather === 'clear') return '';
+  if (!weather) return '';
   // カード基準サイズ（renderCardForShareの幅360 + border等。viewBox比率で配置するので実寸非依存）
   const W = 100, H = 100; // パーセント座標系として扱う（preserveAspectRatio none）
   let inner = '';
@@ -11587,6 +11587,30 @@ window.mmShareWeatherSVG = function(weather, stationName){
       + '<rect x="0" y="0" width="100" height="100" fill="url(#mmRainLines)"/>'
       + '<rect x="0" y="0" width="100" height="100" fill="rgb(105,145,190)" opacity="0.06"/>'
       + dropsSVG;
+  } else if (weather === 'sunny' || weather === 'clear') {
+    // ★index191：晴れバージョン。実物カンコピ。
+    //   ::before  右上の大きな太陽光ハロー（radial-gradient at 100%,0%、温かい黄色光）
+    //   ::after   斜めのレンズフレア光線（横長、rotate -22deg、blur）
+    const defs = '<defs>'
+      + '<radialGradient id="mmSunG" cx="100%" cy="0%" r="100%" fx="100%" fy="0%">'
+      + '<stop offset="0%" stop-color="rgb(255,250,210)" stop-opacity="0.85"/>'
+      + '<stop offset="15%" stop-color="rgb(255,228,130)" stop-opacity="0.45"/>'
+      + '<stop offset="32%" stop-color="rgb(255,210,80)" stop-opacity="0.2"/>'
+      + '<stop offset="55%" stop-color="rgb(255,200,100)" stop-opacity="0.08"/>'
+      + '<stop offset="100%" stop-color="rgb(255,200,100)" stop-opacity="0"/>'
+      + '</radialGradient>'
+      + '<linearGradient id="mmSunRayG" x1="0%" y1="50%" x2="100%" y2="50%">'
+      + '<stop offset="0%" stop-color="rgb(255,235,150)" stop-opacity="0"/>'
+      + '<stop offset="50%" stop-color="rgb(255,235,150)" stop-opacity="0.9"/>'
+      + '<stop offset="100%" stop-color="rgb(255,235,150)" stop-opacity="0"/>'
+      + '</linearGradient>'
+      + '<filter id="mmSunBlur" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="0.5"/></filter>'
+      + '</defs>';
+    inner = defs
+      // 巨大太陽光ハロー（要素全体に右上から広がる温かい光）
+      + '<rect x="0" y="0" width="100" height="100" fill="url(#mmSunG)"/>'
+      // レンズフレア光線（右上に斜めの細い光帯、rotate -22deg、blur）
+      + '<rect x="35" y="12" width="65" height="1.8" fill="url(#mmSunRayG)" filter="url(#mmSunBlur)" transform="rotate(-22 67 13)"/>';
   }
   if (!inner) return '';
   return `<svg class="mcs-weather" width="100%" height="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:18px;">${inner}</svg>`;
