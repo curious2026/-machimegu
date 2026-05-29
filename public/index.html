@@ -450,7 +450,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   font-size:16px;font-weight:900;cursor:pointer;padding:0 12px;font-family:inherit;transition:color 0.15s}
 #sort-dir-btn:hover{color:#c0d0ff}
 .rank-header{padding:8px 14px 6px;border-bottom:1px solid rgba(255,255,255,0.06);
-  font-size:10px;color:#8898c0;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;
+  /* ★index201：ランキングタイトル font-size 10→12px、letter-spacingも1.5→1.2pxに微調整 */
+  font-size:12px;color:#8898c0;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;
   display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
 .rank-avg{font-size:10px;color:#6080c0;font-weight:600;letter-spacing:0}
 #rank-list{flex:1;overflow-y:auto}
@@ -466,9 +467,11 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .rname-row{display:flex;align-items:center;gap:5px}
 .rname{font-size:15px;font-weight:700;color:#e0ecff;letter-spacing:0.3px}
 /* .rfav廃止（Round 3） */
-.rline{font-size:11px;color:#b0c4e0;margin-top:2px;font-weight:500}
+/* ★index201：rline 必ず1行 — 文字数判定漏れでも overflow:ellipsis で安全側に倒す */
+.rline{font-size:11px;color:#b0c4e0;margin-top:2px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rcats{display:flex;gap:3px;margin-top:5px;flex-wrap:nowrap;overflow:hidden}
-.rcat{font-size:9px;padding:2px 5px;border-radius:3px;font-weight:700;white-space:nowrap;flex-shrink:0}
+/* ★index201：rcat フォント9→10px、padding 2→1.5pxで行高さを維持 */
+.rcat{font-size:10px;padding:1.5px 5px;border-radius:3px;font-weight:700;white-space:nowrap;flex-shrink:0}
 .rscore{font-size:23px;font-weight:900;flex-shrink:0;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;min-width:46px;text-align:right;padding-top:1px}
 
 /* ── モーダル（フォントサイズ+1、下4行白色） ── */
@@ -1422,10 +1425,12 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 .sc-line-text{
   display:block!important;
-  font-size:11px;color:#3a4658;font-weight:600;
+  /* ★index202：font-weight 600→700で視認性UP、薄い白縁取りで明背景・中間色背景でも読めるように */
+  font-size:11px;color:#3a4658;font-weight:700;
   text-align:left;margin-bottom:14px;
   white-space:normal;line-height:1.5;
   min-height:14px;
+  text-shadow:0 0 2px rgba(255,255,255,0.6), 0 0 4px rgba(255,255,255,0.3);
 }
 
 /* スコア */
@@ -1730,31 +1735,39 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .rname-row{position:relative}
 .rcardico{
   display:none;
-  width:22px;height:22px;border-radius:50%;
-  background:rgba(88,168,224,0.15);
-  border:1px solid rgba(88,168,224,0.4);
-  color:#58a8e0;font-size:11px;
+  /* ★index201：絵文字円→「カード」テキストバッジに変更（青地白文字、トップMAP/RANKと統一感） */
+  width:auto;height:auto;border-radius:6px;
+  background:linear-gradient(135deg,#58a8e0,#3a8ac4);
+  border:1px solid #58a8e0;
+  color:#fff;font-size:10px;font-weight:900;letter-spacing:0.5px;
+  padding:2px 7px;
   align-items:center;justify-content:center;
   margin-left:6px;
   cursor:pointer;
   flex-shrink:0;
   transition:all 0.15s;
+  box-shadow:0 1px 4px rgba(88,168,224,0.4);
+  font-family:inherit;
+}s;
 }
 .rcardico:hover{background:#58a8e0;color:#fff;transform:scale(1.1)}
 .rank-row.checked-in .rcardico{display:inline-flex}
 
 /* ─── info-panel: スコア横のカードアイコン ─── */
 .ip-score-wrap{display:flex;align-items:center;gap:10px}
+/* ★index201：絵文字円→青地白文字「カード」テキストバッジに統一（ランキング行と同じ意匠） */
 .ip-card-icon{
-  width:34px;height:34px;border-radius:50%;
-  background:linear-gradient(135deg,rgba(88,168,224,0.18),rgba(88,168,224,0.08));
-  border:1.5px solid rgba(88,168,224,0.45);
-  color:#58a8e0;font-size:16px;
+  width:auto;height:auto;border-radius:6px;
+  background:linear-gradient(135deg,#58a8e0,#3a8ac4);
+  border:1px solid #58a8e0;
+  color:#fff;font-size:11px;font-weight:900;letter-spacing:0.5px;
+  padding:4px 9px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   transition:all 0.15s;flex-shrink:0;
-  box-shadow:0 0 8px rgba(88,168,224,0.25);
+  box-shadow:0 1px 4px rgba(88,168,224,0.4);
+  font-family:inherit;
 }
-.ip-card-icon:hover{background:#58a8e0;color:#fff;transform:scale(1.08);box-shadow:0 0 12px rgba(88,168,224,0.5)}
+.ip-card-icon:hover{filter:brightness(1.1);transform:scale(1.05)}
 .ip-card-icon:active{transform:scale(0.95)}
 
 /* ─── ミニカード V2: 点数なし・色付き文字ランク・初訪問大きく ─── */
@@ -4156,37 +4169,23 @@ body.checkin-active #checkin-indicator{
   position:relative;
 }
 
-/* 6. カードマーク：ホログラム風（縦長） */
+/* 6. カードマーク：「カード」テキストバッジ（★index201：絵文字/ホログラム廃止） */
 .rcardico{
-  background:linear-gradient(135deg,#b454dc 0%,#ff80b4 35%,#ffa040 70%,#ffd450 100%) !important;
-  border:1.5px solid #fff !important;
-  border-radius:3px !important;
-  width:11px !important;
-  height:16px !important;
+  /* ★index201：青地白文字「カード」テキストバッジ（トップのMAP/RANKと統一感） */
+  background:linear-gradient(135deg,#58a8e0,#3a8ac4) !important;
+  border:1px solid #58a8e0 !important;
+  border-radius:6px !important;
+  width:auto !important;
+  height:auto !important;
+  padding:2px 7px !important;
+  color:#fff !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  letter-spacing:0.5px !important;
   display:none;
   align-items:center;justify-content:center;
-  box-shadow:0 1px 3px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.5),0 0 4px rgba(255,128,180,0.4) !important;
-  position:relative;
-  overflow:hidden;
-}
-.rcardico::before{
-  /* キラキラ1（左上） */
-  content:'';
-  position:absolute;
-  top:3px;left:2px;
-  width:2px;height:2px;
-  background:rgba(255,255,255,0.85);
-  border-radius:50%;
-  box-shadow:3px 5px 0 -0.5px rgba(255,255,255,0.7),0 8px 0 -0.5px rgba(255,255,255,0.6);
-}
-.rcardico::after{
-  /* 斜めの光沢ライン */
-  content:'';
-  position:absolute;
-  top:-50%;left:-50%;
-  width:200%;height:30%;
-  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.45) 50%,transparent 100%);
-  transform:rotate(-25deg);
+  box-shadow:0 1px 4px rgba(88,168,224,0.4) !important;
+  font-family:inherit !important;
 }
 .rank-row.checked-in .rcardico{display:inline-flex !important}
 
@@ -4615,7 +4614,7 @@ body.checkin-active #checkin-indicator{
         </div>
         <div class="ip-score-wrap">
           <div class="ip-score" id="ip-score"></div>
-          <button class="ip-card-icon" id="ip-card-icon" style="display:none" onclick="openCardFromPanel()" title="マイカード">📇</button>
+          <button class="ip-card-icon" id="ip-card-icon" style="display:none" onclick="openCardFromPanel()" title="マイカード">カード</button>
         </div>
         <div class="ip-rank-lbl" id="ip-rank"></div>
         <div class="ip-nearby" id="ip-nearby"></div>
@@ -5028,19 +5027,25 @@ body.checkin-active #checkin-indicator{
   color: #a5b8d8 !important;
 }
 
-/* 夕方（evening）の暗めカードもテキスト明るめに */
+/* 夕方（evening）：背景は淡いピンク〜オレンジで実は明るい。白文字は溶けるので黒系に戻す。
+   ★index202：「メトロ東西線などの路線名が背景に溶けて見えない」問題への対策。
+   ともきの指摘通り、よほど暗背景でない限り黒系の方が視認性が高い。 */
 #station-card[data-mm-time="evening"] .sc-info-lbl,
 #station-card[data-mm-time="evening"] .sc-line-text{
-  color: #e0e8f0 !important;
+  color: #2a3548 !important;
+  /* 念のため白縁取りで保険（背景がやや暗めの夕焼けでも読めるように） */
+  text-shadow: 0 0 3px rgba(255,255,255,0.55), 0 0 6px rgba(255,255,255,0.3) !important;
 }
 #station-card[data-mm-time="evening"] .sc-info-val{
-  color: #ffffff !important;
+  color: #1a2030 !important;
+  text-shadow: 0 0 3px rgba(255,255,255,0.55) !important;
 }
 #station-card[data-mm-time="evening"] .sc-info-grid{
-  border-top-color: rgba(255,255,255,0.25) !important;
+  border-top-color: rgba(0,0,0,0.18) !important;
 }
 #station-card[data-mm-time="evening"] .sc-score-label{
-  color: #d0d8e8 !important;
+  color: #4a5868 !important;
+  text-shadow: 0 0 3px rgba(255,255,255,0.55) !important;
 }
 
 /* 秋・冬の夜は更に暗いので、より強い白 */
@@ -5866,9 +5871,9 @@ body.checkin-active #checkin-indicator{
 
 /* マイカードアイコンも小さく */
 #info-panel.compact .ip-card-icon{
-  width:26px !important;
-  height:26px !important;
-  font-size:12px !important;
+  /* ★index201：テキストバッジに合わせて padding/font-size 調整 */
+  padding:3px 7px !important;
+  font-size:10px !important;
 }
 
 /* ランクラベルを小さく＆余白削減 */
@@ -7503,9 +7508,27 @@ const isPc=()=>window.innerWidth>=768;
 
 function shortLine(l){return l.replace('東京メトロ','').replace(/^JR/,'').trim();}
 function formatLinesDisplay(lines){
-  const c=lines.map(shortLine);
-  if(c.length<=3)return c.join(' / ');
-  return c.slice(0,3).join(' / ')+' ほか';
+  // ★index201：文字数ベースで「ほか」処理。
+  //   旧実装は「3路線以下なら全部表示」だったため、新宿のような長い路線名×3で2行になっていた。
+  //   修正後：累積文字数が20文字を超えそうな時点で打ち切り、残りは「ほか」で1行に必ず収める。
+  const c = lines.map(shortLine);
+  if (c.length === 0) return '';
+  const MAX_CHARS = 20;  // セパレータ込みでだいたい1行に収まる目安
+  const SEP = ' / ';
+  let acc = c[0];
+  let count = 1;
+  for (let i = 1; i < c.length; i++) {
+    const next = acc + SEP + c[i];
+    // 「ほか」を後ろにつける余地を残す（4文字分のマージン）
+    const remaining = c.length - i - 1;
+    const reservation = remaining > 0 ? 4 : 0;  // 「 ほか」分
+    if (next.length + reservation > MAX_CHARS) {
+      return acc + ' ほか';
+    }
+    acc = next;
+    count++;
+  }
+  return acc;
 }
 
 // Phase D-1: 路線並び順マスタ（将来編集はこの配列を入れ替えるだけでOK）
@@ -9614,7 +9637,7 @@ function updateTable(filtered){
       <div class="rinfo">
         <div class="rname-row">
           <span class="rname">${st.name}駅</span>
-          <span class="rcardico" onclick="event.stopPropagation();openCardFromRanking('${st.name}','${st.pref}')" title="マイカード">📇</span>
+          <span class="rcardico" onclick="event.stopPropagation();openCardFromRanking('${st.name}','${st.pref}')" title="マイカード">カード</span>
         </div>
         <div class="rline">${formatLinesDisplay(st.lines)} · ${st.pref}</div>
         <div class="rcats">${cats}${bonusPill}</div>
@@ -18698,10 +18721,10 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
-<!-- ★index200: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
-<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v200</div>
+<!-- ★index202: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
+<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v202</div>
 <script>
-  console.log('%c[街巡] index version: 200', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 202', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
