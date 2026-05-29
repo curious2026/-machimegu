@@ -2707,7 +2707,9 @@ body:not(.splashing) #table-area{
 .bp-progress-bar{
   width:80%;
   height:6px;
-  background:rgba(255,255,255,0.08);
+  /* ★index196：背景 0.08→0.22 で0%でもバー位置が見える。
+     エリア「0/38駅」のような未制覇でも進捗トラックが視認できる。 */
+  background:rgba(150,180,220,0.22);
   border-radius:3px;
   margin:6px auto 0;
   overflow:hidden;
@@ -15134,20 +15136,12 @@ function renderLineBadges(lineResults, userBadges) {
       const rarityClasses = window.bpRarityClasses(rarity);
       const badgeData = userBadges.get(id) || { id, type:'line', line:r.line, tier:r.tier, conquered:r.conquered, total:r.total, name:`${r.line} ${tierJa(r.tier)}`, desc:`${r.line}の駅を制覇` };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      // ★index194：銅/銀取得後も次のtierまでのバーを残す（金取得時のみ非表示）
-      //   閾値：bronze=30%, silver=60%, gold=100%
-      let nextBar = '';
-      if (r.tier === 'bronze') {
-        const silverTarget = Math.max(1, Math.ceil(r.total * 0.6));
-        nextBar = `<div class="bp-progress" style="font-size:10px;color:#c0c8d4;margin-top:4px">銀まで ${r.conquered}/${silverTarget}駅</div>${window.bpProgressBar ? window.bpProgressBar(r.conquered, silverTarget) : ''}`;
-      } else if (r.tier === 'silver') {
-        nextBar = `<div class="bp-progress" style="font-size:10px;color:#c0c8d4;margin-top:4px">金まで ${r.conquered}/${r.total}駅</div>${window.bpProgressBar ? window.bpProgressBar(r.conquered, r.total) : ''}`;
-      }
+      // ★index196：銅/銀取得後の「次tierまでのバー」はバッジ内に入れない（文字バランス崩れる）。
+      //   元の素のバッジ表示に戻す。
       return `<div class="bp-badge bp-badge-line ${r.tier}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
         ${window.bpStarsHTML(rarity)}
         <div class="bp-name">${lineLabel}</div>
         <div class="bp-sub">${tierJa(r.tier)}</div>
-        ${nextBar}
       </div>`;
     } else {
       // 未獲得：進捗バー追加（bronze閾値=30%が次の目標）
@@ -17229,10 +17223,13 @@ if ('serviceWorker' in navigator) {
     }
 
     // ★index192: トリセツモーダル（スクロール対象に追加）
+    // ★index196: 内側の#torisetsu-modalが実際のスクロール要素（外側bgではなく）
     const trBg = document.getElementById('torisetsu-modal-bg');
     if (trBg && trBg.classList.contains('open')) {
-      console.log('[TopTap] target: torisetsu-modal-bg');
-      return scrollToTopSafe(trBg);
+      const trInner = document.getElementById('torisetsu-modal');
+      const scrollEl = trInner || trBg;
+      console.log('[TopTap] target: torisetsu-modal (inner)');
+      return scrollToTopSafe(scrollEl);
     }
 
     // 6. 履歴
@@ -18507,6 +18504,12 @@ if ('serviceWorker' in navigator) {
     for (const id of MODAL_IDS) {
       const el = document.getElementById(id);
       if (el && el.classList.contains('open')) {
+        // ★index196: トリセツ専用 — 外側(bg)はoverflow:autoだが実際にスクロールしてるのは内側(#torisetsu-modal)。
+        //   `bg`がopenなら内側のmodal要素を監視対象にする。
+        if (id === 'torisetsu-modal-bg') {
+          const inner = document.getElementById('torisetsu-modal');
+          if (inner) return inner;
+        }
         return el;
       }
     }
@@ -18616,12 +18619,10 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
-<!-- ★index195: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
-<!--   反映されてれば「v195」が見える。「v193」「v194」のままなら配信されているHTMLが古い。 -->
-<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v195</div>
+<!-- ★index197: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
+<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v197</div>
 <script>
-  console.log('%c[街巡] index version: 195', 'color:#88ccff;font-weight:bold;font-size:14px');
-  console.log('[街巡] このページが index195 でなければ、ブラウザ/Service Workerに古いHTMLがキャッシュされている可能性');
+  console.log('%c[街巡] index version: 197', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
