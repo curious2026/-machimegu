@@ -191,8 +191,9 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .logo-megu{color:#f0f0f0;font-size:14px;font-weight:700;letter-spacing:1px}
 .logo-sub-en{
-  font-size:9px;font-weight:700;letter-spacing:3px;color:#58a8e0;
-  font-family:'Inter',sans-serif;line-height:1
+  /* ★index198：9→11px へ1段上げ、margin-top:3pxで「街巡-まちめぐ-」と少し離す */
+  font-size:11px;font-weight:700;letter-spacing:3px;color:#58a8e0;
+  font-family:'Inter',sans-serif;line-height:1;margin-top:3px
 }
 .logo-lines{display:none}
 .logo-line-main,.logo-line-f1,.logo-line-f2{display:none}
@@ -228,7 +229,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   .logo-text-block{min-width:0;overflow:hidden}
   .logo-main{font-size:19px!important;letter-spacing:1px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .logo-megu{font-size:13px!important;letter-spacing:0.5px!important}
-  .logo-sub-en{font-size:9px!important;letter-spacing:2px!important}
+  .logo-sub-en{font-size:11px!important;letter-spacing:2px!important;margin-top:3px!important}
   .fsel{font-size:14px!important}
 }
 @media(max-width:767px){
@@ -281,15 +282,18 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   background:#162038;border-bottom:1px solid rgba(180,200,230,0.08);flex-shrink:0}
 @media(max-width:767px){
   #filters{gap:2px;padding:3px 4px}
-  .fsel{padding:3px 3px!important;font-size:11px!important}
-  #searchBtn{font-size:18px!important;padding:1px 5px!important}
+  /* ★index198：モバイルも11→13pxへ。padding統一で.fselと#searchBtnの高さを揃える */
+  .fsel{padding:5px 5px!important;font-size:13px!important}
+  #searchBtn{font-size:18px!important;padding:5px 7px!important}
   #statusbar{font-size:9px!important}
 }
 .fsel{background:rgba(255,255,255,0.05);color:#c8d6f0;border:1px solid rgba(120,150,210,0.2);
-  padding:4px 5px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600;flex-shrink:0}
+  /* ★index198：フォント11→13pxへ1段上げ。padding 4px→5pxで縦サイズも上げる */
+  padding:5px 7px;border-radius:7px;font-size:13px;cursor:pointer;outline:none;font-family:inherit;font-weight:600;flex-shrink:0}
 .fsel option{background:#15203a;color:#d8e8f8;font-weight:600}
 #searchBtn{background:rgba(70,140,255,0.1);border:1.5px solid rgba(160,200,240,0.55);
-  color:#6aa8ff;font-size:18px;cursor:pointer;padding:3px 8px;border-radius:7px;
+  /* ★index198：.fsel と高さを完全一致させる（padding/border-radius統一） */
+  color:#6aa8ff;font-size:18px;cursor:pointer;padding:5px 9px;border-radius:7px;
   line-height:1;transition:all 0.2s;flex-shrink:0}
 #searchBtn:hover{transform:scale(1.08);background:rgba(70,140,255,0.18)}
 #searchBtn:active{transform:scale(0.95)}
@@ -9377,8 +9381,13 @@ const ALWAYS_VISIBLE_STATIONS=new Set([
 ]);
 
 // ★ ズーム別の画面幅比率（マーカー間最小距離 = 画面幅 × この比率）
+// ★index198: 中ズーム帯（zoom 11-13）で密度が高すぎる問題に対応。各値を約10%引き上げて間隔を広げる。
+//   ・zoom 11: 0.130 → 0.143 (+10%)  「先のスクショの拡大」帯
+//   ・zoom 12: 0.110 → 0.121 (+10%)  「先のスクショの拡大」帯
+//   ・zoom 13: 0.090 → 0.099 (+10%)  少し寄った帯
+//   zoom 9-10（広域）と zoom 14-16（駅単位）は変更なし（快適とのこと）
 const ZOOM_RATIO={
-  9:0.18, 10:0.16, 11:0.13, 12:0.11, 13:0.09, 14:0.07, 15:0.05, 16:0.03
+  9:0.18, 10:0.16, 11:0.143, 12:0.121, 13:0.099, 14:0.07, 15:0.05, 16:0.03
 };
 
 function getMinPx(zoom,mapWidth){
@@ -18619,10 +18628,10 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
-<!-- ★index197: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
-<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v197</div>
+<!-- ★index198: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
+<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v198</div>
 <script>
-  console.log('%c[街巡] index version: 197', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 198', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
