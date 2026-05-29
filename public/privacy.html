@@ -202,8 +202,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   background:rgba(255,255,255,0.05);
   color:#7a96b6;border:1px solid rgba(120,150,210,0.25);
   border-radius:12px;
-  /* ★index192：3つを揃えて目立たせる。padding 6→9pxで高さを上げる */
-  padding:9px 11px;cursor:pointer;
+  /* ★index194：マイページが2行だった頃の高さに3つとも揃える（フォントは変えず縦paddingを増やす） */
+  padding:13px 11px;cursor:pointer;
   transition:all 0.15s;
   display:flex;align-items:center;justify-content:center;
   font-family:inherit;font-weight:900;
@@ -236,10 +236,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   .view-tabs{display:flex;gap:2px!important;flex-shrink:0}
   #header{height:64px;padding:0 6px 0 4px!important;gap:4px!important}
   #header{padding-left:max(4px,env(safe-area-inset-left))!important;padding-right:max(6px,env(safe-area-inset-right))!important}
-  .vtab{padding:7px 7px!important;min-width:36px!important;border-radius:8px!important}
+  .vtab{padding:11px 7px!important;min-width:36px!important;border-radius:8px!important}
   .vtab-label{font-size:11px!important;letter-spacing:0.3px!important}
-  /* ★index192：マイページボタンもMAP/RANKと完全同寸に揃える */
-  .user-mypage-link{padding:7px 9px!important;font-size:11px!important;letter-spacing:0.5px!important;border-radius:8px!important;min-width:36px!important}
+  /* ★index194：マイページボタンも縦長で揃える（2行時代と同じ高さ） */
+  .user-mypage-link{padding:11px 9px!important;font-size:11px!important;letter-spacing:0.5px!important;border-radius:8px!important;min-width:36px!important}
   #header-right{flex-direction:column!important;gap:2px!important;flex-shrink:0}
   .info-btn{font-size:9px!important;padding:2px 5px!important}
   .user-avatar{width:26px!important;height:26px!important}
@@ -1266,13 +1266,13 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   opacity:0.75;
 }
 
-/* ─── マイページリンク（★index192：MAP/RANKと同じ高さで横並び、1行表示） ─── */
+/* ─── マイページリンク（★index194：MAP/RANKと同じ高さで横並び、1行表示、2行時代の縦サイズ） ─── */
 .user-mypage-link{
   display:none;
   background:linear-gradient(135deg,#58a8e0,#3a8ac4);
   color:#fff;font-weight:900;font-size:13px;letter-spacing:1px;
-  /* ★index192：.vtab と完全に同じpadding/border-radius で高さを揃える */
-  padding:9px 11px;border-radius:12px;border:1px solid #58a8e0;
+  /* ★index194：.vtab と完全に同じpadding/border-radius で高さを揃える（2行時代の高さに戻す） */
+  padding:13px 11px;border-radius:12px;border:1px solid #58a8e0;
   cursor:pointer;
   box-shadow:0 2px 8px rgba(88,168,224,0.35);
   transition:transform 0.12s;
@@ -15134,10 +15134,20 @@ function renderLineBadges(lineResults, userBadges) {
       const rarityClasses = window.bpRarityClasses(rarity);
       const badgeData = userBadges.get(id) || { id, type:'line', line:r.line, tier:r.tier, conquered:r.conquered, total:r.total, name:`${r.line} ${tierJa(r.tier)}`, desc:`${r.line}の駅を制覇` };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
+      // ★index194：銅/銀取得後も次のtierまでのバーを残す（金取得時のみ非表示）
+      //   閾値：bronze=30%, silver=60%, gold=100%
+      let nextBar = '';
+      if (r.tier === 'bronze') {
+        const silverTarget = Math.max(1, Math.ceil(r.total * 0.6));
+        nextBar = `<div class="bp-progress" style="font-size:10px;color:#c0c8d4;margin-top:4px">銀まで ${r.conquered}/${silverTarget}駅</div>${window.bpProgressBar ? window.bpProgressBar(r.conquered, silverTarget) : ''}`;
+      } else if (r.tier === 'silver') {
+        nextBar = `<div class="bp-progress" style="font-size:10px;color:#c0c8d4;margin-top:4px">金まで ${r.conquered}/${r.total}駅</div>${window.bpProgressBar ? window.bpProgressBar(r.conquered, r.total) : ''}`;
+      }
       return `<div class="bp-badge bp-badge-line ${r.tier}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
         ${window.bpStarsHTML(rarity)}
         <div class="bp-name">${lineLabel}</div>
         <div class="bp-sub">${tierJa(r.tier)}</div>
+        ${nextBar}
       </div>`;
     } else {
       // 未獲得：進捗バー追加（bronze閾値=30%が次の目標）
@@ -15883,10 +15893,13 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
         ${svgInner}
       </div>`;
     } else {
+      // ★index194: エリアバッジにも進捗バーを表示（他のバッジと統一）
+      const nextTarget = r.total;  // エリアは全駅制覇が唯一の閾値
       return `<div class="bp-badge-locked">
         <div class="bp-icon">🛡️</div>
         <div class="bp-name">${r.city}</div>
         <div class="bp-progress">${r.conquered}/${r.total}駅</div>
+        ${window.bpProgressBar ? window.bpProgressBar(r.conquered, nextTarget) : ''}
       </div>`;
     }
   }
@@ -16363,6 +16376,11 @@ async function renderMypageBadgePreview() {
     });
     
     if (cnt) cnt.textContent = `${arr.length}個`;
+    // ★index194: バッジ獲得サブ統計（N/504）も同じ場で同じ値で更新する。
+    //   これで「6個」と「N/504」が論理的に絶対一致。
+    //   別関数（loadMypageData内）の事前計算で何が来ても、この上書きが最後に走るので問題ない。
+    const subEarned = document.getElementById('mp-badge-substat-earned');
+    if (subEarned) subEarned.textContent = arr.length;
     
     const preview = arr.slice(0, 8);
     let html = '';
@@ -18471,12 +18489,14 @@ if ('serviceWorker' in navigator) {
   
   // 監視対象のモーダル ID 一覧（z-index 降順 = 上に重なる順）
   // ★index176: badgepage-bg 追加。バッジページで↑ボタンが出ない問題の修正。
+  // ★index194: torisetsu-modal-bg 追加。トリセツで↑ボタンが出ない問題の修正。
   const MODAL_IDS = [
     'cardversion-bg',
     'card-modal-bg',
     'badgepage-bg',
     'cardlist-bg',
     'mypage-bg',
+    'torisetsu-modal-bg',
     'history-bg',
     'fav-picker-bg',
     'badge-detail-bg',
