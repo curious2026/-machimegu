@@ -202,7 +202,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   background:rgba(255,255,255,0.05);
   color:#7a96b6;border:1px solid rgba(120,150,210,0.25);
   border-radius:12px;
-  padding:6px 9px;cursor:pointer;
+  /* ★index192：3つを揃えて目立たせる。padding 6→9pxで高さを上げる */
+  padding:9px 11px;cursor:pointer;
   transition:all 0.15s;
   display:flex;align-items:center;justify-content:center;
   font-family:inherit;font-weight:900;
@@ -235,8 +236,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   .view-tabs{display:flex;gap:2px!important;flex-shrink:0}
   #header{height:64px;padding:0 6px 0 4px!important;gap:4px!important}
   #header{padding-left:max(4px,env(safe-area-inset-left))!important;padding-right:max(6px,env(safe-area-inset-right))!important}
-  .vtab{padding:4px 5px!important;min-width:34px!important;border-radius:8px!important}
+  .vtab{padding:7px 7px!important;min-width:36px!important;border-radius:8px!important}
   .vtab-label{font-size:11px!important;letter-spacing:0.3px!important}
+  /* ★index192：マイページボタンもMAP/RANKと完全同寸に揃える */
+  .user-mypage-link{padding:7px 9px!important;font-size:11px!important;letter-spacing:0.5px!important;border-radius:8px!important;min-width:36px!important}
   #header-right{flex-direction:column!important;gap:2px!important;flex-shrink:0}
   .info-btn{font-size:9px!important;padding:2px 5px!important}
   .user-avatar{width:26px!important;height:26px!important}
@@ -285,7 +288,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .fsel{background:rgba(255,255,255,0.05);color:#c8d6f0;border:1px solid rgba(120,150,210,0.2);
   padding:4px 5px;border-radius:7px;font-size:11px;cursor:pointer;outline:none;font-family:inherit;font-weight:600;flex-shrink:0}
 .fsel option{background:#15203a;color:#d8e8f8;font-weight:600}
-#searchBtn{background:rgba(70,140,255,0.1);border:1px solid rgba(80,150,255,0.32);
+#searchBtn{background:rgba(70,140,255,0.1);border:1.5px solid rgba(160,200,240,0.55);
   color:#6aa8ff;font-size:18px;cursor:pointer;padding:3px 8px;border-radius:7px;
   line-height:1;transition:all 0.2s;flex-shrink:0}
 #searchBtn:hover{transform:scale(1.08);background:rgba(70,140,255,0.18)}
@@ -1263,28 +1266,32 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   opacity:0.75;
 }
 
-/* ─── マイページリンク（スマホ用テキスト） ─── */
+/* ─── マイページリンク（★index192：MAP/RANKと同じ高さで横並び、1行表示） ─── */
 .user-mypage-link{
   display:none;
   background:linear-gradient(135deg,#58a8e0,#3a8ac4);
-  color:#fff;font-weight:900;font-size:11px;letter-spacing:0.3px;
-  padding:5px 8px;border-radius:12px;border:none;
+  color:#fff;font-weight:900;font-size:13px;letter-spacing:1px;
+  /* ★index192：.vtab と完全に同じpadding/border-radius で高さを揃える */
+  padding:9px 11px;border-radius:12px;border:1px solid #58a8e0;
   cursor:pointer;
   box-shadow:0 2px 8px rgba(88,168,224,0.35);
   transition:transform 0.12s;
-  line-height:1.1;
-  flex-direction:column;
+  line-height:1.15;
   text-align:center;
   flex-shrink:0;
+  white-space:nowrap;
+  min-width:42px;
+  font-family:inherit;
 }
-.user-mypage-link .ump-line{display:block;line-height:1.1;font-size:11px}
+/* 旧2行構造の後方互換（spanが残ってても1行表示） */
+.user-mypage-link .ump-line{display:inline;line-height:1.15;font-size:inherit}
 .user-mypage-link:active{transform:scale(0.95)}
 @media (max-width:640px){
   .user-avatar{display:none!important}
-  .user-mypage-link{display:inline-flex;align-items:center;gap:4px}
+  .user-mypage-link{display:inline-flex;align-items:center;justify-content:center}
 }
 @media (min-width:641px){
-  .user-mypage-link{display:inline-flex;align-items:center;gap:4px}
+  .user-mypage-link{display:inline-flex;align-items:center;justify-content:center}
 }
 
 /* ─── ステーションカード モーダル（V3: スクロール対応・スマホ最適化）─── */
@@ -4516,7 +4523,7 @@ body.checkin-active #checkin-indicator{
 
 <div id="app">
   <div id="header">
-    <div class="logo-wrap" onclick="openModal()">
+    <div class="logo-wrap" onclick="handleAvatarClick()" title="マイページ">
       <img src="/logo192.png" class="logo-icon" alt="街巡ロゴ">
       <div class="logo-text-block">
         <span class="logo-main">街巡<span class="logo-megu">－まちめぐ－</span></span>
@@ -4543,7 +4550,7 @@ body.checkin-active #checkin-indicator{
         </button>
         <div class="user-info" id="userInfo" style="display:none">
           <img class="user-avatar" id="userAvatar" src="" alt="" onclick="handleAvatarClick()" title="マイページ">
-          <button class="user-mypage-link" onclick="handleAvatarClick()" type="button"><span class="ump-line">マイ</span><span class="ump-line">ページ</span></button>
+          <button class="user-mypage-link" onclick="handleAvatarClick()" type="button" aria-label="マイページへ">マイページ</button>
           <span class="user-name" id="userName"></span>
           
         </div>
@@ -4651,6 +4658,7 @@ body.checkin-active #checkin-indicator{
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#7b5fe8,#a080ff)">350</div><div><div class="modal-ax-name">商業・小売</div><div class="modal-ax-desc">百貨店・ショッピング・アパレル・娯楽施設等</div></div></div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#2a8fd4,#50b8ff)">150</div><div><div class="modal-ax-name">生活利便</div><div class="modal-ax-desc">コンビニ・スーパー・薬局・銀行・美容院等</div></div></div>
     <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#c06800,#f09030)">100</div><div><div class="modal-ax-name">医療・福祉</div><div class="modal-ax-desc">病院・クリニック・歯科・調剤薬局等</div></div></div>
+    <div class="modal-ax"><div class="modal-pt" style="background:linear-gradient(135deg,#b08820,#d4a020)">50</div><div><div class="modal-ax-name">ボーナス</div><div class="modal-ax-desc">大学・大規模公園・著名寺社・国立ミュージアム等の文化的価値</div></div></div>
     <div class="modal-note">
       ※ 各軸は施設数最多の駅を基準とした<a href="#" onclick="openLogModal();return false" style="color:#90b8ff;text-decoration:underline">対数相対評価</a>です。<br>
       ※ 本スコアは商業施設密度のみを反映。居住環境・治安等は含みません。<br>
@@ -17198,6 +17206,13 @@ if ('serviceWorker' in navigator) {
     if (mpBg && mpBg.classList.contains('open')) {
       console.log('[TopTap] target: mypage-bg');
       return scrollToTopSafe(mpBg);
+    }
+
+    // ★index192: トリセツモーダル（スクロール対象に追加）
+    const trBg = document.getElementById('torisetsu-modal-bg');
+    if (trBg && trBg.classList.contains('open')) {
+      console.log('[TopTap] target: torisetsu-modal-bg');
+      return scrollToTopSafe(trBg);
     }
 
     // 6. 履歴
