@@ -11102,9 +11102,13 @@ async function tryCompleteCheckin() {
     if (window.markCheckedIn) window.markCheckedIn(pendingCheckin.stationName, pendingCheckin.stationPref);
 
     // ★ Phase B: チェックイン情報をミッション進捗用に保存
+    // ★index207: 地域別ミッション判定で stationPref/stationLat/stationLng も必要に
     window._lastCheckinData = {
       stationId,
       stationName: pendingCheckin.stationName,
+      stationPref: pendingCheckin.stationPref,
+      stationLat: pendingCheckin.stationLat,
+      stationLng: pendingCheckin.stationLng,
       score,
       rank: rankInfo.rank,
       isFirstVisit,
@@ -14029,13 +14033,51 @@ function calcRankConquest(userCards, rankTotals) {
 }
 
 // ─── 週間ミッション定義 ───
-const WEEKLY_MISSIONS = [
-  { id:'A', title:'Bランク以上の駅に5回チェックイン', target:5, type:'rank_above_b' },
-  { id:'B', title:'今週、まだ訪れていない路線でチェックイン', target:1, type:'new_line' },
-  { id:'C', title:'今週、まだ訪れていない市区町村でチェックイン', target:1, type:'new_area' },
-  { id:'D', title:'3つの異なる路線でチェックイン', target:3, type:'three_lines' },
-  { id:'E', title:'最寄り駅以外の駅に再訪する', target:1, type:'revisit_non_home' }
+// ★index207: 地域別ミッションプール導入。共通5＋urban2＋suburb2＋rural2＝計11パターン。
+// XP値も同時に追加（既存5パターンは設計漏れでxpが未定義だった）。
+const WEEKLY_COMMON = [
+  { id:'W_A', title:'Bランク以上の駅に5回チェックイン', target:5, type:'rank_above_b', xp:50 },
+  { id:'W_B', title:'今週、まだ訪れていない路線でチェックイン', target:1, type:'new_line', xp:45 },
+  { id:'W_C', title:'今週、まだ訪れていない市区町村でチェックイン', target:1, type:'new_area', xp:45 },
+  { id:'W_D', title:'3つの異なる路線でチェックイン', target:3, type:'three_lines', xp:40 },
+  { id:'W_E', title:'最寄り駅以外の駅に再訪する', target:1, type:'revisit_non_home', xp:40 }
 ];
+const WEEKLY_URBAN = [
+  { id:'WU_A', title:'7日間で5日以上チェックイン', target:5, type:'days_active_week', xp:60 },
+  { id:'WU_B', title:'異なる5市区町村でチェックイン', target:5, type:'distinct_cities_week', xp:70 }
+];
+const WEEKLY_SUBURB = [
+  { id:'WS_A', title:'Bランク以上の駅に3回チェックイン', target:3, type:'rank_above_b', xp:50 },
+  { id:'WS_B', title:'違う県の駅に2回チェックイン', target:2, type:'distinct_pref_week', xp:60 }
+];
+const WEEKLY_RURAL = [
+  { id:'WR_A', title:'Cランク以上の駅に3回チェックイン', target:3, type:'rank_above_c', xp:50 },
+  { id:'WR_B', title:'今週、累計5駅以上にチェックイン', target:5, type:'total_checkins_week', xp:40 }
+];
+// 後方互換のため WEEKLY_MISSIONS は WEEKLY_COMMON を指す（既存参照を壊さない）
+const WEEKLY_MISSIONS = WEEKLY_COMMON;
+
+// ★index207: ユーザー地域判定（最寄り駅スコアベース、3階層）
+// urban: 最寄り駅 score>=600（23区/横浜中心/大宮等）
+// suburb: 最寄り駅 score 200-599（郊外都市部）
+// rural: 最寄り駅 score<200 または最寄り未登録（地方）
+// この閾値はUIに出さない（メタゲーム化防止）
+function mmGetUserRegion(userProfile) {
+  if (!userProfile || !userProfile.nearestStation) return 'rural';
+  const homeName = userProfile.nearestStation;
+  const homePref = userProfile.prefecture || userProfile.nearestStationPref;
+  const stationData = window.stationData || [];
+  let homeSt = null;
+  if (homePref) {
+    homeSt = stationData.find(s => s.name === homeName && s.pref === homePref);
+  }
+  if (!homeSt) homeSt = stationData.find(s => s.name === homeName);
+  if (!homeSt || typeof homeSt.score !== 'number') return 'rural';
+  if (homeSt.score >= 600) return 'urban';
+  if (homeSt.score >= 200) return 'suburb';
+  return 'rural';
+}
+window.mmGetUserRegion = mmGetUserRegion;
 
 // ─── 週始め月曜0時のミリ秒取得 ───
 function getMondayMidnight() {
@@ -14071,7 +14113,8 @@ function _missionSeedHash(str) {
 }
 
 // ─── 今週のミッション取得（決定論的：UID+週キーから一意に決まる）───
-function getThisWeekMission(uid) {
+// ★index207: 地域別ミッションプール対応（共通5＋地域別2）
+function getThisWeekMission(uid, userProfile) {
   const weekKey = getMondayKey();
   const cacheKey = `mm_weekly_${uid}_${weekKey}`;
   
@@ -14085,11 +14128,17 @@ function getThisWeekMission(uid) {
     }
   } catch(e) {}
   
+  // ★index207: 地域別プール選出 - 共通プール5 + 地域別プール2 = 7パターンから決定論的選出
+  const region = mmGetUserRegion(userProfile);
+  let pool = [...WEEKLY_COMMON];
+  if (region === 'urban') pool = pool.concat(WEEKLY_URBAN);
+  else if (region === 'suburb') pool = pool.concat(WEEKLY_SUBURB);
+  else pool = pool.concat(WEEKLY_RURAL);
+  
   // localStorageが消えてた / 古い → UID+週キーから決定論的に再生成
-  // これで「翌日アクセスしたら違うミッションになってた」問題が解消
   const seed = _missionSeedHash(`${uid}_${weekKey}`);
-  const mission = WEEKLY_MISSIONS[seed % WEEKLY_MISSIONS.length];
-  const data = { ...mission, weekKey, uid };
+  const mission = pool[seed % pool.length];
+  const data = { ...mission, weekKey, uid, region };
   try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch(e) {}
   return data;
 }
@@ -14163,6 +14212,42 @@ function calcMissionProgress(mission, weekCheckins, allUserCards, userProfile) {
         return oldCardIds.has(c.stationId); // 過去に訪問済み
       });
       return hit ? 1 : 0;
+    }
+    // ★index207: ウィークリー新type
+    case 'rank_above_c':
+      return weekCheckins.filter(c => ['S','A','B','C'].includes(c.rank)).length;
+    case 'total_checkins_week':
+      return weekCheckins.length;
+    case 'distinct_pref_week': {
+      // 違う県の駅にN回（最寄り駅の県以外をカウント）
+      const homePref = userProfile && userProfile.prefecture ? userProfile.prefecture :
+                       (userProfile && userProfile.nearestStationPref ? userProfile.nearestStationPref : '');
+      if (!homePref) return weekCheckins.length; // 最寄り県不明なら全件
+      return weekCheckins.filter(c => c.stationPref && c.stationPref !== homePref).length;
+    }
+    case 'distinct_cities_week': {
+      // 今週、異なる市区町村にチェックインした数（STATION_INFO.location使用）
+      const citySet = new Set();
+      const SI = window.STATION_INFO || {};
+      weekCheckins.forEach(c => {
+        const key = c.stationName + '_' + c.stationPref;
+        const info = SI[key];
+        const city = (info && info.location) || c.city || c.stationPref;
+        if (city) citySet.add(city);
+      });
+      return citySet.size;
+    }
+    case 'days_active_week': {
+      // 1週間で何日チェックインしたか（同日複数は1日カウント）
+      const daySet = new Set();
+      weekCheckins.forEach(c => {
+        const t = c.checkedInAt && c.checkedInAt.toMillis ? c.checkedInAt.toMillis() :
+                  (c.checkedInAt && c.checkedInAt.seconds ? c.checkedInAt.seconds*1000 : 0);
+        if (!t) return;
+        const jst = new Date(t + 9*3600*1000);
+        daySet.add(jst.toISOString().slice(0,10));
+      });
+      return daySet.size;
     }
   }
   return 0;
@@ -15128,7 +15213,7 @@ if (typeof formatDeadline === 'function') window.formatDeadline = formatDeadline
 async function renderWeeklyMission(uid, userCards, userProfile) {
   const el = document.getElementById('bp-mission');
   if (!el) return;
-  const mission = getThisWeekMission(uid);
+  const mission = getThisWeekMission(uid, userProfile);  // ★index207: 地域別プール選出のためuserProfile渡す
   const weekCheckins = await fetchUserCheckinsThisWeek(uid);
   const progress = calcMissionProgress(mission, weekCheckins, userCards, userProfile);
   const done = progress >= mission.target;
@@ -16622,7 +16707,7 @@ async function _disabled_checkAndAwardMissionBadge(uid) {
     const userDocSnap = await getDoc(doc(db, 'users', uid));
     const userProfile = userDocSnap.exists() ? userDocSnap.data() : {};
     
-    const mission = getThisWeekMission(uid);
+    const mission = getThisWeekMission(uid, userProfile);  // ★index207: 地域別プール選出
     const weekCheckins = await fetchUserCheckinsThisWeek(uid);
     const userCards = await fetchUserStationCards(uid);
     
@@ -17883,14 +17968,49 @@ if ('serviceWorker' in navigator) {
   }
   
   // ミッション定義（XPはカード由来との整合を取って控えめに）
-  const DAILY_MISSION_POOL = [
+  // ★index207: 地域別ミッションプール導入。共通プール6＋urban7+suburb6+rural7。
+  // 「同じ駅2回」は仕様上1日1回制限と矛盾するため削除。「5駅以上」もDAILY_LIMIT=3と矛盾するため削除。
+  // 毎日2個選出：共通プールから1個 + 地域別プールから1個（最寄り未登録なら共通から2個）
+  const DAILY_COMMON_POOL = [
     { id: 'three_stations',  title: '今日3駅以上チェックイン',          target: 3, xp: 10, type: 'count_today' },
-    { id: 'b_or_above',      title: 'Bランク以上の駅に1駅',              target: 1, xp: 8,  type: 'count_b_above_today' },
-    { id: 'new_station',     title: '初訪問の駅を1駅開拓',                target: 1, xp: 8,  type: 'count_new_today' },
     { id: 'two_lines',       title: '違う路線を2つチェックイン',          target: 2, xp: 8,  type: 'count_distinct_lines_today' },
-    { id: 'a_or_above',      title: 'Aランク以上の駅にチェックイン',     target: 1, xp: 12, type: 'count_a_above_today' },
-    { id: 'five_stations',   title: '今日5駅以上チェックイン（強化）',   target: 5, xp: 20, type: 'count_today' },
+    { id: 'new_station',     title: '初訪問の駅を1駅開拓',                target: 1, xp: 10, type: 'count_new_today' },
+    { id: 'repeat_station',  title: '訪問済みの駅にもう一度チェックイン', target: 1, xp: 8,  type: 'count_repeat_today' },
+    { id: 'home_station',    title: '最寄り駅にチェックイン',             target: 1, xp: 6,  type: 'count_home_today' },
+    { id: 'diff_pref',       title: '違う県の駅にチェックイン',           target: 1, xp: 12, type: 'count_diff_pref_today' },
   ];
+  
+  const DAILY_URBAN_POOL = [
+    { id: 'u_a_or_above',    title: 'Aランク以上の駅にチェックイン',     target: 1, xp: 12, type: 'count_a_above_today' },
+    { id: 'u_b_above_2',     title: 'Bランク以上の駅に2駅',              target: 2, xp: 14, type: 'count_b_above_today' },
+    { id: 'u_c_station',     title: 'Cランクの駅にあえてチェックイン',   target: 1, xp: 14, type: 'count_rank_today', rank: 'C' },
+    { id: 'u_d_station',     title: 'Dランクの駅にあえてチェックイン',   target: 1, xp: 18, type: 'count_rank_today', rank: 'D' },
+    { id: 'u_two_cities',    title: '違う市区町村の駅で2チェックイン',   target: 2, xp: 15, type: 'count_cities_today' },
+    { id: 'u_three_lines',   title: '違う路線を3つチェックイン',         target: 3, xp: 15, type: 'count_distinct_lines_today' },
+    { id: 'u_far',           title: '都心10km圏外の駅にチェックイン',    target: 1, xp: 18, type: 'count_far_today' },
+  ];
+  
+  const DAILY_SUBURB_POOL = [
+    { id: 's_b_or_above',    title: 'Bランク以上の駅にチェックイン',     target: 1, xp: 10, type: 'count_b_above_today' },
+    { id: 's_b_above_2',     title: 'Bランク以上の駅に2駅',              target: 2, xp: 16, type: 'count_b_above_today' },
+    { id: 's_c_above_2',     title: 'Cランク以上の駅に2駅',              target: 2, xp: 10, type: 'count_c_above_today' },
+    { id: 's_three_lines',   title: '違う路線を3つチェックイン',         target: 3, xp: 14, type: 'count_distinct_lines_today' },
+    { id: 's_a_reward',      title: 'Aランク以上の駅へご褒美遠征',       target: 1, xp: 18, type: 'count_a_above_today' },
+    { id: 's_adj_pref',      title: '隣接県の駅にチェックイン',          target: 1, xp: 16, type: 'count_diff_pref_today' },
+  ];
+  
+  const DAILY_RURAL_POOL = [
+    { id: 'r_c_or_above',    title: 'Cランク以上の駅にチェックイン',     target: 1, xp: 10, type: 'count_c_above_today' },
+    { id: 'r_c_above_2',     title: 'Cランク以上の駅に2駅',              target: 2, xp: 16, type: 'count_c_above_today' },
+    { id: 'r_d_three',       title: 'Dランクの駅を3駅チェックイン',      target: 3, xp: 14, type: 'count_rank_today', rank: 'D' },
+    { id: 'r_two_lines',     title: '違う路線を2つチェックイン',         target: 2, xp: 12, type: 'count_distinct_lines_today' },
+    { id: 'r_three_stations',title: '今日3駅以上チェックイン',           target: 3, xp: 16, type: 'count_today' },
+    { id: 'r_b_reward',      title: 'Bランク以上の駅へご褒美遠征',       target: 1, xp: 20, type: 'count_b_above_today' },
+    { id: 'r_b_far_trip',    title: '都市部のBランク以上に遠征',         target: 1, xp: 25, type: 'count_b_above_today' },
+  ];
+  
+  // 後方互換（既存参照を壊さない）
+  const DAILY_MISSION_POOL = DAILY_COMMON_POOL;
   
   // 連続日数によるログインボーナスXP（カード由来との整合）
   // ★index199: ログボXPを案A（2/2/3/3/4）へ。現状の1XPだと手応えがないため底上げ。
@@ -17975,12 +18095,36 @@ if ('serviceWorker' in navigator) {
       // ★index190: その日初めての生成。生成したら必ず保存する（isFirstTodayに依存しない）。
       //   従来は isFirstToday の時しか保存されず、マイページを開くたびに mmProcessLoginBonus が
       //   走ってランダム再生成→「立ち上げるたびにミッションが変わる」バグになっていた。
-      const shuffled = [...DAILY_MISSION_POOL].sort(() => Math.random() - 0.5);
-      const picked = shuffled.slice(0, 2);
+      // ★index207: 地域別ミッション選出。共通プール1個＋地域別プール1個＝計2個。
+      //   最寄り未登録なら共通プールから2個。
+      let userProfile = {};
+      try {
+        const userDocSnap = await window.fsGetDoc(window.fsDoc(window.db, 'users', uid));
+        if (userDocSnap.exists()) userProfile = userDocSnap.data() || {};
+      } catch(e){ /* 権限エラー等は無視 */ }
+      const region = (typeof window.mmGetUserRegion === 'function') 
+        ? window.mmGetUserRegion(userProfile) : 'rural';
+      
+      const shuffled1 = [...DAILY_COMMON_POOL].sort(() => Math.random() - 0.5);
+      let regionalPool = null;
+      if (region === 'urban') regionalPool = DAILY_URBAN_POOL;
+      else if (region === 'suburb') regionalPool = DAILY_SUBURB_POOL;
+      else regionalPool = DAILY_RURAL_POOL;
+      const shuffled2 = userProfile.nearestStation 
+        ? [...regionalPool].sort(() => Math.random() - 0.5)
+        : [...DAILY_COMMON_POOL].sort(() => Math.random() - 0.5); // 未登録なら共通から
+      
+      // 同IDが重複しないように共通1個目と地域別1個目から取る
+      const picked = [shuffled1[0]];
+      const second = shuffled2.find(m => m.id !== shuffled1[0].id) || shuffled2[0];
+      picked.push(second);
+      
       todayMissions = {
         date: today,
+        region: region,  // デバッグ用
         missions: picked.map(m => ({
           id: m.id, title: m.title, target: m.target, xp: m.xp, type: m.type,
+          rank: m.rank,  // count_rank_today 用
           progress: 0, claimed: false
         }))
       };
@@ -18152,6 +18296,75 @@ if ('serviceWorker' in navigator) {
       } else if (m.type === 'count_new_today') {
         if (checkinData && checkinData.isFirstVisit) {
           m.progress = Math.min(m.target, (m.progress || 0) + 1);
+        }
+      } else if (m.type === 'count_c_above_today') {
+        // ★index207: 今日のC以上（rural/suburb向け）
+        if (checkinData && ['S','A','B','C'].includes(checkinData.rank)) {
+          m.progress = Math.min(m.target, (m.progress || 0) + 1);
+        }
+      } else if (m.type === 'count_rank_today') {
+        // ★index207: 特定ランクピンポイント（urbanのC/D逆指名、ruralのD駅3つ等）
+        if (checkinData && m.rank && checkinData.rank === m.rank) {
+          m.progress = Math.min(m.target, (m.progress || 0) + 1);
+        }
+      } else if (m.type === 'count_repeat_today') {
+        // ★index207: 訪問済み駅にもう一度（=同セッションのチェックインだが初訪問でない）
+        if (checkinData && checkinData.isFirstVisit === false) {
+          m.progress = Math.min(m.target, (m.progress || 0) + 1);
+        }
+      } else if (m.type === 'count_home_today') {
+        // ★index207: 最寄り駅にチェックイン
+        try {
+          const userDocSnap = await window.fsGetDoc(window.fsDoc(window.db, 'users', uid));
+          const profile = userDocSnap.exists() ? userDocSnap.data() : {};
+          if (checkinData && profile.nearestStation && checkinData.stationName === profile.nearestStation) {
+            m.progress = Math.min(m.target, (m.progress || 0) + 1);
+          }
+        } catch(e){}
+      } else if (m.type === 'count_diff_pref_today') {
+        // ★index207: 違う県の駅（最寄り駅の県以外、未登録なら全件）
+        try {
+          const userDocSnap = await window.fsGetDoc(window.fsDoc(window.db, 'users', uid));
+          const profile = userDocSnap.exists() ? userDocSnap.data() : {};
+          const homePref = profile.prefecture || profile.nearestStationPref || '';
+          if (checkinData && checkinData.stationPref && (!homePref || checkinData.stationPref !== homePref)) {
+            m.progress = Math.min(m.target, (m.progress || 0) + 1);
+          }
+        } catch(e){}
+      } else if (m.type === 'count_cities_today') {
+        // ★index207: 今日のユニーク市区町村数（STATION_INFO.location利用、再計算式）
+        try {
+          const checkinsRef = window.fsCollection(window.db, 'users', uid, 'checkins');
+          const snap = await window.fsGetDocs(checkinsRef);
+          const today = todayJST();
+          const SI = window.STATION_INFO || {};
+          const citySet = new Set();
+          snap.forEach(d => {
+            const data = d.data();
+            if (!data.checkedInAt) return;
+            const t = data.checkedInAt.toMillis ? data.checkedInAt.toMillis() : data.checkedInAt.seconds*1000;
+            const jst = new Date(t + 9*3600*1000);
+            if (jst.toISOString().slice(0,10) !== today) return;
+            const sName = data.stationName || '';
+            const sPref = data.stationPref || '';
+            const key = sName + '_' + sPref;
+            const info = SI[key];
+            const city = (info && info.location) || sPref;
+            if (city) citySet.add(city);
+          });
+          m.progress = Math.min(m.target, citySet.size);
+        } catch(e){}
+      } else if (m.type === 'count_far_today') {
+        // ★index207: 都心10km圏外（東京駅基準）の駅にチェックイン
+        // 東京駅: lat=35.6812, lng=139.7671
+        if (checkinData && typeof checkinData.stationLat === 'number' && typeof checkinData.stationLng === 'number') {
+          const dLat = checkinData.stationLat - 35.6812;
+          const dLng = checkinData.stationLng - 139.7671;
+          // ざっくりHaversineなしでも10km判定は精度十分
+          const distKm = Math.sqrt(dLat*dLat*111*111 + dLng*dLng*91*91);
+          if (distKm >= 10) {
+            m.progress = Math.min(m.target, (m.progress || 0) + 1);
+          }
         }
       }
       
@@ -18818,7 +19031,7 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- ★index203: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
-<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v206</div>
+<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v207</div>
 <script>
   console.log('%c[街巡] index version: 206', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
