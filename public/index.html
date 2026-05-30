@@ -471,7 +471,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .rline{font-size:11px;color:#b0c4e0;margin-top:2px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rcats{display:flex;gap:3px;margin-top:5px;flex-wrap:nowrap;overflow:hidden}
 /* ★index201：rcat フォント9→10px、padding 2→1.5pxで行高さを維持 */
-.rcat{font-size:10px;padding:1.5px 5px;border-radius:3px;font-weight:700;white-space:nowrap;flex-shrink:0}
+/* ★index206: padding 5px→3pxへ。5個のピル（飲食/商業/生活/医療/ボーナス）が右端切れないように */
+.rcat{font-size:10px;padding:1.5px 3px;border-radius:3px;font-weight:700;white-space:nowrap;flex-shrink:0}
 .rscore{font-size:23px;font-weight:900;flex-shrink:0;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;min-width:46px;text-align:right;padding-top:1px}
 
 /* ── モーダル（フォントサイズ+1、下4行白色） ── */
@@ -713,6 +714,13 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   padding:20px 0 40px;
   -webkit-overflow-scrolling:touch;
 }
+/* ★index206: カードアニメ中だけbackdrop-filterを切る。
+   blur(8px)を毎フレーム計算するのが重く、回転アニメと並行するとGPUが落ちる。
+   アニメ終了後(~1s後)に復活させて見た目は変えない。 */
+#card-modal-bg.is-animating{
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
 #card-modal-bg.open{display:flex}
 #card-modal{
   position:relative;display:flex;flex-direction:column;align-items:center;gap:20px;
@@ -722,22 +730,33 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   /* カード自体の最小高さは確保せず、コンテンツに合わせる */
 }
 #card-flip-wrap{
-  animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
+  animation:cardEnter 0.9s cubic-bezier(0.25,0.8,0.35,1);
   transform-style:preserve-3d;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
 }
+/* ★index206: カード回転中のカクツキ対策。
+   過去3回（will-change/backface-visibility/2フレーム遅延）でも完全解決せず。
+   真因は「rotateY 180deg＋backdrop-filter:blur(8px)＋オーバーシュートeasing」の同時発生で
+   iPhoneのGPUが息切れすること。
+   対策：①rotateY 180→90度（GPU負荷半減、見た目はほぼ同じ「カードが横から立ち上がる」）
+        ②アニメ中はbackdrop-filterを切る（is-animating時に上書き、終了で復活）
+        ③easingをオーバーシュートなしのcubic-bezier(0.25,0.8,0.35,1)に統一
+        ④durationを1.2→0.9sに短縮（早い方が体感カクツキ少ない）
+   既存の倒れる雰囲気は保ちつつ、フレーム落ちを抑える設計。 */
 @keyframes cardEnter{
-  0%{transform:scale(0.3) rotateY(180deg);opacity:0}
-  50%{opacity:1}
+  0%{transform:scale(0.5) rotateY(90deg);opacity:0}
+  60%{opacity:1}
   100%{transform:scale(1) rotateY(0);opacity:1}
 }
 @keyframes cardEnterFirst{
-  0%{transform:scale(0.5) rotateY(360deg);opacity:0}
-  50%{opacity:1}
-  85%{transform:scale(1.05) rotateY(0);opacity:1}
+  0%{transform:scale(0.6) rotateY(180deg);opacity:0}
+  60%{opacity:1}
   100%{transform:scale(1) rotateY(0);opacity:1}
 }
 #card-flip-wrap.first-visit{
-  animation:cardEnterFirst 1.4s cubic-bezier(0.25,0.8,0.35,1)!important;
+  animation:cardEnterFirst 1.2s cubic-bezier(0.25,0.8,0.35,1)!important;
   will-change:transform,opacity;
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
@@ -1916,7 +1935,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 /* ランキング画面強化 */
 .tabbar .tab-active,.tab-cat,.tab-active{font-size:18px!important;font-weight:900!important;color:#fff!important;letter-spacing:1.5px}
-.rank-row .rscore{font-size:30px!important;color:#fff!important}
+/* ★index206: 総合点 30→26pxへ。スマホで「ボーナス38」等の右端切れ問題の解消。 */
+.rank-row .rscore{font-size:26px!important;color:#fff!important;min-width:42px!important}
 .rank-row .rname{font-size:16px!important;letter-spacing:0.5px}
 .rank-row .rline,.rank-row .rdetails,.rank-row .ax-pill,.rank-row > div > div:nth-child(2){font-size:12px!important}
 
@@ -2919,8 +2939,9 @@ body:not(.splashing) #table-area{
 /* ═══ 未獲得バッジのシルエット化 ═══ */
 .bp-badge-locked{
   position:relative;
-  background:linear-gradient(135deg,rgba(45,60,90,0.4) 0%,rgba(20,30,50,0.5) 100%) !important;
-  border:1px dashed rgba(120,150,210,0.25) !important;
+  /* ★index206：未制覇感は残しつつ、視認性UP。背景は少し明るく */
+  background:linear-gradient(135deg,rgba(60,80,115,0.5) 0%,rgba(30,42,68,0.6) 100%) !important;
+  border:1px dashed rgba(160,190,240,0.4) !important;
   overflow:hidden;
 }
 .bp-badge-locked::before{
@@ -2933,18 +2954,21 @@ body:not(.splashing) #table-area{
   pointer-events:none;
 }
 .bp-badge-locked .bp-icon{
-  opacity:0.3;
-  filter:blur(0.5px);
+  /* ★index206：blur削除（読みづらさの主犯）、opacity 0.3→0.5 */
+  opacity:0.5;
 }
 .bp-badge-locked .bp-name{
-  opacity:0.7;
-  font-size:10px !important;
-  color:#7a96b6 !important;
+  /* ★index206：未制覇でも読める明度に。opacity 0.7→0.9、font 10→11px、色も明るく */
+  opacity:0.9;
+  font-size:11px !important;
+  color:#b8c8de !important;
+  font-weight:700 !important;
 }
 .bp-badge-locked .bp-progress{
-  opacity:0.85;
-  font-size:9px !important;
-  color:#a8b8d0;
+  /* ★index206：進捗テキストもくっきり。9→10px、色明るく */
+  opacity:0.95;
+  font-size:10px !important;
+  color:#c8d8ee !important;
   font-weight:700;
 }
 
@@ -3563,18 +3587,27 @@ body:not(.splashing) #table-area{
   font-size:13px !important;
   font-weight:700 !important;
   color:#ffffff !important;
-  background:linear-gradient(135deg,rgba(120,170,230,0.28) 0%,rgba(80,130,200,0.22) 100%) !important;
+  /* ★index206: グラデと▼を両立。background は image+color の複合指定 */
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'><path d='M0 0 L8 0 L4 6 Z' fill='%23ffffff' fill-opacity='0.85'/></svg>") right 6px center / 7px 5px no-repeat,
+    linear-gradient(135deg,rgba(120,170,230,0.28) 0%,rgba(80,130,200,0.22) 100%) !important;
   border:1.5px solid rgba(160,200,240,0.55) !important;
-  padding:5px 10px !important;
+  padding:5px 18px 5px 10px !important;  /* ★index206: 右側に▼分のスペース18px確保 */
   border-radius:9px !important;
   letter-spacing:0.4px !important;
   cursor:pointer !important;
   transition:all 0.15s !important;
   box-shadow:0 1px 4px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.15) !important;
   text-shadow:0 1px 2px rgba(0,0,0,0.3) !important;
+  /* ネイティブ▼を消す */
+  -webkit-appearance:none !important;
+  -moz-appearance:none !important;
+  appearance:none !important;
 }
 .fsel:hover{
-  background:linear-gradient(135deg,rgba(140,190,250,0.38) 0%,rgba(100,150,220,0.32) 100%) !important;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'><path d='M0 0 L8 0 L4 6 Z' fill='%23ffffff' fill-opacity='0.95'/></svg>") right 6px center / 7px 5px no-repeat,
+    linear-gradient(135deg,rgba(140,190,250,0.38) 0%,rgba(100,150,220,0.32) 100%) !important;
   border-color:rgba(180,220,255,0.7) !important;
   transform:translateY(-1px);
   box-shadow:0 3px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2) !important;
@@ -3585,12 +3618,16 @@ body:not(.splashing) #table-area{
 @media (max-width:520px){
   .fsel{
     font-size:11px !important;
-    padding:4px 5px !important;
+    /* ★index206: モバイル幅でも▼ぶん右に14px確保。フォントは11pxキープでスペース節約。 */
+    padding:4px 14px 4px 6px !important;
     letter-spacing:0 !important;
     min-width:0 !important;
     flex-shrink:1 !important;
     text-overflow:ellipsis;
     overflow:hidden;
+    /* モバイルでは▼を少し詰める */
+    background-position:right 4px center, 0 0 !important;
+    background-size:6px 4px, auto !important;
   }
   #filters{
     gap:2px !important;
@@ -3609,7 +3646,7 @@ body:not(.splashing) #table-area{
 }
 /* PCでも path-radius が見切れないよう詰める */
 @media (min-width:521px){
-  .fsel{padding:5px 8px !important;}
+  .fsel{padding:5px 18px 5px 8px !important;}
   #filters{gap:4px !important;}
 }
 
@@ -11174,6 +11211,16 @@ async function openStationCard(data) {
       // ★ハードウェアアクセラレーション促進（GPUレイヤー強制確立）
       wrap.style.willChange = 'transform, opacity';
       wrap.style.transform = 'translateZ(0)';  // GPUレイヤー化のヒント
+      
+      // ★index206: アニメ中だけ backdrop-filter:blur を切る
+      //   blur(8px)を毎フレーム計算する負荷でカードのrotateY回転がカクつく原因。
+      //   アニメ終了(~1.3s)後に is-animating を外して背景blur復活。
+      const bg = document.getElementById('card-modal-bg');
+      if (bg) {
+        bg.classList.add('is-animating');
+        const animDuration = data.isFirstVisit ? 1300 : 1000;  // 余裕を持って終了タイミング
+        setTimeout(() => bg.classList.remove('is-animating'), animDuration);
+      }
     }
   } catch (e) { console.warn('[Card] アニメ再起動エラー:', e); }
 
@@ -13021,7 +13068,24 @@ async function loadMypageData(uid) {
       
       const badgeXP = window.bpCalcTotalXP(rankResults, lineResults, realCheckins, cards);
       const cardXP = Math.floor((totalPower || 0) / 50);  // ★index178: 案A改訂 score ÷ 50（カード収集をXPの主軸に、関東制覇でLV.90+届くライン）
-      const masterXP = cardXP + badgeXP;
+      
+      // ★index206: ログボXP・ミッションXPを累計に取り込む（致命バグ修正）
+      //   旧: masterXP = cardXP + badgeXP のみで、ログボとミッションが完全に無視されていた
+      //   新: dailyState から累計を取得して加算。Firestore権限エラー時は0で続行。
+      //   さらに window._mmDailyBonusXP にキャッシュして bpCalcTotalXP からも参照可能に。
+      let dailyXP = 0;
+      try {
+        const dailyState = await window.mmGetDailyState(uid);
+        if (dailyState) {
+          dailyXP = (dailyState.totalLoginXP || 0) + (dailyState.totalMissionXP || 0);
+        }
+      } catch (e) { console.warn('[Master] dailyXP取得失敗（無視）:', e); }
+      window._mmDailyBonusXP = dailyXP;  // bpCalcTotalXP用キャッシュ
+      
+      // ★index206: badgeXPもキャッシュ更新後に再計算する（古い値で計算されてた場合の上書き）
+      const badgeXP2 = window.bpCalcTotalXP(rankResults, lineResults, realCheckins, cards);
+      
+      const masterXP = cardXP + badgeXP2;  // badgeXP2にdailyXP含まれる
       
       const info = window.bpGetLevelInfo(masterXP);
       
@@ -15491,6 +15555,15 @@ window.bpCalcTotalXP = function(rankResults, lineResults, totalCheckins, userCar
       });
     }
   } catch (e) { console.warn('スペシャルカードXP集計エラー（無視）:', e); }
+  
+  // ─── ログインボーナス＋ミッションXP累計（★index206 致命バグ修正）───
+  //   旧実装ではここで集計されず、ログボ/ミッションのXPがマスターLVに反映されなかった。
+  //   累計値は dailyState から取得したものを window._mmDailyBonusXP にキャッシュしておく。
+  //   キャッシュは masterXP 計算時（マイページ表示時）に必ず更新されるので、
+  //   バッジページのレベル表示でも最新値が使われる。
+  if (typeof window._mmDailyBonusXP === 'number' && window._mmDailyBonusXP > 0) {
+    total += window._mmDailyBonusXP;
+  }
   
   return total;
 };
@@ -17973,8 +18046,19 @@ if ('serviceWorker' in navigator) {
       }
       
       // 保存（bonusClaimedToday=true）
-      const saveOk = await window.mmSetDailyState(user.uid, { bonusClaimedToday: true });
-      console.log('[Bonus] 受取完了 Firestore保存', saveOk);
+      // ★index206: 致命バグ修正。これまではclaim時に bonusClaimedToday=true を保存するだけで、
+      //   XPを累計値に加算する処理が一切なかった→トーストでは「+2 XP」と表示されるのに
+      //   実際のマスターLVには反映されない問題の解消。
+      //   累計XPを users/{uid}/dailyState/current.totalLoginXP に加算保存し、
+      //   bpCalcTotalXP の集計に取り込む。
+      const grantedXp = state.pendingBonusXP || state.lastBonusXP || 0;
+      const prevTotal = state.totalLoginXP || 0;
+      const newTotal = prevTotal + grantedXp;
+      const saveOk = await window.mmSetDailyState(user.uid, { 
+        bonusClaimedToday: true,
+        totalLoginXP: newTotal
+      });
+      console.log('[Bonus] 受取完了 Firestore保存', saveOk, `XP累計 ${prevTotal} → ${newTotal} (+${grantedXp})`);
       // ★index182: 保存失敗をその場で可視化
       if (!saveOk) {
         const err = window._lastDailyError;
@@ -18081,7 +18165,19 @@ if ('serviceWorker' in navigator) {
     }
     
     if (changed) {
-      await window.mmSetDailyState(uid, { todayMissions: state.todayMissions });
+      // ★index206: 致命バグ修正。これまでミッション達成時に m.claimed=true を保存するだけで、
+      //   XPを累計値に加算する処理が一切なかった→トーストでは「+30 XP」と表示されるのに
+      //   マスターLVには反映されない問題の解消。
+      //   newlyCompleted のXP合計を totalMissionXP に加算保存し、bpCalcTotalXP の集計に取り込む。
+      const grantedXp = newlyCompleted.reduce((sum, m) => sum + (m.xp || 0), 0);
+      const prevTotal = state.totalMissionXP || 0;
+      const newTotal = prevTotal + grantedXp;
+      const patch = { todayMissions: state.todayMissions };
+      if (grantedXp > 0) {
+        patch.totalMissionXP = newTotal;
+        console.log('[Mission] XP累計', `${prevTotal} → ${newTotal} (+${grantedXp})`);
+      }
+      await window.mmSetDailyState(uid, patch);
     }
     
     // 新規達成があればトースト
@@ -18722,9 +18818,9 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- ★index203: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
-<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v205</div>
+<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v206</div>
 <script>
-  console.log('%c[街巡] index version: 205', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 206', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
