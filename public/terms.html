@@ -188,6 +188,9 @@
   .page-x-btn:active { transform: scale(0.94); }
 
   /* 右下「↑トップ」フローティングボタン */
+  /* ★v208 #9: index.htmlマイページ側 #mm-scroll-top-btn と色・形状を統一。
+     オレンジ枠(rgba(255,176,112,0.6))＋暗色グラデ背景＋オレンジ文字(#ffb070)。
+     位置は terms ページ用に最適化（チェックインボタン等が無いので bottom は短め）。 */
   .page-scroll-top {
     position: fixed;
     bottom: calc(24px + env(safe-area-inset-bottom, 0px));
@@ -195,31 +198,39 @@
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-size: 22px;
+    background: linear-gradient(135deg,rgba(20,32,52,0.85) 0%,rgba(10,18,30,0.92) 100%);
+    border: 2px solid rgba(255,176,112,0.6);
+    color: #ffb070;
+    font-size: 24px;
     font-weight: 900;
     line-height: 1;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(45,95,122,0.35);
+    box-shadow: 
+      0 6px 16px rgba(0,0,0,0.5),
+      0 0 12px rgba(255,176,112,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.1);
     z-index: 999;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transform: translateY(20px) scale(0.9);
-    transition: opacity 0.25s, transform 0.25s;
+    transform: translateY(20px) scale(0.7);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
     pointer-events: none;
     font-family: inherit;
     padding: 0;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
   }
   .page-scroll-top.visible {
     opacity: 1;
     transform: translateY(0) scale(1);
     pointer-events: auto;
   }
-  .page-scroll-top:active { transform: translateY(0) scale(0.92); }
+  .page-scroll-top:active { 
+    transform:translateY(0) scale(0.92);
+    box-shadow:0 3px 10px rgba(0,0,0,0.5),0 0 16px rgba(255,176,112,0.5);
+  }
 
   /* 最下部「閉じる」ボタン */
   .page-close-btn {
@@ -251,7 +262,7 @@
       right: 14px;
       width: 46px;
       height: 46px;
-      font-size: 20px;
+      font-size: 22px;
     }
     .page-close-btn { font-size: 15px; padding: 12px 18px; }
   }
