@@ -161,8 +161,13 @@ window.mmEnableSentry = function(){
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto Sans JP',sans-serif}
-#app{display:flex;flex-direction:column;height:100vh}
+/* ★index208 #1修正: Android Chromeで100vhはアドレスバー込みの高さになり、
+   スクロール時にバーが出入りするとヘッダーが画面外へ押し出される。
+   html/bodyを固定し、#appを100dvh（動的ビューポート高さ）に。
+   100dvh非対応ブラウザ向けに100vhをフォールバックとして先に書く。 */
+html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto Sans JP',sans-serif;
+  overflow:hidden;overscroll-behavior:none;position:fixed;width:100%;top:0;left:0}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
 
 #header{
   display:flex;align-items:center;padding:0 12px;
@@ -284,7 +289,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   #filters{gap:2px;padding:3px 4px}
   /* ★index198：モバイルも11→13pxへ。padding統一で.fselと#searchBtnの高さを揃える */
   .fsel{padding:5px 5px!important;font-size:13px!important}
-  #searchBtn{font-size:18px!important;padding:5px 7px!important}
+  #searchBtn{font-size:18px!important;padding:5px 8px!important}
   #statusbar{font-size:9px!important}
 }
 .fsel{background:rgba(255,255,255,0.05);color:#c8d6f0;border:1px solid rgba(120,150,210,0.2);
@@ -950,6 +955,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .mp-back:hover{background:rgba(255,255,255,0.12)}
 .mp-title{font-size:17px;font-weight:900;color:#fff;letter-spacing:1px}
+/* ★index208 #6: マイページタイトル左にロゴ追加。
+   ヘッダー行高さ(padding14px+タイトル17px)を変えないようロゴは28px、gap8px。 */
+.mp-title-group{display:flex;align-items:center;gap:8px;min-width:0}
+.mp-title-logo{width:28px;height:28px;border-radius:50%;flex-shrink:0;object-fit:cover}
 .mp-links{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .mp-links a{
   color:#9fb8d8;text-decoration:none;font-size:13px;
@@ -1016,14 +1025,14 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   margin-bottom:8px;
 }
 .mp-master-lv-badge{
-  font-size:13px;font-weight:900;
+  font-size:14px;font-weight:900;
   background:linear-gradient(135deg,#fbd56a 0%,#d4a020 100%);
   color:#1a1408;letter-spacing:1px;
   padding:4px 10px;border-radius:9px;
   box-shadow:0 2px 8px rgba(251,213,106,0.5),inset 0 1px 0 rgba(255,255,255,0.5);
 }
 .mp-master-tier{
-  font-size:20px;font-weight:900;color:#fff;letter-spacing:1.5px;
+  font-size:21px;font-weight:900;color:#fff;letter-spacing:1.5px;
   text-shadow:0 2px 6px rgba(0,0,0,0.5);
 }
 .mp-master-xp-row{
@@ -1066,7 +1075,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .mp-master-breakdown{
   display:flex;gap:10px;
-  font-size:12px;color:#a8b8d0;font-weight:700;
+  font-size:13px;color:#a8b8d0;font-weight:700;
 }
 .mp-master-bd-item{
   flex:1;
@@ -1082,7 +1091,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 @media (max-width:480px){
   .mp-master-panel{padding:18px 16px 14px}
-  .mp-master-tier{font-size:18px}
+  .mp-master-tier{font-size:19px}
 }
 
 /* カード・バッジコレクション項目のサブ情報 */
@@ -3458,7 +3467,10 @@ body:not(.splashing) #table-area{
   /* スマホはデフォルトで上端固定 */
   align-items:flex-start !important;
   justify-content:center !important;
-  padding:14px 12px !important;
+  /* ★index208 #2修正: カードの外周余白を縮小（12→8px / 14→10px）してカード本体を拡大。
+     iPhone/Android両方で「カード外の黒余白が広い」問題への対応。
+     safe-area-inset で実機のノッチ/ナビバーは避ける。 */
+  padding:max(10px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)) !important;
 }
 /* PCサイズは中央寄せに切り替え */
 @media (min-width:768px){
@@ -3470,8 +3482,9 @@ body:not(.splashing) #table-area{
 #card-modal{
   margin:0 auto !important;
   /* デフォルト：スクロール禁止＝完全固定 */
-  max-height:calc(100vh - 28px) !important;
-  max-height:calc(100dvh - 28px) !important;
+  /* ★index208 #2修正: 28px→16pxへ。上下余白縮小に合わせカード高さを拡大 */
+  max-height:calc(100vh - 16px) !important;
+  max-height:calc(100dvh - 16px) !important;
   overflow:hidden !important;
   overscroll-behavior:contain !important;
   touch-action:none !important;
@@ -3483,8 +3496,8 @@ body:not(.splashing) #table-area{
 /* スマホ時：カードを画面いっぱい使う */
 @media (max-width:767px){
   #card-modal{
-    height:calc(100vh - 28px) !important;
-    height:calc(100dvh - 28px) !important;
+    height:calc(100vh - 16px) !important;
+    height:calc(100dvh - 16px) !important;
     display:flex !important;
     flex-direction:column !important;
   }
@@ -3636,8 +3649,8 @@ body:not(.splashing) #table-area{
     overflow:visible !important;
   }
   #searchBtn{
-    padding:3px 6px !important;
-    font-size:13px !important;
+    padding:5px 8px !important;
+    font-size:18px !important;
     flex-shrink:0 !important;
   }
   #statusbar{
@@ -6470,7 +6483,7 @@ body.checkin-active #checkin-indicator{
 
 /* デイリーミッション */
 .mp-daily-title{
-  font-size:11px;font-weight:900;color:#fbd56a;letter-spacing:2px;
+  font-size:12px;font-weight:900;color:#fbd56a;letter-spacing:2px;
   margin-bottom:8px;text-transform:uppercase;
   text-shadow:0 0 8px rgba(251,213,106,0.3);
 }
@@ -7118,7 +7131,10 @@ body.checkin-active #checkin-indicator{
   <div id="mypage-modal" onclick="event.stopPropagation()">
     <div class="mp-header">
       <button class="mp-back" onclick="closeMypage()">←</button>
-      <div class="mp-title">マイページ</div>
+      <div class="mp-title-group">
+        <img src="/logo192.png" class="mp-title-logo" alt="街巡ロゴ">
+        <div class="mp-title">マイページ</div>
+      </div>
       <div class="mp-links">
         <a href="/terms.html" target="_blank" rel="noopener">利用規約</a>
         <a href="/privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>
@@ -18061,13 +18077,16 @@ if ('serviceWorker' in navigator) {
     
     let newStreak = state.loginStreak || 0;
     let lastDate = state.lastLoginDate || '';
-    let bonusClaimed = false;
+    // ★index208 #5修正: 致命バグ。従来 bonusClaimed=false 初期化のため、同日再ログイン時に
+    //   「受取済み(true)」が「未受取(false)」で上書き保存され、XPもボーナスも取り消されていた。
+    //   既存stateの bonusClaimedToday を引き継ぎ、日付が変わった時だけ false にリセットする。
+    let bonusClaimed = state.bonusClaimedToday || false;
     let bonusXP = 0;
     let isFirstToday = false;
     let longestStreak = state.longestStreak || 0;
     
     if (lastDate === today) {
-      // 今日既にログイン済み
+      // 今日既にログイン済み → bonusClaimed は state の値を維持（受取済みなら true のまま）
       isFirstToday = false;
     } else {
       // 連続判定
@@ -18085,7 +18104,7 @@ if ('serviceWorker' in navigator) {
       
       bonusXP = getLoginBonusXP(newStreak);
       isFirstToday = true;
-      bonusClaimed = false;
+      bonusClaimed = false;  // 日付が変わった＝新しい日なので未受取にリセット（正常な挙動）
     }
     
     // 今日のミッションを生成（無ければ）
@@ -18152,7 +18171,10 @@ if ('serviceWorker' in navigator) {
       bonusXP: isFirstToday ? bonusXP : (state.lastBonusXP || 0),
       isFirstToday,
       todayMissions,
-      bonusClaimedToday: state.bonusClaimedToday && !isFirstToday,
+      // ★index208 #5修正: 受取済み状態を正しく返す。従来 state.bonusClaimedToday && !isFirstToday
+      //   だったが、bonusClaimed（引き継ぎ済み変数）を使うほうが整合的。
+      //   isFirstToday時は必ず未受取(false)、それ以外は引き継いだ値。
+      bonusClaimedToday: isFirstToday ? false : bonusClaimed,
     };
   };
   
@@ -19031,7 +19053,7 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- ★index203: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
-<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v207</div>
+<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v208</div>
 <script>
   console.log('%c[街巡] index version: 206', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
