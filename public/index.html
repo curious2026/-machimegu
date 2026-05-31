@@ -1344,8 +1344,14 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 #card-modal{
   position:relative;
   margin:0 auto;
-  padding:18px 14px 60px;
-  max-width:400px;
+  /* ★index213 #2本丸修正: ともきが「カード外の黒余白が広い」と何度言っても変わらなかった真因。
+     旧 padding:18px 14px 60px が「下60px / 左右14px の黒地余白」を作っていた。
+     さらに max-width:400px で iPhone (画面幅390〜430px) の横幅に届かず左右に黒地が出ていた。
+     これらは #card-modal-bg.open のpaddingの内側にあるので、いくら #card-modal-bg を詰めても効かない。
+     真の解決：padding 0、max-width撤廃で「カード本体＝画面いっぱい」にする。
+     カード内のテキスト読みやすさは .sc-content の内部 padding で確保。 */
+  padding:0;
+  max-width:none;
   width:100%;
   display:flex;flex-direction:column;align-items:center;gap:14px;
   perspective:1200px;
@@ -3533,7 +3539,9 @@ body:not(.splashing) #table-area{
 }
 @media (min-width:768px){
   #card-modal{
-    max-width:380px;
+    /* ★index213 #2: PC/タブレット時のカード最大幅。380→560pxに拡大。
+       380px は明らかに小さすぎ、画面の中央に小さなカードが浮いて余白が広く感じる原因。 */
+    max-width:560px;
   }
 }
 
@@ -19115,9 +19123,9 @@ if ('serviceWorker' in navigator) {
      z-index:99999の固定要素なら本来見えるはず。それでも見えない原因として
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:6px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v212</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:6px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v213</div>
 <script>
-  console.log('%c[街巡] index version: 212', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 213', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
