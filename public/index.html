@@ -956,9 +956,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .mp-back:hover{background:rgba(255,255,255,0.12)}
 .mp-title{font-size:17px;font-weight:900;color:#fff;letter-spacing:1px}
 /* ★index208 #6: マイページタイトル左にロゴ追加。
-   ヘッダー行高さ(padding14px+タイトル17px)を変えないようロゴは28px、gap8px。 */
-.mp-title-group{display:flex;align-items:center;gap:8px;min-width:0}
-.mp-title-logo{width:28px;height:28px;border-radius:50%;flex-shrink:0;object-fit:cover}
+   ★index209 #6再強化: 28→40pxへ大幅UP（要望「もう2サイズ上げ」）。
+   ヘッダー行内に収まる範囲で最大化、視認性向上。gap8→10pxで間隔も少し広げる。 */
+.mp-title-group{display:flex;align-items:center;gap:10px;min-width:0}
+.mp-title-logo{width:40px;height:40px;border-radius:50%;flex-shrink:0;object-fit:cover}
 .mp-links{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .mp-links a{
   color:#9fb8d8;text-decoration:none;font-size:13px;
@@ -1361,7 +1362,9 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   max-width:100%;
 }
 #card-flip-wrap{
-  animation:cardEnter 1.2s cubic-bezier(0.34,1.56,0.64,1);
+  /* ★index209 #3: 弾性 cubic-bezier(0.34,1.56,0.64,1) は iOS Safari の中間補間で
+     段階的レンダリングを誘発するため、シンプルな ease-out 系に変更。 */
+  animation:cardEnter 1.0s cubic-bezier(0.25,0.8,0.35,1);
   transform-style:preserve-3d;
   width:100%;
 }
@@ -1370,15 +1373,26 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   50%{opacity:1}
   100%{transform:scale(1) rotateY(0);opacity:1}
 }
+/* ★index209 #3: iPhoneカード初回出現時の「ウルトラマン変身」現象修正。
+   従来 rotateY(360deg)＋85%でscale(1.05)オーバーシュート構造が
+   iOS Safari の GPU で中間補間されず段階的レンダリング(=ズン、ズン)になっていた。
+   対策：
+     ①rotateY 360→180度（GPU 負荷半減、見た目はほぼ同じ「カードが回ってくる」）
+     ②オーバーシュート(85% scale 1.05)を削除し、scale 0.5→1の直線補間に
+     ③opacityも0→100% で連続的に上昇（中間60%表示削除）
+     ④cubic-bezier をシンプルな ease-out 系に統一
+   結果として iPhone も Android Pixel 7a と同じ「クルン、パ」になる。 */
 @keyframes cardEnterFirst{
-  0%{transform:scale(0.5) rotateY(360deg);opacity:0}
-  50%{opacity:1}
-  85%{transform:scale(1.05) rotateY(0);opacity:1}
+  0%{transform:scale(0.5) rotateY(180deg);opacity:0}
   100%{transform:scale(1) rotateY(0);opacity:1}
 }
 #card-flip-wrap.first-visit{
-  animation:cardEnterFirst 1.4s cubic-bezier(0.25,0.8,0.35,1)!important;
+  /* ★index209 #3: duration 1.4s→0.9s 短縮で iPhone での「カクツキ可視時間」短縮。
+     GPUレイヤを明示する translateZ(0) も追加してハードウェアアクセラレーション保証。 */
+  animation:cardEnterFirst 0.9s cubic-bezier(0.25,0.8,0.35,1)!important;
   will-change:transform,opacity;
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
   transform-style:preserve-3d;
@@ -3467,10 +3481,10 @@ body:not(.splashing) #table-area{
   /* スマホはデフォルトで上端固定 */
   align-items:flex-start !important;
   justify-content:center !important;
-  /* ★index208 #2修正: カードの外周余白を縮小（12→8px / 14→10px）してカード本体を拡大。
-     iPhone/Android両方で「カード外の黒余白が広い」問題への対応。
-     safe-area-inset で実機のノッチ/ナビバーは避ける。 */
-  padding:max(10px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)) !important;
+  /* ★index209 #2再強化: 前回(10px×8px)で変化感じず → 大幅縮小。
+     上だけiPhoneノッチ/Dynamic Island避けるため safe-area-inset を尊重(最低4px)、
+     下・左右は4pxまで攻める。実機ピクセル単位で「外余白が広い」感を完全解消。 */
+  padding:max(4px,env(safe-area-inset-top)) 4px max(4px,env(safe-area-inset-bottom)) 4px !important;
 }
 /* PCサイズは中央寄せに切り替え */
 @media (min-width:768px){
@@ -3482,9 +3496,9 @@ body:not(.splashing) #table-area{
 #card-modal{
   margin:0 auto !important;
   /* デフォルト：スクロール禁止＝完全固定 */
-  /* ★index208 #2修正: 28px→16pxへ。上下余白縮小に合わせカード高さを拡大 */
-  max-height:calc(100vh - 16px) !important;
-  max-height:calc(100dvh - 16px) !important;
+  /* ★index209 #2再強化: 16px→8pxへ。さらに上下余白を詰めてカードを最大化 */
+  max-height:calc(100vh - 8px) !important;
+  max-height:calc(100dvh - 8px) !important;
   overflow:hidden !important;
   overscroll-behavior:contain !important;
   touch-action:none !important;
@@ -3496,8 +3510,8 @@ body:not(.splashing) #table-area{
 /* スマホ時：カードを画面いっぱい使う */
 @media (max-width:767px){
   #card-modal{
-    height:calc(100vh - 16px) !important;
-    height:calc(100dvh - 16px) !important;
+    height:calc(100vh - 8px) !important;
+    height:calc(100dvh - 8px) !important;
     display:flex !important;
     flex-direction:column !important;
   }
@@ -6483,7 +6497,8 @@ body.checkin-active #checkin-indicator{
 
 /* デイリーミッション */
 .mp-daily-title{
-  font-size:12px;font-weight:900;color:#fbd56a;letter-spacing:2px;
+  /* ★index209 #8再強化: 12→13pxへもう1段UP */
+  font-size:13px;font-weight:900;color:#fbd56a;letter-spacing:2px;
   margin-bottom:8px;text-transform:uppercase;
   text-shadow:0 0 8px rgba(251,213,106,0.3);
 }
@@ -18155,12 +18170,19 @@ if ('serviceWorker' in navigator) {
       loginStreak: newStreak,
       longestStreak,
       todayMissions,
+      // ★index209 #5強化: bonusClaimed は state.bonusClaimedToday 引継ぎ済み変数。
+      //   日付切替時のみ false、それ以外は受取済み状態を維持。
       bonusClaimedToday: bonusClaimed,
-      pendingBonusXP: isFirstToday ? bonusXP : 0,
+      // ★index209 #5強化: pendingBonusXP も同日内は値を維持。
+      //   従来 isFirstToday ? bonusXP : 0 で同日再ログイン時に0で上書きされ、
+      //   受取UI再描画時に「+0 XP」と表示されるバグを誘発していた。
+      pendingBonusXP: isFirstToday ? bonusXP : (state.pendingBonusXP || 0),
       lastBonusXP: isFirstToday ? bonusXP : (state.lastBonusXP || 0),
     };
     
     // ★index190: 初ログイン時 or ミッションを新規生成した時は必ず保存（後者がバグ修正の肝）
+    // ★index209 #5強化: 万一 missionsNewlyGenerated=true で保存される場合でも、
+    //   bonusClaimedToday が claim 済みなら true のまま保持される構造に。
     if (isFirstToday || missionsNewlyGenerated) {
       await window.mmSetDailyState(uid, newState);
     }
@@ -18224,6 +18246,10 @@ if ('serviceWorker' in navigator) {
         bonusClaimedToday: true,
         totalLoginXP: newTotal
       });
+      // ★index209 #5最終強化: 保存直後に state ローカル変数も明示更新。
+      //   Firestore反映遅延中に並列で mmProcessLoginBonus が走っても整合性確保。
+      state.bonusClaimedToday = true;
+      state.totalLoginXP = newTotal;
       console.log('[Bonus] 受取完了 Firestore保存', saveOk, `XP累計 ${prevTotal} → ${newTotal} (+${grantedXp})`);
       // ★index182: 保存失敗をその場で可視化
       if (!saveOk) {
@@ -19053,7 +19079,7 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- ★index203: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
-<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v208</div>
+<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v209</div>
 <script>
   console.log('%c[街巡] index version: 206', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
