@@ -13274,6 +13274,8 @@ async function loadMypageData(uid) {
     grid.innerHTML = '<div class="mp-empty">読み込みエラー: ' + e.message + '</div>';
   }
 }
+// ★index210 #5最重要修正: claim後にマスターパネルを再計算するため公開
+window.loadMypageData = loadMypageData;
 
 
 // ─── カード一覧専用ページ ───
@@ -18090,6 +18092,17 @@ if ('serviceWorker' in navigator) {
     const yesterday = yesterdayJST();
     let state = await window.mmGetDailyState(uid) || {};
     
+    // ★index210 #5デバッグ: Firestoreから取得した state の重要フィールドを画面に表示。
+    //   「マイページ開く度に消える」原因がFirestoreの値なのか、ロジック側なのかを判別。
+    if (typeof window.mmBonusDebug === 'function') {
+      window.mmBonusDebug('PROCESS', {
+        claimed: state.bonusClaimedToday,
+        pXP: state.pendingBonusXP,
+        tXP: state.totalLoginXP,
+        date: state.lastLoginDate ? state.lastLoginDate.slice(5) : 'none'
+      });
+    }
+    
     let newStreak = state.loginStreak || 0;
     let lastDate = state.lastLoginDate || '';
     // ★index208 #5修正: 致命バグ。従来 bonusClaimed=false 初期化のため、同日再ログイン時に
@@ -18184,6 +18197,15 @@ if ('serviceWorker' in navigator) {
     // ★index209 #5強化: 万一 missionsNewlyGenerated=true で保存される場合でも、
     //   bonusClaimedToday が claim 済みなら true のまま保持される構造に。
     if (isFirstToday || missionsNewlyGenerated) {
+      // ★index210 #5デバッグ: 保存が走った場合、何が保存されたかを画面に出力
+      if (typeof window.mmBonusDebug === 'function') {
+        window.mmBonusDebug('SAVE', {
+          first: isFirstToday,
+          newMis: missionsNewlyGenerated,
+          claimed: bonusClaimed,
+          pXP: newState.pendingBonusXP
+        });
+      }
       await window.mmSetDailyState(uid, newState);
     }
     
@@ -18198,6 +18220,30 @@ if ('serviceWorker' in navigator) {
       //   isFirstToday時は必ず未受取(false)、それ以外は引き継いだ値。
       bonusClaimedToday: isFirstToday ? false : bonusClaimed,
     };
+  };
+  
+  // ★index210 #5: デバッグオーバーレイ。bonus関連の状態を画面に直接出力する。
+  //   コンソール見るのが困難な実機（iPhone PWA等）で診断するため、
+  //   画面右上に小さく出して、状態遷移をともきが目視できるようにする。
+  window.mmBonusDebug = function(label, info){
+    try {
+      let dbg = document.getElementById('mm-bonus-debug');
+      if (!dbg) {
+        dbg = document.createElement('div');
+        dbg.id = 'mm-bonus-debug';
+        dbg.style.cssText = 'position:fixed;top:60px;right:6px;font-size:10px;color:#ffb070;background:rgba(0,0,0,0.75);padding:4px 8px;border-radius:6px;z-index:99998;font-family:monospace;max-width:200px;line-height:1.35;text-align:left;pointer-events:none;border:1px solid rgba(255,176,112,0.3)';
+        document.body.appendChild(dbg);
+      }
+      const now = new Date();
+      const ts = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+      const summary = Object.entries(info || {}).map(([k,v]) => `${k}=${v}`).join(' ');
+      // 直近4件まで保持
+      const lines = (dbg.dataset.lines || '').split('|').filter(Boolean);
+      lines.push(`${ts} ${label}: ${summary}`);
+      while (lines.length > 4) lines.shift();
+      dbg.dataset.lines = lines.join('|');
+      dbg.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+    } catch(_) {}
   };
   
   // ボーナス受け取り
@@ -18251,6 +18297,14 @@ if ('serviceWorker' in navigator) {
       state.bonusClaimedToday = true;
       state.totalLoginXP = newTotal;
       console.log('[Bonus] 受取完了 Firestore保存', saveOk, `XP累計 ${prevTotal} → ${newTotal} (+${grantedXp})`);
+      // ★index210 #5デバッグ: claim保存結果を画面に出力
+      if (typeof window.mmBonusDebug === 'function') {
+        window.mmBonusDebug('CLAIM', {
+          ok: saveOk,
+          got: grantedXp,
+          newTotal: newTotal
+        });
+      }
       // ★index182: 保存失敗をその場で可視化
       if (!saveOk) {
         const err = window._lastDailyError;
@@ -18268,6 +18322,14 @@ if ('serviceWorker' in navigator) {
       // トースト
       if (typeof window.mmShowMissionToast === 'function') {
         window.mmShowMissionToast(`ログインボーナス`, xp);
+      }
+      
+      // ★index210 #5最重要修正: claim後にマスターパネル/Lv表示を即時再計算。
+      //   従来はclaimしてもマイページ表示中は再計算されず、ユーザーから「得点が変わらない」
+      //   と認識されていた。loadMypageDataを再実行して masterXP/Lv/カード/バッジを最新に。
+      if (typeof window.loadMypageData === 'function') {
+        try { await window.loadMypageData(user.uid); } 
+        catch(e){ console.warn('[Bonus] マスターパネル再計算エラー:', e); }
       }
     } catch (e) {
       console.error('[Bonus] claim中に例外:', e);
@@ -19078,10 +19140,14 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
-<!-- ★index203: デプロイ確認用のバージョン表示。画面右下に薄く表示。 -->
-<div id="mm-app-version" style="position:fixed;bottom:2px;right:4px;font-size:9px;color:rgba(255,255,255,0.28);pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.6)">v209</div>
+<!-- ★index203: デプロイ確認用のバージョン表示。画面右下に薄く表示。
+     ★index210: ともきから「v209表示が見えない」報告。html,body{position:fixed}下でも
+     z-index:99999の固定要素なら本来見えるはず。それでも見えない原因として
+     ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
+     を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。 -->
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:6px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v210</div>
 <script>
-  console.log('%c[街巡] index version: 206', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 210', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
