@@ -1357,8 +1357,11 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   display:flex;flex-direction:column;align-items:center;gap:14px;
   perspective:1200px;
   min-height:auto;
-  /* 等比拡大 - スマホは1.1倍、PC専用上書きあり */
-  zoom:1.08;
+  /* 等比拡大 - スマホは1.05倍、PC専用上書きあり
+     ★index217: 1.08→1.05 へ。iPhone 17 (Dynamic Island搭載) で長路線駅
+     （新宿/横浜/東京クラス、3行路線+コメント3つ）の閉じるボタンが画面外に出る問題対策。
+     スクロール禁止＝物理的に収まる縮率にするしかない。1.05で全駅安全に表示可能。 */
+  zoom:1.05;
 }
 #card-flip-wrap{
   width:100%;
@@ -19128,10 +19131,11 @@ if ('serviceWorker' in navigator) {
      ★index210: ともきから「v209表示が見えない」報告。html,body{position:fixed}下でも
      z-index:99999の固定要素なら本来見えるはず。それでも見えない原因として
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
-     を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:6px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v216</div>
+     を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
+     ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:12px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v217</div>
 <script>
-  console.log('%c[街巡] index version: 216', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 217', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
