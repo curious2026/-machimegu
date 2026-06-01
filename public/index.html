@@ -1011,6 +1011,15 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   background:linear-gradient(90deg,#fbd56a 0%,#ff90c8 50%,#5db8ec 100%);
   opacity:0.85;
 }
+/* ★index218 項目1: マイページ中段（統計セクション後）に挟む虹色グラデ線。
+   マスターパネル上端と完全に同一の3色グラデ・高さ・opacity・幅。
+   上下に少しマージンを入れて視覚的なセクション区切りとして機能させる。 */
+.mp-rainbow-divider{
+  height:2px;
+  margin:14px 0;
+  background:linear-gradient(90deg,#fbd56a 0%,#ff90c8 50%,#5db8ec 100%);
+  opacity:0.85;
+}
 .mp-master-label{
   display:flex;align-items:center;gap:8px;
   font-size:11px;font-weight:900;color:#a8b8d0;
@@ -7256,6 +7265,11 @@ body.checkin-active #checkin-indicator{
       <div class="mp-rank-bar" id="mp-rank-bar"></div>
     </div>
     
+    <!-- ★index218 項目1: マスターパネル上端と同じ虹色グラデ線をここにも引く。
+         上半分（アカウント/プロフィール/マスター/ミッション/統計）と
+         下半分（チェックイン履歴/カードコレクション/バッジ/設定）を視覚的に分離。 -->
+    <div class="mp-rainbow-divider"></div>
+    
     <!-- チェックイン履歴セクション -->
     <div class="mp-section" style="padding-bottom:6px">
       <div class="mp-section-title">
@@ -13158,7 +13172,11 @@ async function loadMypageData(uid) {
           `次のレベルまで ${(info.needForNextLv - info.progressInLv).toLocaleString()} XP`;
       }
       if (cardXpEl) cardXpEl.textContent = cardXP.toLocaleString();
-      if (badgeXpEl) badgeXpEl.textContent = badgeXP.toLocaleString();
+      // ★index218 項目2修正: バッジXP表示に badgeXP2（dailyXP込み再計算後）を使う。
+      //   従来は badgeXP（dailyXP反映前）を表示していたため「カードXP+バッジXP ≠ 総合XP」
+      //   となり、ログボ/ミッション分が「行方不明」に見えていた。
+      //   これでマスターXPの内訳が「カードXP + バッジXP = 総合XP」と完全一致する。
+      if (badgeXpEl) badgeXpEl.textContent = badgeXP2.toLocaleString();
       
       // バーアニメ
       setTimeout(() => {
@@ -19133,9 +19151,9 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:12px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v217</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:12px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v218</div>
 <script>
-  console.log('%c[街巡] index version: 217', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
