@@ -1344,15 +1344,21 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 #card-modal{
   position:relative;
   margin:0 auto;
-  /* ★index214 #2再修正: v213で max-width:none にしたら横太りで「デブ」になってしまった。
-     v212の max-width:400px を維持して縦横比を保持しつつ、padding は0のまま維持で
-     下60px・左右14pxの黒地は撤廃。これで縦横比は v212と同じ、下方向だけ拡大。 */
-  padding:0;
+  /* ★index215 #2解釈B実装: v212のプロポーションを維持しつつ全体を等比拡大。
+     - padding:18px 14px 60px → v212と同じ余白を復活（プロポーション維持の鍵）
+     - max-width:400px → v212と同じ横幅上限
+     - zoom:1.1 → 内部要素を含めて全体を10%等比拡大（縦も横も同比率）
+     これで v212の縦長スマートな見た目を保ちつつ、サイズだけ1.1倍に。
+     padding 14px×1.1=15.4px、padding-bottom 60px×1.1=66px と外余白も比例拡大されるが、
+     #card-modal-bg.open(padding:4px)の内側なので画面はみ出ない。 */
+  padding:18px 14px 60px;
   max-width:400px;
   width:100%;
   display:flex;flex-direction:column;align-items:center;gap:14px;
   perspective:1200px;
   min-height:auto;
+  /* 等比拡大 - スマホは1.1倍、PC専用上書きあり */
+  zoom:1.08;
 }
 #card-flip-wrap{
   width:100%;
@@ -3536,9 +3542,10 @@ body:not(.splashing) #table-area{
 }
 @media (min-width:768px){
   #card-modal{
-    /* ★index214 #2: PC/タブレット時。v212の380→420pxへ少し拡大。
-       560pxは横太りすぎたので元の縦長プロポーション基準を保ちつつ気持ち拡大。 */
-    max-width:420px;
+    /* ★index215 #2: PCもv212基準400pxに戻す。zoomで等比拡大することでサイズ感統一。
+       PCは画面幅に余裕があるのでzoomを1.15まで上げて存在感UP。 */
+    max-width:400px;
+    zoom:1.15;
   }
 }
 
@@ -19120,9 +19127,9 @@ if ('serviceWorker' in navigator) {
      z-index:99999の固定要素なら本来見えるはず。それでも見えない原因として
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:6px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v214</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:6px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v215</div>
 <script>
-  console.log('%c[街巡] index version: 214', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 215', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
