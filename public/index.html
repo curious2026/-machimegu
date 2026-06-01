@@ -3490,10 +3490,12 @@ body:not(.splashing) #table-area{
   /* スマホはデフォルトで上端固定 */
   align-items:flex-start !important;
   justify-content:center !important;
-  /* ★index209 #2再強化: 前回(10px×8px)で変化感じず → 大幅縮小。
-     上だけiPhoneノッチ/Dynamic Island避けるため safe-area-inset を尊重(最低4px)、
-     下・左右は4pxまで攻める。実機ピクセル単位で「外余白が広い」感を完全解消。 */
-  padding:max(4px,env(safe-area-inset-top)) 4px max(4px,env(safe-area-inset-bottom)) 4px !important;
+  /* ★index216 #2: 東京/新宿クラスの長路線カードで「閉じる」ボタンが画面下に見切れる問題への対処。
+     原因：上のpadding がmax(4px, safe-area-inset-top) で、iPhoneのDynamic Island機種では
+     safe-area-inset-top≒50pxとなりカード上部に大きな余白ができ、カード下端が画面外に押し出されていた。
+     対策：上を固定8pxに変更。Dynamic Islandは画面中央上部、カード左上の「S」バッジは左寄りなので衝突しない。
+     これでカード全体が画面上端近くまで上がり、下に閉じるボタン表示エリアが確保される。 */
+  padding:8px 4px max(4px,env(safe-area-inset-bottom)) 4px !important;
 }
 /* PCサイズは中央寄せに切り替え */
 @media (min-width:768px){
@@ -19127,9 +19129,9 @@ if ('serviceWorker' in navigator) {
      z-index:99999の固定要素なら本来見えるはず。それでも見えない原因として
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:6px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v215</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:6px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v216</div>
 <script>
-  console.log('%c[街巡] index version: 215', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 216', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
