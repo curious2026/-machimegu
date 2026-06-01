@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>街巡 管理者ダッシュボード</title>
+<!-- VERSION: admin v2 (2026-06) — App Check(reCAPTCHA Enterprise)追加。Auth Enforced環境での auth/internal-error を修正。Firebase SDK 10.13.2→12.12.1 に統一（本体index218と一致） -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -220,8 +221,9 @@ h1{font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:4px;color:#ff
 <div class="copy-toast" id="copy-toast">コピーしました！</div>
 
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-app-check.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js';
 
 // 街巡本体と同じFirebase設定
 const firebaseConfig = {
@@ -234,6 +236,21 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+// ★App Check 初期化（本体 index218 と同じ reCAPTCHA Enterprise）
+// これが無いと、Authentication が App Check Enforced のため
+// signInWithPopup が auth/internal-error で弾かれる（adminログイン不能の原因）
+let appCheck = null;
+try {
+  appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider('6LcQn-8sAAAAACZ4J0cqnQes4VMRYm5mUecZya8T'),
+    isTokenAutoRefreshEnabled: true
+  });
+  console.log('[AppCheck] admin 初期化成功');
+} catch(e) {
+  console.warn('[AppCheck] admin 初期化失敗（無視して続行）:', e.message);
+}
+
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
