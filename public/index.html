@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index228 (2026.06.02) — バッジ路線制覇UI改善: ①.bp-badge-locked のaspect-ratio固定撤廃→min-heightで3行入っても見切れない ②LINE_SHORT_MAP書き換え「東京メトロ◯◯線」→「◯◯線」完全短縮、東京臨海高速鉄道・埼玉高速鉄道など追加短縮 ③renderLineBadges/renderBadgeHTML/プレースホルダー全てshortLineName経由に統一 -->
+<!-- VERSION: index230 (2026.06.02) — オンボーディング画面2 pin-3修正: 中央ピンと重なる位置(left:50% translateX)を左下(left:22%)に移動、特殊アニメ(mm-ob-pin-bounce-center)撤廃→通常版に統一。白抜き隠れ問題と重なり問題を同時解消 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -6186,7 +6186,7 @@ body.checkin-active #checkin-indicator{
 
 /* オンボーディング画面1：サンプルカード */
 .mm-ob-sample-card{
-  width:200px;height:200px;border-radius:24px;
+  width:200px;height:200px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#ff7088 0%,#ff2244 50%,#a01428 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   box-shadow:
@@ -6253,15 +6253,13 @@ body.checkin-active #checkin-indicator{
   0%,100% { transform:scale(1) }
   50%    { transform:scale(1.04) }
 }
-/* オレンジ pin-icon（トップページ右上と統一） */
-.mm-ob-orange-pin{
-  display:inline-block;
-  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 30'%3E%3Cpath d='M12 1.6 C7 1.6 3 5.6 3 10.4 C3 17.5 12 28.4 12 28.4 C12 28.4 21 17.5 21 10.4 C21 5.6 17 1.6 12 1.6 Z' fill='%23ff7300'/%3E%3Ccircle cx='12' cy='10.6' r='3.4' fill='%23ffffff'/%3E%3C/svg%3E");
-  background-size:contain;background-repeat:no-repeat;background-position:center;
+/* オンボーディング画面2：インラインSVGピン（index228: 背景画像方式から変更、表示問題を解消） */
+.mm-ob-pin-svg{
   filter:drop-shadow(0 4px 8px rgba(255,115,0,0.4)) drop-shadow(0 0 12px rgba(255,115,0,0.3));
 }
-.mm-ob-map-visual .mm-ob-orange-pin-center{
+.mm-ob-map-visual .mm-ob-pin-center{
   width:80px;height:100px;
+  position:relative;z-index:2;
 }
 .mm-ob-map-visual .mm-ob-pin-1,
 .mm-ob-map-visual .mm-ob-pin-2,
@@ -6272,17 +6270,10 @@ body.checkin-active #checkin-indicator{
 }
 .mm-ob-map-visual .mm-ob-pin-1{top:25%;left:18%;animation-delay:0s}
 .mm-ob-map-visual .mm-ob-pin-2{top:30%;right:18%;animation-delay:0.5s}
-.mm-ob-map-visual .mm-ob-pin-3{bottom:22%;left:50%;transform:translateX(-50%);animation-delay:1s}
+.mm-ob-map-visual .mm-ob-pin-3{bottom:22%;left:22%;animation-delay:1s}
 @keyframes mm-ob-pin-bounce{
   0%,100% { transform:translateY(0) }
   50%    { transform:translateY(-10px) }
-}
-.mm-ob-map-visual .mm-ob-pin-3{
-  animation-name:mm-ob-pin-bounce-center;
-}
-@keyframes mm-ob-pin-bounce-center{
-  0%,100% { transform:translateX(-50%) translateY(0) }
-  50%    { transform:translateX(-50%) translateY(-10px) }
 }
 
 /* オンボーディング画面3：レベルバッジ */
@@ -17914,9 +17905,10 @@ if ('serviceWorker' in navigator) {
           <div class="mm-ob-card-score">947</div>
         </div>
       </div>
-      <div class="mm-ob-title">あなたの街、何点？</div>
+      <div class="mm-ob-title">あなたの街の「街力」は？</div>
       <div class="mm-ob-subtitle">
-        駅の周辺には<strong>飲食・商業・生活・医療・文化</strong>の点数がある。<br>
+        駅の周辺には<br>
+        <strong>飲食・商業・生活・医療・文化</strong>がある。<br>
         その合計が、その街の<strong>「街力」</strong>。
       </div>
     </div>
@@ -17924,10 +17916,10 @@ if ('serviceWorker' in navigator) {
     <div class="mm-ob-slide" data-idx="1">
       <div class="mm-ob-visual">
         <div class="mm-ob-map-visual">
-          <span class="mm-ob-orange-pin mm-ob-orange-pin-center"></span>
-          <span class="mm-ob-orange-pin mm-ob-pin-1"></span>
-          <span class="mm-ob-orange-pin mm-ob-pin-2"></span>
-          <span class="mm-ob-orange-pin mm-ob-pin-3"></span>
+          <svg class="mm-ob-pin-svg mm-ob-pin-center" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg"><path d="M12 1.6 C7 1.6 3 5.6 3 10.4 C3 17.5 12 28.4 12 28.4 C12 28.4 21 17.5 21 10.4 C21 5.6 17 1.6 12 1.6 Z" fill="#ff7300"/><circle cx="12" cy="10.6" r="3.4" fill="#ffffff"/></svg>
+          <svg class="mm-ob-pin-svg mm-ob-pin-1" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg"><path d="M12 1.6 C7 1.6 3 5.6 3 10.4 C3 17.5 12 28.4 12 28.4 C12 28.4 21 17.5 21 10.4 C21 5.6 17 1.6 12 1.6 Z" fill="#ff7300"/><circle cx="12" cy="10.6" r="3.4" fill="#ffffff"/></svg>
+          <svg class="mm-ob-pin-svg mm-ob-pin-2" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg"><path d="M12 1.6 C7 1.6 3 5.6 3 10.4 C3 17.5 12 28.4 12 28.4 C12 28.4 21 17.5 21 10.4 C21 5.6 17 1.6 12 1.6 Z" fill="#ff7300"/><circle cx="12" cy="10.6" r="3.4" fill="#ffffff"/></svg>
+          <svg class="mm-ob-pin-svg mm-ob-pin-3" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg"><path d="M12 1.6 C7 1.6 3 5.6 3 10.4 C3 17.5 12 28.4 12 28.4 C12 28.4 21 17.5 21 10.4 C21 5.6 17 1.6 12 1.6 Z" fill="#ff7300"/><circle cx="12" cy="10.6" r="3.4" fill="#ffffff"/></svg>
         </div>
       </div>
       <div class="mm-ob-title">街にでよう</div>
@@ -19317,7 +19309,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v228</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v230</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
