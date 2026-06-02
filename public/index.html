@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index224 (2026.06.02) — 雨・雪の落下終点をカード下まで延長(360/340→1000px)、duration も比例延長してスピード感維持(雨1.2〜2.05秒/雪6〜10秒)。223(雪のサイズ/本数調整)/222(雨)/221(カード固まり)等を継承 -->
+<!-- VERSION: index224 (2026.06.02) — マイページ配色統一: ①ミッション達成済みの緑(背景/border/バー/XP/達成マーク/完了文字)→全て水色系へ統一 ②LV上＆チェックイン履歴上の虹色グラデ線→オレンジ単色 ③LV行のカード/バッジ枠→オレンジ薄半透明＋枠。本日の雨・雪改善(終点1000px/duration比例延長/本数増)も継承 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -1011,7 +1011,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .mp-master-panel::before{
   content:'';
   position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,#fbd56a 0%,#ff90c8 50%,#5db8ec 100%);
+  background:#ff9040;
   opacity:0.85;
 }
 /* ★index218 項目1: マイページ中段（統計セクション後）に挟む虹色グラデ線。
@@ -1020,7 +1020,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .mp-rainbow-divider{
   height:2px;
   margin:14px 0;
-  background:linear-gradient(90deg,#fbd56a 0%,#ff90c8 50%,#5db8ec 100%);
+  background:#ff9040;
   opacity:0.85;
 }
 .mp-master-label{
@@ -1092,7 +1092,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .mp-master-bd-item{
   flex:1;
-  background:rgba(0,0,0,0.2);
+  background:rgba(255,144,64,0.10);
+  border:1px solid rgba(255,144,64,0.35);
   padding:6px 10px;border-radius:8px;
   display:flex;align-items:center;justify-content:space-between;gap:6px;
 }
@@ -6570,8 +6571,8 @@ body.checkin-active #checkin-indicator{
   overflow:hidden;
 }
 .mp-daily-mission.completed{
-  background:linear-gradient(135deg,rgba(168,232,184,0.15) 0%,rgba(32,112,64,0.10) 100%);
-  border-color:rgba(168,232,184,0.4);
+  background:linear-gradient(135deg,rgba(93,184,236,0.12) 0%,rgba(40,90,140,0.08) 100%);
+  border-color:rgba(93,184,236,0.35);
 }
 .mp-daily-mission.claimed{
   opacity:0.55;
@@ -6595,7 +6596,7 @@ body.checkin-active #checkin-indicator{
   white-space:nowrap;
 }
 .mp-dm-mission.completed .mp-dm-xp{
-  background:rgba(168,232,184,0.25);color:#a8e8b8;
+  background:rgba(93,184,236,0.22);color:#9cd6f4;
 }
 .mp-dm-progress-track{
   height:6px;background:rgba(255,255,255,0.06);
@@ -6611,14 +6612,14 @@ body.checkin-active #checkin-indicator{
   transition:width 0.6s ease-out;
 }
 .mp-daily-mission.completed .mp-dm-progress-fill{
-  background:linear-gradient(90deg,#a8e8b8,#44cc88);
-  box-shadow:0 0 8px rgba(168,232,184,0.6);
+  background:linear-gradient(90deg,#5db8ec 0%,#90d4f8 50%,#5db8ec 100%);
+  box-shadow:0 0 8px rgba(93,184,236,0.65);
 }
 .mp-dm-status{
   font-size:12px;color:#a8b8d0;font-weight:700;
   display:flex;justify-content:space-between;
 }
-.mp-dm-status .completed-mark{color:#a8e8b8;font-weight:900}
+.mp-dm-status .completed-mark{color:#9cd6f4;font-weight:900}
 
 /* カレンダーモーダル */
 #mm-calendar-bg{
@@ -18634,7 +18635,7 @@ if ('serviceWorker' in navigator) {
     if (missionsEl && data.todayMissions) {
       const activeMissions = data.todayMissions.missions.filter(m => m.progress < m.target);
       if (activeMissions.length === 0) {
-        missionsEl.innerHTML = '<div class="mp-daily-mission completed" style="text-align:center;padding:14px"><div style="color:#a8e8b8;font-weight:900">✓ 今日のミッション完了！</div><div style="font-size:11px;color:#a8b8d0;margin-top:4px">明日また新しいミッションが出るよ</div></div>';
+        missionsEl.innerHTML = '<div class="mp-daily-mission completed" style="text-align:center;padding:14px"><div style="color:#9cd6f4;font-weight:900">✓ 今日のミッション完了！</div><div style="font-size:11px;color:#a8b8d0;margin-top:4px">明日また新しいミッションが出るよ</div></div>';
       } else {
         missionsEl.innerHTML = activeMissions.map(m => {
           const pct = Math.min(100, Math.floor((m.progress / m.target) * 100));
