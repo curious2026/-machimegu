@@ -1,16 +1,28 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 Service Worker v46（Phase E：オフライン体験強化版）
+// 街巡 Service Worker v47（地図タイルのオフライン対応：選択肢B）
 // ═══════════════════════════════════════════════════════════════
-// v45からの変更点：
-// - バージョン番号 v45 → v46
-// - precache に画像系を少し追加（起動高速化）
-// - オフライン時の HTML フォールバック改善（簡易オフラインページ）
-// - Firestore オフライン永続化と連動（クライアント側で対応済み）
-// - 既存の Network First / Cache First 戦略は維持
+// v46からの変更点：
+// - バージョン番号 v46 → v47
+// - ★地図タイル（tile.openstreetmap.org）を「見た分だけ」キャッシュ（Cache First）
+//   上限300枚（約数MB）で古い順に自動削除。事前一括DLはしない（容量配慮）。
+// - ★オフライン時、未キャッシュのタイルには軽量プレースホルダを即返す
+//   （グレーのまま固まる→「オフライン」表示で待ちを断ち切る）
+// - タイルキャッシュはSW更新をまたいで再利用（machimegu-tiles：バージョン非依存）
+// - 既存の Network First(HTML) / Cache First(静的) 戦略は完全維持
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'machimegu-v46';
+const CACHE_VERSION = 'machimegu-v47';
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
+const CACHE_TILES = 'machimegu-tiles';   // ★v47: 地図タイル専用（SW更新をまたいで再利用＝再DL不要）
+const TILE_CACHE_LIMIT = 300;            // ★v47: タイル保持上限（約数MB。超過時は古い順に削除）
+
+// 地図タイル判定（OpenStreetMap）
+function isMapTile(url) {
+  return url.hostname === 'tile.openstreetmap.org';
+}
+
+// オフライン時の未キャッシュタイル用プレースホルダ（256x256・地図背景になじむ濃紺）
+const OFFLINE_TILE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#1a2433"/><text x="128" y="128" fill="#3a4a60" font-size="13" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif">オフライン</text></svg>`;
 
 // インストール時に同梱したい必須アセット（軽量なものだけ）
 const PRECACHE_URLS = [
@@ -73,7 +85,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then(keys => {
       return Promise.all(
         keys.filter(k => 
-          k !== CACHE_VERSION && k !== CACHE_RUNTIME
+          k !== CACHE_VERSION && k !== CACHE_RUNTIME && k !== CACHE_TILES
         ).map(k => {
           console.log('[SW] 旧キャッシュ削除:', k);
           return caches.delete(k);
@@ -88,7 +100,14 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
   
-  // 同一オリジン以外（Firebase, CDN, 地図タイル）はSWを介在させない
+  // ★v47: 地図タイル（別オリジン）だけは例外的にSWで処理
+  //   Cache First + 上限付きキャッシュ + オフライン時プレースホルダ
+  if (req.method === 'GET' && isMapTile(url)) {
+    event.respondWith(handleTile(req));
+    return;
+  }
+  
+  // 同一オリジン以外（Firebase, CDN, 地図タイル以外）はSWを介在させない
   if (url.origin !== self.location.origin) return;
   
   // POST等はキャッシュしない
@@ -147,6 +166,42 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// ─── ★v47: 地図タイル処理（Cache First + 上限 + オフラインプレースホルダ）───
+async function handleTile(req) {
+  const cache = await caches.open(CACHE_TILES);
+  const cached = await cache.match(req);
+  if (cached) return cached;  // 見たことのあるタイル → 即返す（オフラインでもOK）
+  
+  try {
+    const res = await fetch(req);
+    if (res && res.status === 200) {
+      cache.put(req, res.clone());  // 新規タイルを保存
+      trimTileCache();              // 上限超過分を掃除（待たない）
+    }
+    return res;
+  } catch(e) {
+    // オフライン & 未キャッシュ → プレースホルダを即返す（グレー固まり防止）
+    return new Response(OFFLINE_TILE_SVG, {
+      status: 200,
+      headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' }
+    });
+  }
+}
+
+// タイルキャッシュ上限管理（FIFO：put順の古いものから削除）
+async function trimTileCache() {
+  try {
+    const cache = await caches.open(CACHE_TILES);
+    const keys = await cache.keys();
+    if (keys.length > TILE_CACHE_LIMIT) {
+      const excess = keys.length - TILE_CACHE_LIMIT;
+      for (let i = 0; i < excess; i++) {
+        await cache.delete(keys[i]);  // 配列先頭＝最古から削除
+      }
+    }
+  } catch(e) { /* 掃除失敗は無視（次回リトライ） */ }
+}
 
 // ─── メッセージ受信（強制キャッシュクリアなど） ───
 self.addEventListener('message', (event) => {
