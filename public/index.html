@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index226 (2026.06.02) — スター機能Phase1(表示のみ): users.stars初期化追加(新規0)・マスターパネルに⭐スター追加(3列化, gap/font/padding調整)・既存ユーザーは未定義→0表示で安全動作。消費機能はindex227で実装予定 -->
+<!-- VERSION: index227 (2026.06.02) — スター消費機能(Plan B: 所持してる分だけ何個でも): 3駅完走後にチェックインパネルへ「⭐スター使ってもう1駅」ボタン追加・consumeStarForExtraCheckin関数新設(Firestore atomic decrement)・チェックイン実行ガードに_starUnlocked例外・成功後にフラグリセット・ログイン直後にstars数キャッシュ。同一駅1日1回制限はスター使用時も維持(妥当)。226(表示)/雨雪/カード固まり/地図最適化 全継承 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -10877,8 +10877,22 @@ window.renderCheckinSection = async function(st) {
 
   // 今日のチェックイン数チェック
   if (todayCount >= DAILY_LIMIT) {
-    sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br>明日また来てね</div>`;
-    return;
+    // ★index227: スター消費フローへの分岐
+    //   _starUnlocked=true なら「スター消費済み・4駅目チェックイン受付中」状態として
+    //   上限ガードをスキップして下の距離計算・チェックインボタン描画へ進む。
+    if (!window._starUnlocked) {
+      const stars = window._userStarsCache || 0;
+      if (stars >= 1) {
+        // スター所持あり：消費ボタンを表示
+        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br><span style="font-size:11px;opacity:0.85">⭐ スター ${stars}個 所持中</span></div>
+          <button class="ip-ci-btn" style="background:linear-gradient(135deg,#ffb060,#ff9040);color:#1a1408;font-weight:900" onclick="consumeStarForExtraCheckin('${st.name.replace(/'/g,"\\'")}','${st.pref}',${st.lat},${st.lng})">⭐ スター1個使ってもう1駅</button>`;
+      } else {
+        // スターなし：従来通り
+        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br>明日また来てね</div>`;
+      }
+      return;
+    }
+    // _starUnlocked=true: 上限ガードをスキップして下の処理へ進む
   }
 
   // 現在地取得状況
@@ -10918,6 +10932,43 @@ window.requestLocationAndRender = async () => {
 };
 
 // チェックイン開始
+// ★index227: スター消費関数（3駅完走後の追加チェックイン用）
+//   1個 = 1駅。所持してる分だけ何個でも使える方針（Plan B）。
+//   消費後は _starUnlocked=true で次のチェックイン1回だけ上限ガードをスキップ。
+//   チェックイン成功時に _starUnlocked=false に戻る（次の駅もまたスター必要）。
+window.consumeStarForExtraCheckin = async (name, pref, lat, lng) => {
+  const user = auth.currentUser;
+  if (!user) { alert('ログインしてください'); return; }
+  
+  const stars = window._userStarsCache || 0;
+  if (stars < 1) {
+    alert('スターを持っていません');
+    return;
+  }
+  
+  const ok = confirm(`⭐ スター1個を使って「${name}駅」をチェックインしますか？\n（残り: ${stars}個 → ${stars - 1}個）`);
+  if (!ok) return;
+  
+  try {
+    // Firestoreでstarsをatomicに-1
+    await updateDoc(doc(db, 'users', user.uid), { stars: increment(-1) });
+    
+    // ローカルキャッシュも更新
+    window._userStarsCache = stars - 1;
+    window._starUnlocked = true;
+    
+    // マスターパネルのスター表示を即時更新（マイページが開いてなくても表示用要素があれば反映）
+    const starEl = document.getElementById('mp-master-star-count');
+    if (starEl) starEl.textContent = (stars - 1).toLocaleString();
+    
+    // チェックインパネル再描画 → 上限ガードをスキップして距離計算→チェックインボタンが出る
+    if (window.currentStation) window.renderCheckinSection(window.currentStation);
+  } catch (e) {
+    console.error('[Star] 消費エラー:', e);
+    alert('スター消費に失敗しました。通信状況を確認してください。');
+  }
+};
+
 window.startCheckin = async (name, pref, lat, lng) => {
   const user = auth.currentUser;
   if (!user) return;
@@ -10946,7 +10997,8 @@ window.startCheckin = async (name, pref, lat, lng) => {
 
   // 改めて今日の回数チェック
   todayCount = await getTodayCheckinCount(user.uid);
-  if (todayCount >= DAILY_LIMIT) {
+  if (todayCount >= DAILY_LIMIT && !window._starUnlocked) {
+    // ★index227: _starUnlocked=true なら上限ガードをスキップ（スター消費済み）
     alert('本日のチェックイン上限に達しました');
     if (window.currentStation) window.renderCheckinSection(window.currentStation);
     return;
@@ -11157,6 +11209,8 @@ async function tryCompleteCheckin() {
     todayCount = await getTodayCheckinCount(user.uid);
     // ★バグ3修正：本日チェックイン済みSetに即座に追加（次回info-panel表示時に即反映）
     todayCheckedInStationIds.add(stationId);
+    // ★index227: スター解放フラグをリセット（チェックイン成功 → 次の駅もスターが必要）
+    window._starUnlocked = false;
 
     // 訪問回数取得
     let visitCount = 1;
@@ -13230,7 +13284,10 @@ async function loadMypageData(uid) {
       if (badgeXpEl) badgeXpEl.textContent = badgeXP2.toLocaleString();
       // ★index226: スター所有数表示（未定義は0扱い＝既存ユーザーも0として動く）
       const starEl = document.getElementById('mp-master-star-count');
-      if (starEl) starEl.textContent = ((userProfile && userProfile.stars) || 0).toLocaleString();
+      const starsCount = (userProfile && userProfile.stars) || 0;
+      if (starEl) starEl.textContent = starsCount.toLocaleString();
+      // ★index227: チェックインパネルから即参照できるキャッシュ（マイページ開閉に依存しないため、loadMypageData実行時に更新）
+      window._userStarsCache = starsCount;
       
       // バーアニメ
       setTimeout(() => {
@@ -13956,6 +14013,8 @@ onAuthStateChanged(auth, async (user) => {
         if (userData.handleName) {
           document.getElementById('userName').textContent = userData.handleName;
         }
+        // ★index227: スター数をログイン直後にキャッシュ（マイページ未開封でもチェックインパネルから参照可能に）
+        window._userStarsCache = userData.stars || 0;
         console.log('ログイン成功:', userData.handleName);
 
         // Phase 3: 今日のチェックイン数取得・進行中チェックインの復元・位置監視開始
@@ -19249,7 +19308,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v226</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v227</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
