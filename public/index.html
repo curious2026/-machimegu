@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index223 (2026.06.02) — 雪の天候演出を刷新: 静止→落下＋きらめき(明滅)アニメ(CSS only)。位置/サイズ/落下時間/開始タイミングを無相関乱数でバラし最初からランダムに散る。粒小さめ。seed固定で表示時1回だけ生成しGPUで落下→カード登場/スワイプに干渉なし。222(雨)/221(カード固まり)等を継承 -->
+<!-- VERSION: index224 (2026.06.02) — 雨・雪の落下終点をカード下まで延長(360/340→1000px)、duration も比例延長してスピード感維持(雨1.2〜2.05秒/雪6〜10秒)。223(雪のサイズ/本数調整)/222(雨)/221(カード固まり)等を継承 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -5246,7 +5246,7 @@ body.checkin-active #checkin-indicator{
 }
 @keyframes mmRainFall{
   0%{ transform: translateY(-60px) rotate(16deg); }
-  100%{ transform: translateY(360px) rotate(16deg); }
+  100%{ transform: translateY(1000px) rotate(16deg); }
 }
 
 /* 雪：薄い青白いハロー＋結晶12粒（結晶はJSで挿入） */
@@ -5272,7 +5272,7 @@ body.checkin-active #checkin-indicator{
   20%{ opacity: 1; }
   50%{ opacity: 0.5; }
   80%{ opacity: 1; }
-  100%{ transform: translateY(340px); opacity: 0.3; }
+  100%{ transform: translateY(1000px); opacity: 0.3; }
 }
 
 /* ════════════════════════════════════════════════════════════════ */
@@ -17428,7 +17428,7 @@ if ('serviceWorker' in navigator) {
         flake.className = 'mm-snowflake';
         const ss = 7 + sHash(seed + i * 1.7) * 6;          // サイズ 7〜13px
         const sx = sHash(seed + i * 12.9) * 100;            // 横位置 0〜100%
-        const dur = 3.5 + sHash(seed + i * 7.3) * 2.5;      // 落下 3.5〜6秒（ゆっくり）
+        const dur = 6 + sHash(seed + i * 7.3) * 4;          // 落下 6〜10秒（距離増に応じて延長、ゆっくり舞う感を維持）
         const delay = -sHash(seed + i * 23.1) * MAXDUR;     // 開始位置を無秩序に
         flake.style.left = sx + '%';
         flake.style.width = ss + 'px';
@@ -17457,7 +17457,7 @@ if ('serviceWorker' in navigator) {
         const r3 = ((seed * (i + 13) * 2531 + 99991) % 121500) / 121500;
         const len = 15 + r1 * 19;               // 雨脚の長さ 15〜34px
         const left = r2 * 100;                   // 横位置 0〜100%
-        const dur = 0.5 + r3 * 0.35;             // 落下時間 0.5〜0.85秒（やや速め）
+        const dur = 1.2 + r3 * 0.85;             // 落下時間 1.2〜2.05秒（距離増に比例。スピード感は従来「やや速め」を維持）
         drop.style.height = len + 'px';
         drop.style.left = left + '%';
         drop.style.animationDuration = dur + 's';
@@ -19240,7 +19240,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v223</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v224</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
