@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index174 (cache-bust 2026.05.29-17:00) -->
+<!-- VERSION: index220 (2026.06.02) — 地図パン/ズーム最適化: getVisibleでビューポート外の駅を除外し間引き計算と描画を可視領域に限定。219の全修正(text-size-adjust/版表示位置/ミッション被り回避)を継承 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -166,7 +166,10 @@ window.mmEnableSentry = function(){
    html/bodyを固定し、#appを100dvh（動的ビューポート高さ）に。
    100dvh非対応ブラウザ向けに100vhをフォールバックとして先に書く。 */
 html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto Sans JP',sans-serif;
-  overflow:hidden;overscroll-behavior:none;position:fixed;width:100%;top:0;left:0}
+  overflow:hidden;overscroll-behavior:none;position:fixed;width:100%;top:0;left:0;
+  /* ★index219: iOS Safariが縦横回転や特定操作でテキストを勝手に拡大するのを防ぐ
+     （今日/今週のミッション等のフォントが時々大きくなる症状の対策） */
+  -webkit-text-size-adjust:100%;text-size-adjust:100%}
 #app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
 
 #header{
@@ -9537,7 +9540,14 @@ function getVisible(){
   const mapW=mapEl?mapEl.offsetWidth:800;
   const d=getMinPx(zoom,mapW);
   
-  const filtered=getFiltered();
+  // ★index220: ビューポート外の駅を先に除外（地図パン/ズーム時の最適化）
+  //   従来は getFiltered() 全件（スコアあり全駅1,700超）に対して重なり間引きループを
+  //   回していたため、画面外の駅まで毎回 latLngToContainerPoint 計算→moveendごとに重かった。
+  //   画面境界を25%広げた範囲だけに絞ることで、計算量・描画数を可視領域分に限定。
+  //   pad(0.25)で端の駅も含め、パン時のマーカー突然出現を防ぐ。
+  const vbounds=lmap.getBounds().pad(0.25);
+  
+  const filtered=getFiltered().filter(s=>vbounds.contains([s.lat,s.lng]));
   // 特別扱い駅を抽出
   const always=filtered.filter(s=>ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref));
   // それ以外をスコア降順
@@ -18199,10 +18209,19 @@ if ('serviceWorker' in navigator) {
         ? [...regionalPool].sort(() => Math.random() - 0.5)
         : [...DAILY_COMMON_POOL].sort(() => Math.random() - 0.5); // 未登録なら共通から
       
-      // 同IDが重複しないように共通1個目と地域別1個目から取る
-      const picked = [shuffled1[0]];
-      const second = shuffled2.find(m => m.id !== shuffled1[0].id) || shuffled2[0];
-      picked.push(second);
+      // ★index219: 前日と同じミッションが連続で出るのを避ける（ランダム被り対策）
+      //   従来は shuffled1[0] を無条件採用していたため、小さいプールから引く都合上
+      //   前日と同じミッションが翌日も出ることがあった（ともき報告の「同じものが残る」の正体）。
+      //   ※達成/未達成でのリセット判定は別ロジック（date比較）で既に正しく毎日更新されている。
+      const prevIds = (state.todayMissions && Array.isArray(state.todayMissions.missions))
+        ? state.todayMissions.missions.map(m => m.id) : [];
+      // 1個目：前日に出ていないものを優先（全部被る極小ケースのみ先頭にフォールバック）
+      const pick1 = shuffled1.find(m => !prevIds.includes(m.id)) || shuffled1[0];
+      // 2個目：1個目と別ID かつ 前日と別ID を優先 → 無理なら1個目と別IDのみ満たす
+      const pick2 = shuffled2.find(m => m.id !== pick1.id && !prevIds.includes(m.id))
+                  || shuffled2.find(m => m.id !== pick1.id)
+                  || shuffled2[0];
+      const picked = [pick1, pick2];
       
       todayMissions = {
         date: today,
@@ -19151,7 +19170,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:12px;font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v218</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v220</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
