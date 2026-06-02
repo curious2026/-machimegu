@@ -17423,10 +17423,10 @@ if ('serviceWorker' in navigator) {
       const seed = mmHash(stationKey);
       const MAXDUR = 6;  // animation-delayのバラし基準（全粒共通）
       const sHash = function(n){ const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
-      for(let i = 0; i < 16; i++){
+      for(let i = 0; i < 20; i++){
         const flake = document.createElement('div');
         flake.className = 'mm-snowflake';
-        const ss = 5 + sHash(seed + i * 1.7) * 5;          // サイズ 5〜10px（小さめ）
+        const ss = 7 + sHash(seed + i * 1.7) * 6;          // サイズ 7〜13px
         const sx = sHash(seed + i * 12.9) * 100;            // 横位置 0〜100%
         const dur = 3.5 + sHash(seed + i * 7.3) * 2.5;      // 落下 3.5〜6秒（ゆっくり）
         const delay = -sHash(seed + i * 23.1) * MAXDUR;     // 開始位置を無秩序に
