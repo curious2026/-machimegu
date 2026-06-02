@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index222 (2026.06.02) — 雨カードの天候演出を刷新: 静的な水滴→落下する雨脚アニメ(CSS only/やや速め)。白ベース＋夕方のみ金混じり。雨脚はseed固定で表示時1回だけ生成しGPUで落下→カード登場/スワイプに干渉なし。221(カード固まり対策)等を継承 -->
+<!-- VERSION: index223 (2026.06.02) — 雪の天候演出を刷新: 静止→落下＋きらめき(明滅)アニメ(CSS only)。位置/サイズ/落下時間/開始タイミングを無相関乱数でバラし最初からランダムに散る。粒小さめ。seed固定で表示時1回だけ生成しGPUで落下→カード登場/スワイプに干渉なし。222(雨)/221(カード固まり)等を継承 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -5258,9 +5258,21 @@ body.checkin-active #checkin-indicator{
 }
 .mm-snowflake{
   position: absolute;
+  top: 0;
   pointer-events: none;
-  filter: drop-shadow(0 0 3px rgba(180,210,240,0.7));
-  opacity: 0.92;
+  filter: drop-shadow(0 0 2px rgba(200,225,255,0.8));
+  animation: mmSnowFall ease-in-out infinite;
+  will-change: transform, opacity;
+}
+/* index223: 雪を落下＋きらめき(明滅)させる。雪片は mmApplyWeather() で
+   固定本数だけ生成し、以降はCSS transformで落ちるだけ＝GPU処理でメインスレッド不可侵。
+   位置・落下時間・開始タイミングを無相関乱数でバラし、最初からランダムに散らす。 */
+@keyframes mmSnowFall{
+  0%{ transform: translateY(-30px); opacity: 0.3; }
+  20%{ opacity: 1; }
+  50%{ opacity: 0.5; }
+  80%{ opacity: 1; }
+  100%{ transform: translateY(340px); opacity: 0.3; }
 }
 
 /* ════════════════════════════════════════════════════════════════ */
@@ -17403,18 +17415,26 @@ if ('serviceWorker' in navigator) {
     }
 
     if(record.weather === 'snowy'){
-      // 駅IDから seed で配置（同じ駅は同じ結晶配置）
+      // ★index223: 落下＋きらめきの雪（プレビュー承認版）
+      //   駅IDseedで配置を固定（同じ駅は毎回同じ降り方＝チラつき防止）。
+      //   位置・サイズ・落下時間・開始タイミングを「無相関の別乱数系列」で生成し、
+      //   最初の瞬間から列をなさずバラバラに散らす（規則的な相関を断つのが要点）。
+      //   生成は表示時の1回だけ。あとはCSS animationで落ちる＝軽量。
       const seed = mmHash(stationKey);
-      for(let i = 0; i < 12; i++){
+      const MAXDUR = 6;  // animation-delayのバラし基準（全粒共通）
+      const sHash = function(n){ const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
+      for(let i = 0; i < 16; i++){
         const flake = document.createElement('div');
         flake.className = 'mm-snowflake';
-        const sx = ((seed * (i + 7)) % 88) + (i * 2 % 5);
-        const sy = ((seed * (i + 11)) % 92) + (i * 3 % 4);
-        const ss = 11 + ((seed * (i + 13)) % 9);
-        flake.style.top = sy + '%';
+        const ss = 5 + sHash(seed + i * 1.7) * 5;          // サイズ 5〜10px（小さめ）
+        const sx = sHash(seed + i * 12.9) * 100;            // 横位置 0〜100%
+        const dur = 3.5 + sHash(seed + i * 7.3) * 2.5;      // 落下 3.5〜6秒（ゆっくり）
+        const delay = -sHash(seed + i * 23.1) * MAXDUR;     // 開始位置を無秩序に
         flake.style.left = sx + '%';
         flake.style.width = ss + 'px';
         flake.style.height = ss + 'px';
+        flake.style.animationDuration = dur + 's';
+        flake.style.animationDelay = delay + 's';
         flake.innerHTML = MM_SNOWFLAKE_SVG;
         overlay.appendChild(flake);
       }
@@ -19220,7 +19240,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v222</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v223</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
