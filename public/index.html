@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index221 (2026.06.02) — カード「長くスワイプで固まる」対策: will-changeをアニメ終了後に解除しGPUメモリを解放＋アニメ終了setTimeoutの多重防止。220(地図最適化)/219(各種)を継承 -->
+<!-- VERSION: index222 (2026.06.02) — 雨カードの天候演出を刷新: 静的な水滴→落下する雨脚アニメ(CSS only/やや速め)。白ベース＋夕方のみ金混じり。雨脚はseed固定で表示時1回だけ生成しGPUで落下→カード登場/スワイプに干渉なし。221(カード固まり対策)等を継承 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -5217,24 +5217,36 @@ body.checkin-active #checkin-indicator{
   pointer-events: none;
 }
 
-/* 雨：C案（窓の向こうの雨）+ 水滴5個 */
+/* 雨：index222 落下する雨脚（白ベース＋夕方のみ金混じり）
+   雨脚は mmApplyWeather() で固定本数だけ生成し、以降はCSS transformで落とすだけ。
+   JSの毎フレーム処理なし＝GPU処理でメインスレッド不可侵。カード登場/スワイプに干渉しない。 */
 .mm-weather-overlay.rainy::before{
   content: '';
   position: absolute;
   inset: 0;
-  background-image: repeating-linear-gradient(5deg, transparent 0 14px, rgba(125,165,205,0.3) 14px 14.7px, transparent 14.7px 28px);
+  /* 雨天時の空気感：ごく薄い青のもや（雨脚だけだと寂しいので下地に） */
+  background: linear-gradient(180deg, rgba(110,150,195,0.05) 0%, rgba(100,140,185,0.10) 100%);
 }
-.mm-weather-overlay.rainy::after{
-  content: '';
+.mm-raindrop{
   position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 18% 22%, rgba(175,210,240,0.6) 4px, rgba(175,210,240,0.18) 8px, transparent 12px),
-    radial-gradient(circle at 68% 30%, rgba(175,210,240,0.6) 5px, rgba(175,210,240,0.18) 10px, transparent 14px),
-    radial-gradient(circle at 38% 55%, rgba(175,210,240,0.55) 4px, rgba(175,210,240,0.18) 8px, transparent 12px),
-    radial-gradient(circle at 82% 65%, rgba(175,210,240,0.6) 5px, rgba(175,210,240,0.18) 10px, transparent 14px),
-    radial-gradient(circle at 25% 85%, rgba(175,210,240,0.55) 4px, rgba(175,210,240,0.18) 8px, transparent 12px),
-    linear-gradient(180deg, rgba(110,150,195,0.04) 0%, rgba(100,140,185,0.08) 100%);
+  width: 1px;
+  border-radius: 1px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(225,238,255,0) 0%, rgba(225,238,255,0.7) 70%, rgba(225,238,255,0.9) 100%);
+  animation: mmRainFall linear infinite;
+  will-change: transform;
+}
+/* 夕方だけ：金色の雨脚（夕陽に照らされた雨） */
+#station-card[data-mm-time="evening"] .mm-raindrop.gold{
+  background: linear-gradient(to bottom, rgba(255,222,130,0) 0%, rgba(255,222,130,0.75) 70%, rgba(255,224,150,0.95) 100%);
+}
+/* 夕方以外では金の雨脚も白に見せる（金クラスでも暖色背景でない時は白） */
+.mm-raindrop.gold{
+  background: linear-gradient(to bottom, rgba(225,238,255,0) 0%, rgba(225,238,255,0.7) 70%, rgba(225,238,255,0.9) 100%);
+}
+@keyframes mmRainFall{
+  0%{ transform: translateY(-60px) rotate(16deg); }
+  100%{ transform: translateY(360px) rotate(16deg); }
 }
 
 /* 雪：薄い青白いハロー＋結晶12粒（結晶はJSで挿入） */
@@ -17408,6 +17420,33 @@ if ('serviceWorker' in navigator) {
       }
     }
 
+    if(record.weather === 'rainy'){
+      // ★index222: 落下する雨脚を固定本数だけ生成（やや速め=本物っぽさ重視）
+      //   駅IDseedで配置を固定（同じ駅は毎回同じ降り方＝チラつき防止）。
+      //   生成は表示時の1回だけ。あとはCSS animation(transform)で落ちる＝軽量。
+      //   金の雨脚(gold)は6本に1本。CSS側で「夕方のときだけ金、他は白」に分岐。
+      const seed = mmHash(stationKey);
+      const N = 18;
+      for(let i = 0; i < N; i++){
+        const drop = document.createElement('div');
+        const isGold = (i % 6 === 0);
+        drop.className = 'mm-raindrop' + (isGold ? ' gold' : '');
+        // seed由来の擬似乱数（0〜1）
+        const r1 = ((seed * (i + 3) * 9301 + 49297) % 233280) / 233280;
+        const r2 = ((seed * (i + 7) * 4096 + 150889) % 714025) / 714025;
+        const r3 = ((seed * (i + 13) * 2531 + 99991) % 121500) / 121500;
+        const len = 15 + r1 * 19;               // 雨脚の長さ 15〜34px
+        const left = r2 * 100;                   // 横位置 0〜100%
+        const dur = 0.5 + r3 * 0.35;             // 落下時間 0.5〜0.85秒（やや速め）
+        drop.style.height = len + 'px';
+        drop.style.left = left + '%';
+        drop.style.animationDuration = dur + 's';
+        drop.style.animationDelay = (-r1 * dur) + 's';  // 開始位置をバラす
+        drop.style.opacity = isGold ? '0.85' : (0.45 + r3 * 0.4).toFixed(2);
+        overlay.appendChild(drop);
+      }
+    }
+
     card.insertBefore(overlay, card.firstChild);
   }
 
@@ -19181,7 +19220,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v221</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v222</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
