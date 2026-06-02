@@ -17423,7 +17423,7 @@ if ('serviceWorker' in navigator) {
       const seed = mmHash(stationKey);
       const MAXDUR = 6;  // animation-delayのバラし基準（全粒共通）
       const sHash = function(n){ const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
-      for(let i = 0; i < 20; i++){
+      for(let i = 0; i < 50; i++){
         const flake = document.createElement('div');
         flake.className = 'mm-snowflake';
         const ss = 7 + sHash(seed + i * 1.7) * 6;          // サイズ 7〜13px
@@ -17446,7 +17446,7 @@ if ('serviceWorker' in navigator) {
       //   生成は表示時の1回だけ。あとはCSS animation(transform)で落ちる＝軽量。
       //   金の雨脚(gold)は6本に1本。CSS側で「夕方のときだけ金、他は白」に分岐。
       const seed = mmHash(stationKey);
-      const N = 18;
+      const N = 45;
       for(let i = 0; i < N; i++){
         const drop = document.createElement('div');
         const isGold = (i % 6 === 0);
