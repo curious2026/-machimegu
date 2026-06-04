@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index233 (2026.06.02) — toggleOshiStation Cloud Function化(🔴-2対処): ①toggleOshiStationFn初期化追加 ②推し街追加(arrayUnion→Cloud Function action:add) ③推し街削除(arrayRemove→Cloud Function action:remove)。サーバ側で「自分のUIDのみ操作」を保証、他人のUID改ざんを完全防止 -->
+<!-- VERSION: index234 (2026.06.02) — recordCheckin Cloud Function化(🔴-3対処): ①recordCheckinFn初期化 ②チェックイン処理(addDoc/setDoc/updateDoc 3つ→Cloud Function 1呼び出し) ③冗長なvisitCount再取得削除。サーバ側で同一駅1日1回・1日3駅上限を検証、3つのドキュメント書込みをatomicトランザクション化、履歴捏造を完全防止 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -10052,6 +10052,10 @@ const consumeStarFn = httpsCallable(functions, 'consumeStar');
 //   旧: クライアントから arrayUnion/arrayRemove で他人のUIDも操作可能
 //   新: Cloud Function 経由で「自分のUIDのみ操作」を保証
 const toggleOshiStationFn = httpsCallable(functions, 'toggleOshiStation');
+// ★Step 2-5 (index234): チェックイン記録をサーバ側で検証＆書込み（🔴-3対処）
+//   旧: クライアントが checkins / stationCards / users 3つ直接書込み → 履歴捏造可能
+//   新: Cloud Function 経由で全部 atomic 書込み、サーバ側検証
+const recordCheckinFn = httpsCallable(functions, 'recordCheckin');
 console.log('[Functions] 初期化完了（asia-northeast1）');
 
 // ═══ index174緊急修正：Firestore IndexedDBのみクリーンアップ（Authは絶対保持） ═══
@@ -11168,11 +11172,9 @@ async function tryCompleteCheckin() {
   try {
     const stationId = `${pendingCheckin.stationName}_${pendingCheckin.stationPref}`;
     
-    // ★ 同一駅 1日1回制限（★バグB修正：複合インデックス不要の方式に変更）
-    // 旧実装は where('stationId','==',...) + where('checkedInAt','>=',...) の複合クエリで、
-    // Firestore複合インデックスが必須 → 未作成だとエラー → catch握りつぶしで制限が無効だった。
-    // 新実装は getTodayCheckinList（単一フィールド範囲、インデックス不要）で今日の全件を取得し、
-    // stationId 一致をクライアント側で判定する。
+    // ★ 同一駅 1日1回制限（先行チェック：UX向上、サーバ側でも再検証される）
+    // ★Step 2-5 (index234): Cloud Function側で同じ検証を行い、結果が真ならエラーで返す
+    //   ここは即時UXフィードバック用のソフトチェック（残しておく）
     try {
       const todayList = await getTodayCheckinList(user.uid);
       const alreadyToday = todayList.some(c => c.stationId === stationId);
@@ -11185,63 +11187,57 @@ async function tryCompleteCheckin() {
       }
     } catch(dupErr) {
       console.warn('重複チェック失敗（続行）:', dupErr.message);
-      // チェック失敗時は続行（厳格すぎてUX損なわないため）
     }
     
     // 駅情報を取得
     const st = stationData.find(s => s.name === pendingCheckin.stationName && s.pref === pendingCheckin.stationPref);
     const score = st && st.score ? st.score : 0;
     const rankInfo = window.getRank ? window.getRank(score) : { rank: '-' };
-    const isFirstVisit = !(await hasStationCard(user.uid, stationId));
-
-    // チェックイン履歴に追加
     const _cityForCheckin = (window.STATION_CITIES && window.STATION_CITIES[stationId]) || '';
-    await addDoc(collection(db, 'users', user.uid, 'checkins'), {
-      stationName: pendingCheckin.stationName,
-      stationPref: pendingCheckin.stationPref,
-      stationId,
-      stationLat: pendingCheckin.stationLat,
-      stationLng: pendingCheckin.stationLng,
-      checkinLat: finalPos.lat,
-      checkinLng: finalPos.lng,
-      score,
-      rank: rankInfo.rank,
-      city: _cityForCheckin,
-      checkedInAt: serverTimestamp(),
-      isFirstVisit
-    });
-
-    // 初回ならステーションカード生成
-    if (isFirstVisit) {
-      await setDoc(doc(db, 'users', user.uid, 'stationCards', stationId), {
+    const _linesForCheckin = (st && Array.isArray(st.lines)) ? st.lines : [];
+    
+    // ★Step 2-5 (index234): Cloud Function recordCheckin を呼び出し
+    //   旧: addDoc(checkins) + setDoc(stationCards) + updateDoc(users) の3回書込み
+    //   新: 1回のCloud Function呼び出しでサーバ側atomic処理（履歴捏造を完全防止）
+    //   戻り値: { success, isFirstVisit, todayCount, visitCount }
+    let recordResult;
+    try {
+      const res = await recordCheckinFn({
+        stationId: stationId,
         stationName: pendingCheckin.stationName,
         stationPref: pendingCheckin.stationPref,
-        stationId,
         stationLat: pendingCheckin.stationLat,
         stationLng: pendingCheckin.stationLng,
-        lines: st && st.lines ? st.lines : [],
+        checkinLat: finalPos.lat,
+        checkinLng: finalPos.lng,
+        score: score,
+        rank: rankInfo.rank,
         city: _cityForCheckin,
-        firstScore: score,
-        firstRank: rankInfo.rank,
-        firstVisitAt: serverTimestamp(),
-        lastVisitAt: serverTimestamp(),
-        visitCount: 1
+        lines: _linesForCheckin,
+        starUnlocked: !!window._starUnlocked,
       });
-      // ユーザー統計更新
-      await updateDoc(doc(db, 'users', user.uid), {
-        totalCheckins: increment(1),
-        uniqueStations: increment(1)
-      });
-    } else {
-      // 既存カードの訪問回数アップ
-      await updateDoc(doc(db, 'users', user.uid, 'stationCards', stationId), {
-        lastVisitAt: serverTimestamp(),
-        visitCount: increment(1)
-      });
-      await updateDoc(doc(db, 'users', user.uid), {
-        totalCheckins: increment(1)
-      });
+      recordResult = res.data || {};
+    } catch(e) {
+      console.error('[recordCheckin] Cloud Function呼び出しエラー:', e);
+      let msg = 'チェックインの保存に失敗しました。';
+      if (e && e.code) {
+        if (e.code === 'functions/failed-precondition') {
+          msg = e.message || '本日の上限または重複でチェックインできませんでした';
+        } else if (e.code === 'functions/unauthenticated') {
+          msg = 'ログインの有効期限が切れました。再度ログインしてください。';
+        } else if (e.code === 'functions/invalid-argument') {
+          msg = '入力エラー: ' + (e.message || '');
+        }
+      }
+      alert(msg);
+      clearPending();
+      hideCheckinIndicator();
+      if (window.currentStation) window.renderCheckinSection(window.currentStation);
+      return;
     }
+    
+    const isFirstVisit = !!recordResult.isFirstVisit;
+    const visitCount = recordResult.visitCount || 1;
 
     // 今日の回数を再取得
     todayCount = await getTodayCheckinCount(user.uid);
@@ -11250,12 +11246,8 @@ async function tryCompleteCheckin() {
     // ★index227: スター解放フラグをリセット（チェックイン成功 → 次の駅もスターが必要）
     window._starUnlocked = false;
 
-    // 訪問回数取得
-    let visitCount = 1;
-    try {
-      const cardDoc = await getDoc(doc(db, 'users', user.uid, 'stationCards', stationId));
-      if (cardDoc.exists()) visitCount = cardDoc.data().visitCount || 1;
-    } catch {}
+    // ★Step 2-5 (index234): visitCountはCloud Function の戻り値から既に取得済み
+    //   旧: getDoc(stationCards) で再フェッチ → 削除（不要、レイテンシ削減）
 
     // ★★ Step3: チェックイン成功時にカードコレクション集約ドキュメントへカード追加 ★★
     // 「カードが増えるのはチェックイン時だけ」（案A）の核心。
@@ -19365,7 +19357,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v233</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v234</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
