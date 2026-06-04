@@ -148,6 +148,14 @@ app.use(express.static(path.join(__dirname, 'public'), {
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache');  // HTMLは常に最新
     }
+    // ★Step 2前哨: service-worker.jsは絶対にキャッシュしない（Service Worker鉄則）
+    //   ブラウザがSWを7日キャッシュすると、サーバ側でSW更新しても反映されず、
+    //   「新しいデータがあります→更新中…のまま」のループバグが発生する。
+    if (filePath.endsWith('service-worker.js')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
   }
 }));
 
