@@ -14,6 +14,7 @@
 const express = require('express');
 const compression = require('compression');
 const cors    = require('cors');
+const rateLimit = require('express-rate-limit');  // ★Step 1-②: APIレート制限
 const path    = require('path');
 const fs      = require('fs');
 const duckdb  = require('duckdb');
@@ -23,7 +24,12 @@ const jose    = require('jose');
 // Firebase ID Token 軽量検証（管理者ダッシュボード認証用）
 // jose で Google の公開鍵を取得して JWT 検証
 // ═══════════════════════════════════════════════════════════════
-const ADMIN_UIDS = ['JpHzl9PQf1MNHwXovfvDhKHU57z1'];  // ともきのUID
+// ★Step 1-④: ADMIN_UIDSを環境変数化（GitHubソース露出リスク回避）
+//   旧: ハードコード → リポジトリ公開時にUIDが世界に露出
+//   新: Railway環境変数 ADMIN_UIDS から読込（カンマ区切りで複数可）
+//   フォールバック: 環境変数未設定時のみ既存UIDで動作（移行期間中の事故防止）
+const ADMIN_UIDS = (process.env.ADMIN_UIDS || 'JpHzl9PQf1MNHwXovfvDhKHU57z1')
+  .split(',').map(s => s.trim()).filter(Boolean);
 const FIREBASE_PROJECT_ID = 'machi-megu-project';
 
 // Google のJWKエンドポイント（Firebaseが使う公開鍵）
@@ -37,14 +43,14 @@ const FIREBASE_JWKS = jose.createRemoteJWKSet(
 
 async function verifyFirebaseIdToken(token) {
   // Firebase ID TokenはJWT形式、joseで検証
-  // clockTolerance: Firebase ID Tokenは1時間で期限切れになるが、
-  // フロント側で getIdToken(true) を呼ばないと自動更新されない。
-  // Phase 1運用中の応急処置として、24時間まで期限切れを許容。
-  // セキュリティ：ADMIN_UIDSによる二重チェックで守られている。
+  // ★Step 1-③: clockToleranceを24時間→5分に短縮（業界標準）
+  //   旧: 24時間 → トークン漏洩時に最大24時間悪用可能 = セキュリティリスク大
+  //   新: 5分 → 漏洩時の悪用ウィンドウを288分の1に短縮
+  //   ※クライアント側（admin.html）で50分ごとに getIdToken(true) で自動更新する設計と組み合わせ
   const { payload } = await jose.jwtVerify(token, FIREBASE_JWKS, {
     issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
     audience: FIREBASE_PROJECT_ID,
-    clockTolerance: '24 hours'
+    clockTolerance: '5 minutes'
   });
   // payload.sub または payload.user_id が UID
   return {
@@ -91,7 +97,48 @@ app.use(compression({
   threshold: 1024,    // 1KB未満は圧縮しない（オーバーヘッド回避）
 }));
 
-app.use(cors());
+// ★Step 1-①: CORS制限（本番ドメインと開発用localhostのみ許可）
+//   旧: app.use(cors()) → 誰でもAPIを叩ける = DDoS/コスト爆発リスク
+//   新: 明示的なoriginリストで制限
+app.use(cors({
+  origin: [
+    'https://machimegu.com',
+    'https://www.machimegu.com',
+    'http://localhost:3001',
+    'http://localhost:3000'
+  ],
+  credentials: true
+}));
+
+// ★Step 1-②: APIレート制限（DDoS・コスト爆発対策）
+//   一般API: 1分100回まで（通常利用では十分余裕、攻撃時はブロック）
+//   一括取得: 1分30回まで（重い処理なので厳しめ）
+//   管理API: 1分5回まで（rebuild等の重要操作）
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'リクエストが多すぎます。少し待ってからもう一度お試しください。' }
+});
+const heavyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'リクエストが多すぎます。少し待ってからもう一度お試しください。' }
+});
+const adminLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: '管理APIのレート制限に達しました' }
+});
+// 適用：一般APIは100/分、重いAPIは30/分、管理APIは5/分
+app.use('/api/score', generalLimiter);
+app.use('/api/all-scores', heavyLimiter);
+app.use('/api/admin', adminLimiter);
 app.use(express.json());
 
 // 静的ファイルにキャッシュヘッダ
@@ -986,6 +1033,19 @@ app.get('/api/health', (req, res) => res.json({
 // ═══════════════════════════════════════════════════════════════
 // 起動
 // ═══════════════════════════════════════════════════════════════
+
+// ★Step 1-⑤: 未捕捉例外ハンドラ（プロセスクラッシュ防止）
+//   Node.jsで未捕捉例外/Promise rejectionが出るとプロセスが落ち、Railwayが再起動する間サービス断。
+//   ログだけ出して継続するように。
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err && err.stack ? err.stack : err);
+  // プロセスは継続させる（Railway再起動による断を防ぐ）
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[unhandledRejection]', reason);
+  // 同上、継続
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`[起動] port ${PORT}`));
 
