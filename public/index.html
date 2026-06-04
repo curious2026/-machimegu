@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index231 (2026.06.02) — SW更新ループバグ修正: 「更新」ボタン押下後5秒以内にcontrollerchangeが来なければ強制リロード(タイムアウト保険)。server.js側でservice-worker.jsをno-cache配信に変更したのと合わせて根本＋対症の両対処 -->
+<!-- VERSION: index232 (2026.06.02) — Cloud Functions経由スター消費化: ①firebase-functions SDK import追加 ②functions/consumeStarFn 初期化(asia-northeast1) ③consumeStarForExtraCheckinをCloud Function呼び出しに変更(サーバ側でstars検証＆starUsageLogs記録)。レビュー🔴-1 Firestore Rules stars改ざん問題の対処の一環。Rules厳格化は次のステップ -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -9988,6 +9988,8 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { getAnalytics, logEvent, setAnalyticsCollectionEnabled }
   from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+import { getFunctions, httpsCallable }
+  from "https://www.gstatic.com/firebasejs/12.12.1/firebase-functions.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB88IewpQSXzLeICeilSCwP5R6Q6vTlSDI",
@@ -10036,6 +10038,17 @@ const auth = getAuth(app);
 //   - 元のシンプルな getFirestore() に戻す
 const db = getFirestore(app);
 console.log('[Firestore] 通常モード（永続化なし、ログイン安定優先）');
+
+// ════════════════════════════════════════════════════════════════
+// ★Step 2-2: Cloud Functions クライアント初期化（asia-northeast1の東京リージョン）
+// レビュー対応 🔴-1: スター消費等の特権操作を Cloud Functions 経由に変更。
+// クライアントから直接 Firestore に stars を書き込むのを禁止し、
+// サーバ側で検証＆ログ記録するため。
+// 参照: functions/index.js の consumeStar 関数（machimegu-functions プロジェクト）
+// ════════════════════════════════════════════════════════════════
+const functions = getFunctions(app, 'asia-northeast1');
+const consumeStarFn = httpsCallable(functions, 'consumeStar');
+console.log('[Functions] 初期化完了（asia-northeast1）');
 
 // ═══ index174緊急修正：Firestore IndexedDBのみクリーンアップ（Authは絶対保持） ═══
 // ★ index172のミス：firebaseを含む全DBを削除していたため、Firebase Authの
@@ -10932,6 +10945,9 @@ window.requestLocationAndRender = async () => {
 //   1個 = 1駅。所持してる分だけ何個でも使える方針（Plan B）。
 //   消費後は _starUnlocked=true で次のチェックイン1回だけ上限ガードをスキップ。
 //   チェックイン成功時に _starUnlocked=false に戻る（次の駅もまたスター必要）。
+// ★Step 2-2 (index232): Firestore直接書込み→Cloud Functions経由に変更
+//   旧: updateDoc(users/{uid}, {stars: increment(-1)}) ←F12で改ざん可能
+//   新: consumeStarFn を呼び出し、サーバ側で stars>0 検証＆ログ記録
 window.consumeStarForExtraCheckin = async (name, pref, lat, lng) => {
   const user = auth.currentUser;
   if (!user) { alert('ログインしてください'); return; }
@@ -10946,22 +10962,44 @@ window.consumeStarForExtraCheckin = async (name, pref, lat, lng) => {
   if (!ok) return;
   
   try {
-    // Firestoreでstarsをatomicに-1
-    await updateDoc(doc(db, 'users', user.uid), { stars: increment(-1) });
+    // ★Step 2-2: Cloud Function consumeStar を呼び出し
+    //   サーバ側で stars>0 検証 → stars -1 → starUsageLogs に記録
+    //   戻り値: { success: true, newStarsCount: number }
+    const result = await consumeStarFn({
+      stationId: `${name}_${pref}`,
+      stationName: name
+    });
     
-    // ローカルキャッシュも更新
-    window._userStarsCache = stars - 1;
+    const newCount = result.data && typeof result.data.newStarsCount === 'number'
+      ? result.data.newStarsCount
+      : stars - 1;
+    
+    // ローカルキャッシュもサーバの結果に同期
+    window._userStarsCache = newCount;
     window._starUnlocked = true;
     
-    // マスターパネルのスター表示を即時更新（マイページが開いてなくても表示用要素があれば反映）
+    // マスターパネルのスター表示を即時更新
     const starEl = document.getElementById('mp-master-star-count');
-    if (starEl) starEl.textContent = (stars - 1).toLocaleString();
+    if (starEl) starEl.textContent = newCount.toLocaleString();
     
     // チェックインパネル再描画 → 上限ガードをスキップして距離計算→チェックインボタンが出る
     if (window.currentStation) window.renderCheckinSection(window.currentStation);
   } catch (e) {
-    console.error('[Star] 消費エラー:', e);
-    alert('スター消費に失敗しました。通信状況を確認してください。');
+    console.error('[Star] Cloud Function 呼び出しエラー:', e);
+    
+    // エラーコード別のメッセージ
+    let msg = 'スター消費に失敗しました。通信状況を確認してください。';
+    if (e && e.code) {
+      if (e.code === 'functions/failed-precondition') {
+        // スター不足（サーバ側で再検証した結果）
+        msg = e.message || 'スターが足りません。ページを再読み込みしてください。';
+      } else if (e.code === 'functions/unauthenticated') {
+        msg = 'ログインの有効期限が切れました。再度ログインしてください。';
+      } else if (e.code === 'functions/invalid-argument') {
+        msg = '入力エラー: ' + (e.message || '不正な値です');
+      }
+    }
+    alert(msg);
   }
 };
 
@@ -19316,7 +19354,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v231</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v232</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
