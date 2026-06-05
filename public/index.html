@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index242 (2026.06.05) — 🟡-3関連: 救済処理 completeCheckinResumed のCloud Function化。Rules v4で stationCards 直書きが禁止されているため、これまで救済処理は実は PERMISSION_DENIED で動作不能だった。通常の tryCompleteCheckin と同じく recordCheckin Cloud Function を呼ぶように統一。checkinLat/Lng は駅座標を使用(5分前に範囲内だった保証は pendingCheckin の存在で担保、CF側半径チェックは0mで確実通過)。エラー時は静かにpendingCheckin破棄(ユーザーは救済を期待してないためalert無し)。基: index241 県またぎ14駅クリーンアップ -->
+<!-- VERSION: index243 (2026.06.05) — 🟡-3完全対処: badges/dailyState/meta のクライアント直書きを全廃、Cloud Function経由に統一。①新規CF: awardBadges(バッジ条件サーバ側再検証)/updateDailyState(loginStreak単調増加等の整合性チェック)/updateMetaCollection(visitCountサーバ管理、addCard/pinCard対応)。②F12でバッジ偽造・連続日数偽装・visitCount水増しの攻撃が完全に塞がる。③Rules v5でbadges/meta/dailyStateをwrite false化。④checkAndAwardBadges大幅refactor: バッジ判定をバッファ→最後にCFを1回だけ呼ぶ。Firestoreコール数も10〜20→1に削減。⑤clearAll/clearOne(デバッグ用全削除)はCF未実装、F12からの呼出はエラー警告。基: index242 救済処理CF化 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -10137,6 +10137,10 @@ const toggleOshiStationFn = httpsCallable(functions, 'toggleOshiStation');
 //   旧: クライアントが checkins / stationCards / users 3つ直接書込み → 履歴捏造可能
 //   新: Cloud Function 経由で全部 atomic 書込み、サーバ側検証
 const recordCheckinFn = httpsCallable(functions, 'recordCheckin');
+// ★index243 (2026-06-05): badges/dailyState/meta のCF経由書込み用（🟡-3対処）
+const awardBadgesFn = httpsCallable(functions, 'awardBadges');
+const updateDailyStateFn = httpsCallable(functions, 'updateDailyState');
+const updateMetaCollectionFn = httpsCallable(functions, 'updateMetaCollection');
 console.log('[Functions] 初期化完了（asia-northeast1）');
 
 // ═══ index174緊急修正：Firestore IndexedDBのみクリーンアップ（Authは絶対保持） ═══
@@ -13882,23 +13886,31 @@ window.mmCloudGetStation = function(stationKey) {
 };
 
 // ★Step4: pinnedIndex を更新（代表カード切り替え）
-// メモリ即更新＋Firestore非同期書き込み
+// ★index243 (2026-06-05): updateMetaCollection CF (mode=pinCard) 経由に統一（🟡-3対処）
+//   メモリは即更新（UX維持）、CFは結果を待ってから返答。CFエラー時はメモリも巻き戻し
 window.mmCloudPinCard = async function(stationKey, newIndex) {
   if (!stationKey || typeof newIndex !== 'number') return false;
   if (!mmCollectionCache || !mmCollectionCache.stations) return false;
   const st = mmCollectionCache.stations[stationKey];
   if (!st || !st.cards) return false;
   if (newIndex < 0 || newIndex >= st.cards.length) return false;
-  st.pinnedIndex = newIndex;
+  const oldIndex = st.pinnedIndex;
+  st.pinnedIndex = newIndex; // メモリ楽観更新
   const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
   if (uid) {
     try {
-      await setDoc(doc(db, 'users', uid, 'meta', 'collection'), {
-        stations: mmCollectionCache.stations,
-        updatedAt: serverTimestamp()
+      const res = await updateMetaCollectionFn({
+        mode: 'pinCard',
+        stationKey: stationKey,
+        newIndex: newIndex,
       });
+      // CFレスポンスでメモリを正規化（不要だが念のため）
+      if (res && res.data && res.data.station) {
+        mmCollectionCache.stations[stationKey] = res.data.station;
+      }
     } catch (e) {
-      console.warn('[mmCloud] PinCard 保存失敗:', e);
+      console.warn('[mmCloud] PinCard CF呼出失敗:', e && e.code, e && e.message);
+      st.pinnedIndex = oldIndex; // メモリ巻き戻し
       return false;
     }
   }
@@ -13906,9 +13918,10 @@ window.mmCloudPinCard = async function(stationKey, newIndex) {
   return true;
 };
 
-// 天気記録を書く（メモリ即更新＋Firestore非同期書き込み）
-// ★★ Step2用「上書き」関数。Step3でカード追加用の mmCloudAddCard が新設されたため、
-//     通常の運用ではこの関数は呼ばれない（Deprecated）。万一のフォールバック用に残置。
+// 天気記録を書く（Deprecated、通常運用では呼ばれない）
+// ★index243 (2026-06-05): updateMetaCollection CF (mode=addCard) 経由に統一（🟡-3対処）
+//   旧の「単純上書き」挙動は失われ、CFのaddCardロジック（同じ組合せは据え置き、新組合せは追加）に
+//   置き換わる。本関数はDeprecatedなのでこの挙動変更は問題なし。
 window.mmCloudSetRecord = async function(stationKey, record) {
   if (!stationKey || !record) return;
   if (!mmCollectionCache) mmCollectionCache = { stations: {}, updatedAt: null };
@@ -13938,16 +13951,27 @@ window.mmCloudSetRecord = async function(stationKey, record) {
     };
   }
 
-  // Firestoreに非同期書き込み（待たない＝カクツキ防止。メモリは上で即更新済み）
+  // ★index243: updateMetaCollection CF (mode=addCard) 経由
   const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
   if (uid) {
     try {
-      await setDoc(doc(db, 'users', uid, 'meta', 'collection'), {
-        stations: mmCollectionCache.stations,
-        updatedAt: serverTimestamp()
+      const res = await updateMetaCollectionFn({
+        mode: 'addCard',
+        stationKey: stationKey,
+        card: {
+          season: record.season,
+          time: record.time,
+          weather: record.weather,
+          type: record.type || 'cloud',
+          special: null,
+        },
       });
+      // CFレスポンスでメモリ正規化
+      if (res && res.data && res.data.station) {
+        mmCollectionCache.stations[stationKey] = res.data.station;
+      }
     } catch (e) {
-      console.warn('[mmCloud] 保存失敗:', e);
+      console.warn('[mmCloud] SetRecord CF呼出失敗:', e && e.code, e && e.message);
     }
   }
 };
@@ -14162,16 +14186,31 @@ window.mmCloudAddCard = async function(stationKey, weather) {
     status = 'new_station';
   }
 
-  // Firestoreに非同期書き込み（メモリは上で即更新済み）
+  // ★index243 (2026-06-05): updateMetaCollection CF (mode=addCard) 経由に統一（🟡-3対処）
+  //   旧: クライアント直書き → F12でvisitCount偽装可能だった
+  //   新: CF側で visitCount を +1 管理、firstVisitAt不変、組合せ判定もサーバ側
+  //   メモリは楽観的に先に更新済み、CF成功時はレスポンスで正規化
   const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
   if (uid) {
     try {
-      await setDoc(doc(db, 'users', uid, 'meta', 'collection'), {
-        stations: mmCollectionCache.stations,
-        updatedAt: serverTimestamp()
+      const res = await updateMetaCollectionFn({
+        mode: 'addCard',
+        stationKey: stationKey,
+        card: {
+          season: weather.season,
+          time: weather.time,
+          weather: weather.weather,
+          type: weather.type || 'fresh',
+          special: weather.special || null,
+        },
       });
+      // CFレスポンスの station でメモリを正規化（visitCount等を正値に）
+      if (res && res.data && res.data.station) {
+        mmCollectionCache.stations[stationKey] = res.data.station;
+      }
     } catch (e) {
-      console.warn('[mmCloud] AddCard 保存失敗:', e);
+      console.warn('[mmCloud] AddCard CF呼出失敗:', e && e.code, e && e.message);
+      // CF失敗時もメモリは更新済みなのでUIは正常表示（次回起動時に同期）
     }
   }
   console.log('[mmCloud] AddCard ' + stationKey + ' → ' + status +
@@ -14192,28 +14231,15 @@ window.mmCloudDebugDump = function() {
   }
 };
 window.mmCloudDebugClearAll = async function() {
-  mmCollectionCache = { stations: {}, updatedAt: null };
-  const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
-  if (uid) {
-    try {
-      await setDoc(doc(db, 'users', uid, 'meta', 'collection'), { stations: {}, updatedAt: serverTimestamp() });
-      console.log('[mmCloud] 全カード記録を削除しました');
-    } catch (e) { console.warn(e); }
-  }
+  // ★index243: デバッグ用全削除はCF未実装（Rules v5でclient書込み禁止のため動作しない）
+  //   全削除が必要な場合は Firebase Console から直接 meta/collection ドキュメントを削除すること
+  console.warn('[mmCloud] DebugClearAll はCF未実装。Firebase Console から手動削除してください: users/<uid>/meta/collection');
+  alert('全カード削除はFirebase Consoleから手動操作してください\n（セキュリティ強化のためクライアントから削除不可）');
 };
 window.mmCloudDebugClearOne = async function(stationKey) {
-  if (mmCollectionCache && mmCollectionCache.stations) {
-    delete mmCollectionCache.stations[stationKey];
-    const uid = window.auth && window.auth.currentUser && window.auth.currentUser.uid;
-    if (uid) {
-      try {
-        await setDoc(doc(db, 'users', uid, 'meta', 'collection'), {
-          stations: mmCollectionCache.stations, updatedAt: serverTimestamp()
-        });
-        console.log('[mmCloud] ' + stationKey + ' の記録を削除しました');
-      } catch (e) { console.warn(e); }
-    }
-  }
+  // ★index243: デバッグ用個別削除はCF未実装
+  console.warn('[mmCloud] DebugClearOne はCF未実装: ' + stationKey);
+  alert('個別カード削除はFirebase Consoleから手動操作してください\n（セキュリティ強化のためクライアントから削除不可）');
 };
 
 onAuthStateChanged(auth, async (user) => {
@@ -14676,16 +14702,15 @@ function calcMissionProgress(mission, weekCheckins, allUserCards, userProfile) {
   return 0;
 }
 
-// ─── バッジFirestore保存 ───
-async function persistBadge(uid, badgeId, data) {
-  try {
-    await setDoc(doc(db, 'users', uid, 'badges', badgeId), {
-      ...data,
-      earnedAt: serverTimestamp()
-    });
-  } catch(e) {
-    console.error('バッジ保存エラー:', badgeId, e);
-  }
+// ─── バッジ保存（★index243: バッファに積むだけ、CFはまとめて1回呼ぶ）───
+//   旧: 単発で setDoc → Firestore コール数が獲得バッジ数だけ膨れる、F12偽造可
+//   新: バッファに積み、checkAndAwardBadges 末尾で awardBadges CF を1回だけ呼ぶ
+//       CF側でバッジ条件をサーバ再検証するため、F12偽造を完全防止
+let _pendingBadgeAdds = [];   // [{ id, type, ...data }]
+let _pendingBadgeDeletes = []; // [string] (repeat_系のみ)
+function persistBadge(uid, badgeId, data) {
+  // 互換性維持: 旧シグネチャ persistBadge(uid, badgeId, data) のまま
+  _pendingBadgeAdds.push({ id: badgeId, ...data });
 }
 
 // ─── チェックイン後のバッジ判定（新規獲得分のみ抽出して保存） ───
@@ -14791,15 +14816,13 @@ async function checkAndAwardBadges(uid) {
     // 既に最上位tierを獲得済みなら何もしない
     if (userBadges.has(winnerBadgeId)) continue;
     
-    // 下位tierを削除（既獲得分）
+    // 下位tierを削除（既獲得分） ★index243: バッファに積む（CFでまとめて削除）
     for (const tierId of ALL_TIER_IDS) {
       if (tierId === highestTier.id) continue;
       const lowerBadgeId = `repeat_${tierId}_${card.stationId}`;
       if (userBadges.has(lowerBadgeId)) {
-        try {
-          await deleteDoc(doc(db, 'users', uid, 'badges', lowerBadgeId));
-          userBadges.delete(lowerBadgeId);
-        } catch(e) { console.warn('下位tier削除失敗', lowerBadgeId, e); }
+        _pendingBadgeDeletes.push(lowerBadgeId);
+        userBadges.delete(lowerBadgeId);
       }
     }
     
@@ -14814,11 +14837,43 @@ async function checkAndAwardBadges(uid) {
       name: `${stationName}${highestTier.suffix}`,
       desc: `同じ駅に${highestTier.count}回チェックインの証`
     };
-    await persistBadge(uid, winnerBadgeId, badge);
+    persistBadge(uid, winnerBadgeId, badge); // ★index243: バッファに積むのみ、await不要
     userBadges.set(winnerBadgeId, badge);
     newlyEarned.push(badge);
   }
   
+  // ★index243 (2026-06-05): バッジ確定書込みをCloud Function経由に一本化
+  //   旧: 各 persistBadge で都度 setDoc → コール数膨大＋F12偽造可能
+  //   新: バッファに溜めて awardBadges CF を1回だけ呼ぶ → コール数1回、サーバ側で条件再検証
+  if (_pendingBadgeAdds.length > 0 || _pendingBadgeDeletes.length > 0) {
+    try {
+      const res = await awardBadgesFn({
+        badges: _pendingBadgeAdds,
+        deleteBadgeIds: _pendingBadgeDeletes,
+      });
+      const data = res && res.data;
+      if (data) {
+        const awardedCount = (data.awarded || []).length;
+        const rejectedCount = (data.rejected || []).length;
+        console.log(`[awardBadges] CF成功: awarded=${awardedCount} rejected=${rejectedCount}`);
+        if (rejectedCount > 0) {
+          console.warn('[awardBadges] 拒否されたバッジ:', data.rejected);
+          // 拒否されたバッジはローカルからも除外
+          const rejectedIds = new Set((data.rejected || []).map(r => r.id));
+          newlyEarned = newlyEarned.filter(b => !rejectedIds.has(b.id));
+        }
+      }
+    } catch(e) {
+      // CFエラー時: UI体験を壊さないため alert は出さず、コンソールログのみ
+      // ローカル変数(newlyEarned, userBadges)は更新済みなのでUIは正常表示される
+      // 次回起動時に Firestore から再読込された時点で実データと同期される
+      console.warn('[awardBadges] CF呼出エラー(UIは続行):', e && e.code, e && e.message);
+    }
+    // バッファクリア
+    _pendingBadgeAdds = [];
+    _pendingBadgeDeletes = [];
+  }
+
   return newlyEarned;
 }
 
@@ -18545,28 +18600,33 @@ if ('serviceWorker' in navigator) {
   };
   
   window.mmSetDailyState = async function(uid, data){
+    // ★index243 (2026-06-05): updateDailyState Cloud Function 経由に統一（🟡-3対処）
+    //   旧: クライアント直書き → F12でloginStreak偽造可能だった
+    //   新: CF側でloginStreak単調増加チェック、lastLoginDate未来日付禁止、bonusClaimedToday同日内取消禁止、
+    //       lastLoginBonusXPの整合性チェック等を実施
+    //   Rules v5 で dailyState は write false なので、クライアント直書きはRules違反でエラーになる
     try {
-      // ★index210 セーフガード: Firestore は undefined 値を含むドキュメントを拒否する。
-      //   万一 undefined が紛れ込んでも保存できるよう、ここで再帰的に除去。
-      //   今後新しいミッションタイプを追加する時の保険にもなる。
+      // クライアント側でも undefined 除去（CF側もやるが二重防御）
       const stripUndefined = (obj) => {
         if (obj === null || typeof obj !== 'object') return obj;
         if (Array.isArray(obj)) return obj.map(stripUndefined);
         const cleaned = {};
         Object.keys(obj).forEach(k => {
-          if (obj[k] === undefined) return;  // undefined フィールドはスキップ
+          if (obj[k] === undefined) return;
           cleaned[k] = stripUndefined(obj[k]);
         });
         return cleaned;
       };
       const safeData = stripUndefined(data);
-      const ref = window.fsDoc(window.db, 'users', uid, 'dailyState', 'current');
-      await window.fsSetDoc(ref, safeData, { merge: true });
-      window._lastDailyError = null;
-      return true;
+      const res = await updateDailyStateFn({ data: safeData });
+      if (res && res.data && res.data.success) {
+        window._lastDailyError = null;
+        return true;
+      }
+      return false;
     } catch(e) {
-      console.warn('dailyState保存エラー:', e);
-      window._lastDailyError = e;  // ★index182: 実機切り分け用にエラー保持
+      console.warn('[updateDailyState] CF呼出エラー:', e && e.code, e && e.message);
+      window._lastDailyError = e;
       return false;
     }
   };
@@ -19596,7 +19656,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v242</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v243</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
