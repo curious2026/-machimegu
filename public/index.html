@@ -50,6 +50,32 @@
   });
 })();
 </script>
+<script>
+// ═══ ★index238 🟡-2: PII マスク関数（ログ出力時のメール/UIDマスク用）═══
+//   全スコープから window.maskEmail / window.maskUid で呼べる。
+//   目的: console.log にメール/UIDが平文で出ることを防ぐ。
+//         - Sentry の自動 breadcrumb 取得時に PII が外部送信されるのを防止
+//         - F12デバッガ越しの覗き見対策（カフェのWi-Fi等）
+//         - Play 申請 Data Safety Section の「ログにPIIを残さない」申告と整合
+//   呼び出し例:
+//     console.log('[Auth] ログイン成功:', window.maskEmail(user.email));
+//        → '[Auth] ログイン成功: ***@example.com'
+//     console.log('[Bonus] uid=', window.maskUid(user.uid));
+//        → '[Bonus] uid= abc***xyz'
+(function(){
+  window.maskEmail = function(email) {
+    if (!email || typeof email !== 'string') return '';
+    const at = email.indexOf('@');
+    if (at < 0) return '***';
+    return '***' + email.slice(at);
+  };
+  window.maskUid = function(uid) {
+    if (!uid || typeof uid !== 'string') return '';
+    if (uid.length <= 6) return '***';
+    return uid.slice(0, 3) + '***' + uid.slice(-3);
+  };
+})();
+</script>
 <!-- ═══ Sentry エラー監視 ═══ -->
 <script
   src="https://js.sentry-cdn.com/6fd4e6d2fd1031e86e3c1acac510e894.min.js"
@@ -124,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index237 (2026.06.05) — レビュー🟡 ✨-2対応: 外部からログインへの導線の長さを解消。①オンボーディング最終画面のCTAを「はじめる」→「ログインしてはじめる」に格上げ(押下でmmOnboardingFinish→signInWithGoogle直結、右上の小さなログインボタンを探す工程を消す) ②サブCTAのテキスト「スキップ」→「あとでログイン」(未ログインで地図を見る選択肢を明示) ③スプラッシュの「タップでスキップ」ヒント出現タイミングを 2.5秒→1.0秒 に前倒し(タップ可能領域は既にonclick=skipSplashで実装済みだったため変更不要。気づきの早さだけ改善)。HTMLとCSSの構造は維持、ロジック側のみ最小改修。基: index236 位置取得の一本化＋15分キャッシュ -->
+<!-- VERSION: index238 (2026.06.05) — レビュー🟡 Step 2クライアント側対応。①PIIマスク(🟡-2): window.maskEmail/maskUid を冒頭scriptで定義しwindow公開、認証ログ3箇所(Popup/Redirect/onAuthStateChanged)とAccount Delete 2箇所、Bonus 1箇所の計6箇所の console.log で email/uid を平文で出さないようマスク化(***@example.com / abc***xyz 形式)。Sentry breadcrumb・F12デバッガ越しの覗き見・Play Data Safety申告整合のため。②SWタイムアウト(🟡-7): service-worker.js v48 と連動、Network First の HTML 経路に 3秒タイムアウトを追加して電波弱い環境での白画面待ち時間を緩和。基: index237 ログイン導線の改善 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -10213,7 +10239,7 @@ window.signInWithGoogle = async () => {
     try {
       console.log('[Auth] signInWithPopup 試行');
       const result = await signInWithPopup(auth, provider);
-      console.log('[Auth] Popupログイン成功:', result.user?.email);
+      console.log('[Auth] Popupログイン成功:', window.maskEmail(result.user?.email));
       safeLogEvent('login', { method: 'Google_Popup' });
       return;
     } catch (popupErr) {
@@ -10258,7 +10284,7 @@ window.signInWithGoogle = async () => {
     console.log('[Auth] getRedirectResult 呼び出し開始');
     const result = await getRedirectResult(auth);
     if (result && result.user) {
-      console.log('[Auth] Redirectログイン成功:', result.user.email);
+      console.log('[Auth] Redirectログイン成功:', window.maskEmail(result.user.email));
       safeLogEvent('login', { method: 'Google_Redirect' });
     } else {
       console.log('[Auth] getRedirectResult: 戻り結果なし（通常起動）');
@@ -10273,7 +10299,7 @@ window.signInWithGoogle = async () => {
   if (typeof onAuthStateChanged === 'function') {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log('[Auth] onAuthStateChanged: ログイン状態確認:', user.email);
+        console.log('[Auth] onAuthStateChanged: ログイン状態確認:', window.maskEmail(user.email));
       } else {
         console.log('[Auth] onAuthStateChanged: 未ログイン');
       }
@@ -13261,7 +13287,7 @@ window.deleteAccountFromMypage = async () => {
     }
     
     // ─── Step 2: Firestore全データ削除 ───
-    console.log('[Account Delete] Step 2: Firestoreデータ削除開始 uid=' + uid);
+    console.log('[Account Delete] Step 2: Firestoreデータ削除開始 uid=' + window.maskUid(uid));
     const subcollections = ['checkins', 'stationCards', 'badges', 'meta'];
     let deletedTotal = 0;
     
@@ -13284,7 +13310,7 @@ window.deleteAccountFromMypage = async () => {
     // ユーザー本体ドキュメント削除（favStations等含む）
     try {
       await deleteDoc(doc(db, 'users', uid));
-      console.log('[Account Delete] users/' + uid + ' 本体削除完了');
+      console.log('[Account Delete] users/' + window.maskUid(uid) + ' 本体削除完了');
     } catch (docErr) {
       console.warn('[Account Delete] users本体削除エラー（続行）:', docErr);
     }
@@ -18600,7 +18626,7 @@ if ('serviceWorker' in navigator) {
       console.log('[Bonus] claim開始');
       const user = auth.currentUser;
       if (!user) { console.warn('[Bonus] auth.currentUser=null'); return; }
-      console.log('[Bonus] uid=', user.uid);
+      console.log('[Bonus] uid=', window.maskUid(user.uid));
       let state = await window.mmGetDailyState(user.uid);
       console.log('[Bonus] state=', state);
       // ★index181: state未生成（初回 or 取得失敗）なら mmProcessLoginBonus で生成してから再取得
@@ -19485,7 +19511,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v237</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v238</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
