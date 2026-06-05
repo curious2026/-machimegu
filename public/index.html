@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index234 (2026.06.02) — recordCheckin Cloud Function化(🔴-3対処): ①recordCheckinFn初期化 ②チェックイン処理(addDoc/setDoc/updateDoc 3つ→Cloud Function 1呼び出し) ③冗長なvisitCount再取得削除。サーバ側で同一駅1日1回・1日3駅上限を検証、3つのドキュメント書込みをatomicトランザクション化、履歴捏造を完全防止 -->
+<!-- VERSION: index235 (2026.06.05) — チェックイン完了フリーズ修正(本番テスト発見バグ): ①mmGetWeatherのfetchに4秒タイムアウト(AbortController)追加→電波不安定でも永久ハングしない ②カードゲット演出(showCheckinSuccess)を天気取得・mmCloudAddCardより先に即出す→カードの瞬間を外部API依存から切離し、砂時計・保留メモも即クリア ③カード保存+天気取得を後追い非同期化(UIブロックなし、失敗してもカードは出る) ④showCheckinSuccessに初回日(checkinDate)を渡す→再訪問カードが今日でなく初訪問日を表示(バグ2修正) ⑤冗長なgetTodayCheckinCount再取得を削除しrecordResult.todayCountを使用 ⑥CF成功後の外側catchにhideCheckinIndicator/clearPending追加(例外時も砂時計を残さない保険)。基: index234 recordCheckin Cloud Function化 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -11239,86 +11239,117 @@ async function tryCompleteCheckin() {
     const isFirstVisit = !!recordResult.isFirstVisit;
     const visitCount = recordResult.visitCount || 1;
 
-    // 今日の回数を再取得
-    todayCount = await getTodayCheckinCount(user.uid);
+    // ★index235: todayCount はCFの戻り値を使用（getTodayCheckinCount の再取得を廃止）。
+    //   再取得の await はフリーズ要因になりうる上、CFが既に正しい値を返している。
+    if (typeof recordResult.todayCount === 'number') {
+      todayCount = recordResult.todayCount;
+    } else {
+      todayCount = Math.min((todayCount || 0) + 1, DAILY_LIMIT);
+    }
     // ★バグ3修正：本日チェックイン済みSetに即座に追加（次回info-panel表示時に即反映）
     todayCheckedInStationIds.add(stationId);
     // ★index227: スター解放フラグをリセット（チェックイン成功 → 次の駅もスターが必要）
     window._starUnlocked = false;
 
-    // ★Step 2-5 (index234): visitCountはCloud Function の戻り値から既に取得済み
-    //   旧: getDoc(stationCards) で再フェッチ → 削除（不要、レイテンシ削減）
+    // ★index235: clearPending() を呼ぶと pendingCheckin が null になるため、
+    //   後続（カード演出・後追いカード保存）で使う値を先にローカルへ退避する。
+    const _ciName = pendingCheckin.stationName;
+    const _ciPref = pendingCheckin.stationPref;
+    const _ciLat  = pendingCheckin.stationLat;
+    const _ciLng  = pendingCheckin.stationLng;
 
-    // ★★ Step3: チェックイン成功時にカードコレクション集約ドキュメントへカード追加 ★★
-    // 「カードが増えるのはチェックイン時だけ」（案A）の核心。
-    // 同じ組み合わせなら据え置き＋訪問回数のみ更新、違えば新カード追加（案B）。
-    // mmCloudAddCard はメモリを同期で即更新するため、直後の showCheckinSuccess →
-    // mmApplyWeather の流れで mmCloudGetRecord が新カードを読める。
-    try {
-      if (typeof window.mmCloudAddCard === 'function' &&
-          typeof window.mmStationKey === 'function' &&
-          typeof window.mmGetSeason === 'function' &&
-          typeof window.mmGetTime === 'function' &&
-          typeof window.mmGetWeather === 'function') {
-        const stationObj = { name: pendingCheckin.stationName, pref: pendingCheckin.stationPref };
-        const stKey = window.mmStationKey(stationObj);
-        const weatherStr = await window.mmGetWeather(pendingCheckin.stationLat, pendingCheckin.stationLng);
-        // ★Step5: tier抽選（初訪問のみ、再訪問では抽選しない）
-        const rolledTier = isFirstVisit ? (window.mmRollCardTier ? window.mmRollCardTier() : null) : null;
-        const addResult = await window.mmCloudAddCard(stKey, {
-          season: window.mmGetSeason(),
-          time: window.mmGetTime(),
-          weather: weatherStr,
-          type: 'fresh',
-          special: rolledTier  // ★Step5: シャイニー/ミシック抽選結果（null=通常）
-        });
-        // ミシック出現時はフラッシュ＋自動シェア演出
-        if (rolledTier && rolledTier.startsWith('mythic') && window.mmShowMythicFlash) {
-          setTimeout(() => window.mmShowMythicFlash(rolledTier, pendingCheckin.stationName, score, rankInfo.rank), 100);
-        } else if (rolledTier === 'shiny' && window.mmShowShinyFlash) {
-          setTimeout(() => window.mmShowShinyFlash(), 100);
+    // ★index235（バグ2修正）: 再訪問なら「初回にカードをもらった日」をカードに渡す。
+    //   未指定だと showCheckinSuccess が new Date()（今日）を描いてしまう。初訪問は null=今日でOK。
+    let checkinDateForCard = null;
+    if (!isFirstVisit) {
+      try {
+        if (typeof window.mmStationKey === 'function' && typeof window.mmCloudGetStation === 'function') {
+          const _stKey0 = window.mmStationKey({ name: _ciName, pref: _ciPref });
+          const _stEntry0 = window.mmCloudGetStation(_stKey0);
+          if (_stEntry0 && _stEntry0.firstVisitAt) checkinDateForCard = _stEntry0.firstVisitAt;
         }
-      } else {
-        console.warn('[Step3] mmCloud関連関数の一部が未準備、カード追加をスキップ');
-      }
-    } catch (e) {
-      console.warn('[Step3] mmCloudAddCard 呼び出しエラー（チェックイン自体は成功）:', e);
+      } catch (_e0) { /* 取得失敗時は今日にフォールバック */ }
     }
 
-    if (window.markCheckedIn) window.markCheckedIn(pendingCheckin.stationName, pendingCheckin.stationPref);
+    if (window.markCheckedIn) window.markCheckedIn(_ciName, _ciPref);
 
     // ★ Phase B: チェックイン情報をミッション進捗用に保存
     // ★index207: 地域別ミッション判定で stationPref/stationLat/stationLng も必要に
     window._lastCheckinData = {
       stationId,
-      stationName: pendingCheckin.stationName,
-      stationPref: pendingCheckin.stationPref,
-      stationLat: pendingCheckin.stationLat,
-      stationLng: pendingCheckin.stationLng,
+      stationName: _ciName,
+      stationPref: _ciPref,
+      stationLat: _ciLat,
+      stationLng: _ciLng,
       score,
       rank: rankInfo.rank,
       isFirstVisit,
     };
 
+    // ★★ index235: カードゲット演出を最優先で「即」出す ★★
+    //   このアプリで最も大事な瞬間。天気取得やカード保存(後述)を待たずに先に出すことで、
+    //   屋外の回線がどうであろうとカードは必ず・即座に出る（旧版はここで天気待ちフリーズ）。
     showCheckinSuccess({
-      name: pendingCheckin.stationName,
-      pref: pendingCheckin.stationPref,
+      name: _ciName,
+      pref: _ciPref,
       score,
       rank: rankInfo.rank,
       color: rankInfo.color,
       isFirstVisit,
-      visitCount
+      visitCount,
+      checkinDate: checkinDateForCard  // ★index235: 再訪問は初回日、初訪問は null(=今日)
     });
 
+    // ★ 砂時計・保留メモを即クリア（カードが出た＝チェックイン確定）
     clearPending();
     hideCheckinIndicator();
     if (window.currentStation) window.renderCheckinSection(window.currentStation);
     if (typeof runBadgeCheckAfterCheckin === 'function') {
       runBadgeCheckAfterCheckin();
     }
+
+    // ★★ index235: カードコレクションへの永続化＋天気エフェクトは「後追い」で実行 ★★
+    //   await でUIを止めない。失敗してもカードは既に出ているので体験に影響なし。
+    //   2.8秒後に開くカードに間に合えば天気が乗り、間に合わなければ次に開いた時に反映される。
+    //   「カードが増えるのはチェックイン時だけ」（案A）の核心はここで担保。
+    (async function persistCardAfterShow(){
+      try {
+        if (typeof window.mmCloudAddCard === 'function' &&
+            typeof window.mmStationKey === 'function' &&
+            typeof window.mmGetSeason === 'function' &&
+            typeof window.mmGetTime === 'function' &&
+            typeof window.mmGetWeather === 'function') {
+          const stKey = window.mmStationKey({ name: _ciName, pref: _ciPref });
+          const weatherStr = await window.mmGetWeather(_ciLat, _ciLng);  // ★4秒タイムアウト付き
+          // ★Step5: tier抽選（初訪問のみ、再訪問では抽選しない）
+          const rolledTier = isFirstVisit ? (window.mmRollCardTier ? window.mmRollCardTier() : null) : null;
+          await window.mmCloudAddCard(stKey, {
+            season: window.mmGetSeason(),
+            time: window.mmGetTime(),
+            weather: weatherStr,
+            type: 'fresh',
+            special: rolledTier  // ★Step5: シャイニー/ミシック抽選結果（null=通常）
+          });
+          // ミシック/シャイニー出現演出（カードの上に重ねて出す）
+          if (rolledTier && rolledTier.startsWith('mythic') && window.mmShowMythicFlash) {
+            setTimeout(function(){ window.mmShowMythicFlash(rolledTier, _ciName, score, rankInfo.rank); }, 100);
+          } else if (rolledTier === 'shiny' && window.mmShowShinyFlash) {
+            setTimeout(function(){ window.mmShowShinyFlash(); }, 100);
+          }
+        } else {
+          console.warn('[Step3] mmCloud関連関数の一部が未準備、カード追加をスキップ');
+        }
+      } catch (e) {
+        console.warn('[Step3] mmCloudAddCard 呼び出しエラー（チェックイン自体は成功）:', e);
+      }
+    })();
   } catch (e) {
     console.error('チェックイン保存エラー:', e);
-    alert('チェックインの保存に失敗しました: ' + e.message);
+    // ★index235: 例外時も砂時計と保留メモを必ず消す（カードが出ない状態で固着させない保険）。
+    try { clearPending(); } catch(_e1) {}
+    try { hideCheckinIndicator(); } catch(_e2) {}
+    try { if (window.currentStation) window.renderCheckinSection(window.currentStation); } catch(_e3) {}
+    alert('チェックインの保存に失敗しました: ' + (e && e.message ? e.message : ''));
   }
 }
 
@@ -17448,7 +17479,17 @@ if ('serviceWorker' in navigator) {
     }
     try {
       const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lng + '&current=weather_code&timezone=auto';
-      const res = await fetch(url);
+      // ★index235: 4秒タイムアウト。屋外の不安定な回線で応答が返らないと
+      //   await fetch が無限待ちになり、チェックイン完了処理ごとフリーズしていた。
+      //   abort されると AbortError を throw → 下の catch で 'sunny' を返して先へ進む。
+      const _wctrl = new AbortController();
+      const _wtid = setTimeout(function(){ _wctrl.abort(); }, 4000);
+      let res;
+      try {
+        res = await fetch(url, { signal: _wctrl.signal });
+      } finally {
+        clearTimeout(_wtid);
+      }
       if(!res.ok) throw new Error('weather api');
       const data = await res.json();
       const code = (data && data.current && data.current.weather_code) || 0;
@@ -19357,7 +19398,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v234</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v235</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
