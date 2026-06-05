@@ -1,20 +1,34 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v9（Phase E：プリ計算 + 一括取得API）
+// 街巡 server.js v10（Step 1 全部入り：レビュー 2026-06-05 反映）
 // ═══════════════════════════════════════════════════════════════
-// 主要変更点：
+// v9 → v10 の変更点（2026-06-05 総合レビュー対応）：
+//   🔴-1: /api/test を本番から削除（レート制限・認証なしでDuckDB→S3クエリ発生
+//         する穴。コスト爆発リスク）
+//   🟡-1: helmet によるセキュリティヘッダー（HSTS / X-Content-Type-Options /
+//         X-Frame-Options / Referrer-Policy）を導入。CSPは現状unsafe-inline
+//         必要のため無効化（将来Step 3で詰める）
+//   🟡-4: /api/score の動的計算経路に座標範囲チェック追加（日本国内範囲外を
+//         400で弾く。攻撃座標でのS3クエリを抑制）
+//   🟡-5: express.json() に limit:'10kb' 設定（POSTのbody肥大化攻撃を抑制）
+//   🟡-6: /api/version にレート制限（generalLimiter）追加
+//   🟡-8: STATIONS_BY_ID Map化（/api/score キャッシュ参照を O(N²)→O(N) に）
+//   🟡-9,10: uncaughtException / rebuild失敗を Discord webhook で通知
+//         （DISCORD_WEBHOOK_URL 環境変数。未設定でも安全に動作）
+//
+// 既存機能（v9から維持）：
 //   - 起動時に旧キャッシュ即読込（stale-while-revalidate）
 //   - バックグラウンドで全駅×3半径をプリ計算
-//   - 新エンドポイント /api/all-scores（一括取得）
-//   - 既存 /api/score も維持（後方互換）
-//   - HTTPキャッシュヘッダで30日キャッシュ
+//   - エンドポイント /api/all-scores（一括取得）、/api/score（個別後方互換）
+//   - HTTPキャッシュヘッダで30日キャッシュ → 5分に短縮済（v9）
 //   - 四半期更新判定（前回計算から90日以上で再計算）
-//   - 管理用 /api/rebuild、/api/status
+//   - 管理用 /api/admin/rebuild、/api/status、/api/admin/diff
 // ═══════════════════════════════════════════════════════════════
 
 const express = require('express');
 const compression = require('compression');
 const cors    = require('cors');
 const rateLimit = require('express-rate-limit');  // ★Step 1-②: APIレート制限
+const helmet  = require('helmet');                // ★v10: セキュリティヘッダー（🟡-1）
 const path    = require('path');
 const fs      = require('fs');
 const duckdb  = require('duckdb');
@@ -97,6 +111,21 @@ app.use(compression({
   threshold: 1024,    // 1KB未満は圧縮しない（オーバーヘッド回避）
 }));
 
+// ★v10 🟡-1: セキュリティヘッダー（helmet）
+//   HSTS: HTTPS強制（1年）。Cloudflareでも有効化済だが、Origin側でも明示。
+//   X-Content-Type-Options: nosniff（MIME sniffing攻撃防止）
+//   X-Frame-Options: SAMEORIGIN（clickjacking防止）
+//   Referrer-Policy: strict-origin-when-cross-origin（リファラ漏洩抑制）
+//   CSP: 現状インラインscript/styleが大量にあるため無効化。将来Step 3で詰める。
+//        index.html側で meta CSP を入れる場合も同様に nonce 等の対応が要る。
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,  // Firebase/Google CDN との互換性
+  crossOriginOpenerPolicy: false,    // signInWithPopup の Google ログインウィンドウ互換
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: false },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+}));
+
 // ★Step 1-①: CORS制限（本番ドメインと開発用localhostのみ許可）
 //   旧: app.use(cors()) → 誰でもAPIを叩ける = DDoS/コスト爆発リスク
 //   新: 明示的なoriginリストで制限
@@ -139,7 +168,11 @@ const adminLimiter = rateLimit({
 app.use('/api/score', generalLimiter);
 app.use('/api/all-scores', heavyLimiter);
 app.use('/api/admin', adminLimiter);
-app.use(express.json());
+// ★v10 🟡-6: /api/version はクライアントが定期ポーリングする想定。
+//   no-storeでCDNキャッシュ効かないため、Origin側で攻撃を弾く必要あり。
+app.use('/api/version', generalLimiter);
+// ★v10 🟡-5: body size limit（POSTエンドポイントはbody不要 or 極小JSONのみ）
+app.use(express.json({ limit: '10kb' }));
 
 // 静的ファイルにキャッシュヘッダ
 app.use(express.static(path.join(__dirname, 'public'), {
@@ -191,9 +224,12 @@ const SCORES_CACHE_PREV_FILE = path.join(CACHE_DIR, 'scores_cache_previous.json'
 
 // ═══ 駅マスタ読込 ═══
 let STATIONS = [];
+// ★v10 🟡-8: id → station の O(1) 引きMap。/api/score のキャッシュ参照を O(N²) → O(N) に。
+const STATIONS_BY_ID = new Map();
 try {
   STATIONS = JSON.parse(fs.readFileSync(STATIONS_FILE, 'utf8'));
-  console.log(`駅マスタ読込: ${STATIONS.length}駅`);
+  STATIONS.forEach(s => STATIONS_BY_ID.set(s.id, s));
+  console.log(`駅マスタ読込: ${STATIONS.length}駅 (Map化: ${STATIONS_BY_ID.size}件)`);
 } catch(e) {
   console.error('stations.json読込失敗:', e.message);
   console.error('→ stations.jsonをルート直下に配置してください');
@@ -812,11 +848,20 @@ app.get('/api/score', async (req, res) => {
     const r = parseInt(req.query.radius) || 800;
     const rKey = `r${r}`;
     
-    // プリ計算キャッシュから探す（最寄り駅で一致）
+    // ★v10 🟡-4: 座標範囲チェック（日本国内のみ受付）
+    //   NaN/Infinity/関東外座標でのキャッシュミス→S3クエリを抑制。
+    //   範囲: 緯度20〜46（沖縄〜北海道）、経度122〜154（与那国〜南鳥島）。
+    //   攻撃座標を投げてキャッシュミスを誘発する手口を弾く。
+    if (!isFinite(lat) || !isFinite(lng) || lat < 20 || lat > 46 || lng < 122 || lng > 154) {
+      return res.status(400).json({ error: 'invalid coordinates', score: 0, details: {} });
+    }
+    
+    // ★v10 🟡-8: キャッシュ参照は Map で O(1) 引き。
+    //   旧: scoresCache.stations 全件ループ × STATIONS.find = O(N²)（1737駅で約300万比較）
+    //   新: scoresCache.stations 全件ループ × STATIONS_BY_ID.get = O(N)
     let foundData = null;
     for (const [sid, data] of Object.entries(scoresCache.stations || {})) {
-      // STATIONSから座標で一致を探す
-      const st = STATIONS.find(s => s.id === sid);
+      const st = STATIONS_BY_ID.get(sid);
       if (st && Math.abs(st.lat - lat) < 0.0001 && Math.abs(st.lng - lng) < 0.0001) {
         foundData = data[rKey];
         break;
@@ -899,7 +944,10 @@ app.post('/api/admin/rebuild', requireAdmin, (req, res) => {
     const check = checkRebuildMode();
     if (check.mode === 'incremental') {
       rebuildScores({ mode: 'incremental', stations: check.stations })
-        .catch(e => console.error('rebuild failed:', e));
+        .catch(e => {
+          console.error('rebuild failed:', e);
+          notifyOps('rebuild failed (incremental, admin)', e && e.stack ? e.stack : String(e));
+        });
       return res.json({ ok: true, message: `差分計算開始（${check.stations.length}駅）`, status: getBuildStatus() });
     } else {
       console.log('[admin] incremental要求だが差分なし → フルモードで実行');
@@ -908,7 +956,10 @@ app.post('/api/admin/rebuild', requireAdmin, (req, res) => {
   
   // デフォルト：強制フルモード
   console.log('[admin] 手動rebuild受信: 強制フルモード実行（autoスキップ廃止）');
-  rebuildScores({ mode: 'full' }).catch(e => console.error('rebuild failed:', e));
+  rebuildScores({ mode: 'full' }).catch(e => {
+    console.error('rebuild failed:', e);
+    notifyOps('rebuild failed (full, admin)', e && e.stack ? e.stack : String(e));
+  });
   return res.json({ ok: true, message: '強制フル再計算開始（全駅再計算）', status: getBuildStatus() });
 });
 
@@ -1009,25 +1060,20 @@ app.get('/api/admin/diff', requireAdmin, (req, res) => {
 // 旧 /api/rebuild（後方互換、認証なしのまま）→ 削除して認証必須に統一
 // app.post('/api/rebuild') は requireAdmin に移行
 
-// テスト
-app.get('/api/test', async (req, res) => {
-  try {
-    const r = parseInt(req.query.radius) || 800;
-    const counts = await getRawCounts(35.6896, 139.7006, r);
-    const bonusObj = calcBonus(35.6896, 139.7006);
-    const result = calcScore(counts, r, bonusObj);
-    res.json({ 
-      ok: true, 
-      source: 'Overture Maps 2026-04-15', 
-      radius: r, 
-      globalMax: globalMaxByRadius[String(r)],
-      ...result, 
-      counts 
-    });
-  } catch(e) {
-    res.json({ ok: false, error: e.message });
-  }
-});
+// ★v10 🔴-1: /api/test を本番から削除（2026-06-05 総合レビュー対応）
+//   旧コード:
+//     app.get('/api/test', async (req, res) => {
+//       const counts = await getRawCounts(35.6896, 139.7006, r);  // ←S3クエリ走る
+//       const bonusObj = calcBonus(35.6896, 139.7006);
+//       const result = calcScore(counts, r, bonusObj);
+//       res.json({ ok: true, ... });
+//     });
+//   問題:
+//     - /api/score, /api/admin, /api/all-scores のレート制限グループ外
+//     - 認証ミドルウェアもなし（誰でも叩ける）
+//     - 内部で getRawCounts → DuckDBがS3 Parquetへクエリ発行
+//     - 攻撃者が叩き続けるとS3 GET費用とメモリ占有が爆発
+//   開発時のスモークテストは npm test 等のローカルスクリプトに切り出す。
 
 // ヘルスチェック
 app.get('/api/health', (req, res) => res.json({
@@ -1042,15 +1088,46 @@ app.get('/api/health', (req, res) => res.json({
 // 起動
 // ═══════════════════════════════════════════════════════════════
 
+// ★v10 🟡-9,10: 異常時の運用通知（Discord webhook）
+//   DISCORD_WEBHOOK_URL 環境変数を Railway に設定すると有効。
+//   未設定でも安全に動作（catch内でURL確認）。
+//   発火条件:
+//     - uncaughtException / unhandledRejection
+//     - rebuildScores の失敗（catch経由でこの関数を呼ぶ）
+//   送信に失敗しても運用継続（通知失敗で本体が止まる事故を防ぐ）。
+//   レート: 同一メッセージの連投を5分間1回に抑える（ノイズ防止）。
+const _notifyLastSent = new Map();
+function notifyOps(title, detail) {
+  const url = process.env.DISCORD_WEBHOOK_URL;
+  if (!url) return;
+  const key = String(title).slice(0, 80);
+  const now = Date.now();
+  const last = _notifyLastSent.get(key) || 0;
+  if (now - last < 5 * 60 * 1000) return;  // 5分間に同一titleは1回まで
+  _notifyLastSent.set(key, now);
+  const msg = `🚨 **${title}**\n\`\`\`\n${String(detail || '').slice(0, 1500)}\n\`\`\``;
+  // fire-and-forget（待たない）
+  try {
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: msg })
+    }).catch(() => {});
+  } catch(_) {}
+}
+
 // ★Step 1-⑤: 未捕捉例外ハンドラ（プロセスクラッシュ防止）
 //   Node.jsで未捕捉例外/Promise rejectionが出るとプロセスが落ち、Railwayが再起動する間サービス断。
 //   ログだけ出して継続するように。
+//   v10 🟡-9: Discord webhook で通知も飛ばす（DISCORD_WEBHOOK_URL設定時のみ）
 process.on('uncaughtException', (err) => {
   console.error('[uncaughtException]', err && err.stack ? err.stack : err);
+  notifyOps('uncaughtException', err && err.stack ? err.stack : String(err));
   // プロセスは継続させる（Railway再起動による断を防ぐ）
 });
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[unhandledRejection]', reason);
+  notifyOps('unhandledRejection', String(reason && reason.stack ? reason.stack : reason));
   // 同上、継続
 });
 
@@ -1070,13 +1147,19 @@ initDB().then(() => {
   if (rebuildCheck.mode === 'full') {
     console.log('[起動] フル再計算が必要、30秒後にバックグラウンドで開始');
     setTimeout(() => {
-      rebuildScores({ mode: 'full' }).catch(e => console.error('[起動] rebuild failed:', e));
+      rebuildScores({ mode: 'full' }).catch(e => {
+        console.error('[起動] rebuild failed:', e);
+        notifyOps('rebuild failed (full, startup)', e && e.stack ? e.stack : String(e));
+      });
     }, 30000);
   } else if (rebuildCheck.mode === 'incremental') {
     console.log(`[起動] 差分計算が必要（${rebuildCheck.stations.length}駅追加）、10秒後にバックグラウンドで開始`);
     setTimeout(() => {
       rebuildScores({ mode: 'incremental', stations: rebuildCheck.stations })
-        .catch(e => console.error('[起動] rebuild failed:', e));
+        .catch(e => {
+          console.error('[起動] rebuild failed:', e);
+          notifyOps('rebuild failed (incremental, startup)', e && e.stack ? e.stack : String(e));
+        });
     }, 10000);
   } else {
     const ageDays = Math.floor((Date.now() - scoresCache.builtAt) / (24*60*60*1000));
