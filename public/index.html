@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index236 (2026.06.05) — レビュー🟡 ✨-1対応: ログイン時に位置情報が何度も聞かれる問題の解消。①位置取得の入口を一本化する acquirePosition() を新設(15分キャッシュ＋取得中Promise共有で多重OS呼出を防止) ②getCurrentPos を acquirePosition に委譲し、onAuthStateChanged複数回発火・チェックイン開始・現在地ボタン等の全経路を1ゲートに集約 ③watchPosition/getFreshPosition/gotoCurrentLocation/起動時getCurrentPosition の各成功時に内部キャッシュ(_setGeoCache)へ流し込み、どの経路で取れても以降の経路はキャッシュヒット ④window._setGeoCache/window.acquirePosition を公開しclassic↔moduleで共有。getFreshPositionの「キャッシュ無視で鮮度必須」挙動は維持(チェックイン成立判定用)。基: index235 チェックイン完了フリーズ修正 -->
+<!-- VERSION: index237 (2026.06.05) — レビュー🟡 ✨-2対応: 外部からログインへの導線の長さを解消。①オンボーディング最終画面のCTAを「はじめる」→「ログインしてはじめる」に格上げ(押下でmmOnboardingFinish→signInWithGoogle直結、右上の小さなログインボタンを探す工程を消す) ②サブCTAのテキスト「スキップ」→「あとでログイン」(未ログインで地図を見る選択肢を明示) ③スプラッシュの「タップでスキップ」ヒント出現タイミングを 2.5秒→1.0秒 に前倒し(タップ可能領域は既にonclick=skipSplashで実装済みだったため変更不要。気づきの早さだけ改善)。HTMLとCSSの構造は維持、ロジック側のみ最小改修。基: index236 位置取得の一本化＋15分キャッシュ -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2385,7 +2385,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 
 #splash-overlay.first-launch.playing .splash-skip-hint{
-  animation:splashSkipHint 0.5s ease-out 2.5s forwards;
+  /* ★index237 ✨-2対応: 出現を2.5s→1.0sに前倒し。
+     タップ可能領域は元々 splash-overlay の onclick="skipSplash()" で実装済みだが、
+     「タップで飛ばせる」と気づくのが遅いと結局7秒待ってしまうため、ヒントの出現を早める。 */
+  animation:splashSkipHint 0.5s ease-out 1.0s forwards;
 }
 @keyframes splashSkipHint{
   to{opacity:1}
@@ -18112,7 +18115,7 @@ if ('serviceWorker' in navigator) {
       <div class="mm-ob-dot" data-idx="2"></div>
     </div>
     <div class="mm-ob-buttons">
-      <button class="mm-ob-skip" onclick="window.mmOnboardingSkip()" type="button">スキップ</button>
+      <button class="mm-ob-skip" onclick="window.mmOnboardingSkip()" type="button">あとでログイン</button>
       <button class="mm-ob-next" id="mm-ob-next-btn" onclick="window.mmOnboardingNext()" type="button">つぎへ</button>
     </div>
   </div>
@@ -18162,16 +18165,28 @@ if ('serviceWorker' in navigator) {
     });
     dots.forEach((d, i) => d.classList.toggle('active', i === idx));
     
-    // 最後のスライドなら「はじめる」ボタンに
+    // ★index237 ✨-2対応: 最後のスライドは「ログインしてはじめる」に格上げ。
+    //   従来「はじめる」→ホーム遷移後に右上の小さなログインボタンを探す動線が、
+    //   ボタン1つでGoogleログインに直結するようになり、新規ユーザーの離脱を防ぐ。
     if (nextBtn) {
-      nextBtn.textContent = (idx >= TOTAL_SLIDES - 1) ? 'はじめる' : 'つぎへ';
+      nextBtn.textContent = (idx >= TOTAL_SLIDES - 1) ? 'ログインしてはじめる' : 'つぎへ';
     }
     currentSlide = idx;
   }
   
   window.mmOnboardingNext = function(){
     if (currentSlide >= TOTAL_SLIDES - 1) {
+      // ★index237 ✨-2対応: 最終画面の「ログインしてはじめる」押下で
+      //   オンボーディング完了処理＋Googleログインを連続実行。
+      //   signInWithGoogle は classic スコープに公開済み（loginBtn の onclick から呼ばれている）。
       window.mmOnboardingFinish();
+      try {
+        if (typeof window.signInWithGoogle === 'function') {
+          // mmOnboardingFinish のフェードアウト(400ms)後にログインダイアログを出す。
+          // 同期だとオンボーディングの閉じアニメ中にポップアップが被って見栄えが悪い。
+          setTimeout(function(){ window.signInWithGoogle(); }, 450);
+        }
+      } catch(e) { console.warn('[onboarding] signInWithGoogle 呼出エラー:', e); }
     } else {
       showSlide(currentSlide + 1);
     }
@@ -19470,7 +19485,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v236</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v237</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
