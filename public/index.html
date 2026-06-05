@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index238 (2026.06.05) — レビュー🟡 Step 2クライアント側対応。①PIIマスク(🟡-2): window.maskEmail/maskUid を冒頭scriptで定義しwindow公開、認証ログ3箇所(Popup/Redirect/onAuthStateChanged)とAccount Delete 2箇所、Bonus 1箇所の計6箇所の console.log で email/uid を平文で出さないようマスク化(***@example.com / abc***xyz 形式)。Sentry breadcrumb・F12デバッガ越しの覗き見・Play Data Safety申告整合のため。②SWタイムアウト(🟡-7): service-worker.js v48 と連動、Network First の HTML 経路に 3秒タイムアウトを追加して電波弱い環境での白画面待ち時間を緩和。基: index237 ログイン導線の改善 -->
+<!-- VERSION: index240 (2026.06.05) — Tier 2 各県10駅程度の準・優先表示駅62駅を追加(PRIORITY_TIER2_STATIONS)。 + Tier 1の那須塩原→佐野訂正(11スレで指示)。 zoom>=11 で Tier 2 も常時表示、広域ズーム(z<=10)では Tier 1の38駅のみ。 取手・鹿島神宮は実体茨城だがCOORDSキーは千葉県側で登録(データ実態に合わせる)。 COORDS未登録のため除外: 西武秩父・真岡・大田原(駅自体なし)・上州富岡・横川。 Tier 1(38)+Tier 2(62)=計100駅。基: index239 ALWAYS_VISIBLE_STATIONS 12→38駅拡張 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -9584,10 +9584,39 @@ const ALWAYS_VISIBLE_STATIONS=new Set([
   '浦和_埼玉県','川口_埼玉県','所沢_埼玉県','春日部_埼玉県',
   // 茨城県3駅（新規）
   '水戸_茨城県','つくば_茨城県','土浦_茨城県',
-  // 栃木県3駅（新規）
-  '宇都宮_栃木県','小山_栃木県','那須塩原_栃木県',
+  // 栃木県3駅（新規・index240: 那須塩原→佐野に訂正）
+  '宇都宮_栃木県','小山_栃木県','佐野_栃木県',
   // 群馬県3駅（新規）
   '高崎_群馬県','前橋_群馬県','太田_群馬県'
+]);
+
+// ★index240: Tier 2 = 準・優先表示駅62駅（中ズーム z>=11 で常時表示）
+//   Tier 1（38駅、ALWAYS_VISIBLE_STATIONS）の補完として、1都6県の中規模ハブ・観光拠点を網羅。
+//   広域ズーム（z=9-10）では Tier 1のみ、中ズーム以上（z>=11）で Tier 2 も特別扱いされる。
+//   ★注意：取手・鹿島神宮は実体は茨城県だが、COORDS登録上は千葉県扱いのため、ここでも千葉県キーで指定。
+//   ★除外駅（COORDS未登録）：西武秩父・真岡・大田原（駅自体なし）・上州富岡・横川。
+const PRIORITY_TIER2_STATIONS=new Set([
+  // 東京都10駅
+  '東京_東京都','品川_東京都','秋葉原_東京都','浅草_東京都','押上_東京都',
+  '豊洲_東京都','二子玉川_東京都','自由が丘_東京都','中目黒_東京都','三鷹_東京都',
+  // 神奈川県9駅
+  '関内_神奈川県','元町・中華街_神奈川県','桜木町_神奈川県','大船_神奈川県','横須賀中央_神奈川県',
+  '茅ヶ崎_神奈川県','海老名_神奈川県','本厚木_神奈川県','逗子_神奈川県',
+  // 千葉県9駅
+  '津田沼_千葉県','流山おおたかの森_千葉県','浦安_千葉県','成田_千葉県','成田空港_千葉県',
+  '木更津_千葉県','銚子_千葉県','館山_千葉県','茂原_千葉県',
+  // 埼玉県8駅
+  '南越谷_埼玉県','熊谷_埼玉県','飯能_埼玉県','武蔵浦和_埼玉県','朝霞台_埼玉県',
+  '越谷レイクタウン_埼玉県','草加_埼玉県','久喜_埼玉県',
+  // 茨城県10駅（取手・鹿島神宮はキーが千葉県側）
+  '守谷_茨城県','取手_千葉県','古河_茨城県','笠間_茨城県','友部_茨城県',
+  '勝田_茨城県','日立_茨城県','鹿島神宮_千葉県','大洗_茨城県','牛久_茨城県',
+  // 栃木県8駅
+  '那須塩原_栃木県','東武宇都宮_栃木県','東武日光_栃木県','鬼怒川温泉_栃木県',
+  '栃木_栃木県','足利_栃木県','鹿沼_栃木県','矢板_栃木県',
+  // 群馬県8駅
+  '桐生_群馬県','伊勢崎_群馬県','渋川_群馬県','長野原草津口_群馬県','水上_群馬県',
+  '館林_群馬県','沼田_群馬県','中之条_群馬県'
 ]);
 
 // ★ ズーム別の画面幅比率（マーカー間最小距離 = 画面幅 × この比率）
@@ -9620,14 +9649,16 @@ function getVisible(){
   const vbounds=lmap.getBounds().pad(0.25);
   
   const filtered=getFiltered().filter(s=>vbounds.contains([s.lat,s.lng]));
-  // 特別扱い駅を抽出
+  // 特別扱い駅を抽出（Tier 1: 全ズームで常時表示）
   const always=filtered.filter(s=>ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref));
-  // それ以外をスコア降順
-  const others=filtered.filter(s=>!ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref))
+  // ★index240: Tier 2 = zoom>=11（中ズーム以上）でのみ特別扱い。広域ズーム(z<=10)では非優先（スコア順扱い）。
+  const tier2=(zoom>=11)?filtered.filter(s=>!ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref)&&PRIORITY_TIER2_STATIONS.has(s.name+'_'+s.pref)):[];
+  // それ以外をスコア降順（Tier 1とTier 2の両方を除外）
+  const others=filtered.filter(s=>!ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref)&&!(zoom>=11&&PRIORITY_TIER2_STATIONS.has(s.name+'_'+s.pref)))
     .sort((a,b)=>b.score-a.score);
   
-  // 特別扱い駅から先に配置（必ず表示）
-  const vis=[...always];
+  // 特別扱い駅から先に配置（Tier 1 → Tier 2 → others の順で重なり判定）
+  const vis=[...always,...tier2];
   // その他は重なり判定で間引き（特別駅とも重ならないように）
   for(const st of others){
     const p=lmap.latLngToContainerPoint([st.lat,st.lng]);
@@ -19527,7 +19558,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v238</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v240</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
