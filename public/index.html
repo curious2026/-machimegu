@@ -124,7 +124,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index235 (2026.06.05) — チェックイン完了フリーズ修正(本番テスト発見バグ): ①mmGetWeatherのfetchに4秒タイムアウト(AbortController)追加→電波不安定でも永久ハングしない ②カードゲット演出(showCheckinSuccess)を天気取得・mmCloudAddCardより先に即出す→カードの瞬間を外部API依存から切離し、砂時計・保留メモも即クリア ③カード保存+天気取得を後追い非同期化(UIブロックなし、失敗してもカードは出る) ④showCheckinSuccessに初回日(checkinDate)を渡す→再訪問カードが今日でなく初訪問日を表示(バグ2修正) ⑤冗長なgetTodayCheckinCount再取得を削除しrecordResult.todayCountを使用 ⑥CF成功後の外側catchにhideCheckinIndicator/clearPending追加(例外時も砂時計を残さない保険)。基: index234 recordCheckin Cloud Function化 -->
+<!-- VERSION: index236 (2026.06.05) — レビュー🟡 ✨-1対応: ログイン時に位置情報が何度も聞かれる問題の解消。①位置取得の入口を一本化する acquirePosition() を新設(15分キャッシュ＋取得中Promise共有で多重OS呼出を防止) ②getCurrentPos を acquirePosition に委譲し、onAuthStateChanged複数回発火・チェックイン開始・現在地ボタン等の全経路を1ゲートに集約 ③watchPosition/getFreshPosition/gotoCurrentLocation/起動時getCurrentPosition の各成功時に内部キャッシュ(_setGeoCache)へ流し込み、どの経路で取れても以降の経路はキャッシュヒット ④window._setGeoCache/window.acquirePosition を公開しclassic↔moduleで共有。getFreshPositionの「キャッシュ無視で鮮度必須」挙動は維持(チェックイン成立判定用)。基: index235 チェックイン完了フリーズ修正 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -8368,6 +8368,8 @@ function gotoCurrentLocation(){
   if(!navigator.geolocation){alert('位置情報が使えません');return;}
   navigator.geolocation.getCurrentPosition(pos=>{
     const{latitude:lat,longitude:lng,accuracy}=pos.coords;
+    // ★index236: 取得値を内部キャッシュへ流し込む（以降の経路はOSを叩かない）
+    if (typeof window._setGeoCache === 'function') window._setGeoCache(lat, lng, accuracy || 50);
     lmap.setView([lat,lng],15);
     // currentLocationを更新（watchPositionと同期）
     if (typeof currentLocation !== 'undefined') {
@@ -9880,6 +9882,9 @@ if (navigator.geolocation) {
   navigator.geolocation.getCurrentPosition(
     pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
+      // ★index236: 起動時の1発を内部キャッシュへ。これで以降の onAuthStateChanged 再発火・
+      //   現在地ボタン・チェックイン開始時の getCurrentPos は全てキャッシュヒットでOSを叩かない。
+      if (typeof window._setGeoCache === 'function') window._setGeoCache(lat, lng, pos.coords.accuracy || 50);
       
       // ★★ 起動シーケンス全体を保護するフラグ
       // → render() 内の closeInfo() が呼ばれないようにする
@@ -10544,24 +10549,81 @@ function getDistanceM(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// GPS現在地取得（promise版）
-function getCurrentPos() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) { reject(new Error('位置情報が利用できません')); return; }
-    navigator.geolocation.getCurrentPosition(
-      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-      err => reject(err),
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
-    );
-  });
+// ─── ★index236: 位置取得の一本化ゲート ───────────────────────────────────
+//
+// 問題: ✨-1「ログイン時に位置情報が何度も聞かれる」
+//   起動時ブロック・onAuthStateChangedの再発火・現在地ボタン・チェックイン開始等、
+//   位置取得の入口が複数あり、それぞれが独立に navigator.geolocation を叩いていた。
+//   iOS Safari は getCurrentPosition と watchPosition で別々に許可を確認しうるため、
+//   ログイン状態が確定するたびにダイアログが何度も出る現象が発生していた。
+//
+// 解決: 全経路を acquirePosition() という1つのキャッシュゲートに通す。
+//   ① 15分以内のキャッシュ(_geoCache)があれば即返す（OSへの問い合わせ無し）
+//   ② 取得中(_geoInFlight)なら同じPromiseを共有（多重 getCurrentPosition 防止）
+//   ③ それ以外は実取得し、結果を _geoCache に保存
+//   さらに、watchPosition / getFreshPosition / gotoCurrentLocation / 起動時の
+//   getCurrentPosition の各成功時にも _setGeoCache を呼んでキャッシュを共有する
+//   ことで、どの経路で1回取れれば他の経路は OS を叩かずに済む。
+let _geoCache = null;       // { lat, lng, accuracy, time }
+let _geoInFlight = null;    // 取得中の Promise（多重防止）
+const GEO_CACHE_MS = 15 * 60 * 1000;  // 既定キャッシュ寿命: 15分
+
+function _setGeoCache(lat, lng, accuracy) {
+  if (typeof lat !== 'number' || typeof lng !== 'number') return;
+  _geoCache = { lat: lat, lng: lng, accuracy: (accuracy == null ? 50 : accuracy), time: Date.now() };
 }
 
-// ★ チェックイン成立判定用：キャッシュ無視で必ず最新位置を取得
+function acquirePosition(opts) {
+  opts = opts || {};
+  const maxAge = (typeof opts.maxAgeMs === 'number') ? opts.maxAgeMs : GEO_CACHE_MS;
+  // 1) キャッシュヒット → 即返す（OS問い合わせなし）
+  if (_geoCache && (Date.now() - _geoCache.time) < maxAge) {
+    return Promise.resolve({ lat: _geoCache.lat, lng: _geoCache.lng, accuracy: _geoCache.accuracy });
+  }
+  // 2) 取得中なら同じPromiseを共有
+  if (_geoInFlight) return _geoInFlight;
+  // 3) 実取得
+  if (!navigator.geolocation) {
+    return Promise.reject(new Error('位置情報が利用できません'));
+  }
+  _geoInFlight = new Promise(function(resolve, reject) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        _setGeoCache(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+        _geoInFlight = null;
+        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+      },
+      function(err) {
+        _geoInFlight = null;
+        reject(err);
+      },
+      {
+        enableHighAccuracy: !!opts.highAccuracy,
+        timeout: opts.timeout || 15000,
+        maximumAge: maxAge
+      }
+    );
+  });
+  return _geoInFlight;
+}
+
+// GPS現在地取得（promise版）— ★index236: acquirePositionに委譲。
+//   呼び出し側のシグネチャはそのままで、内部だけ15分キャッシュゲート経由になる。
+function getCurrentPos() {
+  return acquirePosition({ highAccuracy: false, timeout: 15000, maxAgeMs: GEO_CACHE_MS });
+}
+
+// ★ チェックイン成立判定用：キャッシュ無視で必ず最新位置を取得（鮮度必須なので acquirePosition を経由しない）
+//   ただし、取れた値は _setGeoCache に流して以降の getCurrentPos 経路で再利用できるようにする。
 function getFreshPosition() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) { reject(new Error('位置情報が利用できません')); return; }
     navigator.geolocation.getCurrentPosition(
-      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+      pos => {
+        // ★index236: 鮮度高の値を内部キャッシュにも流し込み、以降のgetCurrentPosをキャッシュヒットに
+        _setGeoCache(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+      },
       err => reject(err),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 } // ★ maximumAge: 0 でキャッシュ無視
     );
@@ -10696,6 +10758,10 @@ function startWatchPosition() {
       const lng = pos.coords.longitude;
       const accuracy = pos.coords.accuracy;
       currentLocation = { lat, lng, accuracy };
+      // ★index236: watchが動いている間は内部キャッシュも常に最新に保つ。
+      //   これにより、他経路（onAuthStateChanged再発火/チェックイン開始/現在地ボタン等）から
+      //   getCurrentPos が呼ばれても、キャッシュヒットで OS を叩かない＝ダイアログが出ない。
+      _setGeoCache(lat, lng, accuracy);
       // ★ リアルタイムマーカー更新（Googleマップ風の青ドット）
       updateUserLocationMarker(lat, lng, accuracy);
       // ★ チェックイン中なら距離チェック（30秒ごと、超過時は警告）
@@ -17153,6 +17219,12 @@ window.openBadgePage = async function() {
 if (typeof startWatchPosition === 'function') window.startWatchPosition = startWatchPosition;
 if (typeof getDistanceM === 'function') window.getDistanceM = getDistanceM;
 if (typeof showInfo === 'function') window.showInfo = showInfo;
+// ★index236: 位置取得の一本化ゲートをclassicスコープからも使えるように公開。
+//   gotoCurrentLocation(現在地ボタン)・起動時ブロックの生getCurrentPositionから
+//   _setGeoCache を呼んでキャッシュを共有するために必要。
+if (typeof _setGeoCache === 'function') window._setGeoCache = _setGeoCache;
+if (typeof acquirePosition === 'function') window.acquirePosition = acquirePosition;
+if (typeof getCurrentPos === 'function') window.getCurrentPos = getCurrentPos;
 
 // ★index182: module外の普通<script>（ログボ・ミッション関数群）からfirestoreを使えるようwindow公開
 //   原因：それらの関数は type="module" の外にあり、import した doc/getDoc/setDoc 等が見えず
@@ -19398,7 +19470,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v235</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v236</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
