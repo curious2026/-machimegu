@@ -1,24 +1,39 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 Service Worker v47（地図タイルのオフライン対応：選択肢B）
+// 街巡 Service Worker v48（Network First のタイムアウト追加：レビュー🟡-7）
 // ═══════════════════════════════════════════════════════════════
-// v46からの変更点：
-// - バージョン番号 v46 → v47
-// - ★地図タイル（tile.openstreetmap.org）を「見た分だけ」キャッシュ（Cache First）
-//   上限300枚（約数MB）で古い順に自動削除。事前一括DLはしない（容量配慮）。
-// - ★オフライン時、未キャッシュのタイルには軽量プレースホルダを即返す
-//   （グレーのまま固まる→「オフライン」表示で待ちを断ち切る）
-// - タイルキャッシュはSW更新をまたいで再利用（machimegu-tiles：バージョン非依存）
-// - 既存の Network First(HTML) / Cache First(静的) 戦略は完全維持
+// v47からの変更点：
+// - バージョン番号 v47 → v48
+// - ★HTML経路の Network First に 3秒タイムアウト追加（🟡-7対応）
+//   旧: fetch(req).then(...).catch(/* キャッシュにフォールバック */)
+//        → fetchが「失敗」しなくても応答10秒以上だと真っ白な画面で待たされる
+//   新: 3秒で諦めてキャッシュに切り替える Promise.race 方式
+//   電車内・地下・電波が極端に弱い場所での白画面待ち時間を緩和。
+//   オフラインフォールバックHTMLの利用機会も増える＝UXがより安定。
+// - 既存戦略 Network First(HTML) / Cache First(静的+地図タイル) は完全維持
+// - タイルキャッシュ（CACHE_TILES）は v47 と互換、再ダウンロード不要
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_VERSION = 'machimegu-v47';
+const CACHE_VERSION = 'machimegu-v48';
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
-const CACHE_TILES = 'machimegu-tiles';   // ★v47: 地図タイル専用（SW更新をまたいで再利用＝再DL不要）
-const TILE_CACHE_LIMIT = 300;            // ★v47: タイル保持上限（約数MB。超過時は古い順に削除）
+const CACHE_TILES = 'machimegu-tiles';   // タイル専用（SW更新をまたいで再利用）
+const TILE_CACHE_LIMIT = 300;            // タイル保持上限（約数MB）
+const HTML_NETWORK_TIMEOUT_MS = 3000;    // ★v48: HTML Network First のタイムアウト
 
 // 地図タイル判定（OpenStreetMap）
 function isMapTile(url) {
   return url.hostname === 'tile.openstreetmap.org';
+}
+
+// ★v48 🟡-7: タイムアウト付き fetch（Network First の白画面対策）
+//   通常の fetch は応答が遅延した場合（10秒以上）にずっと待ち続け、
+//   `catch` も発火しないため、ユーザーには真っ白な画面が長時間表示される。
+//   Promise.race で「先に決まった方」を採用：fetch成功 or タイムアウト reject。
+//   タイムアウト時は catch 経由でキャッシュフォールバックに流れる。
+function fetchWithTimeout(req, ms) {
+  return Promise.race([
+    fetch(req),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('SW timeout ' + ms + 'ms')), ms))
+  ]);
 }
 
 // オフライン時の未キャッシュタイル用プレースホルダ（256x256・地図背景になじむ濃紺）
@@ -125,7 +140,8 @@ self.addEventListener('fetch', (event) => {
   
   if (isHtmlNav) {
     event.respondWith(
-      fetch(req)
+      // ★v48 🟡-7: 3秒で諦めてキャッシュにフォールバック（電波弱い環境での白画面対策）
+      fetchWithTimeout(req, HTML_NETWORK_TIMEOUT_MS)
         .then(res => {
           // 成功時はランタイムキャッシュに保存（オフライン保険）
           if (res && res.status === 200) {
@@ -135,7 +151,7 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
         .catch(() => {
-          // ネットワーク失敗 → ランタイムキャッシュから返す
+          // ネットワーク失敗 or 3秒タイムアウト → ランタイムキャッシュから返す
           return caches.match(req).then(cached => {
             if (cached) return cached;
             return caches.match('/').then(rootCached => {
