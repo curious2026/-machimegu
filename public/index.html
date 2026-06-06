@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index244 (2026.06.06) — 🔴緊急修正: ログボ・デイリー・ウィークリーミッション全滅バグ修正。①真因: updateDailyStateFn が <script type="module"> 内で const 宣言されていたが、mmSetDailyState (L18621) は <script>(classic) 内にあり、ES Moduleスコープ境界違反で「updateDailyStateFn is not defined」エラー。実行不可能になっていたためCF呼出が走らず、dailyState 全部未保存→画面UI更新→再オープンで「未受取」に戻る症状。デイリー・ウィークリーミッションも同じ経路で全滅。②修正: 全6つの CF Fn (consumeStarFn/toggleOshiStationFn/recordCheckinFn/awardBadgesFn/updateDailyStateFn/updateMetaCollectionFn) を window 公開、保険で過去 index182 パターンを全 CF に適用。L18621 の呼出を window.updateDailyStateFn に変更。③functions/index.js v5: lastLoginBonusXP → lastBonusXP にフィールド名統一(クライアントとの整合性)。④過去スレ警告「bpCalcTotalXP cross-script/module scope boundaries」の教訓を再活用。基: index243 🟡-3完全対処版 -->
+<!-- VERSION: index245 (2026.06.06) — UI改善: ①スター上限到達画面に「駅まであと ○m」距離表示を追加(3行目)、スター所持時/なし両方とも。②ボタンテキスト変更「⭐ スター1個使ってもう1駅」→「⭐ スターを使ってもう1駅」。基: index244 ログボ/ミッション全滅バグ修正版 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -11097,11 +11097,11 @@ window.renderCheckinSection = async function(st) {
       const stars = window._userStarsCache || 0;
       if (stars >= 1) {
         // スター所持あり：消費ボタンを表示
-        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br><span style="font-size:11px;opacity:0.85">⭐ スター ${stars}個 所持中</span></div>
-          <button class="ip-ci-btn" style="background:linear-gradient(135deg,#ffb060,#ff9040);color:#1a1408;font-weight:900" onclick="consumeStarForExtraCheckin('${st.name.replace(/'/g,"\\'")}','${st.pref}',${st.lat},${st.lng})">⭐ スター1個使ってもう1駅</button>`;
+        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br><span style="font-size:11px;opacity:0.85">⭐ スター ${stars}個 所持中</span><br><span style="font-size:11px;opacity:0.85">駅まであと ${Math.round(distHere)}m</span></div>
+          <button class="ip-ci-btn" style="background:linear-gradient(135deg,#ffb060,#ff9040);color:#1a1408;font-weight:900" onclick="consumeStarForExtraCheckin('${st.name.replace(/'/g,"\\'")}','${st.pref}',${st.lat},${st.lng})">⭐ スターを使ってもう1駅</button>`;
       } else {
         // スターなし：従来通り
-        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br>明日また来てね</div>`;
+        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br>明日また来てね<br><span style="font-size:11px;opacity:0.85">駅まであと ${Math.round(distHere)}m</span></div>`;
       }
       return;
     }
@@ -19668,7 +19668,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v244</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v245</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
