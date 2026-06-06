@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index245 (2026.06.06) — UI改善: ①スター上限到達画面に「駅まであと ○m」距離表示を追加(3行目)、スター所持時/なし両方とも。②ボタンテキスト変更「⭐ スター1個使ってもう1駅」→「⭐ スターを使ってもう1駅」。基: index244 ログボ/ミッション全滅バグ修正版 -->
+<!-- VERSION: index247 (2026.06.07) — マップ密集解消: Tier 1+Tier 2駅を無条件で全表示していたため都心(zoom 11-13)で重なって読めない問題を修正。新ロジック: 全駅を「Tier 1 → Tier 2 → others」「同Tier内スコア降順」でソート→優先度高い順に重なり判定で配置、後続が既存駅と近接(d未満)ならskip。スコア高い駅・上位Tier駅が常に優先表示。zoom>=14は全表示（高ズームでは密集なし）。基: index246 Android UI調整版 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -4539,6 +4539,19 @@ body.checkin-active #checkin-indicator{
 }
 
 </style>
+<script>
+// ★index246 (2026-06-07): Android 専用CSS適用のための body クラス付与
+// User Agent判定。iOS には is-android が付かないため影響なし。
+(function(){
+  try {
+    if (/Android/i.test(navigator.userAgent || '')) {
+      var apply = function(){ if (document.body) document.body.classList.add('is-android'); };
+      if (document.body) apply();
+      else document.addEventListener('DOMContentLoaded', apply, { once: true });
+    }
+  } catch(e) { /* 念のため。失敗してもiOSと同じ表示になるだけ */ }
+})();
+</script>
 </head>
 <body class="splashing">
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -7123,6 +7136,72 @@ body.checkin-active #checkin-indicator{
 .mc-share-card.mcs-dark .mcs-info-grid{border-top-color:rgba(255,255,255,0.18)}
 .mc-share-card.mcs-dark .mcs-logo{color:#a5b8d8}
 .mc-share-card.mcs-dark .mcs-logo strong{color:#c5d4e8}
+
+/* ════════════════════════════════════════════════════════════════
+   ★index246 (2026-06-07): Android専用UI調整（is-android クラスが付与された時のみ適用）
+   iOS / iPad / iPod には影響しない
+   ════════════════════════════════════════════════════════════════ */
+
+/* 修正① + ④: マイページのカード一覧 / カードコレクション を3列固定 */
+.is-android .mp-card-grid {
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 6px !important;
+}
+
+/* 修正②: ランキング画面のカテゴリチップ右端見切れ＆★見切れ解消 */
+.is-android .rcats {
+  gap: 2px !important;
+}
+.is-android .rcat {
+  padding: 1.5px 2.5px !important;
+  letter-spacing: -0.3px !important;
+}
+.is-android .rcat.bonus-pill {
+  /* ボーナス★が見切れないよう少し余白追加 */
+  padding-right: 4px !important;
+}
+.is-android .rank-row {
+  padding: 8px 8px 7px !important;  /* 左右paddingを 14→8px に */
+  gap: 6px !important;
+}
+.is-android .rank-row .rscore {
+  min-width: 40px !important;  /* 46→40 */
+}
+
+/* 修正③: フィルター行のプルダウン幅均等化（路線が広すぎる問題） */
+.is-android #filters {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 3px !important;
+  padding: 3px !important;
+}
+.is-android .fsel {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding: 4px 12px 4px 4px !important;  /* 右の▼スペース確保しつつ詰める */
+  font-size: 10.5px !important;
+  letter-spacing: 0 !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+}
+.is-android #lineSelect {
+  flex: 1.3 1 0 !important;  /* 路線は少しだけ広め（路線名がそれなりの長さ） */
+}
+.is-android #searchBtn {
+  flex: 0 0 auto !important;
+}
+
+/* 修正⑤: 駅カードのメモ枠を 3行→2行に縮小（閉じるボタン見切れ解消） */
+.is-android .sc-memo-content {
+  min-height: 38px !important;  /* 旧 54px (3行) → 新 38px (2行) */
+}
+.is-android .sc-memo {
+  min-height: 64px !important;  /* 旧 78px → 新 64px */
+}
+/* ════════════════════════════════════════════════════════════════
+   ★index246 Android専用CSS ここまで
+   ════════════════════════════════════════════════════════════════ */
 </style>
 
 <!-- ステーションカード モーダル -->
@@ -9649,23 +9728,41 @@ function getVisible(){
   const vbounds=lmap.getBounds().pad(0.25);
   
   const filtered=getFiltered().filter(s=>vbounds.contains([s.lat,s.lng]));
-  // 特別扱い駅を抽出（Tier 1: 全ズームで常時表示）
-  const always=filtered.filter(s=>ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref));
-  // ★index240: Tier 2 = zoom>=11（中ズーム以上）でのみ特別扱い。広域ズーム(z<=10)では非優先（スコア順扱い）。
-  const tier2=(zoom>=11)?filtered.filter(s=>!ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref)&&PRIORITY_TIER2_STATIONS.has(s.name+'_'+s.pref)):[];
-  // それ以外をスコア降順（Tier 1とTier 2の両方を除外）
-  const others=filtered.filter(s=>!ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref)&&!(zoom>=11&&PRIORITY_TIER2_STATIONS.has(s.name+'_'+s.pref)))
-    .sort((a,b)=>b.score-a.score);
   
-  // 特別扱い駅から先に配置（Tier 1 → Tier 2 → others の順で重なり判定）
-  const vis=[...always,...tier2];
-  // その他は重なり判定で間引き（特別駅とも重ならないように）
-  for(const st of others){
+  // ★index247 (2026-06-07): 密集解消のためロジック全面刷新
+  //   旧 (index240): Tier 1 + Tier 2 を無条件で全表示 → 都心(zoom 11-13)で重なって読めない
+  //   新: 全駅を (Tier1→Tier2→others) (同Tier内スコア降順) でソート → 順に重なり判定で配置
+  //       優先度の高い駅が必ず先に配置されるため、重なる場合は優先度低い方が消える
+  //       Tier 1 同士でも東京駅(857)→新宿駅(932)→...のスコア順で表示優先
+  //       zoom>=14 は密集にならないため全表示（ズームインで全部見える）
+  
+  // 各駅の優先度ランク（0=Tier1, 1=Tier2[zoom>=11時のみ], 2=others）
+  const getTierRank=(s)=>{
+    if(ALWAYS_VISIBLE_STATIONS.has(s.name+'_'+s.pref))return 0;
+    if(zoom>=11 && PRIORITY_TIER2_STATIONS.has(s.name+'_'+s.pref))return 1;
+    return 2;
+  };
+  
+  // Tier→スコアの2段ソート
+  const sorted=filtered.slice().sort((a,b)=>{
+    const ta=getTierRank(a), tb=getTierRank(b);
+    if(ta!==tb) return ta-tb;          // Tier 優先
+    return b.score-a.score;             // 同Tier内はスコア降順
+  });
+  
+  // zoom>=14 は全表示（高ズームでは密集にならないため重なり判定不要）
+  if(zoom>=14) return sorted;
+  
+  // 重なり判定で間引き（優先度高い順に配置、後続が既存駅と近接ならskip）
+  const vis=[];
+  for(const st of sorted){
     const p=lmap.latLngToContainerPoint([st.lat,st.lng]);
     if(!vis.some(v=>{
       const q=lmap.latLngToContainerPoint([v.lat,v.lng]);
       return Math.hypot(p.x-q.x,p.y-q.y)<d;
-    }))vis.push(st);
+    })){
+      vis.push(st);
+    }
   }
   return vis;
 }
@@ -19668,7 +19765,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v245</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v247</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
