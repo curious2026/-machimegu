@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index243 (2026.06.05) — 🟡-3完全対処: badges/dailyState/meta のクライアント直書きを全廃、Cloud Function経由に統一。①新規CF: awardBadges(バッジ条件サーバ側再検証)/updateDailyState(loginStreak単調増加等の整合性チェック)/updateMetaCollection(visitCountサーバ管理、addCard/pinCard対応)。②F12でバッジ偽造・連続日数偽装・visitCount水増しの攻撃が完全に塞がる。③Rules v5でbadges/meta/dailyStateをwrite false化。④checkAndAwardBadges大幅refactor: バッジ判定をバッファ→最後にCFを1回だけ呼ぶ。Firestoreコール数も10〜20→1に削減。⑤clearAll/clearOne(デバッグ用全削除)はCF未実装、F12からの呼出はエラー警告。基: index242 救済処理CF化 -->
+<!-- VERSION: index244 (2026.06.06) — 🔴緊急修正: ログボ・デイリー・ウィークリーミッション全滅バグ修正。①真因: updateDailyStateFn が <script type="module"> 内で const 宣言されていたが、mmSetDailyState (L18621) は <script>(classic) 内にあり、ES Moduleスコープ境界違反で「updateDailyStateFn is not defined」エラー。実行不可能になっていたためCF呼出が走らず、dailyState 全部未保存→画面UI更新→再オープンで「未受取」に戻る症状。デイリー・ウィークリーミッションも同じ経路で全滅。②修正: 全6つの CF Fn (consumeStarFn/toggleOshiStationFn/recordCheckinFn/awardBadgesFn/updateDailyStateFn/updateMetaCollectionFn) を window 公開、保険で過去 index182 パターンを全 CF に適用。L18621 の呼出を window.updateDailyStateFn に変更。③functions/index.js v5: lastLoginBonusXP → lastBonusXP にフィールド名統一(クライアントとの整合性)。④過去スレ警告「bpCalcTotalXP cross-script/module scope boundaries」の教訓を再活用。基: index243 🟡-3完全対処版 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -10141,6 +10141,18 @@ const recordCheckinFn = httpsCallable(functions, 'recordCheckin');
 const awardBadgesFn = httpsCallable(functions, 'awardBadges');
 const updateDailyStateFn = httpsCallable(functions, 'updateDailyState');
 const updateMetaCollectionFn = httpsCallable(functions, 'updateMetaCollection');
+
+// ★index244 (2026-06-06): 全CF Fn を window 公開（クラシック script からのアクセス用）
+//   真因: updateDailyStateFn が module 内 const 宣言なので mmSetDailyState (classic script内)
+//        から見えず「updateDailyStateFn is not defined」でログボ・ミッション全滅していた。
+//   修正: 過去 index182 で確立した「module外の普通<script>からのアクセスはwindow経由」パターンを
+//        全CF Fn に適用。保険で将来のscope越境にも備える。
+window.consumeStarFn = consumeStarFn;
+window.toggleOshiStationFn = toggleOshiStationFn;
+window.recordCheckinFn = recordCheckinFn;
+window.awardBadgesFn = awardBadgesFn;
+window.updateDailyStateFn = updateDailyStateFn;
+window.updateMetaCollectionFn = updateMetaCollectionFn;
 console.log('[Functions] 初期化完了（asia-northeast1）');
 
 // ═══ index174緊急修正：Firestore IndexedDBのみクリーンアップ（Authは絶対保持） ═══
@@ -18618,7 +18630,7 @@ if ('serviceWorker' in navigator) {
         return cleaned;
       };
       const safeData = stripUndefined(data);
-      const res = await updateDailyStateFn({ data: safeData });
+      const res = await window.updateDailyStateFn({ data: safeData });  // ★index244: classic scope なので window 経由
       if (res && res.data && res.data.success) {
         window._lastDailyError = null;
         return true;
@@ -19656,7 +19668,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v243</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v244</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
