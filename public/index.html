@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index248 (2026.06.07) — Android専用UI調整・カード見切れ最終調整: ①.sc-close-btn の margin-top 6→2px (カードと閉じるボタンの距離を詰める)。②#card-modal-bg.open の padding-top 8→4px、padding-bottom も safe-area→4px (カード位置を上に詰める)。③#card-modal の max-height/height を 100vh-8px → 100vh-4px に拡張。Android専用、iOS無影響。基: index247 マップ密集解消版 -->
+<!-- VERSION: index250 (2026.06.07) — マップ中間ズーム密集解消: index247 でマップ密集ロジック刷新後、zoom 9-11(広域)と 14-16(駅単位)は快適だが、zoom 12-13 だけ都心部で重なりが残っていた。原因: ZOOM_RATIO[12]=0.121, [13]=0.099 のしきい値がマーカー直径(50-80px)に対し小さすぎ。修正: zoom 12 0.121→0.17 (+40%)、zoom 13 0.099→0.14 (+40%) 。9-11と14-16は変更なし。Tier 1/2でスコア高い駅が優先表示、近接の低スコア駅は間引かれる。基: index249 Androidカード倍率調整版 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -7231,6 +7231,26 @@ body.checkin-active #checkin-indicator{
 /* ════════════════════════════════════════════════════════════════
    ★index248 Android追加調整 ここまで
    ════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════
+   ★index249 (2026-06-07) Android最終調整: カード倍率 1.05 → 1.03
+   ════════════════════════════════════════════════════════════════ */
+
+/*
+ 経緯:
+ - まちめぐ9 (index217) で全機種 zoom:1.05 を採用 (iPhone17系の閉じるボタン見切れ対策)
+ - index246 で Android UI 5項目調整、index248 で カード位置/閉じるボタン距離詰め
+ - それでも Android Pixel 7a で閉じるボタン見切れ継続
+ - 原因: zoom 倍率 1.05 が Android の縦表示制約に対して大きすぎ
+ - 解決: Android のみ zoom:1.03 へ (内部要素含めて等比縮小、見切れ完全解消狙い)
+ - iOS は 1.05 維持 (Dynamic Island機の最適値、変更しない)
+*/
+.is-android #card-modal {
+  zoom: 1.03 !important;
+}
+/* ════════════════════════════════════════════════════════════════
+   ★index249 Android最終調整 ここまで
+   ════════════════════════════════════════════════════════════════ */
+
 
 </style>
 
@@ -9732,10 +9752,13 @@ const PRIORITY_TIER2_STATIONS=new Set([
 // ★index198: 中ズーム帯（zoom 11-13）で密度が高すぎる問題に対応。各値を約10%引き上げて間隔を広げる。
 //   ・zoom 11: 0.130 → 0.143 (+10%)  「先のスクショの拡大」帯
 //   ・zoom 12: 0.110 → 0.121 (+10%)  「先のスクショの拡大」帯
-//   ・zoom 13: 0.090 → 0.099 (+10%)  少し寄った帯
+//   ・zoom 13: 0.090 → 0.099 (+10%)  少し寄った帯  ←旧
+//   ★index250: 都心部の中間ズーム密集が解消されないため、12, 13 を大幅に上げる
+//   ・zoom 12: 0.121 → 0.17 (+40%)  しきい値 47→66px (iPhone 390px幅換算)
+//   ・zoom 13: 0.099 → 0.14 (+40%)  しきい値 39→55px
 //   zoom 9-10（広域）と zoom 14-16（駅単位）は変更なし（快適とのこと）
 const ZOOM_RATIO={
-  9:0.18, 10:0.16, 11:0.143, 12:0.121, 13:0.099, 14:0.07, 15:0.05, 16:0.03
+  9:0.18, 10:0.16, 11:0.143, 12:0.17, 13:0.14, 14:0.07, 15:0.05, 16:0.03  /* ★index250: 12 0.121→0.17, 13 0.099→0.14 (都心部の中間ズーム密集解消) */
 };
 
 function getMinPx(zoom,mapWidth){
@@ -19795,7 +19818,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v248</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v250</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
