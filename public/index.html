@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index255 (2026.06.07) — ともき指示3点対応。①L14464 setDoc(lastLoginAt) を完全削除(C案本質対処): lastLoginAtはサーバ側で使われていない(loginStreakは別のdailyState.lastLoginDate使用)ため、Firestore更新自体を廃止。Rules変更/CF追加なしで最小工数で根治。②オンボーディング3画面: バージョン更新時にも出る印象→Finish時のみ保存だと途中離脱で再表示される弱点→表示直後に即フラグ保存に変更。③デイリーミッションのDAILY_SUBURB_POOL から s_adj_pref(隣接県の駅) を削除、s_two_cities(違う市区町村の駅で2チェックイン、xp:14) に置換。県系ミッションはDAILY_COMMON_POOLのdiff_prefのみに統一。 -->
+<!-- VERSION: index256 (2026.06.07) — 致命バグ再修正。①iPhoneでマイページは出るのにチェックインパネルだけ「Googleでログイン」のまま固定される問題: 真因はL14454 getDoc(userRef) が失敗(Rules v5 で users/{uid} の read が制限の可能性)→外側catchに飛び→L14528 renderCheckinSection 再描画スキップ。対処: try/catch の外側で必ず renderCheckinSection 再描画を実行+200ms後の二重保険。②Android 起動時 現在位置が中心に来ない問題: panBy の setTimeout 300ms ではLeafletマップのレイアウトが安定しない端末あり。対処: 600ms に延長+mapH=0ならリトライ機構追加。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -10150,19 +10150,26 @@ if (navigator.geolocation) {
         lmap.setView([lat, lng], 13);
         
         // 「現在地を上から4割の位置に」するため、地図を下にパンする
-        // setView のアニメーションが完了してから panBy を実行（300ms待機）
-        setTimeout(() => {
+        // ★index256: 300ms→600ms に延長、mapH=0ならリトライ（Androidで現在位置が
+        //   中心に来ない問題への対処。Leaflet マップのレイアウトが安定する前に panBy
+        //   を呼ぶと clientHeight=0 で offsetY が 0 になり、見た目「真ん中のまま」になる）。
+        const tryPanBy = (attemptCount) => {
           try {
             const mapEl = document.getElementById('leaflet-map');
-            if (mapEl) {
-              const mapH = mapEl.clientHeight;
-              // mapH * 0.15 = 画面高さの15%下にずらす = 現在地が上から35%位置に
-              const offsetY = mapH * 0.15;
-              lmap.panBy([0, offsetY], { animate: false });
-              console.log('[起動] panBy offsetY=' + offsetY + 'px（現在地を上から約35%位置に）');
+            if (!mapEl) return;
+            const mapH = mapEl.clientHeight;
+            // mapH=0 はマップがまだ表示準備中。最大5回(計1秒)までリトライ
+            if (mapH === 0 && attemptCount < 5) {
+              setTimeout(() => tryPanBy(attemptCount + 1), 200);
+              return;
             }
+            // mapH * 0.15 = 画面高さの15%下にずらす = 現在地が上から35%位置に
+            const offsetY = mapH * 0.15;
+            lmap.panBy([0, offsetY], { animate: false });
+            console.log('[起動] panBy offsetY=' + offsetY + 'px（mapH=' + mapH + ', attempt=' + attemptCount + '）');
           } catch(e) { console.warn('現在地位置オフセット失敗', e); }
-        }, 300);
+        };
+        setTimeout(() => tryPanBy(0), 600);
         
         console.log('[起動] 現在位置中心3km圏表示:', lat, lng);
         
@@ -14530,6 +14537,29 @@ onAuthStateChanged(auth, async (user) => {
     } catch (e) {
       console.error('プロフィール確認エラー:', e);
     }
+    
+    // ★★★ index256: try/catch の外側で必ず renderCheckinSection を再描画する。
+    //   真因: 上記 try 内の getDoc(userRef) や setDoc が失敗すると外側 catch に飛び、
+    //   try 内の renderCheckinSection 再描画がスキップされる。結果、auth.currentUser が
+    //   セットされているにも関わらず、チェックインパネルだけ「Googleでログイン」UI のまま
+    //   固定される現象が iPhone で発生していた(マイページ・カードは見られるので「ログイン
+    //   できてるけどできてない」奇妙な状況)。
+    //   対処: ここで try/catch とは独立して必ず再描画 → Firestore で何が起きても
+    //   チェックインパネルは最新の auth.currentUser を反映する。
+    if (window.currentStation && window.renderCheckinSection) {
+      try {
+        window.renderCheckinSection(window.currentStation);
+      } catch (renderErr) {
+        console.warn('[Auth] 最終 renderCheckinSection 失敗:', renderErr.message);
+      }
+    }
+    // さらに 500ms 後にもう一度（最寄り駅自動表示が onAuthStateChanged 発火後に
+    // 遅れて呼ばれた場合の保険。renderCheckinSection は冪等なので二度呼んでも問題ない）
+    setTimeout(() => {
+      if (auth.currentUser && window.currentStation && window.renderCheckinSection) {
+        try { window.renderCheckinSection(window.currentStation); } catch(_e) {}
+      }
+    }, 500);
   } else {
     loginBtn.style.display = 'inline-block';
     userInfo.style.display = 'none';
@@ -19863,7 +19893,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v255</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v256</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
