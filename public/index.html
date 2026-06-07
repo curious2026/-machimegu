@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index258 (2026.06.07) — 真の真因を特定。ともきがPCコンソールでReferenceError: distHere is not defined を見せてくれて即発覚。L11307/L11311 の distHere は別スコープのL11267定義変数を参照していて未定義状態(既存バグ)。ともきが今日3駅チェックインしてスターも持っている=この分岐に入るので発火。結果renderCheckinSectionが途中で中断→innerHTML更新されず→古い「Googleでログイン」UIが残る。これがiPhone固有に見えたのは偶然(タイミングの問題ではなく本当にこの分岐に入って中断していた)。修正: todayCount>=DAILY_LIMIT 分岐の冒頭で distHere を再計算。currentLocationが取れない場合は0で安全側。index253-257の認証関連修正(userOverride/リトライ機構/lastLoginAt削除等)は全て見当違いだったが副作用なし、保険として残置。 -->
+<!-- VERSION: index259 (2026.06.07) — Android 起動時 現在位置取得失敗の本当の真因対処。過去スレ「まちめぐ6」のコード調査で発覚: 起動時 getCurrentPosition が timeout 5000ms (5秒) で失敗 → エラーコールバックに入って「東京中心のまま」になる構造。ともきの Pixel 7a (SIMなし、iPhoneテザリング、室内WiFi環境) では 5秒では位置取得が間に合わない。対処: ①timeout を 5秒→15秒に延長、②エラー時にもう一度 enableHighAccuracy:true (高精度GPS) で再試行、③ログを強化してエラーコード詳細表示。これで Android 室内環境でも位置取得が成功するはず。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -10224,9 +10224,81 @@ if (navigator.geolocation) {
       } catch(e) { console.warn('起動時マップ移動失敗', e); }
     },
     err => {
-      console.log('[起動] 位置情報取得失敗、東京中心のまま:', err.message);
+      // ★index259: Android (SIMなしテザリング、室内WiFiのみ等) で timeout 5秒だと
+      //   位置取得が間に合わずエラーになるケースが多い。エラー時に高精度モード
+      //   (enableHighAccuracy:true、timeout 15秒) で1回だけリトライする。
+      console.warn('[起動] 位置情報取得失敗 (1回目):', 'code=' + err.code, err.message);
+      if (err.code === 3 || err.code === 2) {  // 3=TIMEOUT, 2=POSITION_UNAVAILABLE
+        console.log('[起動] 高精度モードで再試行 (timeout 15秒)');
+        navigator.geolocation.getCurrentPosition(
+          pos2 => {
+            const { latitude: lat2, longitude: lng2 } = pos2.coords;
+            if (typeof window._setGeoCache === 'function') window._setGeoCache(lat2, lng2, pos2.coords.accuracy || 50);
+            window._startupPhase = true;
+            console.log('[起動・リトライ成功] startupPhase=true');
+            lmap.off('movestart', closeInfo);
+            try {
+              lmap.setView([lat2, lng2], 13);
+              const tryPanBy2 = (attemptCount) => {
+                try {
+                  const mapEl = document.getElementById('leaflet-map');
+                  if (!mapEl) return;
+                  const mapH = mapEl.clientHeight;
+                  if (mapH === 0 && attemptCount < 5) {
+                    setTimeout(() => tryPanBy2(attemptCount + 1), 200);
+                    return;
+                  }
+                  const offsetY = mapH * 0.10;
+                  lmap.panBy([0, offsetY], { animate: false });
+                  console.log('[起動・リトライ] panBy offsetY=' + offsetY + 'px');
+                } catch(e) { console.warn('現在地位置オフセット失敗', e); }
+              };
+              setTimeout(() => tryPanBy2(0), 100);
+              console.log('[起動・リトライ成功] 現在位置中心3km圏表示:', lat2, lng2);
+              // 最寄り駅自動表示のポーリングも実行
+              let pa = 0;
+              const pi = setInterval(() => {
+                pa++;
+                if (pa > 40) {
+                  clearInterval(pi);
+                  lmap.on('movestart', closeInfo);
+                  window._startupPhase = false;
+                  return;
+                }
+                const distFn = window.getDistanceM;
+                const showFn = window.showInfo;
+                const hasScored = Array.isArray(stationData) && stationData.length > 0 && stationData.some(s => s.score && s.score > 0);
+                if (typeof distFn !== 'function' || typeof showFn !== 'function' || !hasScored) return;
+                clearInterval(pi);
+                try {
+                  let nearest = null, minDist = Infinity;
+                  stationData.forEach(st => {
+                    if (!st.lat || !st.lng || !st.score) return;
+                    const d = distFn(lat2, lng2, st.lat, st.lng);
+                    if (d < minDist) { minDist = d; nearest = st; }
+                  });
+                  if (nearest) {
+                    console.log('[起動・リトライ] 最寄り駅自動表示:', nearest.name, '距離:', Math.round(minDist) + 'm');
+                    showFn(nearest);
+                  }
+                } catch(e) { console.warn('起動時最寄り駅表示失敗', e); }
+                setTimeout(() => {
+                  window._startupPhase = false;
+                  lmap.on('movestart', closeInfo);
+                }, 5000);
+              }, 200);
+            } catch(e) { console.warn('起動時マップ移動失敗 (リトライ)', e); }
+          },
+          err2 => {
+            console.warn('[起動・リトライ] 高精度モードも失敗:', 'code=' + err2.code, err2.message, '→ 東京中心のまま');
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+      } else {
+        console.log('[起動] 位置情報取得失敗 (code=' + err.code + ')、東京中心のまま:', err.message);
+      }
     },
-    { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+    { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
   );
 }
 // ★ ログイン後にpendingCheckin救済を試行
@@ -19921,7 +19993,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v258</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v259</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
