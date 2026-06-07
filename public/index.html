@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index247 (2026.06.07) — マップ密集解消: Tier 1+Tier 2駅を無条件で全表示していたため都心(zoom 11-13)で重なって読めない問題を修正。新ロジック: 全駅を「Tier 1 → Tier 2 → others」「同Tier内スコア降順」でソート→優先度高い順に重なり判定で配置、後続が既存駅と近接(d未満)ならskip。スコア高い駅・上位Tier駅が常に優先表示。zoom>=14は全表示（高ズームでは密集なし）。基: index246 Android UI調整版 -->
+<!-- VERSION: index248 (2026.06.07) — Android専用UI調整・カード見切れ最終調整: ①.sc-close-btn の margin-top 6→2px (カードと閉じるボタンの距離を詰める)。②#card-modal-bg.open の padding-top 8→4px、padding-bottom も safe-area→4px (カード位置を上に詰める)。③#card-modal の max-height/height を 100vh-8px → 100vh-4px に拡張。Android専用、iOS無影響。基: index247 マップ密集解消版 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -7202,6 +7202,36 @@ body.checkin-active #checkin-indicator{
 /* ════════════════════════════════════════════════════════════════
    ★index246 Android専用CSS ここまで
    ════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════
+   ★index248 (2026-06-07) Android追加調整: カード見切れ最終対処
+   ════════════════════════════════════════════════════════════════ */
+
+/* 修正①: カードと閉じるボタンの距離を詰める (margin-top 6→2px) */
+.is-android .sc-close-btn {
+  margin-top: 2px !important;
+}
+
+/* 修正②: カード位置を上に詰める + 下マージンも縮小 */
+.is-android #card-modal-bg.open {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+/* 修正③: カードの利用可能高さを拡張 (100vh-8px → 100vh-4px) */
+.is-android #card-modal {
+  max-height: calc(100vh - 4px) !important;
+  max-height: calc(100dvh - 4px) !important;
+}
+@media (max-width:767px) {
+  .is-android #card-modal {
+    height: calc(100vh - 4px) !important;
+    height: calc(100dvh - 4px) !important;
+  }
+}
+/* ════════════════════════════════════════════════════════════════
+   ★index248 Android追加調整 ここまで
+   ════════════════════════════════════════════════════════════════ */
+
 </style>
 
 <!-- ステーションカード モーダル -->
@@ -19765,7 +19795,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v247</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v248</div>
 <script>
   console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
