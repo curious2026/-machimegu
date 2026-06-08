@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index261 (2026.06.08) — index260 の副作用バグ修正。①index260でlocalStorage前回位置を使うようになりgetCurrentPositionが1秒で返るように。②結果、loadAll()のスコア取得（数秒かかる）の完了前に最寄り駅ポーリングが8秒タイムアウト → 起動時の最寄り駅ポップアップが出なくなる副作用が両OSで発生。③対処: メイン側・リトライ側両方のポーリングタイムアウトを8秒→30秒に延長。これで loadAll() の完了を確実に待てる。index260の他の変更（バグ①の真の修正・カード演出常時化・コレクションlastVisitAt順）は維持。 -->
+<!-- VERSION: index262 (2026.06.08) — バグ③（ミッション達成5分遅延）対症療法。①runBadgeCheckAfterCheckin の最後でマイページが開いていれば mmRenderDailyPanel を300ms遅延で強制再描画。これで「マイページが開いた状態でチェックイン→達成と表示されない」問題が解消。②mmSetDailyState に CF呼び出し時間ログ追加（5分遅延の真因特定用）：「[updateDailyState] CF呼出開始」「CF成功 Nms」「CF呼出エラー Nms」を出力。これで実機で5分遅延の発生時に CFがリトライしているか／成功までNミリ秒かかっているかが見える。③真因（Firestore eventual consistency or CFリトライ）の確定には実機コンソールログが必要。index261 の他の変更（バグ①真の修正・カード演出常時化・コレクションlastVisitAt順・最寄り駅ポーリング30秒延長）は維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -16932,9 +16932,35 @@ window.runBadgeCheckAfterCheckin = async () => {
     // ★ Phase B: デイリーミッション進捗更新
     if (window.mmUpdateMissionProgress && window._lastCheckinData) {
       try {
+        console.log('[Mission] 進捗判定開始');
+        const t0 = Date.now();
         await window.mmUpdateMissionProgress(user.uid, window._lastCheckinData);
+        console.log('[Mission] 進捗判定完了', (Date.now() - t0) + 'ms');
       } catch(e) { console.warn('ミッション進捗更新エラー:', e); }
     }
+    
+    // ★index262: バグ③対策（マイページ自動再描画）
+    //   ミッション達成判定が完了した時点でマイページが開いていれば、強制再描画してUI即反映する。
+    //   これにより「マイページを開いた状態でチェックイン→達成と表示されない」問題が解消。
+    //   ※5分遅延の真因（Firestore eventual consistency or CFリトライ）の対症療法。
+    //   真因確定には実機コンソールログが必要。
+    try {
+      const mpBg = document.getElementById('mypage-bg');
+      if (mpBg && mpBg.classList.contains('open')) {
+        console.log('[Mission] マイページ開いてる→自動再描画実行');
+        // 少し遅延させて Firestore 反映を待つ（300ms）
+        setTimeout(async () => {
+          try {
+            if (window.mmRenderDailyPanel) {
+              await window.mmRenderDailyPanel(user.uid);
+              console.log('[Mission] マイページ再描画完了');
+            }
+          } catch(e) { console.warn('[Mission] マイページ再描画エラー:', e); }
+        }, 300);
+      } else {
+        console.log('[Mission] マイページ閉じてる→再描画スキップ');
+      }
+    } catch(e) { console.warn('[Mission] マイページ判定エラー:', e); }
   } catch(e) { console.error('バッジ判定エラー:', e); }
 };
 
@@ -19040,6 +19066,8 @@ if ('serviceWorker' in navigator) {
     //   新: CF側でloginStreak単調増加チェック、lastLoginDate未来日付禁止、bonusClaimedToday同日内取消禁止、
     //       lastLoginBonusXPの整合性チェック等を実施
     //   Rules v5 で dailyState は write false なので、クライアント直書きはRules違反でエラーになる
+    // ★index262: バグ③（ミッション5分遅延）真因特定のためログ強化。CF呼び出し時間とリトライを可視化。
+    const _t0 = Date.now();
     try {
       // クライアント側でも undefined 除去（CF側もやるが二重防御）
       const stripUndefined = (obj) => {
@@ -19053,14 +19081,19 @@ if ('serviceWorker' in navigator) {
         return cleaned;
       };
       const safeData = stripUndefined(data);
+      console.log('[updateDailyState] CF呼出開始 keys=' + Object.keys(safeData).join(','));
       const res = await window.updateDailyStateFn({ data: safeData });  // ★index244: classic scope なので window 経由
+      const _dt = Date.now() - _t0;
       if (res && res.data && res.data.success) {
         window._lastDailyError = null;
+        console.log('[updateDailyState] CF成功 ' + _dt + 'ms');
         return true;
       }
+      console.warn('[updateDailyState] CF応答異常 ' + _dt + 'ms', res && res.data);
       return false;
     } catch(e) {
-      console.warn('[updateDailyState] CF呼出エラー:', e && e.code, e && e.message);
+      const _dt = Date.now() - _t0;
+      console.warn('[updateDailyState] CF呼出エラー ' + _dt + 'ms:', e && e.code, e && e.message);
       window._lastDailyError = e;
       return false;
     }
@@ -20091,9 +20124,9 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v261</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v262</div>
 <script>
-  console.log('%c[街巡] index version: 261', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 262', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
