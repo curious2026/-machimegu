@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index263 (2026.06.08) — APK実機テストで判明した2件のUI問題を対処。①バッジコレクション見切れ（両OS）: スマホで.bp-gridが3列固定だったが、Pixel 7a (411px CSS幅) では3列+gap10pxが画面幅を超え右端見切れ発生。@media (max-width:520px)で2列に変更（minmax(0,1fr)で確実に均等分割）。②Android フィルター文字大きすぎ: Android Chromeのselectドロップダウンは OS ネイティブUIで描画されCSS制御に限界がある。.is-android .fsel に font-size:13px を強制指定。ただしAndroid側「表示サイズ」「フォントサイズ」設定が大きめならそれが優先されるためCSSだけでは完全解決不可。Phase 4.5でカスタムドロップダウン実装を検討。index262の他の変更は全て維持。 -->
+<!-- VERSION: index263 (2026.06.08) — APK実機テストで判明したUI問題への対処。①バッジコレクション見切れ修正: スマホで.bp-gridが3列固定だったが、内部の.bp-badge-rankにwidth/height固定がなくgridセル幅次第で球体が肥大化、結果として3列が画面幅を超えて見切れていた。v263初版で2列にしたがそれだとデカすぎ＆スクロール多発。最終版は「3列復活＋カード内コンテンツ縮小（min-height 108px, icon 22px, name 11px）＋球体aspect-ratio:1/1で正方形セル化＋gap 8px」で見切れ解消とコンパクト両立。②Android フィルター文字: .is-android .fsel に font-size:13px 強制指定したが、Android Chromeの<select>ドロップダウンはOSネイティブUI描画でCSS制御に限界。完全iPhone化にはカスタムドロップダウン実装が必要、v264で対応予定。index262の他の変更（バグ③マイページ自動再描画＋ログ強化、バグ①真の修正、カード演出常時化、コレクションlastVisitAt順、最寄り駅ポーリング30秒延長）は全て維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2031,10 +2031,6 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 .fsel option{font-size:11px!important;line-height:1.1!important;padding:2px 4px!important}
 
-/* ★index263: Android Chrome の select ドロップダウンは OS ネイティブUI で描画されるため、
-   CSS の font-size が完全には効かない。is-android クラスで強制指定を試みる。
-   ただし、Android「表示サイズ」「フォントサイズ」設定が大きめだとそれが優先される。
-   完全制御にはカスタムドロップダウン実装が必要（Phase 4.5 で検討）。 */
 .is-android .fsel,
 .is-android .fsel option{
   font-size:13px !important;
@@ -2593,9 +2589,42 @@ body:not(.splashing) #table-area{
   gap:12px !important;
 }
 @media (max-width:520px){
-  /* ★index263: 3列→2列に変更。Pixel 7a (411px CSS幅)で3列+gap10pxが画面幅を超え、
-     カードが右端で見切れる現象が両OSで発生していた対処。2列ならゆったり収まる。 */
-  .bp-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:10px !important}
+  /* ★index263: 3列復活＋カード全体縮小で見切れ解消。
+     2列だと球体（aspect-ratio未指定）が異常にデカく、スクロール多発で却って使いづらかった。
+     3列＋gap8px＋カード内コンテンツ縮小で、画面幅411pxのPixel 7aでも収まる。
+     球体（.bp-badge-rank）はaspect-ratio:1/1で正方形セル化、セル幅に追従。 */
+  .bp-grid{
+    grid-template-columns:repeat(3, minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+  .bp-badge-locked,
+  .bp-badge-earned{
+    min-height:108px !important;
+    padding:8px 4px 10px !important;
+    min-width:0 !important;
+    overflow:hidden;
+  }
+  .bp-badge-locked .bp-icon,
+  .bp-badge-earned .bp-icon{
+    font-size:22px !important;
+    margin-bottom:4px !important;
+  }
+  .bp-badge-locked .bp-name,
+  .bp-badge-earned .bp-name{
+    font-size:11px !important;
+    line-height:1.2 !important;
+  }
+  .bp-badge-locked .bp-progress,
+  .bp-badge-earned .bp-progress{
+    font-size:10px !important;
+  }
+  /* ランク制覇円形は aspect-ratio で正方形（grid セル幅追従） */
+  .bp-badge-rank{
+    aspect-ratio:1/1 !important;
+    min-height:0 !important;
+  }
+  .bp-badge-rank .bp-name{font-size:11px !important}
+  .bp-badge-rank .bp-sub{font-size:12px !important; margin-top:2px !important}
 }
 
 /* バッジ共通：未獲得 */
