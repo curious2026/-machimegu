@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index264 (2026.06.08) — フィルター文字大きすぎ問題の根本解決：カスタムドロップダウン実装。①Android ChromeのselectドロップダウンはOSネイティブUIで描画されCSS制御が効かないため、フォント設定が標準でも文字・行幅が肥大化していた。②対処：4つのfsel（エリア、路線、ランク、距離）について、既存<select>をdisplay:none化して値保持＋既存JS互換性を維持しつつ、表示用<div class="fsel-custom"><button>+<ul>を被せる構造に。選択時はselect.valueを同期＋changeイベント発火で既存ハンドラ（onPrefChange/render/onRadiusChange）を自動実行。③lineSelectの動的生成と同期するrefreshCustomLineMenu関数も実装。④iPhone/Android共通の見た目に統一、Android Chromeの仕様問題から完全解放。index263の他の変更（バッジ3列復活＋サイズ縮小、球体aspect-ratio:1/1）も維持。 -->
+<!-- VERSION: index265 (2026.06.08) — index264の路線フィルター未同期バグ修正＋②⑤対症療法。①路線フィルター修正: initLineSelect()がカスタムドロップダウンIIFE評価より前に実行されるため、初期化時のwindow.refreshCustomLineMenu()が未定義スキップされていた。対処: initCustomSelect冒頭で必ずsyncMenuFromSelect()を呼び、初期化時に最新select.optionsを<li>に完全ミラー。②バグ② 最寄り駅ポップアップ未出: loadAll()完了後にinfo-panelが閉じてれば、_geoCacheの位置から最寄り駅を補強表示する処理を追加（既存ロジックと排他制御）。③バグ⑤ Androidマイページ4-5秒遅延: 真因特定用にloadMypageData全体・getCards・getDailyStateにconsole.time/timeEndログ追加。実機確認でボトルネック特定可能に。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -9843,6 +9843,34 @@ async function loadAll(){
   } else {
     setStatus(stationData.filter(s=>s.score>0).length+'駅表示中',false);
   }
+  
+  // ★index265: バグ② 対症療法 — loadAll完了後、最寄り駅ポップアップがまだ出てなくて
+  //   位置情報キャッシュがあれば補強表示する。
+  //   既存の起動シーケンス（getCurrentPosition成功callback→ポーリング）と排他制御：
+  //   info-panel.open があれば（既に表示済み）何もしない、無ければ位置キャッシュから計算して表示。
+  setTimeout(() => {
+    try {
+      const ip = document.getElementById('info-panel');
+      if (ip && ip.classList.contains('open')) {
+        return;  // 既に最寄り駅表示済み（または別の駅を表示中）
+      }
+      const cache = (typeof _geoCache !== 'undefined') ? _geoCache : null;
+      if (!cache || typeof cache.lat !== 'number' || typeof cache.lng !== 'number') return;
+      const hasScored = stationData.some(s => s.score && s.score > 0);
+      if (!hasScored) return;
+      if (typeof getDistanceM !== 'function' || typeof showInfo !== 'function') return;
+      let nearest = null, minDist = Infinity;
+      stationData.forEach(st => {
+        if (!st.lat || !st.lng || !st.score) return;
+        const d = getDistanceM(cache.lat, cache.lng, st.lat, st.lng);
+        if (d < minDist) { minDist = d; nearest = st; }
+      });
+      if (nearest) {
+        console.log('[loadAll-rescue] 最寄り駅補強表示:', nearest.name, Math.round(minDist) + 'm');
+        showInfo(nearest);
+      }
+    } catch(e) { console.warn('[loadAll-rescue] エラー:', e); }
+  }, 500);
 }
 
 // フォールバック：個別取得（all-scoresが死んだ時のみ）
@@ -13979,6 +14007,9 @@ window.deleteAccountFromMypage = async () => {
 };
 
 async function loadMypageData(uid) {
+  // ★index265: バグ⑤ Androidマイページ4-5秒遅延の真因特定用ログ追加。
+  //   各処理の所要時間を計測。実機で出力を見れば、どの処理がボトルネックか即特定可能。
+  console.time('[Mypage] total');
   // アバターボタン再バインド（マイページ表示時に確実に）
   if (window._bindAvatarButton) setTimeout(() => window._bindAvatarButton(), 50);
   
@@ -13987,11 +14018,14 @@ async function loadMypageData(uid) {
   
   try {
     // 全カード取得
+    console.time('[Mypage] getCards');
     const cardsRef = collection(db, 'users', uid, 'stationCards');
     const snap = await getDocs(cardsRef);
+    console.timeEnd('[Mypage] getCards');
     
     const cards = [];
     snap.forEach(d => cards.push({ id: d.id, ...d.data() }));
+    console.log('[Mypage] cards数:', cards.length);
     
     // 統計計算
     let totalCheckins = 0, totalPower = 0, bestRank = '-';
@@ -14037,7 +14071,9 @@ async function loadMypageData(uid) {
       //   さらに window._mmDailyBonusXP にキャッシュして bpCalcTotalXP からも参照可能に。
       let dailyXP = 0;
       try {
+        console.time('[Mypage] getDailyState');
         const dailyState = await window.mmGetDailyState(uid);
+        console.timeEnd('[Mypage] getDailyState');
         if (dailyState) {
           dailyXP = (dailyState.totalLoginXP || 0) + (dailyState.totalMissionXP || 0);
         }
@@ -14206,9 +14242,11 @@ async function loadMypageData(uid) {
     // Phase D-2.1: バッジプレビュー＋推し街描画
     if (typeof renderMypageBadgePreview === 'function') renderMypageBadgePreview();
     if (typeof renderFavStations === 'function') renderFavStations();
+    console.timeEnd('[Mypage] total');
   } catch (e) {
     console.error('マイページデータ取得エラー:', e);
     grid.innerHTML = '<div class="mp-empty">読み込みエラー: ' + e.message + '</div>';
+    try { console.timeEnd('[Mypage] total'); } catch(_) {}
   }
 }
 // ★index210 #5最重要修正: claim後にマスターパネルを再計算するため公開
@@ -20297,9 +20335,9 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v264</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v265</div>
 <script>
-  console.log('%c[街巡] index version: 264', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 265', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   // ★index264: カスタムドロップダウン制御。
   //   Android ChromeのselectドロップダウンがOSネイティブUI描画で巨大化する問題への根本対処。
@@ -20319,6 +20357,20 @@ if ('serviceWorker' in navigator) {
       }
     }
     
+    // ★index264 fix: select.options を <li> に完全ミラー。
+    //   lineSelectなど動的にoptionが追加されるselectでも、初期化時の最新状態を反映できる。
+    function syncMenuFromSelect(wrap, select){
+      const menu = wrap.querySelector('.fsel-custom-menu');
+      if (!menu || !select || select.options.length === 0) return;
+      const html = Array.from(select.options).map(opt => {
+        const sel = opt.value === select.value ? ' class="selected"' : '';
+        const v = String(opt.value).replace(/"/g, '&quot;');
+        const t = String(opt.textContent).replace(/</g, '&lt;');
+        return `<li data-value="${v}"${sel}>${t}</li>`;
+      }).join('');
+      menu.innerHTML = html;
+    }
+    
     function initCustomSelect(wrap){
       const btn = wrap.querySelector('.fsel-custom-btn');
       const menu = wrap.querySelector('.fsel-custom-menu');
@@ -20326,7 +20378,8 @@ if ('serviceWorker' in navigator) {
       const select = document.getElementById(selectId);
       if (!btn || !menu || !select) return;
       
-      // 初期ラベル同期
+      // ★initialize: 必ず select の最新 options を反映（動的lineSelect対策）
+      syncMenuFromSelect(wrap, select);
       syncLabelFromSelect(wrap, select);
       
       btn.addEventListener('click', function(e){
@@ -20365,17 +20418,7 @@ if ('serviceWorker' in navigator) {
       const wrap = document.querySelector('.fsel-custom[data-target="lineSelect"]');
       const select = document.getElementById('lineSelect');
       if (!wrap || !select) return;
-      const menu = wrap.querySelector('.fsel-custom-menu');
-      if (!menu) return;
-      // option を li にミラー
-      const html = Array.from(select.options).map(opt => {
-        const sel = opt.value === select.value ? ' class="selected"' : '';
-        const v = opt.value.replace(/"/g, '&quot;');
-        const t = opt.textContent.replace(/</g, '&lt;');
-        return `<li data-value="${v}"${sel}>${t}</li>`;
-      }).join('');
-      menu.innerHTML = html;
-      // ラベルも同期
+      syncMenuFromSelect(wrap, select);
       syncLabelFromSelect(wrap, select);
     };
     
