@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index259 (2026.06.07) — Android 起動時 現在位置取得失敗の本当の真因対処。過去スレ「まちめぐ6」のコード調査で発覚: 起動時 getCurrentPosition が timeout 5000ms (5秒) で失敗 → エラーコールバックに入って「東京中心のまま」になる構造。ともきの Pixel 7a (SIMなし、iPhoneテザリング、室内WiFi環境) では 5秒では位置取得が間に合わない。対処: ①timeout を 5秒→15秒に延長、②エラー時にもう一度 enableHighAccuracy:true (高精度GPS) で再試行、③ログを強化してエラーコード詳細表示。これで Android 室内環境でも位置取得が成功するはず。 -->
+<!-- VERSION: index260 (2026.06.08) — バグ①修正＋仕様変更2件。①Android起動時の「東京中心5秒→現在位置」現象の真の修正：これは getCurrentPosition が timeout してたのではなく、低精度モードで約5秒かけて正常に成功していただけ。真因は Leaflet マップ初期 center が東京固定だったこと。対処：localStorage に前回位置(mm_last_position)を保存し、起動時の Leaflet 初期 center に使用。初回ユーザーのみ東京中心スタート。②仕様A：チェックイン演出を常時表示。再訪問でも openStationCard を呼ぶ。新組合せ獲得(new_card)と初訪問は派手アニメ、同組合せ再訪問(duplicate)は短縮アニメ（フリップ尺はそのまま、2.8秒で自動クローズ）。③仕様B：カードコレクションのソート「日付」を lastVisitAt 順に変更（再訪問するたび最新位置に並ぶ）。stationCards に lastVisitAt が無いケースに備えて、openCardListPage で checkins から駅単位の最終訪問日を集計して合体。チェックイン履歴は時系列のまま不変。④コンソール「version: 218」表示漏れも修正。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -9274,7 +9274,27 @@ const STATIONS=Object.values(STATIONS_MAP)
   .map(s=>({...s,lat:COORDS[s.name+'_'+s.pref][0],lng:COORDS[s.name+'_'+s.pref][1],score:null,details:{}}));
 
 // ═══ 地図初期化 ═══
-const lmap=L.map('leaflet-map',{zoomControl:isPc()}).setView([35.665,139.720],11);
+// ★index260: 起動時の初期centerは localStorage の前回位置を優先（東京中心固定をやめる）
+//   バグ①対策：「立ち上げ→東京真ん中5秒→現在位置」を「立ち上げ→ほぼ前回位置→GPS取得後パン」に。
+//   これにより、初回ユーザー以外は起動瞬間に「前回開いた場所」から始まる体感に変わる。
+let _initCenter = [35.665, 139.720];  // 東京中心デフォルト
+let _initZoom = 11;
+try {
+  const _lp = localStorage.getItem('mm_last_position');
+  if (_lp) {
+    const _p = JSON.parse(_lp);
+    if (_p && typeof _p.lat === 'number' && typeof _p.lng === 'number') {
+      // 7日以内なら使う（古すぎる位置は信頼しない）
+      const _ageMs = Date.now() - (_p.ts || 0);
+      if (_ageMs < 7 * 24 * 60 * 60 * 1000) {
+        _initCenter = [_p.lat, _p.lng];
+        _initZoom = 13;  // 前回位置使用時は3km圏ズーム
+        console.log('[起動] 前回位置から開始:', _p.lat, _p.lng, '(経過', Math.round(_ageMs/60000), '分)');
+      }
+    }
+  }
+} catch(e) { console.warn('[起動] 前回位置読み出し失敗:', e); }
+const lmap=L.map('leaflet-map',{zoomControl:isPc()}).setView(_initCenter, _initZoom);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
   attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom:19
@@ -10919,6 +10939,14 @@ const GEO_CACHE_MS = 15 * 60 * 1000;  // 既定キャッシュ寿命: 15分
 function _setGeoCache(lat, lng, accuracy) {
   if (typeof lat !== 'number' || typeof lng !== 'number') return;
   _geoCache = { lat: lat, lng: lng, accuracy: (accuracy == null ? 50 : accuracy), time: Date.now() };
+  // ★index260: localStorage に前回位置を保存（起動時の初期center用、バグ①対策）
+  //   getCurrentPosition / watchPosition / acquirePosition すべての成功時にここを通るので
+  //   localStorage が常に最新位置で更新される。
+  try {
+    localStorage.setItem('mm_last_position', JSON.stringify({
+      lat: lat, lng: lng, ts: Date.now()
+    }));
+  } catch(e) {}
 }
 
 function acquirePosition(opts) {
@@ -11802,17 +11830,22 @@ async function tryCompleteCheckin() {
             typeof window.mmGetSeason === 'function' &&
             typeof window.mmGetTime === 'function' &&
             typeof window.mmGetWeather === 'function') {
+          // ★index260: 前回チェックインの status が残らないよう開始時にリセット
+          window._lastCardStatus = null;
           const stKey = window.mmStationKey({ name: _ciName, pref: _ciPref });
           const weatherStr = await window.mmGetWeather(_ciLat, _ciLng);  // ★4秒タイムアウト付き
           // ★Step5: tier抽選（初訪問のみ、再訪問では抽選しない）
           const rolledTier = isFirstVisit ? (window.mmRollCardTier ? window.mmRollCardTier() : null) : null;
-          await window.mmCloudAddCard(stKey, {
+          // ★index260: 戻り値を保存。duplicate→短縮アニメ、new_card/new_station→派手アニメ判定に使う。
+          const cardResult = await window.mmCloudAddCard(stKey, {
             season: window.mmGetSeason(),
             time: window.mmGetTime(),
             weather: weatherStr,
             type: 'fresh',
             special: rolledTier  // ★Step5: シャイニー/ミシック抽選結果（null=通常）
           });
+          window._lastCardStatus = (cardResult && cardResult.status) || null;
+          console.log('[Card] addCard status:', window._lastCardStatus);
           // ミシック/シャイニー出現演出（カードの上に重ねて出す）
           if (rolledTier && rolledTier.startsWith('mythic') && window.mmShowMythicFlash) {
             setTimeout(function(){ window.mmShowMythicFlash(rolledTier, _ciName, score, rankInfo.rank); }, 100);
@@ -11856,12 +11889,20 @@ function showCheckinSuccess(data) {
     `本日 ${todayCount}/${DAILY_LIMIT}駅`;
   document.getElementById('checkin-success-bg').classList.add('open');
   
-  // 2.8秒後にミニ通知を閉じて、カードを開く（初訪問のみ）
+  // 2.8秒後にミニ通知を閉じて、カードを開く
+  // ★index260 仕様変更: 初訪問のみだった条件を撤廃 → 再訪問でも必ずカード演出を出す。
+  //   duplicate（同じ季節×時間×天気を既に持ってる再訪問）は短縮アニメ（自動クローズ1.5秒）、
+  //   new_card（新組合せ獲得）と初訪問（new_station）は派手アニメ（タップ閉じ）。
   setTimeout(() => {
     document.getElementById('checkin-success-bg').classList.remove('open');
-    if (data.isFirstVisit) {
-      setTimeout(() => openStationCard(data), 200);
+    // 判定：初訪問 or new_card → 派手、duplicate → 短縮
+    let _isShort = false;
+    if (!data.isFirstVisit) {
+      const _st = window._lastCardStatus;
+      // duplicate or 状態不明（CF失敗等の保守判断）は短縮
+      _isShort = (_st === 'duplicate' || _st == null || _st === undefined);
     }
+    setTimeout(() => openStationCard(Object.assign({}, data, { isShortAnim: _isShort })), 200);
   }, 2800);
 }
 window.closeCheckinSuccess = () => {
@@ -11901,7 +11942,10 @@ async function openStationCard(data) {
     const wrap = document.getElementById('card-flip-wrap');
     if (wrap) {
       // first-visit クラスを付与（初訪問なら派手アニメ）
-      if (data.isFirstVisit) {
+      // ★index260: 「再訪問で新組合せ獲得（new_card）」も派手アニメ扱いにする
+      //   isShortAnim=false → 派手（初訪問 or new_card）、isShortAnim=true → 控えめ（duplicate）
+      const _isPretty = data.isFirstVisit || (data.isShortAnim === false);
+      if (_isPretty) {
         wrap.classList.add('first-visit');
         if (card) card.classList.add('first-visit');
       } else {
@@ -11915,6 +11959,23 @@ async function openStationCard(data) {
       // ★ハードウェアアクセラレーション促進（GPUレイヤー強制確立）
       wrap.style.willChange = 'transform, opacity';
       wrap.style.transform = 'translateZ(0)';  // GPUレイヤー化のヒント
+      
+      // ★index260: duplicate 時は自動クローズ（フリップ尺はそのまま、表示時間のみ短縮）
+      //   ともき仕様：「フリップ尺はそのまま、表示時間を短縮」＝カード全体が見えてフリップ完了、
+      //   その後 1.5秒で自動的に閉じる。タップで早期に閉じることも可能。
+      if (window._autoCloseTimer) { clearTimeout(window._autoCloseTimer); window._autoCloseTimer = null; }
+      if (data.isShortAnim === true) {
+        // フリップアニメ完了(約1.3秒)＋少し見える時間(1.5秒) = 約2.8秒で自動クローズ
+        window._autoCloseTimer = setTimeout(() => {
+          const bg2 = document.getElementById('card-modal-bg');
+          if (bg2 && bg2.classList.contains('open')) {
+            if (typeof window.closeCardModal === 'function') {
+              // null を渡すと「背景クリック条件」をバイパスして閉じる
+              window.closeCardModal();
+            }
+          }
+        }, 2800);
+      }
       
       // ★index206: アニメ中だけ backdrop-filter:blur を切る
       //   blur(8px)を毎フレーム計算する負荷でカードのrotateY回転がカクつく原因。
@@ -13185,7 +13246,15 @@ window.renderCardListSorted = () => {
   let cards = cardListData.slice();
   
   const sign = (cardSortDir === 'desc') ? -1 : 1;
-  const getMs = (c) => c.firstVisitAt && c.firstVisitAt.toMillis ? c.firstVisitAt.toMillis() : 0;
+  // ★index260: 「日付」ソートは lastVisitAt（最終訪問日）を優先。
+  //   なければ firstVisitAt（初訪問日）にフォールバック。
+  //   仕様B：カードコレクションは「最近行った駅」が先頭に並ぶ。
+  const getMs = (c) => {
+    if (typeof c.lastVisitAt === 'number') return c.lastVisitAt;
+    if (c.lastVisitAt && c.lastVisitAt.toMillis) return c.lastVisitAt.toMillis();
+    if (c.firstVisitAt && c.firstVisitAt.toMillis) return c.firstVisitAt.toMillis();
+    return 0;
+  };
   
   if (cardSortKey === 'date') {
     cards.sort((a,b) => sign * (getMs(a) - getMs(b)));
@@ -14002,6 +14071,30 @@ window.openCardListPage = async () => {
     if (banner) banner.style.display = '';
     const scoreValEl = document.getElementById('cl-score-value');
     if (scoreValEl) scoreValEl.textContent = totalPower.toLocaleString();
+    
+    // ★index260 仕様B: checkins から駅単位の最終訪問日(lastVisitAt)を計算して合体。
+    //   stationCards に lastVisitAt が CF経由で保存されていない可能性があるため
+    //   クライアント側で checkins を集計して補完する（CF改修不要）。
+    try {
+      const ckRef = collection(db, 'users', user.uid, 'checkins');
+      const ckSnap = await getDocs(ckRef);
+      const lastVisitMap = {};  // stationId -> 最新ms
+      ckSnap.forEach(d => {
+        const cd = d.data();
+        if (!cd.checkedInAt) return;
+        const t = cd.checkedInAt.toMillis ? cd.checkedInAt.toMillis() : (cd.checkedInAt.seconds * 1000);
+        const sid = cd.stationId || (cd.stationName && cd.stationPref ? (cd.stationName + '_' + cd.stationPref) : '');
+        if (!sid) return;
+        if (!lastVisitMap[sid] || t > lastVisitMap[sid]) lastVisitMap[sid] = t;
+      });
+      // cards 各要素の id（=stationId）と照合
+      cards.forEach(c => {
+        if (lastVisitMap[c.id]) c.lastVisitAt = lastVisitMap[c.id];
+      });
+      console.log('[CardList] lastVisitAt 合体完了:', Object.keys(lastVisitMap).length, '駅');
+    } catch(e) {
+      console.warn('[CardList] checkins 集計失敗（firstVisitAt順で代替）:', e);
+    }
     
     cardListData = cards;
     cardSortKey = 'date';
@@ -19993,9 +20086,9 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v259</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v260</div>
 <script>
-  console.log('%c[街巡] index version: 218', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 260', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
