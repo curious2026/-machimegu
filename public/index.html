@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index260 (2026.06.08) — バグ①修正＋仕様変更2件。①Android起動時の「東京中心5秒→現在位置」現象の真の修正：これは getCurrentPosition が timeout してたのではなく、低精度モードで約5秒かけて正常に成功していただけ。真因は Leaflet マップ初期 center が東京固定だったこと。対処：localStorage に前回位置(mm_last_position)を保存し、起動時の Leaflet 初期 center に使用。初回ユーザーのみ東京中心スタート。②仕様A：チェックイン演出を常時表示。再訪問でも openStationCard を呼ぶ。新組合せ獲得(new_card)と初訪問は派手アニメ、同組合せ再訪問(duplicate)は短縮アニメ（フリップ尺はそのまま、2.8秒で自動クローズ）。③仕様B：カードコレクションのソート「日付」を lastVisitAt 順に変更（再訪問するたび最新位置に並ぶ）。stationCards に lastVisitAt が無いケースに備えて、openCardListPage で checkins から駅単位の最終訪問日を集計して合体。チェックイン履歴は時系列のまま不変。④コンソール「version: 218」表示漏れも修正。 -->
+<!-- VERSION: index261 (2026.06.08) — index260 の副作用バグ修正。①index260でlocalStorage前回位置を使うようになりgetCurrentPositionが1秒で返るように。②結果、loadAll()のスコア取得（数秒かかる）の完了前に最寄り駅ポーリングが8秒タイムアウト → 起動時の最寄り駅ポップアップが出なくなる副作用が両OSで発生。③対処: メイン側・リトライ側両方のポーリングタイムアウトを8秒→30秒に延長。これで loadAll() の完了を確実に待てる。index260の他の変更（バグ①の真の修正・カード演出常時化・コレクションlastVisitAt順）は維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -10199,9 +10199,13 @@ if (navigator.geolocation) {
         let pollAttempts = 0;
         const pollInterval = setInterval(() => {
           pollAttempts++;
-          if (pollAttempts > 40) {  // 40回 = 8秒タイムアウト
+          // ★index261: タイムアウト 8秒→30秒に延長。
+          //   index260でlocalStorage前回位置を使うようになり、getCurrentPositionが1秒程度で返るように。
+          //   結果、loadAll()のスコア取得完了前に hasScoredStations=false でタイムアウトする副作用が出た。
+          //   30秒あれば loadAll() の完了を待てる。
+          if (pollAttempts > 150) {  // 150回 = 30秒タイムアウト
             clearInterval(pollInterval);
-            console.warn('[起動] 最寄り駅表示タイムアウト');
+            console.warn('[起動] 最寄り駅表示タイムアウト (30秒経過)');
             // タイムアウト時もmovestartリスナーを戻す
             lmap.on('movestart', closeInfo);
             window._startupPhase = false;
@@ -10279,7 +10283,8 @@ if (navigator.geolocation) {
               let pa = 0;
               const pi = setInterval(() => {
                 pa++;
-                if (pa > 40) {
+                // ★index261: リトライ側もタイムアウト 8秒→30秒に揃える
+                if (pa > 150) {
                   clearInterval(pi);
                   lmap.on('movestart', closeInfo);
                   window._startupPhase = false;
@@ -20086,9 +20091,9 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v260</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v261</div>
 <script>
-  console.log('%c[街巡] index version: 260', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 261', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
