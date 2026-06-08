@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index262 (2026.06.08) — バグ③（ミッション達成5分遅延）対症療法。①runBadgeCheckAfterCheckin の最後でマイページが開いていれば mmRenderDailyPanel を300ms遅延で強制再描画。これで「マイページが開いた状態でチェックイン→達成と表示されない」問題が解消。②mmSetDailyState に CF呼び出し時間ログ追加（5分遅延の真因特定用）：「[updateDailyState] CF呼出開始」「CF成功 Nms」「CF呼出エラー Nms」を出力。これで実機で5分遅延の発生時に CFがリトライしているか／成功までNミリ秒かかっているかが見える。③真因（Firestore eventual consistency or CFリトライ）の確定には実機コンソールログが必要。index261 の他の変更（バグ①真の修正・カード演出常時化・コレクションlastVisitAt順・最寄り駅ポーリング30秒延長）は維持。 -->
+<!-- VERSION: index263 (2026.06.08) — APK実機テストで判明した2件のUI問題を対処。①バッジコレクション見切れ（両OS）: スマホで.bp-gridが3列固定だったが、Pixel 7a (411px CSS幅) では3列+gap10pxが画面幅を超え右端見切れ発生。@media (max-width:520px)で2列に変更（minmax(0,1fr)で確実に均等分割）。②Android フィルター文字大きすぎ: Android Chromeのselectドロップダウンは OS ネイティブUIで描画されCSS制御に限界がある。.is-android .fsel に font-size:13px を強制指定。ただしAndroid側「表示サイズ」「フォントサイズ」設定が大きめならそれが優先されるためCSSだけでは完全解決不可。Phase 4.5でカスタムドロップダウン実装を検討。index262の他の変更は全て維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2031,6 +2031,16 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 .fsel option{font-size:11px!important;line-height:1.1!important;padding:2px 4px!important}
 
+/* ★index263: Android Chrome の select ドロップダウンは OS ネイティブUI で描画されるため、
+   CSS の font-size が完全には効かない。is-android クラスで強制指定を試みる。
+   ただし、Android「表示サイズ」「フォントサイズ」設定が大きめだとそれが優先される。
+   完全制御にはカスタムドロップダウン実装が必要（Phase 4.5 で検討）。 */
+.is-android .fsel,
+.is-android .fsel option{
+  font-size:13px !important;
+  line-height:1.2 !important;
+}
+
 /* 街力ランク legend タイトル強化 */
 .legend-title,.legend > div:first-child,.legend h3,.legend > h3,
 #legendModal > div:first-child,#legendBtn,#legendBtn *,
@@ -2583,7 +2593,9 @@ body:not(.splashing) #table-area{
   gap:12px !important;
 }
 @media (max-width:520px){
-  .bp-grid{grid-template-columns:repeat(3,1fr) !important;gap:10px !important}
+  /* ★index263: 3列→2列に変更。Pixel 7a (411px CSS幅)で3列+gap10pxが画面幅を超え、
+     カードが右端で見切れる現象が両OSで発生していた対処。2列ならゆったり収まる。 */
+  .bp-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:10px !important}
 }
 
 /* バッジ共通：未獲得 */
@@ -20124,9 +20136,9 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v262</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v263</div>
 <script>
-  console.log('%c[街巡] index version: 262', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 263', 'color:#88ccff;font-weight:bold;font-size:14px');
 </script>
 
 </body>
