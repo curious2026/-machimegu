@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index263 (2026.06.08) — APK実機テストで判明したUI問題への対処。①バッジコレクション見切れ修正: スマホで.bp-gridが3列固定だったが、内部の.bp-badge-rankにwidth/height固定がなくgridセル幅次第で球体が肥大化、結果として3列が画面幅を超えて見切れていた。v263初版で2列にしたがそれだとデカすぎ＆スクロール多発。最終版は「3列復活＋カード内コンテンツ縮小（min-height 108px, icon 22px, name 11px）＋球体aspect-ratio:1/1で正方形セル化＋gap 8px」で見切れ解消とコンパクト両立。②Android フィルター文字: .is-android .fsel に font-size:13px 強制指定したが、Android Chromeの<select>ドロップダウンはOSネイティブUI描画でCSS制御に限界。完全iPhone化にはカスタムドロップダウン実装が必要、v264で対応予定。index262の他の変更（バグ③マイページ自動再描画＋ログ強化、バグ①真の修正、カード演出常時化、コレクションlastVisitAt順、最寄り駅ポーリング30秒延長）は全て維持。 -->
+<!-- VERSION: index264 (2026.06.08) — フィルター文字大きすぎ問題の根本解決：カスタムドロップダウン実装。①Android ChromeのselectドロップダウンはOSネイティブUIで描画されCSS制御が効かないため、フォント設定が標準でも文字・行幅が肥大化していた。②対処：4つのfsel（エリア、路線、ランク、距離）について、既存<select>をdisplay:none化して値保持＋既存JS互換性を維持しつつ、表示用<div class="fsel-custom"><button>+<ul>を被せる構造に。選択時はselect.valueを同期＋changeイベント発火で既存ハンドラ（onPrefChange/render/onRadiusChange）を自動実行。③lineSelectの動的生成と同期するrefreshCustomLineMenu関数も実装。④iPhone/Android共通の見た目に統一、Android Chromeの仕様問題から完全解放。index263の他の変更（バッジ3列復活＋サイズ縮小、球体aspect-ratio:1/1）も維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2036,6 +2036,89 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   font-size:13px !important;
   line-height:1.2 !important;
 }
+
+/* ★index264: カスタムドロップダウン実装。Android Chromeのselect ドロップダウンが
+   OSネイティブUI描画で巨大化する問題への根本対処。既存<select>はdisplay:noneで残し
+   値保持＋既存JS互換性を維持。表示用のbutton+ulをかぶせる。iPhone/Android共通の見た目。 */
+.fsel-custom{
+  position:relative;
+  display:inline-block;
+  vertical-align:middle;
+}
+.fsel-custom-btn{
+  background:rgba(255,255,255,0.05);
+  color:#c8d6f0;
+  border:1px solid rgba(120,150,210,0.2);
+  border-radius:6px;
+  padding:5px 22px 5px 8px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  position:relative;
+  min-width:62px;
+  text-align:left;
+  white-space:nowrap;
+  -webkit-appearance:none;
+  appearance:none;
+  font-family:inherit;
+  line-height:1.4;
+}
+.fsel-custom-btn:active{background:rgba(120,150,210,0.15)}
+.fsel-custom-btn::after{
+  content:'▼';
+  position:absolute;
+  right:6px; top:50%;
+  transform:translateY(-50%);
+  font-size:8px;
+  color:#7fa8d8;
+  pointer-events:none;
+}
+.fsel-custom.open .fsel-custom-btn{
+  border-color:rgba(120,170,230,0.5);
+  background:rgba(120,150,210,0.12);
+}
+.fsel-custom-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  background:#15203a;
+  color:#d8e8f8;
+  border:1px solid rgba(120,150,210,0.35);
+  border-radius:8px;
+  max-height:60vh;
+  overflow-y:auto;
+  z-index:9999;
+  list-style:none;
+  padding:4px 0;
+  margin:0;
+  min-width:max(100%, 110px);
+  box-shadow:0 6px 20px rgba(0,0,0,0.55);
+  font-size:13px;
+  line-height:1.3;
+  -webkit-overflow-scrolling:touch;
+}
+.fsel-custom-menu[hidden]{display:none}
+.fsel-custom-menu li{
+  padding:8px 14px;
+  cursor:pointer;
+  white-space:nowrap;
+  font-weight:600;
+  color:#d8e8f8;
+  border-bottom:1px solid rgba(120,150,210,0.08);
+}
+.fsel-custom-menu li:last-child{border-bottom:none}
+.fsel-custom-menu li:hover,
+.fsel-custom-menu li:active{
+  background:rgba(120,150,210,0.18);
+}
+.fsel-custom-menu li.selected{
+  background:rgba(120,150,210,0.28);
+  color:#88ccff;
+  font-weight:900;
+}
+/* スクロールバーをスマートに */
+.fsel-custom-menu::-webkit-scrollbar{width:6px}
+.fsel-custom-menu::-webkit-scrollbar-thumb{background:rgba(120,150,210,0.35);border-radius:3px}
 
 /* 街力ランク legend タイトル強化 */
 .legend-title,.legend > div:first-child,.legend h3,.legend > h3,
@@ -4742,7 +4825,23 @@ body.checkin-active #checkin-indicator{
   </div>
 
   <div id="filters">
-    <select class="fsel" id="prefSelect" onchange="onPrefChange()">
+    <!-- ★index264: 既存<select>をdisplay:none化して残し、カスタムUIを被せる。
+         既存JSは引き続き select.value で読み書き可能（互換性維持）。
+         option リストは static + 動的（lineSelectのみ）の両方サポート。 -->
+    <div class="fsel-custom" data-target="prefSelect">
+      <button type="button" class="fsel-custom-btn"><span class="fsel-custom-label">エリア</span></button>
+      <ul class="fsel-custom-menu" hidden>
+        <li data-value="" class="selected">エリア</li>
+        <li data-value="東京都">東京都</li>
+        <li data-value="神奈川県">神奈川県</li>
+        <li data-value="埼玉県">埼玉県</li>
+        <li data-value="千葉県">千葉県</li>
+        <li data-value="茨城県">茨城県</li>
+        <li data-value="栃木県">栃木県</li>
+        <li data-value="群馬県">群馬県</li>
+      </ul>
+    </div>
+    <select class="fsel" id="prefSelect" onchange="onPrefChange()" style="display:none">
       <option value="">エリア</option>
       <option value="東京都">東京都</option>
       <option value="神奈川県">神奈川県</option>
@@ -4752,13 +4851,42 @@ body.checkin-active #checkin-indicator{
       <option value="栃木県">栃木県</option>
       <option value="群馬県">群馬県</option>
     </select>
-    <select class="fsel" id="lineSelect" onchange="render()"><option value="">路線</option></select>
-    <select class="fsel" id="rankFilter" onchange="render()">
+
+    <div class="fsel-custom" data-target="lineSelect">
+      <button type="button" class="fsel-custom-btn"><span class="fsel-custom-label">路線</span></button>
+      <ul class="fsel-custom-menu" hidden>
+        <li data-value="" class="selected">路線</li>
+      </ul>
+    </div>
+    <select class="fsel" id="lineSelect" onchange="render()" style="display:none"><option value="">路線</option></select>
+
+    <div class="fsel-custom" data-target="rankFilter">
+      <button type="button" class="fsel-custom-btn"><span class="fsel-custom-label">ランク</span></button>
+      <ul class="fsel-custom-menu" hidden>
+        <li data-value="" class="selected">ランク</li>
+        <li data-value="S">S</li>
+        <li data-value="A">A</li>
+        <li data-value="B">B</li>
+        <li data-value="C">C</li>
+        <li data-value="D">D</li>
+      </ul>
+    </div>
+    <select class="fsel" id="rankFilter" onchange="render()" style="display:none">
       <option value="">ランク</option>
       <option value="S">S</option><option value="A">A</option>
       <option value="B">B</option><option value="C">C</option><option value="D">D</option>
     </select>
-    <select class="fsel" id="radiusSelect" onchange="onRadiusChange()">
+
+    <div class="fsel-custom" data-target="radiusSelect">
+      <button type="button" class="fsel-custom-btn"><span class="fsel-custom-label">500m</span></button>
+      <ul class="fsel-custom-menu" hidden>
+        <li data-value="500" class="selected">500m</li>
+        <li data-value="800">800m</li>
+        <li data-value="1200">1.2km</li>
+        <li data-value="checkedin">訪問済</li>
+      </ul>
+    </div>
+    <select class="fsel" id="radiusSelect" onchange="onRadiusChange()" style="display:none">
       <option value="500" selected>500m</option>
       <option value="800">800m</option>
       <option value="1200">1.2km</option>
@@ -10129,6 +10257,8 @@ function initLineSelect(){
   sortedLineKeys(ALL_LINES).forEach(line=>{
     const o=document.createElement('option');o.value=line;o.textContent=shortLineName(line);ls.appendChild(o);
   });
+  // ★index264: カスタム路線メニューも同期生成
+  if (typeof window.refreshCustomLineMenu === 'function') window.refreshCustomLineMenu();
 }
 function onPrefChange(){
   const pref=document.getElementById('prefSelect').value;
@@ -10138,6 +10268,8 @@ function onPrefChange(){
   sortedLineKeys(src||{}).forEach(line=>{
     const o=document.createElement('option');o.value=line;o.textContent=shortLineName(line);ls.appendChild(o);
   });
+  // ★index264: カスタム路線メニューも同期再生成
+  if (typeof window.refreshCustomLineMenu === 'function') window.refreshCustomLineMenu();
   render();
 }
 
@@ -20165,9 +20297,118 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v263</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v264</div>
 <script>
-  console.log('%c[街巡] index version: 263', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 264', 'color:#88ccff;font-weight:bold;font-size:14px');
+
+  // ★index264: カスタムドロップダウン制御。
+  //   Android ChromeのselectドロップダウンがOSネイティブUI描画で巨大化する問題への根本対処。
+  //   既存<select>はdisplay:noneで値保持＋既存JS互換性維持。表示用button+ulを被せる。
+  //   選択時に select.value 同期＋change イベント発火で既存ハンドラ（onPrefChange等）を自動実行。
+  (function(){
+    function syncLabelFromSelect(wrap, select){
+      const labelEl = wrap.querySelector('.fsel-custom-label');
+      const opt = select.options[select.selectedIndex];
+      if (labelEl && opt) labelEl.textContent = opt.text;
+      // selected クラスも同期
+      const menu = wrap.querySelector('.fsel-custom-menu');
+      if (menu) {
+        menu.querySelectorAll('li').forEach(li => {
+          li.classList.toggle('selected', li.getAttribute('data-value') === select.value);
+        });
+      }
+    }
+    
+    function initCustomSelect(wrap){
+      const btn = wrap.querySelector('.fsel-custom-btn');
+      const menu = wrap.querySelector('.fsel-custom-menu');
+      const selectId = wrap.getAttribute('data-target');
+      const select = document.getElementById(selectId);
+      if (!btn || !menu || !select) return;
+      
+      // 初期ラベル同期
+      syncLabelFromSelect(wrap, select);
+      
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        // 他のメニュー閉じる
+        document.querySelectorAll('.fsel-custom').forEach(w => {
+          if (w !== wrap) {
+            w.classList.remove('open');
+            const m = w.querySelector('.fsel-custom-menu');
+            if (m) m.hidden = true;
+          }
+        });
+        const opening = menu.hidden;
+        menu.hidden = !opening;
+        wrap.classList.toggle('open', opening);
+      });
+      
+      menu.addEventListener('click', function(e){
+        const li = e.target.closest('li');
+        if (!li) return;
+        e.stopPropagation();
+        const value = li.getAttribute('data-value');
+        // selectのvalue更新＋change発火
+        select.value = value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        // ラベル更新＋selected反映
+        syncLabelFromSelect(wrap, select);
+        // 閉じる
+        menu.hidden = true;
+        wrap.classList.remove('open');
+      });
+    }
+    
+    // 路線メニュー再生成（onPrefChange / initLineSelect から呼ばれる）
+    window.refreshCustomLineMenu = function(){
+      const wrap = document.querySelector('.fsel-custom[data-target="lineSelect"]');
+      const select = document.getElementById('lineSelect');
+      if (!wrap || !select) return;
+      const menu = wrap.querySelector('.fsel-custom-menu');
+      if (!menu) return;
+      // option を li にミラー
+      const html = Array.from(select.options).map(opt => {
+        const sel = opt.value === select.value ? ' class="selected"' : '';
+        const v = opt.value.replace(/"/g, '&quot;');
+        const t = opt.textContent.replace(/</g, '&lt;');
+        return `<li data-value="${v}"${sel}>${t}</li>`;
+      }).join('');
+      menu.innerHTML = html;
+      // ラベルも同期
+      syncLabelFromSelect(wrap, select);
+    };
+    
+    // 初期化
+    function initAllCustomSelects(){
+      document.querySelectorAll('.fsel-custom').forEach(initCustomSelect);
+      // 外側クリックで全メニュー閉じる
+      document.addEventListener('click', function(){
+        document.querySelectorAll('.fsel-custom').forEach(w => {
+          w.classList.remove('open');
+          const m = w.querySelector('.fsel-custom-menu');
+          if (m) m.hidden = true;
+        });
+      });
+      // Esc キーで閉じる
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.fsel-custom').forEach(w => {
+            w.classList.remove('open');
+            const m = w.querySelector('.fsel-custom-menu');
+            if (m) m.hidden = true;
+          });
+        }
+      });
+      console.log('[CustomSelect] 初期化完了:', document.querySelectorAll('.fsel-custom').length, '個');
+    }
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAllCustomSelects);
+    } else {
+      initAllCustomSelects();
+    }
+  })();
 </script>
 
 </body>
