@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index267 (2026.06.08) — バグ⑤計測ログが画面ログパネルに出ない問題への対処。①真因: console.time/timeEnd は通常のconsole.logとは別系統で出力されるため、index266の画面ログパネル捕捉対象外だった。②対処1（即効）: loadMypageData の計測を console.time/timeEnd から Date.now() + console.log ベースに置き換え。4箇所修正（total開始/getCards/getDailyState/total終了、catch側も）。これで [Mypage] getCards: XXXms / [Mypage] getDailyState: XXXms / [Mypage] total: XXXms が画面ログに表示される。③対処2（将来の保険）: 画面ログパネル本体にも console.time/timeEnd 上書き処理を追加。今後 console.time を使うコードがあっても画面に「ラベル: XXms」形式で表示される。index266の他の機能（画面ログパネル全体、バグ②補強、路線フィルター修正）は全て維持。 -->
+<!-- VERSION: index268 (2026.06.09) — バグ② 根治対処：起動時GPS許可ダイアログを確実にトリガする仕組みを実装。①真因: TWA/Android Chrome環境では permission状態が「prompt」でgetCurrentPositionを呼んでも許可ダイアログが即時表示されず、最大2分間ユーザーが「位置情報なし」状態を体感する致命的UX問題があった（屋外テストで確定）。②対処: アプリ起動時のpermission状態チェック分岐に「prompt」処理を追加。状態がpromptの場合は新規実装のアプリ内説明モーダル（#gps-permission-bg）を表示。「許可する」ボタンタップで window.onGpsPermissionAllow が即getCurrentPos()を呼び、ブラウザネイティブの許可ダイアログを確実にトリガ→許可後は即座に最寄り駅自動表示まで進む。③UI: 既存badge-detail-bgパターンを踏襲、📍アイコン+説明テキスト+「許可する」「あとで」ボタン。「あとで」or外側クリックで一旦閉じる（再表示は今後の動線で要検討）。index267の他の機能（画面ログパネル/loadMypageData計測ログ/カスタムドロップダウン）は全て維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -3618,6 +3618,47 @@ body:not(.splashing) #table-area{
   backdrop-filter:blur(6px);padding:20px;
 }
 #badge-detail-bg.open{display:flex}
+
+/* ★index268: GPS許可説明モーダル。初回起動時の位置情報許可促進UI */
+#gps-permission-bg{
+  position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:9000;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);padding:20px;
+}
+#gps-permission-bg.open{display:flex}
+#gps-permission-modal{
+  background:linear-gradient(160deg,#1a2848 0%,#142038 50%,#0e1828 100%);
+  border:1px solid rgba(120,150,210,0.35);border-radius:18px;
+  padding:28px 22px 22px;max-width:340px;width:100%;text-align:center;
+  position:relative;box-shadow:0 8px 32px rgba(0,0,0,0.6);
+}
+.gpm-icon{
+  width:64px;height:64px;margin:0 auto 14px;
+  background:rgba(120,170,230,0.15);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:38px;line-height:1;
+}
+.gpm-title{font-size:18px;font-weight:900;color:#fff;margin-bottom:12px;line-height:1.4}
+.gpm-desc{
+  font-size:14px;color:#cfdaee;line-height:1.6;margin-bottom:10px;text-align:left;
+}
+.gpm-note{
+  font-size:12px;color:#8a9cb8;line-height:1.5;margin-bottom:18px;
+  background:rgba(120,150,210,0.08);padding:10px 12px;border-radius:8px;
+  border-left:3px solid rgba(120,170,230,0.5);text-align:left;
+}
+.gpm-btn-allow{
+  width:100%;padding:14px;background:linear-gradient(135deg,#4a8edd 0%,#3878c8 100%);
+  color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:900;
+  cursor:pointer;font-family:inherit;letter-spacing:0.5px;
+  box-shadow:0 4px 12px rgba(60,120,200,0.4);margin-bottom:10px;
+}
+.gpm-btn-allow:active{transform:scale(0.98);box-shadow:0 2px 6px rgba(60,120,200,0.4)}
+.gpm-btn-later{
+  width:100%;padding:10px;background:transparent;color:#8a9cb8;border:none;
+  font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+}
+.gpm-btn-later:active{color:#cfdaee}
 #badge-detail-modal{
   background:linear-gradient(160deg,#1a2848 0%,#142038 50%,#0e1828 100%);
   border:1px solid rgba(120,150,210,0.3);border-radius:18px;
@@ -14917,6 +14958,12 @@ onAuthStateChanged(auth, async (user) => {
         // ★今回修正：位置情報の許可状態を確認→既に許可されてれば自動取得（毎回ダイアログ不要に）
         // permissions APIで'granted'なら、ユーザーアクションなしで即getCurrentPos→currentLocationセット。
         // 'prompt'（初回）または非対応ブラウザの場合は、従来通りユーザーボタン経由で取得。
+        // ★index268: バグ② 根治対処。'prompt'状態で getCurrentPosition を呼んでも
+        //   TWA / Android Chrome 環境では許可ダイアログが即座に表示されないため、
+        //   起動から最大2分間「位置情報なし」状態が続いていた致命的UX問題。
+        //   対処：'prompt' 時はアプリ内説明モーダルを表示し、ユーザーが「許可する」ボタンを
+        //   押した瞬間に getCurrentPos() を呼ぶ。ユーザー操作直後だとブラウザネイティブの
+        //   許可ダイアログが確実に即トリガされ、許可後すぐに最寄り駅表示まで進む。
         try {
           if (navigator.permissions && navigator.permissions.query) {
             const status = await navigator.permissions.query({ name: 'geolocation' });
@@ -14931,7 +14978,13 @@ onAuthStateChanged(auth, async (user) => {
                 console.warn('[GPS] 自動取得失敗:', geoErr.message);
                 // 失敗してもアプリは動く（ボタン経由で再試行可能）
               }
+            } else if (status.state === 'prompt') {
+              console.log('[GPS] 許可状態: prompt → 説明モーダル表示');
+              if (typeof window.showGpsPermissionModal === 'function') {
+                window.showGpsPermissionModal();
+              }
             } else {
+              // denied など
               console.log('[GPS] 許可状態:', status.state, '→ ユーザーアクション待ち');
             }
           }
@@ -18268,6 +18321,18 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <!-- Phase D-1: バッジ詳細モーダル -->
+<!-- ★index268: GPS許可説明モーダル。初回起動時の位置情報許可ダイアログを確実にトリガする -->
+<div id="gps-permission-bg" onclick="if(event.target.id==='gps-permission-bg')window.onGpsPermissionLater()">
+  <div id="gps-permission-modal">
+    <div class="gpm-icon">📍</div>
+    <div class="gpm-title">位置情報の使用について</div>
+    <div class="gpm-desc">街巡まちめぐは、お近くの駅を表示し、街力スコアを計算するために位置情報を使用します。</div>
+    <div class="gpm-note">「許可する」をタップすると、次に端末から確認画面が表示されます。<br><strong>「アプリの使用時のみ」</strong>を選択してください。</div>
+    <button type="button" class="gpm-btn-allow" onclick="window.onGpsPermissionAllow()">許可する</button>
+    <button type="button" class="gpm-btn-later" onclick="window.onGpsPermissionLater()">あとで</button>
+  </div>
+</div>
+
 <div id="badge-detail-bg" onclick="if(event.target.id==='badge-detail-bg')closeBadgeDetail()">
   <div id="badge-detail-modal">
     <button class="bdm-close" onclick="closeBadgeDetail()" type="button">×</button>
@@ -20337,7 +20402,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v267</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v268</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -20353,7 +20418,73 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 267', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 268', 'color:#88ccff;font-weight:bold;font-size:14px');
+
+  // ★index268: GPS許可説明モーダル制御
+  //   バグ② 根治対処：起動時に許可状態が 'prompt' の場合、このモーダルを表示。
+  //   ユーザーが「許可する」を押した瞬間に getCurrentPos() を呼び、ブラウザネイティブの
+  //   許可ダイアログを確実にトリガする。許可後は即座に最寄り駅表示まで進む。
+  window.showGpsPermissionModal = function(){
+    const bg = document.getElementById('gps-permission-bg');
+    if (bg) {
+      bg.classList.add('open');
+      console.log('[GPS] 許可説明モーダル表示');
+    }
+  };
+  window.onGpsPermissionAllow = async function(){
+    const bg = document.getElementById('gps-permission-bg');
+    if (bg) bg.classList.remove('open');
+    console.log('[GPS] ユーザーが「許可する」をタップ → getCurrentPos呼び出し');
+    // getCurrentPos を呼ぶとブラウザネイティブの許可ダイアログがポップアップする
+    try {
+      if (typeof getCurrentPos !== 'function') {
+        console.warn('[GPS] getCurrentPos未定義（読み込み完了前？）');
+        return;
+      }
+      const loc = await getCurrentPos();
+      window.currentLocation = loc;
+      console.log('[GPS] ユーザー許可後の位置取得成功:', loc.lat.toFixed(4), loc.lng.toFixed(4));
+      // マップを現在地に移動
+      if (window.lmap && typeof window.lmap.setView === 'function') {
+        window.lmap.setView([loc.lat, loc.lng], 13);
+      }
+      // 最寄り駅自動表示（既存の起動シーケンスのロジックをここで再現）
+      // info-panel が既に開いてれば何もしない（重複防止）
+      const ip = document.getElementById('info-panel');
+      const alreadyOpen = ip && ip.classList.contains('open');
+      const distFn = window.getDistanceM;
+      const showFn = window.showInfo;
+      const stations = window.stationData;
+      if (!alreadyOpen && typeof distFn === 'function' && typeof showFn === 'function' && Array.isArray(stations) && stations.length > 0) {
+        const hasScored = stations.some(s => s.score && s.score > 0);
+        if (hasScored) {
+          let nearest = null, minDist = Infinity;
+          stations.forEach(st => {
+            if (!st.lat || !st.lng || !st.score) return;
+            const d = distFn(loc.lat, loc.lng, st.lat, st.lng);
+            if (d < minDist) { minDist = d; nearest = st; }
+          });
+          if (nearest) {
+            console.log('[GPS] 許可後 最寄り駅自動表示:', nearest.name, Math.round(minDist) + 'm');
+            try { showFn(nearest); } catch(e) { console.warn('[GPS] showInfo失敗:', e); }
+          }
+        } else {
+          console.log('[GPS] 許可後 stationData未ロード → loadAll-rescue に委譲');
+        }
+      }
+      // currentStation 既存ならチェックインセクション再描画
+      if (window.currentStation && window.renderCheckinSection) {
+        try { window.renderCheckinSection(window.currentStation); } catch(e){}
+      }
+    } catch (err) {
+      console.warn('[GPS] ユーザー許可後の取得失敗:', err && err.message);
+    }
+  };
+  window.onGpsPermissionLater = function(){
+    const bg = document.getElementById('gps-permission-bg');
+    if (bg) bg.classList.remove('open');
+    console.log('[GPS] ユーザーが「あとで」を選択');
+  };
 
   // ★index266: 画面内デバッグログパネル本体
   (function(){
@@ -20431,7 +20562,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v267) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v268) ===', '#88ccff');
   })();
 </script>
 
