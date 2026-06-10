@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index268 (2026.06.09) — バグ② 根治対処：起動時GPS許可ダイアログを確実にトリガする仕組みを実装。①真因: TWA/Android Chrome環境では permission状態が「prompt」でgetCurrentPositionを呼んでも許可ダイアログが即時表示されず、最大2分間ユーザーが「位置情報なし」状態を体感する致命的UX問題があった（屋外テストで確定）。②対処: アプリ起動時のpermission状態チェック分岐に「prompt」処理を追加。状態がpromptの場合は新規実装のアプリ内説明モーダル（#gps-permission-bg）を表示。「許可する」ボタンタップで window.onGpsPermissionAllow が即getCurrentPos()を呼び、ブラウザネイティブの許可ダイアログを確実にトリガ→許可後は即座に最寄り駅自動表示まで進む。③UI: 既存badge-detail-bgパターンを踏襲、📍アイコン+説明テキスト+「許可する」「あとで」ボタン。「あとで」or外側クリックで一旦閉じる（再表示は今後の動線で要検討）。index267の他の機能（画面ログパネル/loadMypageData計測ログ/カスタムドロップダウン）は全て維持。 -->
+<!-- VERSION: index272 (2026.06.10) — UX改善2点。①チェックインカードの自動クローズ廃止: 旧仕様ではduplicate（再訪問の既所持組合せ）時に2.8秒で自動クローズしていたが、駅コメントをゆっくり読みたいとの要望により全ケース手動クローズに統一。既存の「閉じる」ボタン(.sc-close-btn)と背景タップで閉じる。_autoCloseTimerのsetTimeoutブロックを削除。②バッジページ「次の目標」2つ体制化: 旧は進捗率1位の目標1個のみで右側ががら空きだった。進捗率2位の候補を右側に「その次」(🚩)として併記する2カラムレイアウトに変更（#bp-next-goal2、bp-next-goal-row flexラッパー）。候補が1つしか無い場合は2つ目を非表示。狭幅対応でrow内はpadding/フォント縮小＋タイトルellipsis。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -976,13 +976,19 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   backdrop-filter:blur(10px);
 }
 .mp-back{
-  width:36px;height:36px;border-radius:50%;
-  background:rgba(255,255,255,0.06);border:none;color:#cfdaee;
-  font-size:18px;cursor:pointer;
+  /* ★index271: スクロールトップボタン(#mm-scroll-top-btn)とデザイン統一。
+     オレンジ枠＋オレンジ太矢印で視認性向上（要望）。タップ領域44px確保。 */
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(20,32,52,0.85) 0%,rgba(10,18,30,0.92) 100%);
+  border:2px solid rgba(255,176,112,0.6);color:#ffb070;
+  font-size:22px;font-weight:900;line-height:1;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  transition:background 0.15s;
+  box-shadow:0 4px 12px rgba(0,0,0,0.45),0 0 10px rgba(255,176,112,0.25),inset 0 1px 0 rgba(255,255,255,0.1);
+  transition:transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color:transparent;flex-shrink:0;padding:0;
 }
-.mp-back:hover{background:rgba(255,255,255,0.12)}
+.mp-back:hover{box-shadow:0 4px 12px rgba(0,0,0,0.45),0 0 16px rgba(255,176,112,0.45),inset 0 1px 0 rgba(255,255,255,0.1)}
+.mp-back:active{transform:scale(0.92)}
 .mp-title{font-size:17px;font-weight:900;color:#fff;letter-spacing:1px}
 /* ★index208 #6: マイページタイトル左にロゴ追加。
    ★index209 #6再強化: 28→40pxへ大幅UP（要望「もう2サイズ上げ」）。
@@ -1708,9 +1714,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 .mp-link:hover{color:#58a8e0}
 .mp-link:hover{color:#7fbce8;text-decoration:underline}
 .mp-badge-preview{
-  /* ★index176: auto-fillだと端列が余って虫食いに見えるので auto-fit + 4列上限で詰める */
+  /* ★index270: auto-fitはアイテム1個の時に空き列を潰して1個が全幅に巨大化する仕様。
+     バッジ1個のユーザーで巨大バッジが表示されるバグの原因だったため、4列固定に変更。 */
   display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(72px, 1fr));
+  grid-template-columns:repeat(4, 1fr);
   gap:10px;
   min-height:80px;
 }
@@ -1743,7 +1750,18 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   position:sticky;top:0;z-index:10;
   backdrop-filter:blur(10px);
 }
-.cl-back{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:#cfdaee;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cl-back{
+  /* ★index271: スクロールトップボタンとデザイン統一（mp-backと同じ）。 */
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(20,32,52,0.85) 0%,rgba(10,18,30,0.92) 100%);
+  border:2px solid rgba(255,176,112,0.6);color:#ffb070;
+  font-size:22px;font-weight:900;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.45),0 0 10px rgba(255,176,112,0.25),inset 0 1px 0 rgba(255,255,255,0.1);
+  transition:transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color:transparent;flex-shrink:0;padding:0;
+}
+.cl-back:active{transform:scale(0.92)}
 .cl-title{font-size:16px;font-weight:900;color:#fff;letter-spacing:1px}
 .cl-hint{font-size:13px;color:#fff;font-weight:700}
 .cl-body{padding:18px 16px}
@@ -2636,7 +2654,7 @@ body:not(.splashing) #table-area{
 
 .cl-title{font-size:18px !important;letter-spacing:1.5px}
 .cl-hint{font-size:14px !important}
-.cl-back{width:42px !important;height:42px !important;font-size:20px !important}
+/* ★index271: .cl-back のサイズ上書きは廃止（基本定義44pxに統一） */
 
 .bp-section-title{
   font-size:18px !important;font-weight:900;color:#fff !important;
@@ -3178,6 +3196,20 @@ body:not(.splashing) #table-area{
 /* ═══ Phase 4：タブ・フィルタ・ソート・次の目標 ═══ */
 
 /* 次の目標ハイライト */
+/* ★index272: 次の目標2カラム化。row内では各カードがflex:1で横並び、
+   狭い幅でも収まるようpadding/フォントを縮小調整 */
+.bp-next-goal-row{
+  display:flex;gap:10px;margin:0 0 16px;
+}
+.bp-next-goal-row .bp-next-goal{
+  flex:1;min-width:0;margin:0;
+  padding:10px 10px;gap:8px;
+}
+.bp-next-goal-row .bp-ng-icon{font-size:20px;flex-shrink:0}
+.bp-next-goal-row .bp-ng-title{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bp-next-goal-row .bp-ng-progress{font-size:11px}
+.bp-next-goal-row .bp-ng-body{min-width:0}
+
 .bp-next-goal{
   background:linear-gradient(135deg,rgba(251,213,106,0.15) 0%,rgba(255,144,200,0.10) 100%);
   border:1px solid rgba(251,213,106,0.35);
@@ -7829,12 +7861,23 @@ body.checkin-active #checkin-indicator{
         <div class="bp-cs-categories" id="bp-cs-categories"></div>
       </div>
       
-      <div id="bp-next-goal" class="bp-next-goal" style="display:none">
-        <div class="bp-ng-icon">🎯</div>
-        <div class="bp-ng-body">
-          <div class="bp-ng-label">次の目標</div>
-          <div class="bp-ng-title" id="bp-ng-title">—</div>
-          <div class="bp-ng-progress" id="bp-ng-progress"></div>
+      <div class="bp-next-goal-row" id="bp-next-goal-row">
+        <div id="bp-next-goal" class="bp-next-goal" style="display:none">
+          <div class="bp-ng-icon">🎯</div>
+          <div class="bp-ng-body">
+            <div class="bp-ng-label">次の目標</div>
+            <div class="bp-ng-title" id="bp-ng-title">—</div>
+            <div class="bp-ng-progress" id="bp-ng-progress"></div>
+          </div>
+        </div>
+        <!-- ★index272: 2つ目の目標（右側）。右ががら空きだったので2つ体制に -->
+        <div id="bp-next-goal2" class="bp-next-goal" style="display:none">
+          <div class="bp-ng-icon">🚩</div>
+          <div class="bp-ng-body">
+            <div class="bp-ng-label">その次</div>
+            <div class="bp-ng-title" id="bp-ng-title2">—</div>
+            <div class="bp-ng-progress" id="bp-ng-progress2"></div>
+          </div>
         </div>
       </div>
       
@@ -12207,22 +12250,11 @@ async function openStationCard(data) {
       wrap.style.willChange = 'transform, opacity';
       wrap.style.transform = 'translateZ(0)';  // GPUレイヤー化のヒント
       
-      // ★index260: duplicate 時は自動クローズ（フリップ尺はそのまま、表示時間のみ短縮）
-      //   ともき仕様：「フリップ尺はそのまま、表示時間を短縮」＝カード全体が見えてフリップ完了、
-      //   その後 1.5秒で自動的に閉じる。タップで早期に閉じることも可能。
+      // ★index272: 自動クローズ廃止（ともき要望）。
+      //   旧: duplicate（再訪問の既所持組合せ）は2.8秒で自動クローズしていたが、
+      //   駅コメントをゆっくり読みたいとの要望により、全ケースで手動クローズに統一。
+      //   下部の「閉じる」ボタン（.sc-close-btn）または背景タップで閉じる（既存導線）。
       if (window._autoCloseTimer) { clearTimeout(window._autoCloseTimer); window._autoCloseTimer = null; }
-      if (data.isShortAnim === true) {
-        // フリップアニメ完了(約1.3秒)＋少し見える時間(1.5秒) = 約2.8秒で自動クローズ
-        window._autoCloseTimer = setTimeout(() => {
-          const bg2 = document.getElementById('card-modal-bg');
-          if (bg2 && bg2.classList.contains('open')) {
-            if (typeof window.closeCardModal === 'function') {
-              // null を渡すと「背景クリック条件」をバイパスして閉じる
-              window.closeCardModal();
-            }
-          }
-        }, 2800);
-      }
       
       // ★index206: アニメ中だけ backdrop-filter:blur を切る
       //   blur(8px)を毎フレーム計算する負荷でカードのrotateY回転がカクつく原因。
@@ -17130,6 +17162,8 @@ window.updateNextGoal = function(rankResults, lineResults, totalCheckins){
   if (candidates.length === 0) {
     const el = document.getElementById('bp-next-goal');
     if (el) el.style.display = 'none';
+    const el2 = document.getElementById('bp-next-goal2');
+    if (el2) el2.style.display = 'none';
     return;
   }
   
@@ -17144,6 +17178,21 @@ window.updateNextGoal = function(rankResults, lineResults, totalCheckins){
   const remain = Math.max(0, top.target - top.current);
   document.getElementById('bp-ng-progress').innerHTML = 
     `あと <strong>${remain}${top.unit}</strong>（${top.current}/${top.target}）`;
+  
+  // ★index272: 2つ目の目標（右側）。進捗率2位の候補を表示、無ければ非表示
+  const second = candidates[1] || null;
+  const el2 = document.getElementById('bp-next-goal2');
+  if (el2) {
+    if (second) {
+      el2.style.display = '';
+      document.getElementById('bp-ng-title2').textContent = second.title;
+      const remain2 = Math.max(0, second.target - second.current);
+      document.getElementById('bp-ng-progress2').innerHTML = 
+        `あと <strong>${remain2}${second.unit}</strong>（${second.current}/${second.target}）`;
+    } else {
+      el2.style.display = 'none';
+    }
+  }
 };
 
 function renderCheckinBadges(total, userBadges) {
@@ -17188,46 +17237,49 @@ window._origShowCheckinSuccess = window.showCheckinSuccess;
 window.runBadgeCheckAfterCheckin = async () => {
   const user = auth.currentUser;
   if (!user) return;
+  
+  // ★index270: ミッション進捗更新を最優先＋独立try-catch化。
+  //   旧構造ではバッジ判定(checkAndAwardBadges)が先で、それがエラーを投げると
+  //   同一tryブロック内のミッション更新がスキップされる構造的欠陥があった。
+  //   （「Bランク以上にチェックインしたのにミッション未達成」の有力原因）
+  //   ミッション更新を先頭に移動し、バッジ判定・マイページ再描画もそれぞれ独立try-catch化。
+  if (window.mmUpdateMissionProgress && window._lastCheckinData) {
+    try {
+      console.log('[Mission] 進捗判定開始');
+      const t0 = Date.now();
+      await window.mmUpdateMissionProgress(user.uid, window._lastCheckinData);
+      console.log('[Mission] 進捗判定完了', (Date.now() - t0) + 'ms');
+    } catch(e) { console.warn('ミッション進捗更新エラー:', e); }
+  }
+  
   try {
     const newBadges = await checkAndAwardBadges(user.uid);
     if (newBadges.length > 0) {
       // チェックイン成功表示が閉じてからバッジ表示
       setTimeout(() => showBadgeEarnedQueue(newBadges), 2200);
     }
-    
-    // ★ Phase B: デイリーミッション進捗更新
-    if (window.mmUpdateMissionProgress && window._lastCheckinData) {
-      try {
-        console.log('[Mission] 進捗判定開始');
-        const t0 = Date.now();
-        await window.mmUpdateMissionProgress(user.uid, window._lastCheckinData);
-        console.log('[Mission] 進捗判定完了', (Date.now() - t0) + 'ms');
-      } catch(e) { console.warn('ミッション進捗更新エラー:', e); }
-    }
-    
-    // ★index262: バグ③対策（マイページ自動再描画）
-    //   ミッション達成判定が完了した時点でマイページが開いていれば、強制再描画してUI即反映する。
-    //   これにより「マイページを開いた状態でチェックイン→達成と表示されない」問題が解消。
-    //   ※5分遅延の真因（Firestore eventual consistency or CFリトライ）の対症療法。
-    //   真因確定には実機コンソールログが必要。
-    try {
-      const mpBg = document.getElementById('mypage-bg');
-      if (mpBg && mpBg.classList.contains('open')) {
-        console.log('[Mission] マイページ開いてる→自動再描画実行');
-        // 少し遅延させて Firestore 反映を待つ（300ms）
-        setTimeout(async () => {
-          try {
-            if (window.mmRenderDailyPanel) {
-              await window.mmRenderDailyPanel(user.uid);
-              console.log('[Mission] マイページ再描画完了');
-            }
-          } catch(e) { console.warn('[Mission] マイページ再描画エラー:', e); }
-        }, 300);
-      } else {
-        console.log('[Mission] マイページ閉じてる→再描画スキップ');
-      }
-    } catch(e) { console.warn('[Mission] マイページ判定エラー:', e); }
   } catch(e) { console.error('バッジ判定エラー:', e); }
+  
+  // ★index262: バグ③対策（マイページ自動再描画）
+  //   ミッション達成判定が完了した時点でマイページが開いていれば、強制再描画してUI即反映する。
+  //   これにより「マイページを開いた状態でチェックイン→達成と表示されない」問題が解消。
+  try {
+    const mpBg = document.getElementById('mypage-bg');
+    if (mpBg && mpBg.classList.contains('open')) {
+      console.log('[Mission] マイページ開いてる→自動再描画実行');
+      // 少し遅延させて Firestore 反映を待つ（300ms）
+      setTimeout(async () => {
+        try {
+          if (window.mmRenderDailyPanel) {
+            await window.mmRenderDailyPanel(user.uid);
+            console.log('[Mission] マイページ再描画完了');
+          }
+        } catch(e) { console.warn('[Mission] マイページ再描画エラー:', e); }
+      }, 300);
+    } else {
+      console.log('[Mission] マイページ閉じてる→再描画スキップ');
+    }
+  } catch(e) { console.warn('[Mission] マイページ判定エラー:', e); }
 };
 
 
@@ -19611,67 +19663,85 @@ if ('serviceWorker' in navigator) {
     let changed = false;
     let newlyCompleted = [];
     
+    // ★index270: 今日のチェックイン一覧をループ前に1回だけ取得（再計算式の基盤）。
+    //   旧実装ではrank系ミッション（Bランク以上等）がインクリメンタル方式
+    //   （チェックインの瞬間に checkinData.rank を見て+1するだけ）で、
+    //   その瞬間にエラーやタイミング問題があると永遠に取りこぼす欠陥があった。
+    //   新実装：Firestoreから今日の全チェックインを取得し、駅マスタからランクを
+    //   逆引きして毎回再計算する。今日中なら過去の取りこぼしも自動復活する。
+    let todayCheckins = [];
+    try {
+      const checkinsRef = window.fsCollection(window.db, 'users', uid, 'checkins');
+      const snap = await window.fsGetDocs(checkinsRef);
+      const today = todayJST();
+      snap.forEach(d => {
+        const data = d.data();
+        if (!data.checkedInAt) return;
+        const t = data.checkedInAt.toMillis ? data.checkedInAt.toMillis() : data.checkedInAt.seconds * 1000;
+        const jst = new Date(t + 9*3600*1000);
+        if (jst.toISOString().slice(0,10) !== today) return;
+        todayCheckins.push({
+          stationName: data.stationName || (data.stationId && data.stationId.includes('_') ? data.stationId.split('_')[0] : ''),
+          stationPref: data.stationPref || (data.stationId && data.stationId.includes('_') ? data.stationId.split('_').slice(1).join('_') : ''),
+          rank: data.rank || null,  // CFが保存していれば直接使う
+        });
+      });
+    } catch(e) { console.warn('[Mission] 今日のチェックイン取得エラー:', e); }
+    
+    // 駅名+県名からランクを引く（checkinsにrank未保存の古いデータ用フォールバック）
+    function rankOfCheckin(c){
+      if (c.rank && ['S','A','B','C','D'].includes(c.rank)) return c.rank;
+      try {
+        if (Array.isArray(window.stationData)) {
+          const st = window.stationData.find(s => s.name === c.stationName && (!c.stationPref || s.pref === c.stationPref));
+          if (st && typeof st.score === 'number' && window.getRank) {
+            return window.getRank(st.score).rank;
+          }
+        }
+      } catch(e){}
+      return null;
+    }
+    
     for (const m of state.todayMissions.missions) {
       if (m.claimed) continue;
       const prevProgress = m.progress;
       
       if (m.type === 'count_today' || m.type === 'count_distinct_lines_today') {
-        // 今日のチェックイン総数を再計算（全数）
+        // ★index270: ループ前に取得済みの todayCheckins を使う（getDocs重複排除）
         try {
-          const checkinsRef = window.fsCollection(window.db, 'users', uid, 'checkins');
-          const snap = await window.fsGetDocs(checkinsRef);
-          const today = todayJST();
-          let count = 0;
+          let count = todayCheckins.length;
           const lineSet = new Set();
-          snap.forEach(d => {
-            const data = d.data();
-            if (!data.checkedInAt) return;
-            const t = data.checkedInAt.toMillis ? data.checkedInAt.toMillis() : data.checkedInAt.seconds * 1000;
-            const jst = new Date(t + 9*3600*1000);
-            const dStr = jst.toISOString().slice(0,10);
-            if (dStr === today) {
-              count++;
-              // ★index190: 路線取得。未定義のSTATION_LINESではなくLINE_DATAから逆引きする。
-              //   stationId形式は「駅名_県名」、LINE_DATAは 県名→路線→駅名配列。
-              //   これがバグの真因：「違う路線を2つ」が常に0/2だったのはSTATION_LINESがundefinedだったため。
-              const sid = data.stationId || (data.stationName && data.stationPref ? (data.stationName + '_' + data.stationPref) : '');
-              const sName = data.stationName || (sid.includes('_') ? sid.split('_')[0] : sid);
-              const sPref = data.stationPref || (sid.includes('_') ? sid.split('_').slice(1).join('_') : '');
-              if (window.LINE_DATA && sPref && window.LINE_DATA[sPref]) {
-                const linesInPref = window.LINE_DATA[sPref];
-                Object.keys(linesInPref).forEach(lineName => {
-                  if (Array.isArray(linesInPref[lineName]) && linesInPref[lineName].includes(sName)) {
-                    lineSet.add(lineName);
-                  }
-                });
-              }
+          todayCheckins.forEach(c => {
+            // ★index190: 路線取得。LINE_DATAから逆引き（県名→路線→駅名配列）。
+            if (window.LINE_DATA && c.stationPref && window.LINE_DATA[c.stationPref]) {
+              const linesInPref = window.LINE_DATA[c.stationPref];
+              Object.keys(linesInPref).forEach(lineName => {
+                if (Array.isArray(linesInPref[lineName]) && linesInPref[lineName].includes(c.stationName)) {
+                  lineSet.add(lineName);
+                }
+              });
             }
           });
           if (m.type === 'count_today') m.progress = count;
           else m.progress = lineSet.size;
         } catch(e) { console.warn('ミッション進捗計算エラー:', e); }
       } else if (m.type === 'count_b_above_today') {
-        // 今日のB以上
-        if (checkinData && ['S','A','B'].includes(checkinData.rank)) {
-          m.progress = Math.min(m.target, (m.progress || 0) + 1);
-        }
+        // ★index270: 再計算式。今日のチェックインのうちB以上の数
+        m.progress = Math.min(m.target, todayCheckins.filter(c => ['S','A','B'].includes(rankOfCheckin(c))).length);
       } else if (m.type === 'count_a_above_today') {
-        if (checkinData && ['S','A'].includes(checkinData.rank)) {
-          m.progress = Math.min(m.target, (m.progress || 0) + 1);
-        }
+        // ★index270: 再計算式
+        m.progress = Math.min(m.target, todayCheckins.filter(c => ['S','A'].includes(rankOfCheckin(c))).length);
       } else if (m.type === 'count_new_today') {
         if (checkinData && checkinData.isFirstVisit) {
           m.progress = Math.min(m.target, (m.progress || 0) + 1);
         }
       } else if (m.type === 'count_c_above_today') {
-        // ★index207: 今日のC以上（rural/suburb向け）
-        if (checkinData && ['S','A','B','C'].includes(checkinData.rank)) {
-          m.progress = Math.min(m.target, (m.progress || 0) + 1);
-        }
+        // ★index270: 再計算式
+        m.progress = Math.min(m.target, todayCheckins.filter(c => ['S','A','B','C'].includes(rankOfCheckin(c))).length);
       } else if (m.type === 'count_rank_today') {
-        // ★index207: 特定ランクピンポイント（urbanのC/D逆指名、ruralのD駅3つ等）
-        if (checkinData && m.rank && checkinData.rank === m.rank) {
-          m.progress = Math.min(m.target, (m.progress || 0) + 1);
+        // ★index270: 再計算式（特定ランクピンポイント）
+        if (m.rank) {
+          m.progress = Math.min(m.target, todayCheckins.filter(c => rankOfCheckin(c) === m.rank).length);
         }
       } else if (m.type === 'count_repeat_today') {
         // ★index207: 訪問済み駅にもう一度（=同セッションのチェックインだが初訪問でない）
@@ -19698,24 +19768,14 @@ if ('serviceWorker' in navigator) {
           }
         } catch(e){}
       } else if (m.type === 'count_cities_today') {
-        // ★index207: 今日のユニーク市区町村数（STATION_INFO.location利用、再計算式）
+        // ★index270: ループ前取得済みの todayCheckins を使う（getDocs重複排除）
         try {
-          const checkinsRef = window.fsCollection(window.db, 'users', uid, 'checkins');
-          const snap = await window.fsGetDocs(checkinsRef);
-          const today = todayJST();
           const SI = window.STATION_INFO || {};
           const citySet = new Set();
-          snap.forEach(d => {
-            const data = d.data();
-            if (!data.checkedInAt) return;
-            const t = data.checkedInAt.toMillis ? data.checkedInAt.toMillis() : data.checkedInAt.seconds*1000;
-            const jst = new Date(t + 9*3600*1000);
-            if (jst.toISOString().slice(0,10) !== today) return;
-            const sName = data.stationName || '';
-            const sPref = data.stationPref || '';
-            const key = sName + '_' + sPref;
+          todayCheckins.forEach(c => {
+            const key = c.stationName + '_' + c.stationPref;
             const info = SI[key];
-            const city = (info && info.location) || sPref;
+            const city = (info && info.location) || c.stationPref;
             if (city) citySet.add(city);
           });
           m.progress = Math.min(m.target, citySet.size);
@@ -20402,12 +20462,12 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v268</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v272</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
 <button id="mm-debug-toggle" type="button" aria-label="デバッグログ" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));left:max(8px,env(safe-area-inset-left));font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,0.55);padding:2px 8px;border-radius:6px;border:1px solid rgba(120,150,210,0.3);z-index:99999;font-family:monospace;cursor:pointer;line-height:1.4">📋</button>
-<div id="mm-debug-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;height:38vh;background:rgba(0,0,0,0.92);color:#a8f0a8;font-family:monospace;font-size:10px;line-height:1.4;z-index:99998;border-top:2px solid rgba(120,200,120,0.5);display:flex;flex-direction:column">
+<div id="mm-debug-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;height:38vh;background:rgba(0,0,0,0.92);color:#a8f0a8;font-family:monospace;font-size:10px;line-height:1.4;z-index:99998;border-top:2px solid rgba(120,200,120,0.5);flex-direction:column">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-bottom:1px solid rgba(120,200,120,0.3);background:rgba(0,40,0,0.5)">
     <span style="color:#88ccff;font-weight:700;font-size:11px">📋 Debug Log</span>
     <div>
@@ -20418,7 +20478,41 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 268', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 272', 'color:#88ccff;font-weight:bold;font-size:14px');
+
+  // ★index270: トップ画面上部見切れバグの修正。
+  //   症状: ふとした時にヘッダー上部が見切れ、再起動するまで直らない。
+  //   原因: html/bodyはposition:fixed済み(index208)だが、キーボード表示などで
+  //   OSブラウザがビューポート自体を上にスクロールさせ、それが残留する
+  //   （iOS/Android両方で既知の現象。検索モーダル等の入力欄使用後に起きやすい）。
+  //   対処: visualViewportの変化時・入力欄からのフォーカス離脱時・画面回転時に
+  //   scrollTo(0,0)を強制し、残留スクロールを自動補正する。
+  (function(){
+    function fixViewportShift(){
+      try {
+        if (window.scrollY !== 0 || window.scrollX !== 0) {
+          window.scrollTo(0, 0);
+          console.log('[Viewport] 残留スクロール補正実行');
+        }
+        const de = document.documentElement;
+        if (de && (de.scrollTop !== 0 || de.scrollLeft !== 0)) {
+          de.scrollTop = 0; de.scrollLeft = 0;
+        }
+        if (document.body && (document.body.scrollTop !== 0 || document.body.scrollLeft !== 0)) {
+          document.body.scrollTop = 0; document.body.scrollLeft = 0;
+        }
+      } catch(e){}
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', function(){ setTimeout(fixViewportShift, 120); });
+    }
+    document.addEventListener('focusout', function(){ setTimeout(fixViewportShift, 150); });
+    window.addEventListener('orientationchange', function(){ setTimeout(fixViewportShift, 300); });
+    // 保険：アプリ復帰時にも補正
+    document.addEventListener('visibilitychange', function(){
+      if (!document.hidden) setTimeout(fixViewportShift, 200);
+    });
+  })();
 
   // ★index268: GPS許可説明モーダル制御
   //   バグ② 根治対処：起動時に許可状態が 'prompt' の場合、このモーダルを表示。
@@ -20562,10 +20656,11 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v268) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v272) ===', '#88ccff');
   })();
 </script>
 
+<script>
   // ★index264: カスタムドロップダウン制御。
   //   Android ChromeのselectドロップダウンがOSネイティブUI描画で巨大化する問題への根本対処。
   //   既存<select>はdisplay:noneで値保持＋既存JS互換性維持。表示用button+ulを被せる。
