@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index272 (2026.06.10) — UX改善2点。①チェックインカードの自動クローズ廃止: 旧仕様ではduplicate（再訪問の既所持組合せ）時に2.8秒で自動クローズしていたが、駅コメントをゆっくり読みたいとの要望により全ケース手動クローズに統一。既存の「閉じる」ボタン(.sc-close-btn)と背景タップで閉じる。_autoCloseTimerのsetTimeoutブロックを削除。②バッジページ「次の目標」2つ体制化: 旧は進捗率1位の目標1個のみで右側ががら空きだった。進捗率2位の候補を右側に「その次」(🚩)として併記する2カラムレイアウトに変更（#bp-next-goal2、bp-next-goal-row flexラッパー）。候補が1つしか無い場合は2つ目を非表示。狭幅対応でrow内はpadding/フォント縮小＋タイトルellipsis。 -->
+<!-- VERSION: index273 (2026.06.10) — 屋外テスト発覚バグ対応2点。①ミッション「2駅チェックインしたのに1/2」の根治: v270の再計算式はFirestoreから今日の分を取得して数えるが、recordCheckin CFのサーバ書き込みが直後のクライアントgetDocsにまだ反映されないeventual consistencyのケースで今回分が1件欠けていた（旧バグ③5分遅延の真因でもある。後続チェックインの再計算で遅れて反映されていた）。対処: 取得結果に今回チェックイン駅が無ければ_lastCheckinDataから補正マージして数える。共通配列方式のためrank系/count_today/路線/市区町村の全ミッションタイプに一括で効く。②スター消費失敗（iPhone/Android両方、通信良好でも発生）: クライアントのconsumeStarFn呼び出しがcatchに飛んでいるがエラーコードが既存分岐外。真因確定のためエラーcode/messageをアラートと📋ログに明示出力する調査コードを追加（確定後削除予定）。CF側ログの確認も必要。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -11795,6 +11795,8 @@ window.consumeStarForExtraCheckin = async (name, pref, lat, lng) => {
     if (window.currentStation) window.renderCheckinSection(window.currentStation);
   } catch (e) {
     console.error('[Star] Cloud Function 呼び出しエラー:', e);
+    // ★index273: 真因調査のため code / message を明示的にログ出力（📋パネルで確認可能）
+    console.error('[Star] エラー詳細 code:', (e && e.code) || '不明', '/ message:', (e && e.message) || '不明');
     
     // エラーコード別のメッセージ
     let msg = 'スター消費に失敗しました。通信状況を確認してください。';
@@ -11808,6 +11810,9 @@ window.consumeStarForExtraCheckin = async (name, pref, lat, lng) => {
         msg = '入力エラー: ' + (e.message || '不正な値です');
       }
     }
+    // ★index273: バグ調査中の暫定措置。エラーの正体を画面で確認できるよう詳細を併記
+    //   （真因確定後のバージョンで削除予定）
+    msg += '\n\n[調査用情報]\ncode: ' + ((e && e.code) || '不明') + '\nmessage: ' + ((e && e.message) || '不明');
     alert(msg);
   }
 };
@@ -19688,6 +19693,25 @@ if ('serviceWorker' in navigator) {
       });
     } catch(e) { console.warn('[Mission] 今日のチェックイン取得エラー:', e); }
     
+    // ★index273: 今回チェックイン分の補正マージ（バグ「2駅チェックインしたのに1/2」の根治）。
+    //   recordCheckin CFのサーバ書き込みが、直後のクライアントgetDocsにまだ反映されない
+    //   （Firestore eventual consistency）ケースがあり、今回の分が1件欠けてカウントされていた。
+    //   これが旧バグ③「ミッション5分遅延」の真因でもある（後続チェックインの再計算で遅れて反映）。
+    //   対処：今回のチェックイン駅が取得結果に無ければ checkinData から補って数える。
+    if (checkinData && checkinData.stationName) {
+      const exists = todayCheckins.some(c =>
+        c.stationName === checkinData.stationName &&
+        (c.stationPref || '') === (checkinData.stationPref || ''));
+      if (!exists) {
+        todayCheckins.push({
+          stationName: checkinData.stationName,
+          stationPref: checkinData.stationPref || '',
+          rank: checkinData.rank || null,
+        });
+        console.log('[Mission] 今回チェックイン分を補正マージ:', checkinData.stationName, '(Firestore未反映分)');
+      }
+    }
+    
     // 駅名+県名からランクを引く（checkinsにrank未保存の古いデータ用フォールバック）
     function rankOfCheckin(c){
       if (c.rank && ['S','A','B','C','D'].includes(c.rank)) return c.rank;
@@ -20462,7 +20486,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v272</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v273</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -20478,7 +20502,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 272', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 273', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   // ★index270: トップ画面上部見切れバグの修正。
   //   症状: ふとした時にヘッダー上部が見切れ、再起動するまで直らない。
@@ -20656,7 +20680,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v272) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v273) ===', '#88ccff');
   })();
 </script>
 
