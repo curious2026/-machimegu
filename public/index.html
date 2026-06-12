@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index273 (2026.06.10) — 屋外テスト発覚バグ対応2点。①ミッション「2駅チェックインしたのに1/2」の根治: v270の再計算式はFirestoreから今日の分を取得して数えるが、recordCheckin CFのサーバ書き込みが直後のクライアントgetDocsにまだ反映されないeventual consistencyのケースで今回分が1件欠けていた（旧バグ③5分遅延の真因でもある。後続チェックインの再計算で遅れて反映されていた）。対処: 取得結果に今回チェックイン駅が無ければ_lastCheckinDataから補正マージして数える。共通配列方式のためrank系/count_today/路線/市区町村の全ミッションタイプに一括で効く。②スター消費失敗（iPhone/Android両方、通信良好でも発生）: クライアントのconsumeStarFn呼び出しがcatchに飛んでいるがエラーコードが既存分岐外。真因確定のためエラーcode/messageをアラートと📋ログに明示出力する調査コードを追加（確定後削除予定）。CF側ログの確認も必要。 -->
+<!-- VERSION: index277 (2026.06.12) — 通常レベルアップ演出の追加（ともき要望）。従来のレベルアップ祝福は階級の節目（LV.10/20/.../90/99、称号変更時）の豪華モーダルのみで、16→17等の階級内レベルアップは無反応だった。mmCheckLevelUpに通常レベルアップ分岐を追加し、軽量トースト（✦LEVEL UP✦ + LV.数字、画面上部16%にポップ→約2.2秒で自動消滅、タップ不要、pointer-events:none）を表示。スタイルとDOM要素は初回呼び出し時に自己注入する自己完結型で既存CSSへの影響ゼロ。発火タイミングは従来同様マイページ描画時のレベル比較（localStorage: mm_last_master_lv_v1）。複数レベル一気上がりは最新レベルのみ表示。節目の豪華モーダルは従来通り維持（節目優先）。v276スター後払い・v274ミッション修正は全維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -11767,54 +11767,21 @@ window.consumeStarForExtraCheckin = async (name, pref, lat, lng) => {
     return;
   }
   
-  const ok = confirm(`⭐ スター1個を使って「${name}駅」をチェックインしますか？\n（残り: ${stars}個 → ${stars - 1}個）`);
+  const ok = confirm(`⭐ スター1個を使って「${name}駅」をチェックインしますか？\n（残り: ${stars}個 → ${stars - 1}個）\n\n※スターはチェックイン成立時に消費されます。\n途中で離れた場合などは消費されません。`);
   if (!ok) return;
   
-  try {
-    // ★Step 2-2: Cloud Function consumeStar を呼び出し
-    //   サーバ側で stars>0 検証 → stars -1 → starUsageLogs に記録
-    //   戻り値: { success: true, newStarsCount: number }
-    const result = await consumeStarFn({
-      stationId: `${name}_${pref}`,
-      stationName: name
-    });
-    
-    const newCount = result.data && typeof result.data.newStarsCount === 'number'
-      ? result.data.newStarsCount
-      : stars - 1;
-    
-    // ローカルキャッシュもサーバの結果に同期
-    window._userStarsCache = newCount;
-    window._starUnlocked = true;
-    
-    // マスターパネルのスター表示を即時更新
-    const starEl = document.getElementById('mp-master-star-count');
-    if (starEl) starEl.textContent = newCount.toLocaleString();
-    
-    // チェックインパネル再描画 → 上限ガードをスキップして距離計算→チェックインボタンが出る
-    if (window.currentStation) window.renderCheckinSection(window.currentStation);
-  } catch (e) {
-    console.error('[Star] Cloud Function 呼び出しエラー:', e);
-    // ★index273: 真因調査のため code / message を明示的にログ出力（📋パネルで確認可能）
-    console.error('[Star] エラー詳細 code:', (e && e.code) || '不明', '/ message:', (e && e.message) || '不明');
-    
-    // エラーコード別のメッセージ
-    let msg = 'スター消費に失敗しました。通信状況を確認してください。';
-    if (e && e.code) {
-      if (e.code === 'functions/failed-precondition') {
-        // スター不足（サーバ側で再検証した結果）
-        msg = e.message || 'スターが足りません。ページを再読み込みしてください。';
-      } else if (e.code === 'functions/unauthenticated') {
-        msg = 'ログインの有効期限が切れました。再度ログインしてください。';
-      } else if (e.code === 'functions/invalid-argument') {
-        msg = '入力エラー: ' + (e.message || '不正な値です');
-      }
-    }
-    // ★index273: バグ調査中の暫定措置。エラーの正体を画面で確認できるよう詳細を併記
-    //   （真因確定後のバージョンで削除予定）
-    msg += '\n\n[調査用情報]\ncode: ' + ((e && e.code) || '不明') + '\nmessage: ' + ((e && e.message) || '不明');
-    alert(msg);
-  }
+  // ★index276: スター消費を「チェックイン成立の瞬間」に行う後払い方式に変更（救済措置）。
+  //   旧方式: confirm OK で即 consumeStar CF → 5分滞在中に離脱・圏外・キャンセルすると
+  //   チェックインは不成立なのにスターだけ減る損失が発生していた（ともき報告）。
+  //   新方式: ここでは上限スキップフラグ(_starUnlocked)だけ立ててチェックイン開始し、
+  //   recordCheckin 成功＝チェックイン成立の時点で初めて consumeStar を呼ぶ。
+  //   不成立ならスターは最初から減っていないため、返却処理そのものが不要。
+  window._starUnlocked = true;
+  console.log('[Star] 後払いモードでチェックイン開始（成立時に消費）');
+  await window.startCheckin(name, pref, lat, lng);
+  
+  // チェックインパネルを「チェックイン中」状態で再描画
+  if (window.currentStation) window.renderCheckinSection(window.currentStation);
 };
 
 window.startCheckin = async (name, pref, lat, lng) => {
@@ -11891,6 +11858,8 @@ window.cancelCheckin = () => {
   if (checkinTimer) { clearInterval(checkinTimer); checkinTimer = null; }
   clearPending();
   hideCheckinIndicator();
+  // ★index276: スター後払い方式のためフラグもクリア（スターは未消費＝損失なし）
+  window._starUnlocked = false;
   if (window.currentStation) window.renderCheckinSection(window.currentStation);
 };
 
@@ -12054,8 +12023,35 @@ async function tryCompleteCheckin() {
     }
     // ★バグ3修正：本日チェックイン済みSetに即座に追加（次回info-panel表示時に即反映）
     todayCheckedInStationIds.add(stationId);
-    // ★index227: スター解放フラグをリセット（チェックイン成功 → 次の駅もスターが必要）
+    // ★index227/276: スター解放フラグをリセット＋後払い消費の実行
+    const _usedStar = !!window._starUnlocked;
     window._starUnlocked = false;
+    if (_usedStar) {
+      // ★index276: 後払い方式。チェックインが成立した今、はじめてスターを消費する。
+      //   離脱・キャンセル・圏外失敗時はここに到達しない＝スターは減らない（救済措置）。
+      //   非同期実行でカード演出をブロックしない。失敗時は1.5秒後に1回だけ再試行。
+      const _starStationId = stationId;
+      const _starStationName = pendingCheckin.stationName;
+      (async () => {
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          try {
+            const result = await consumeStarFn({ stationId: _starStationId, stationName: _starStationName });
+            const newCount = result.data && typeof result.data.newStarsCount === 'number'
+              ? result.data.newStarsCount
+              : Math.max(0, (window._userStarsCache || 1) - 1);
+            window._userStarsCache = newCount;
+            const starEl = document.getElementById('mp-master-star-count');
+            if (starEl) starEl.textContent = newCount.toLocaleString();
+            console.log('[Star] チェックイン成立 → スター消費完了 残り' + newCount + '個');
+            return;
+          } catch (e) {
+            console.error('[Star] 成立時のスター消費失敗 (試行' + attempt + '/2) code:', (e && e.code) || e);
+            if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+            else console.error('[Star] スター消費を断念（チェックインは成立済みのためユーザー損失なし）');
+          }
+        }
+      })();
+    }
 
     // ★index235: clearPending() を呼ぶと pendingCheckin が null になるため、
     //   後続（カード演出・後追いカード保存）で使う値を先にローカルへ退避する。
@@ -19251,11 +19247,56 @@ if ('serviceWorker' in navigator) {
     if (crossed) {
       // 祝福モーダル表示
       showLevelUpModal(crossed, tierName);
+    } else if (currentLevel > lastLv) {
+      // ★index277: 通常レベルアップ（16→17等、階級内）にも軽い演出を追加（ともき要望）。
+      //   節目（10刻み）は従来の豪華モーダル、それ以外はタップ不要・自動で消える軽量トースト。
+      showLevelUpToast(currentLevel);
     }
     
     // 記録更新
     try { localStorage.setItem(LAST_LV_KEY, String(currentLevel)); } catch(e) {}
   };
+  
+  // ★index277: 軽量レベルアップトースト（通常レベルアップ用）
+  //   画面上部にポンと出て、約2.2秒で自動消滅。スタイルは初回呼び出し時に自己注入。
+  function showLevelUpToast(newLevel){
+    if (!document.getElementById('mm-lvup-toast-style')) {
+      const st = document.createElement('style');
+      st.id = 'mm-lvup-toast-style';
+      st.textContent = [
+        '#mm-lvup-toast{position:fixed;top:16%;left:50%;transform:translateX(-50%) scale(0.6);',
+        'background:linear-gradient(135deg,rgba(38,52,84,0.97),rgba(20,30,52,0.97));',
+        'border:2px solid rgba(255,215,80,0.7);border-radius:16px;padding:13px 30px;',
+        'z-index:99990;opacity:0;pointer-events:none;text-align:center;',
+        'box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 24px rgba(255,215,80,0.3);}',
+        '#mm-lvup-toast.show{animation:mmLvUpPop 2.2s cubic-bezier(0.2,0.9,0.3,1.15) forwards;}',
+        '@keyframes mmLvUpPop{',
+        '0%{opacity:0;transform:translateX(-50%) scale(0.6) translateY(12px);}',
+        '12%{opacity:1;transform:translateX(-50%) scale(1.08) translateY(0);}',
+        '22%{transform:translateX(-50%) scale(1);}',
+        '78%{opacity:1;transform:translateX(-50%) scale(1) translateY(0);}',
+        '100%{opacity:0;transform:translateX(-50%) scale(0.95) translateY(-16px);}}',
+        '.mm-lvup-toast-label{font-size:12px;font-weight:900;color:#ffd750;letter-spacing:3px;}',
+        '.mm-lvup-toast-lv{font-size:27px;font-weight:900;color:#fff;margin-top:2px;line-height:1.1;}',
+        '.mm-lvup-toast-lv .lv-num{color:#ffd750;}'
+      ].join('');
+      document.head.appendChild(st);
+    }
+    let toast = document.getElementById('mm-lvup-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'mm-lvup-toast';
+      toast.innerHTML = '<div class="mm-lvup-toast-label">✦ LEVEL UP ✦</div>' +
+                        '<div class="mm-lvup-toast-lv">LV.<span class="lv-num" id="mm-lvup-toast-num"></span></div>';
+      document.body.appendChild(toast);
+    }
+    const numEl = document.getElementById('mm-lvup-toast-num');
+    if (numEl) numEl.textContent = newLevel;
+    toast.classList.remove('show');
+    void toast.offsetWidth;  // reflow を挟んでアニメーションを再発火可能に
+    toast.classList.add('show');
+    console.log('[LevelUp] 軽量演出表示: LV.' + newLevel);
+  }
   
   function showLevelUpModal(milestone, tierName){
     const modal = document.getElementById('mm-lu-modal');
@@ -19662,8 +19703,19 @@ if ('serviceWorker' in navigator) {
   // デイリーミッション進捗更新（チェックイン後フック）
   window.mmUpdateMissionProgress = async function(uid, checkinData){
     // checkinData: { stationId, stationName, score, rank, isFirstVisit, lines }
-    const state = await window.mmGetDailyState(uid);
-    if (!state || !state.todayMissions || state.todayMissions.date !== todayJST()) return;
+    let state = await window.mmGetDailyState(uid);
+    // ★index274: 当日ミッション未生成（前日のまま）なら、ここで生成してから判定を続行。
+    //   旧実装は date 不一致で即 return しており、「マイページを開く前にチェックインすると
+    //   ミッションが一切カウントされない」取りこぼしバグの真因だった（東陽町 0/3 事件）。
+    //   ミッション生成は従来マイページ初表示時の mmProcessLoginBonus 内でのみ実行されていた。
+    if (!state || !state.todayMissions || state.todayMissions.date !== todayJST()) {
+      console.log('[Mission] 当日ミッション未生成 → その場で生成して判定続行');
+      try {
+        await window.mmProcessLoginBonus(uid);
+        state = await window.mmGetDailyState(uid);
+      } catch(e) { console.warn('[Mission] ミッション生成失敗:', e); }
+      if (!state || !state.todayMissions || state.todayMissions.date !== todayJST()) return;
+    }
     
     let changed = false;
     let newlyCompleted = [];
@@ -19734,20 +19786,56 @@ if ('serviceWorker' in navigator) {
         // ★index270: ループ前に取得済みの todayCheckins を使う（getDocs重複排除）
         try {
           let count = todayCheckins.length;
-          const lineSet = new Set();
-          todayCheckins.forEach(c => {
-            // ★index190: 路線取得。LINE_DATAから逆引き（県名→路線→駅名配列）。
-            if (window.LINE_DATA && c.stationPref && window.LINE_DATA[c.stationPref]) {
-              const linesInPref = window.LINE_DATA[c.stationPref];
-              Object.keys(linesInPref).forEach(lineName => {
-                if (Array.isArray(linesInPref[lineName]) && linesInPref[lineName].includes(c.stationName)) {
-                  lineSet.add(lineName);
+          if (m.type === 'count_today') {
+            m.progress = count;
+          } else {
+            // ★index274: 「違う路線をNつ」を 1駅=1路線 の割り当て方式に変更。
+            //   旧実装は乗り入れ路線の和集合サイズだったため、新橋（8路線）1駅で
+            //   一発達成してしまう欠陥があった（ともき指摘）。
+            //   新実装: 駅→路線を1対1で割り当てる最大マッチング数を進捗とする。
+            //   例: 東陽町(東西線)+新橋(8路線)=2、東西線のみの駅を3駅巡っても1。
+            // 駅単位で重複排除（同じ駅の複数回チェックインは1駅扱い）
+            const uniqMap = new Map();
+            todayCheckins.forEach(c => {
+              const key = c.stationName + '_' + (c.stationPref || '');
+              if (!uniqMap.has(key)) uniqMap.set(key, c);
+            });
+            // 各駅の乗り入れ路線リストを構築
+            const stationLines = [];
+            uniqMap.forEach(c => {
+              const lines = [];
+              if (window.LINE_DATA && c.stationPref && window.LINE_DATA[c.stationPref]) {
+                const linesInPref = window.LINE_DATA[c.stationPref];
+                Object.keys(linesInPref).forEach(lineName => {
+                  if (Array.isArray(linesInPref[lineName]) && linesInPref[lineName].includes(c.stationName)) {
+                    lines.push(lineName);
+                  }
+                });
+              }
+              if (lines.length > 0) stationLines.push(lines);
+            });
+            // 最大二部マッチング（Kuhnの増加路アルゴリズム）
+            const lineIndex = new Map();
+            stationLines.forEach(ls => ls.forEach(l => { if (!lineIndex.has(l)) lineIndex.set(l, lineIndex.size); }));
+            const matchOfLine = new Array(lineIndex.size).fill(-1);
+            const tryAssign = (si, visited) => {
+              for (const l of stationLines[si]) {
+                const li = lineIndex.get(l);
+                if (visited.has(li)) continue;
+                visited.add(li);
+                if (matchOfLine[li] === -1 || tryAssign(matchOfLine[li], visited)) {
+                  matchOfLine[li] = si;
+                  return true;
                 }
-              });
+              }
+              return false;
+            };
+            let matched = 0;
+            for (let i = 0; i < stationLines.length; i++) {
+              if (tryAssign(i, new Set())) matched++;
             }
-          });
-          if (m.type === 'count_today') m.progress = count;
-          else m.progress = lineSet.size;
+            m.progress = matched;
+          }
         } catch(e) { console.warn('ミッション進捗計算エラー:', e); }
       } else if (m.type === 'count_b_above_today') {
         // ★index270: 再計算式。今日のチェックインのうちB以上の数
@@ -20486,7 +20574,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v273</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v277</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -20502,7 +20590,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 273', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 277', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   // ★index270: トップ画面上部見切れバグの修正。
   //   症状: ふとした時にヘッダー上部が見切れ、再起動するまで直らない。
@@ -20514,6 +20602,11 @@ if ('serviceWorker' in navigator) {
   (function(){
     function fixViewportShift(){
       try {
+        // ★index274: 入力中（キーボード表示中）は補正をスキップ。
+        //   キーボード表示時にブラウザがフォーカス要素を見せようとするスクロールを
+        //   この補正が打ち消してしまい、メモ入力欄がキーボードに隠れる悪循環の一因だった。
+        const ae = document.activeElement;
+        if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;
         if (window.scrollY !== 0 || window.scrollX !== 0) {
           window.scrollTo(0, 0);
           console.log('[Viewport] 残留スクロール補正実行');
@@ -20536,6 +20629,53 @@ if ('serviceWorker' in navigator) {
     document.addEventListener('visibilitychange', function(){
       if (!document.hidden) setTimeout(fixViewportShift, 200);
     });
+  })();
+
+  // ★index274: メモ入力時のキーボード対応。
+  //   症状: カードのメモ欄をタップするとキーボードが出るが、メモ欄がキーボードの
+  //   下に隠れて何を書いているか見えない（ともき報告）。
+  //   対処: メモ欄フォーカス時、キーボードを除いた可視領域(visualViewport.height)から
+  //   はみ出す分だけカードモーダル全体を上にシフト。フォーカス解除で元に戻す。
+  (function(){
+    function adjustCardForKeyboard(){
+      try {
+        const vv = window.visualViewport;
+        const memo = document.getElementById('sc-memo-content');
+        const modal = document.getElementById('card-modal');
+        if (!vv || !memo || !modal) return;
+        const rect = memo.getBoundingClientRect();
+        const overlap = rect.bottom - vv.height + 24;  // 24px余白
+        if (overlap > 0) {
+          modal.style.transition = 'transform 0.25s ease-out';
+          modal.style.transform = 'translateY(-' + Math.round(overlap) + 'px)';
+          console.log('[Memo] キーボード対応シフト: ' + Math.round(overlap) + 'px');
+        }
+      } catch(e){}
+    }
+    function resetCardShift(){
+      try {
+        const modal = document.getElementById('card-modal');
+        if (modal) modal.style.transform = '';
+      } catch(e){}
+    }
+    document.addEventListener('focusin', function(e){
+      if (e.target && e.target.id === 'sc-memo-content') {
+        // キーボードのアニメーション完了を待ってから位置計算
+        setTimeout(adjustCardForKeyboard, 350);
+      }
+    });
+    document.addEventListener('focusout', function(e){
+      if (e.target && e.target.id === 'sc-memo-content') {
+        setTimeout(resetCardShift, 100);
+      }
+    });
+    // キーボード高さ確定後の再調整（iOSはresizeが遅れて来ることがある）
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', function(){
+        const ae = document.activeElement;
+        if (ae && ae.id === 'sc-memo-content') adjustCardForKeyboard();
+      });
+    }
   })();
 
   // ★index268: GPS許可説明モーダル制御
@@ -20680,7 +20820,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v273) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v277) ===', '#88ccff');
   })();
 </script>
 
