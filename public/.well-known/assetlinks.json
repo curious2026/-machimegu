@@ -1,8 +1,15 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "com.machimegu.app",
-        "sha256_cert_fingerprints": ["5E:35:A3:B6:64:7D:FE:E8:E2:76:30:C5:5D:1C:DC:CB:0A:1A:27:FD:EC:F7:DC:E4:CE:11:30:E2:A0:18:10:97"]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.machimegu.app",
+      "sha256_cert_fingerprints": [
+        "72:2E:FF:EF:43:04:45:5C:04:DB:A3:21:AA:74:19:C3:9B:9B:0B:DF:F1:6C:7F:5A:23:24:66:B2:F8:A7:16:26",
+        "5E:35:A3:B6:64:7D:FE:E8:E2:76:30:C5:5D:1C:DC:CB:0A:1A:27:FD:EC:F7:DC:E4:CE:11:30:E2:A0:18:10:97"
+      ]
+    }
+  }
+]
