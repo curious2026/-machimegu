@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index277 (2026.06.12) — 通常レベルアップ演出の追加（ともき要望）。従来のレベルアップ祝福は階級の節目（LV.10/20/.../90/99、称号変更時）の豪華モーダルのみで、16→17等の階級内レベルアップは無反応だった。mmCheckLevelUpに通常レベルアップ分岐を追加し、軽量トースト（✦LEVEL UP✦ + LV.数字、画面上部16%にポップ→約2.2秒で自動消滅、タップ不要、pointer-events:none）を表示。スタイルとDOM要素は初回呼び出し時に自己注入する自己完結型で既存CSSへの影響ゼロ。発火タイミングは従来同様マイページ描画時のレベル比較（localStorage: mm_last_master_lv_v1）。複数レベル一気上がりは最新レベルのみ表示。節目の豪華モーダルは従来通り維持（節目優先）。v276スター後払い・v274ミッション修正は全維持。 -->
+<!-- VERSION: index278 (2026.06.18) — V278の3点改修。①検索バー2行目の4ドロップダウン（エリア/路線/ランク/半径）をflex:1で均等配分し、虫眼鏡右の余白を埋めて全機種で横幅を有効活用（statusbarのmargin-left:auto除去）。②ヘッダー「マイページ」見切れ修正：幅400px以下/360px以下の超狭幅機種（2020年頃の小型Android等）でロゴをわずかに縮小＋ロゴ枠の縮小を許可し、MAP/RANK/マイページが必ず収まるように（iPhone/Pixel 7aは対象外で見た目不変）。③dev/本番の表示出し分け：location.hostname==='machimegu.com'を本番判定とし、本番では右下バージョンバッジ・左下📋デバッグログボタンを非表示、マイページ最下部に「version 1.0」を控えめ表示。dev環境（別URL）は自動的に開発モード扱いで従来通りログ・バッジ表示。v277通常レベルアップ演出・v276スター後払い・v274ミッション修正は全維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -331,7 +331,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   line-height:1;transition:all 0.2s;flex-shrink:0}
 #searchBtn:hover{transform:scale(1.08);background:rgba(70,140,255,0.18)}
 #searchBtn:active{transform:scale(0.95)}
-#statusbar{font-size:10px;color:#5878b8;white-space:nowrap;flex-shrink:0;font-weight:600;margin-left:auto;padding-right:2px}
+#statusbar{font-size:10px;color:#5878b8;white-space:nowrap;flex-shrink:0;font-weight:600;padding-right:2px}
 #statusbar.anim{color:#5a90ff;animation:pulse 1.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:0.35}50%{opacity:1}}
 
@@ -2049,6 +2049,38 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 
 .fsel option{font-size:11px!important;line-height:1.1!important;padding:2px 4px!important}
 
+/* ★index278: 超狭幅機種（幅400px以下、2020年頃の小型Android等）対策。
+   ロゴが幅を食い尽くして右端の「マイページ」ボタンが見切れる問題を解消。
+   ロゴ文字とアイコンをわずかに縮小し、ロゴ枠の縮小を許可。
+   MAP/RANK/マイページが必ず画面内に収まる。iPhone/Pixel 7a(幅411px+)は対象外で見た目不変。 */
+@media(max-width:400px){
+  .logo-wrap{
+    flex-shrink:1!important;
+    min-width:0!important;
+    padding:3px 6px!important;
+    gap:5px!important;
+    overflow:hidden;
+  }
+  .logo-icon{width:40px!important;height:40px!important}
+  .logo-text-block{min-width:0;overflow:hidden}
+  .logo-main{font-size:17px!important;letter-spacing:0.3px!important}
+  .logo-megu{font-size:12px!important;letter-spacing:0!important}
+  .logo-sub-en{font-size:10px!important;letter-spacing:1.5px!important}
+  .view-tabs{gap:2px!important}
+  .vtab{padding:11px 6px!important;min-width:33px!important}
+  .vtab-label{font-size:10.5px!important}
+  .user-mypage-link{padding:11px 7px!important;font-size:10.5px!important;min-width:33px!important}
+  #header{gap:3px!important}
+}
+/* 幅360px以下（さらに小型）：ロゴ英字サブを隠して縦も詰め、確実に収める */
+@media(max-width:360px){
+  .logo-sub-en{display:none!important}
+  .logo-main{font-size:16px!important}
+  .logo-icon{width:36px!important;height:36px!important}
+  .vtab{padding:11px 5px!important;min-width:30px!important}
+  .user-mypage-link{padding:11px 6px!important;min-width:30px!important}
+}
+
 .is-android .fsel,
 .is-android .fsel option{
   font-size:13px !important;
@@ -2062,6 +2094,10 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   position:relative;
   display:inline-block;
   vertical-align:middle;
+  /* ★index278: 4つのドロップダウンを画面幅に応じて均等に広げる。
+     虫眼鏡右の余白をドロップダウン側に回し、全機種で横幅を有効活用。 */
+  flex:1 1 0;
+  min-width:0;
 }
 .fsel-custom-btn{
   background:rgba(255,255,255,0.05);
@@ -2073,6 +2109,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   font-weight:600;
   cursor:pointer;
   position:relative;
+  /* ★index278: 親(.fsel-custom)がflexで伸びるので幅100%で追従。min-width下限は維持 */
+  width:100%;
   min-width:62px;
   text-align:left;
   white-space:nowrap;
@@ -7741,6 +7779,8 @@ body.checkin-active #checkin-indicator{
         <button class="mp-delete-btn" onclick="deleteAccountFromMypage()">アカウントを削除</button>
         <div class="mp-delete-hint">⚠️ 削除すると全データ（チェックイン履歴・カード・バッジ・推し街）が永久に消えます</div>
       </div>
+      <!-- ★index278: バージョン表示。本番ではversion 1.0、開発では開発バージョン番号。JSで出し分け。 -->
+      <div id="mp-app-version" style="margin-top:14px;text-align:center;font-size:11px;color:rgba(160,180,210,0.45);letter-spacing:0.5px;font-weight:600">version 1.0</div>
     </div>
   </div>
 </div>
@@ -20574,7 +20614,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v277</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v278</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -20590,7 +20630,34 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 277', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 278', 'color:#88ccff;font-weight:bold;font-size:14px');
+
+  /* ★index278: dev/本番の表示出し分け。
+     本番(machimegu.com)では開発用UI(右下バージョンバッジ・左下📋デバッグログボタン)を隠す。
+     dev環境(別URL)やlocalhost等は従来通り全部表示=開発モード。
+     window.__MM_IS_PROD__ を定義し、マイページのversion表示など他箇所でも参照可能に。 */
+  (function(){
+    var host = (location.hostname || '').toLowerCase();
+    var isProd = (host === 'machimegu.com' || host === 'www.machimegu.com');
+    window.__MM_IS_PROD__ = isProd;
+    if (isProd) {
+      try {
+        var verBadge = document.getElementById('mm-app-version');
+        if (verBadge) verBadge.style.display = 'none';
+        var dbgToggle = document.getElementById('mm-debug-toggle');
+        if (dbgToggle) dbgToggle.style.display = 'none';
+      } catch(e){}
+    } else {
+      /* 開発環境: マイページのバージョン表示を開発用表記に差し替え */
+      try {
+        var mpVer = document.getElementById('mp-app-version');
+        if (mpVer) {
+          mpVer.textContent = 'dev v278';
+          mpVer.style.color = 'rgba(255,180,120,0.6)';
+        }
+      } catch(e){}
+    }
+  })();
 
   // ★index270: トップ画面上部見切れバグの修正。
   //   症状: ふとした時にヘッダー上部が見切れ、再起動するまで直らない。
@@ -20820,7 +20887,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v277) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v278) ===', '#88ccff');
   })();
 </script>
 
