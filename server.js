@@ -251,16 +251,44 @@ try {
 // }
 let scoresCache = { version: '', builtAt: 0, stations: {} };
 
+// GitHubルートに同梱する seed キャッシュ（dev環境フォールバック用）
+// 本番の scores_cache.json を /api/admin/download-cache でDLし、
+// scores_cache_seed.json としてリポジトリ直下に配置すると、
+// CACHE_DIR にキャッシュが無い環境（dev の /tmp/cache 等）でも
+// Overture を再計算せずにこの seed から街力を表示できる。
+const SCORES_SEED_FILE = path.join(__dirname, 'scores_cache_seed.json');
+
 function loadScoresCache() {
+  // ① まず CACHE_DIR の正規キャッシュを読む（本番ボリューム /data 等）
   try {
     if (fs.existsSync(SCORES_CACHE_FILE)) {
       scoresCache = JSON.parse(fs.readFileSync(SCORES_CACHE_FILE, 'utf8'));
       const cnt = Object.keys(scoresCache.stations || {}).length;
       console.log(`スコアキャッシュ読込: v${scoresCache.version}, ${cnt}駅, builtAt=${new Date(scoresCache.builtAt).toLocaleString('ja-JP')}`);
+      if (cnt > 0) return;  // 正規キャッシュが有効なら seed は不要
     }
   } catch(e) {
     console.warn('スコアキャッシュ読込失敗:', e.message);
     scoresCache = { version: '', builtAt: 0, stations: {} };
+  }
+
+  // ② 正規キャッシュが無い/空の場合のみ、GitHub同梱の seed を読む（dev用フォールバック）
+  try {
+    if (fs.existsSync(SCORES_SEED_FILE)) {
+      const seed = JSON.parse(fs.readFileSync(SCORES_SEED_FILE, 'utf8'));
+      const seedCnt = Object.keys(seed.stations || {}).length;
+      if (seedCnt > 0) {
+        scoresCache = seed;
+        console.log(`[seed] 正規キャッシュ無し → 同梱 seed を使用: v${seed.version}, ${seedCnt}駅`);
+        // seed を CACHE_DIR にも保存して以降は正規キャッシュ扱いにする（次回起動を高速化）
+        try {
+          saveScoresCache(seed);
+          console.log('[seed] CACHE_DIR に seed を複製保存しました');
+        } catch(_) {}
+      }
+    }
+  } catch(e) {
+    console.warn('[seed] seed 読込失敗:', e.message);
   }
 }
 
@@ -1057,6 +1085,31 @@ app.get('/api/admin/diff', requireAdmin, (req, res) => {
   });
 });
 
+// ═══════════════════════════════════════════════════════════════
+// ★dev環境seed用: 計算済みスコアキャッシュのダウンロード（管理者専用）
+//   目的: 本番の scores_cache.json を取得し、GitHubに seed として配置することで
+//         dev環境（CACHE_DIR空）でも Overture を再計算せず街力を表示できるようにする。
+//   認証: requireAdmin（Firebase ID Token + ADMIN_UIDS チェック）
+//   挙動: 現在メモリ上にある scoresCache をそのまま JSON で返す（添付ダウンロード）
+//         ファイル本体ではなくメモリ内容を返すので、ボリュームのパスに依存しない。
+// ═══════════════════════════════════════════════════════════════
+app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
+  try {
+    const cnt = Object.keys(scoresCache.stations || {}).length;
+    if (cnt === 0) {
+      return res.status(404).json({ error: 'キャッシュが空です（計算済みデータがありません）' });
+    }
+    const body = JSON.stringify(scoresCache);
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="scores_cache.json"');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.send(body);
+  } catch (e) {
+    console.error('[/api/admin/download-cache] error:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // 旧 /api/rebuild（後方互換、認証なしのまま）→ 削除して認証必須に統一
 // app.post('/api/rebuild') は requireAdmin に移行
 
@@ -1140,7 +1193,18 @@ loadScoresCache();
 // 2. DuckDB初期化 → 必要なら再計算
 initDB().then(() => {
   console.log('[起動] DuckDB初期化完了');
-  
+
+  // ★dev環境用: DISABLE_AUTO_REBUILD=1 のとき起動時の自動再計算を完全スキップ。
+  //   dev は seed キャッシュ（GitHub同梱）で街力表示するだけが目的で、
+  //   Overture へのフル再計算は不要かつ失敗する（リリース日付固定のため）。
+  //   本番には設定しない＝従来通り四半期/新規駅で自動再計算する。
+  //   dev で意図的に再計算したいときは admin の「手動で再計算開始」を使えば可能。
+  if (process.env.DISABLE_AUTO_REBUILD === '1') {
+    const cnt = Object.keys(scoresCache.stations || {}).length;
+    console.log(`[起動] DISABLE_AUTO_REBUILD=1 → 自動再計算スキップ（seed/既存キャッシュ ${cnt}駅で稼働）`);
+    return;
+  }
+
   const rebuildCheck = checkRebuildMode();
   console.log(`[起動] rebuild判定:`, rebuildCheck.mode, '/', rebuildCheck.reason);
   
