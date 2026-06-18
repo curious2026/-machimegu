@@ -190,8 +190,9 @@ h1{font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:4px;color:#ff
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" onclick="loadAll()">🔄 ステータス更新</button>
       <button class="btn warn" id="rebuild-btn" onclick="triggerRebuild()">⚙️ 手動で再計算開始</button>
+      <button class="btn" id="dlcache-btn" onclick="downloadCache()">📥 キャッシュをダウンロード</button>
     </div>
-    <div style="font-size:11px;color:#7a96b6;margin-top:8px;line-height:1.5">※ 再計算は30分〜1時間程度かかります。実行中も古いデータでサービス継続されます。</div>
+    <div style="font-size:11px;color:#7a96b6;margin-top:8px;line-height:1.5">※ 再計算は30分〜1時間程度かかります。実行中も古いデータでサービス継続されます。<br>※ 「キャッシュをダウンロード」は dev 環境 seed 用。落とした scores_cache.json を scores_cache_seed.json にリネームしてリポジトリ直下に置くと dev でも街力が表示されます。</div>
   </div>
 
   <div class="section">
@@ -505,6 +506,41 @@ window.triggerRebuild = async function() {
     showMsg('❌ 通信エラー: ' + e.message, 'error', 6000);
     btn.disabled = false;
     btn.textContent = '⚙️ 手動で再計算開始';
+  }
+};
+
+// ═══ キャッシュDL（dev環境 seed 用） ═══
+// /api/admin/download-cache を認証付きで叩き、scores_cache.json を保存する。
+window.downloadCache = async function() {
+  const btn = document.getElementById('dlcache-btn');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ 取得中...';
+  try {
+    showMsg('📡 キャッシュを取得中...', 'info', 0);
+    const res = await authFetch('/api/admin/download-cache');
+    if (!res.ok) {
+      let msg = 'HTTP ' + res.status;
+      try { const d = await res.json(); if (d.error) msg = d.error; } catch(_) {}
+      showMsg('❌ エラー: ' + msg, 'error', 6000);
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'scores_cache.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    const mb = (blob.size / (1024 * 1024)).toFixed(2);
+    showMsg(`✅ ダウンロード完了（${mb} MB）。scores_cache_seed.json にリネームしてリポジトリ直下へ配置してください`, 'success', 12000);
+  } catch(e) {
+    showMsg('❌ 通信エラー: ' + e.message, 'error', 6000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
   }
 };
 
