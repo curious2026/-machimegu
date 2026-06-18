@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index279 (2026.06.18) — チェックイン位置取得の二段構えフォールバック追加。症状: TWA(Play版)起動直後や駅ビル高層階(東京駅大丸10F窓際等)で「位置情報の取得に失敗しました: Timeout expired」が出てチェックインできない。原因: getFreshPosition等が高精度(enableHighAccuracy:true)・maximumAge:0・単発のため、TWA初回や高層階の測位遅延に間に合わない(Chrome直接起動は測位サブシステムが温まってて速いが、TWAコールドスタートは遅い)。対処: 起動時ロジック(index259)と同じ思想で、getFreshPositionを①高精度10秒→失敗(TIMEOUT/UNAVAILABLE)時②低精度15秒+直近30秒キャッシュ許容、の二段構えに。「位置情報を許可」ボタンとチェックイン本体の現在地確認もgetCurrentPos→getFreshPositionに変更。Timeout時のエラー文言を「高層階や電波の弱い場所では取得しにくい、移動して再試行を」に改善。30秒キャッシュは移動距離わずかで500m判定に実害なし、精度が粗くても半径500m判定で自然にガード。V278(検索バー均等配分・ヘッダー見切れ修正・dev/本番出し分け)は全維持。 -->
+<!-- VERSION: index280 (2026.06.18) — 常連バッジ(同駅リピート)のレイアウト崩れ修正＋立体化。症状: 常連バッジを初めて取得するとマイページのバッジコレクション4列グリッドが崩れ、行が揃わなくなる(iPhone/Android両方)。原因: 他バッジ(六角形bp-badge-line/円bp-badge-rank/盾bp-badge-area/CHECKINS)は全てaspect-ratio:1で正方形セル化されているのに、常連バッジbp-badge-repeatだけaspect-ratio未指定でmin-height:100pxのみだったため、セル高さが他と揃わずグリッドが崩れていた。常連バッジ未取得ユーザー(妻等)では発症しない。対処: ①aspect-ratio:1追加で正方形化しグリッド整列を回復 ②min-height削除 ③立体化(外側ドロップシャドウ0 4px 12px+上端鏡面ハイライト::before+inset陰影強化)で他バッジと統一感。V279(GPS二段構え)・V278(検索バー均等配分・ヘッダー見切れ修正・dev/本番出し分け)は全維持。あわせてindex280で2点変更: (A)シャイニー/ミシック抽選を「初訪問のみ」→「毎チェックイン」に変更(新カードが作られる時=新しい季節×時刻×天気の組合せ時に抽選が有効化。同組合せのduplicateは元々カードが増えないので抽選無効。レア演出もnew_card/new_station時のみ表示)。(B)共有ボタン文言を「Xに投稿/Xでシェア」→「Xなどに投稿/Xなどでシェア」に変更(実装はnavigator.share優先=OS共有メニューで複数SNS選択可、X intentはフォールバック。実態に合わせた)。(C)dev環境専用のレアカード見本テストボタン追加(__MM_IS_PROD__=falseの時だけ右下に「🎰tier見本」表示、押すと手持ちカード先頭2駅をメモリ上だけシャイニー/ミシックに書換→一覧再描画。Firestore非書込でリロードで元通り。本番では生成されず実害ゼロ)。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -3497,17 +3497,37 @@ body:not(.splashing) #table-area{
 }
 
 /* 同駅リピート称号バッジ：角丸スクエア＋tier別配色 */
+/* ★index280: aspect-ratio:1 を追加（他バッジ=六角形/円/盾は全てaspect-ratio:1で正方形セル化されているが、
+   常連バッジだけ未指定でmin-heightのみだったため、4列グリッドで高さが揃わずレイアウトが崩れていた。
+   常連バッジ取得後にマイページプレビューが崩れるバグの真因）。
+   あわせて立体感を強化：外側ドロップシャドウ＋上端ハイライト＋::before鏡面で他バッジと統一感を持たせる。 */
 .bp-badge-repeat{
-  border-radius:14px;
+  aspect-ratio:1;
+  border-radius:16px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:8px 6px;color:#fff;
-  border:2px solid rgba(255,255,255,0.22);
-  box-shadow:inset 0 -8px 16px rgba(0,0,0,0.18),inset 0 3px 8px rgba(255,255,255,0.22);
+  border:2px solid rgba(255,255,255,0.24);
+  box-shadow:
+    inset 0 -10px 20px rgba(0,0,0,0.28),
+    inset 0 6px 14px rgba(255,255,255,0.30),
+    inset 0 -2px 4px rgba(255,255,255,0.12),
+    0 4px 12px rgba(0,0,0,0.5);
   cursor:pointer;
   transition:transform 0.2s;
-  min-height:100px;
   text-align:center;
+  position:relative;
+  overflow:hidden;
 }
+/* 上端の鏡面ハイライト（六角形バッジと同じ思想で立体感を出す） */
+.bp-badge-repeat::before{
+  content:'';
+  position:absolute;
+  top:6%;left:12%;right:12%;height:32%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.40) 0%,rgba(255,255,255,0.06) 75%,transparent 100%);
+  border-radius:14px 14px 50% 50%;
+  pointer-events:none;
+}
+.bp-badge-repeat > *{position:relative;z-index:1}
 .bp-badge-repeat:active{transform:scale(0.96)}
 .bp-repeat-emoji{
   font-size:24px;line-height:1;margin-bottom:3px;
@@ -12200,8 +12220,13 @@ async function tryCompleteCheckin() {
           window._lastCardStatus = null;
           const stKey = window.mmStationKey({ name: _ciName, pref: _ciPref });
           const weatherStr = await window.mmGetWeather(_ciLat, _ciLng);  // ★4秒タイムアウト付き
-          // ★Step5: tier抽選（初訪問のみ、再訪問では抽選しない）
-          const rolledTier = isFirstVisit ? (window.mmRollCardTier ? window.mmRollCardTier() : null) : null;
+          // ★index280: tier抽選を「初訪問のみ」→「毎チェックイン」に変更。
+          //   旧仕様: isFirstVisit時のみ抽選 → 同じ駅へのリピートではレアが一切出ず、
+          //           実際の抽選回数=初訪問駅数に限られ、シャイニー/ミシックに出会いにくかった。
+          //   新仕様: 毎回抽選する。ただしカードは「季節×時刻×天気」が新組合せの時だけ増える(new_card/new_station)。
+          //           同組合せ(duplicate)はカードが増えないので、抽選結果は保存先がなく自然に無効化される。
+          //           → 「同じ駅でも、違う季節/時間帯/天気で訪れれば新カードのチャンスがあり、その時レア抽選も走る」。
+          const rolledTier = (window.mmRollCardTier ? window.mmRollCardTier() : null);
           // ★index260: 戻り値を保存。duplicate→短縮アニメ、new_card/new_station→派手アニメ判定に使う。
           const cardResult = await window.mmCloudAddCard(stKey, {
             season: window.mmGetSeason(),
@@ -12211,11 +12236,14 @@ async function tryCompleteCheckin() {
             special: rolledTier  // ★Step5: シャイニー/ミシック抽選結果（null=通常）
           });
           window._lastCardStatus = (cardResult && cardResult.status) || null;
-          console.log('[Card] addCard status:', window._lastCardStatus);
+          console.log('[Card] addCard status:', window._lastCardStatus, '/ tier:', rolledTier || '(通常)');
+          // ★index280: レア出現演出は「新しいカードが実際に作られた時(new_card/new_station)」のみ。
+          //   duplicate(カード増えず)の時に抽選で当たっても、カードに乗らないので演出は出さない(誤認防止)。
+          const cardCreated = (window._lastCardStatus === 'new_card' || window._lastCardStatus === 'new_station');
           // ミシック/シャイニー出現演出（カードの上に重ねて出す）
-          if (rolledTier && rolledTier.startsWith('mythic') && window.mmShowMythicFlash) {
+          if (cardCreated && rolledTier && rolledTier.startsWith('mythic') && window.mmShowMythicFlash) {
             setTimeout(function(){ window.mmShowMythicFlash(rolledTier, _ciName, score, rankInfo.rank); }, 100);
-          } else if (rolledTier === 'shiny' && window.mmShowShinyFlash) {
+          } else if (cardCreated && rolledTier === 'shiny' && window.mmShowShinyFlash) {
             setTimeout(function(){ window.mmShowShinyFlash(); }, 100);
           }
         } else {
@@ -13211,7 +13239,7 @@ window.shareCard = async function() {
         try { await navigator.share({title:'街巡-まちめぐ-', text, url}); } catch(_) {}
       } else {
         try { await navigator.clipboard.writeText(text + '\n' + url); alert('テキストをコピーしました！'); }
-        catch(_) { prompt('コピーしてXに投稿:', text + '\n' + url); }
+        catch(_) { prompt('コピーしてXなどに投稿:', text + '\n' + url); }
       }
     }
   } finally {
@@ -14853,10 +14881,10 @@ window.mmShowAutoShareModal = function(tier, stationName, score, rank) {
       <div class="asm-title">伝説のカードを獲得！</div>
       <div class="asm-station">${stationName}</div>
       <div class="asm-score">${rank} ${score}</div>
-      <div class="asm-text">500分の1で出現するミシックカード。<br>この瞬間をXでシェアしませんか？</div>
+      <div class="asm-text">500分の1で出現するミシックカード。<br>この瞬間をXなどでシェアしませんか？</div>
       <div class="asm-actions">
         <button class="asm-btn asm-btn-secondary" onclick="document.getElementById('auto-share-modal').classList.remove('open')">あとで</button>
-        <button class="asm-btn asm-btn-primary" onclick="window.mmShareMythic('${tier}','${stationName}',${score},'${rank}')">Xでシェア</button>
+        <button class="asm-btn asm-btn-primary" onclick="window.mmShareMythic('${tier}','${stationName}',${score},'${rank}')">Xなどでシェア</button>
       </div>
     </div>
   `;
@@ -18470,7 +18498,7 @@ if ('serviceWorker' in navigator) {
     <div class="bdm-earned" id="bdm-earned"></div>
     <button id="bdm-share-btn" class="bdm-share-btn" onclick="window.shareBadge()" type="button">
       <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      <span>Xに投稿</span>
+      <span>Xなどに投稿</span>
     </button>
   </div>
 </div>
@@ -20649,7 +20677,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v279</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v280</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -20665,7 +20693,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 279', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 280', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   /* ★index278: dev/本番の表示出し分け。
      本番(machimegu.com)では開発用UI(右下バージョンバッジ・左下📋デバッグログボタン)を隠す。
@@ -20687,14 +20715,59 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v279';
+          mpVer.textContent = 'dev v280';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
     }
   })();
 
-  // ★index270: トップ画面上部見切れバグの修正。
+  /* ★index280: 【dev環境専用】レアカード(シャイニー/ミシック)見本表示テスト。
+     window.__MM_IS_PROD__ が false の時だけ画面右下に小さなテストボタンを表示。
+     押すと、ログイン中ユーザーのコレクション(mmCollectionCache)の手持ちカードのうち
+     先頭2駅のカードを1枚=シャイニー、もう1枚=ミシック(季節は今月基準)に「メモリ上だけ」書き換え、
+     カード一覧を再描画する。Firestoreには一切書き込まない=リロードで元に戻る完全な見た目確認用。
+     本番(machimegu.com)では __MM_IS_PROD__=true なのでボタン自体が生成されず、実害ゼロ。 */
+  (function(){
+    if (window.__MM_IS_PROD__) return;  // 本番では何もしない
+    function makeBtn(){
+      if (document.getElementById('mm-tiertest-btn')) return;
+      var b = document.createElement('button');
+      b.id = 'mm-tiertest-btn';
+      b.type = 'button';
+      b.textContent = '🎰 tier見本';
+      b.style.cssText = 'position:fixed;bottom:max(36px,calc(env(safe-area-inset-bottom) + 30px));right:max(8px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#fff;background:rgba(120,60,160,0.85);padding:4px 9px;border-radius:6px;border:1px solid rgba(200,160,240,0.5);z-index:99999;font-family:monospace;cursor:pointer;line-height:1.4';
+      b.onclick = function(){
+        try {
+          var cache = window.mmCollectionCache;
+          if (!cache || !cache.stations) { alert('カードがまだ読み込まれていません。ログイン後にコレクションを開いてから押してください。'); return; }
+          var keys = Object.keys(cache.stations);
+          if (keys.length < 1) { alert('手持ちカードがありません。'); return; }
+          // 今月の季節からミシックtierを決定（実抽選と同じ対応）
+          var m = new Date().getMonth() + 1;
+          var mythicTier = (m===4)?'mythic-spring':(m===8)?'mythic-summer':(m===11)?'mythic-autumn':(m===1)?'mythic-winter':'mythic-spring';
+          // 先頭駅の先頭カード → シャイニー
+          var s0 = cache.stations[keys[0]];
+          if (s0 && s0.cards && s0.cards[0]) s0.cards[0].special = 'shiny';
+          // 2駅目の先頭カード → ミシック（駅が1つしかなければ同じ駅の2枚目、なければ同じ1枚目を上書き）
+          if (keys.length >= 2) {
+            var s1 = cache.stations[keys[1]];
+            if (s1 && s1.cards && s1.cards[0]) s1.cards[0].special = mythicTier;
+          } else if (s0 && s0.cards && s0.cards[1]) {
+            s0.cards[1].special = mythicTier;
+          }
+          if (typeof window.renderCardListSorted === 'function') window.renderCardListSorted();
+          if (typeof window.renderCardVersion === 'function') window.renderCardVersion();
+          alert('先頭カードをシャイニー、次の駅をミシック(' + mythicTier + ')に変更しました(メモリ上のみ)。\nカードコレクションを開いて確認してください。リロードで元に戻ります。');
+        } catch(e){ alert('tierテスト失敗: ' + e.message); }
+      };
+      document.body.appendChild(b);
+    }
+    if (document.body) makeBtn();
+    else document.addEventListener('DOMContentLoaded', makeBtn);
+  })();
+
+
   //   症状: ふとした時にヘッダー上部が見切れ、再起動するまで直らない。
   //   原因: html/bodyはposition:fixed済み(index208)だが、キーボード表示などで
   //   OSブラウザがビューポート自体を上にスクロールさせ、それが残留する
@@ -20922,7 +20995,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v279) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v280) ===', '#88ccff');
   })();
 </script>
 
