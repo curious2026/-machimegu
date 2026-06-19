@@ -150,9 +150,8 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index282 (2026.06.19) — v281からの修正: dev用🎰tier見本ボタンが「カードがまだ読み込まれていません」で動かなかった問題を修正。原因: ボタンが参照していたmmCollectionCacheはマイページ用の別データで、カード一覧(全部見る)はcardListData配列から描画されていた(参照先の取り違え)。対処: renderCardListSortedでcardListDataをwindow.__mmCardListDataに公開し、🎰ボタンはそれを参照して先頭2枚のspecialをshiny/mythicに書換→renderCardListSortedで再描画する方式に変更。使い方=「カードコレクション→全部見る」を一度開いてから🎰を押す。
-     【v281からの修正】LEVEL UPモーダルの共有ボタン「Xで自慢」を「Xなどで自慢」に修正(全共有ボタンがXなど表記に統一)。
-     【以下v280からの継続内容】常連バッジ(同駅リピート)のレイアウト崩れ修正＋立体化(aspect-ratio:1で正方形化+立体陰影)。(A)シャイニー/ミシック抽選を「初訪問のみ」→「毎チェックイン」に変更(新カード作成時に抽選有効、duplicateは無効、レア演出もnew時のみ)。(B)共有ボタン文言を「Xなどに投稿/Xなどでシェア」に(navigator.share優先の実態に合わせた)。(C)dev環境専用レアカード見本テストボタン🎰(本番では生成されず実害ゼロ)。V279(GPS二段構え)・V278(検索バー均等配分・ヘッダー見切れ修正・dev/本番出し分け)は全維持。 -->
+<!-- VERSION: index283 (2026.06.19) — 【詳細カードのシャイニー/ミシック演出を本実装】v282までは一覧の小カード(mp-mini-card)だけレア表示され、カードをタップして開く詳細カード(#station-card)は通常表示のままだった(実装漏れ。本番で実際にレアを引いても詳細が光らないバグ)。真因2つ: (1)レア演出CSSが.sc-card[data-tier]向けだったが実際の詳細カードは#station-card(idのみ・sc-cardクラス無し)で一切適用されず (2)詳細カードを開くopenCardFromHistoryがspecialを渡しておらず、Firestore再取得時もtierを読んでいなかった。対処: (A)#station-card[data-tier]専用のレア演出CSSを新規実装(シャイニー=青の宝石フレーム+星屑、ミシック=金の宝石フレーム+季節モチーフ粒子(桜/花火/紅葉/雪)+金箔ホロ。情報量の多い詳細カードの可読性を保つため、全面ダーク化せず外周額装+ヘッダー宝石質感+季節差し色で「特別な一枚」を演出。メモ/駅情報の白背景は維持)。(B)mmApplyTierToCardを拡張しtierタグ(★SHINY/✦MYTHIC 桜等)を動的挿入。(C)openCardFromHistoryで即時描画時に__mmCardListDataからspecialを引いて渡し、Firestore再取得後もcd.specialで確定適用(無ければ即時描画のtierを維持=🎰見本も本番も両対応)。
+     【v282】dev用🎰tier見本ボタンの参照先をcardListData(__mmCardListData)に修正。【v281】LEVEL UP共有ボタンもXなど化。【v280】常連バッジ崩れ修正+立体化、シャイニー/ミシック抽選を毎チェックイン化、共有ボタンXなど化、dev用🎰ボタン追加。V279/V278維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -6067,6 +6066,164 @@ body.checkin-active #checkin-indicator{
 .mp-mini-card[data-tier="mythic-summer"]::after{ content:'✦ MYTHIC ✦ 花火'; }
 .mp-mini-card[data-tier="mythic-autumn"]::after{ content:'✦ MYTHIC ✦ 紅葉'; }
 .mp-mini-card[data-tier="mythic-winter"]::after{ content:'✦ MYTHIC ✦ 雪'; }
+
+/* ═══════════════════════════════════════════════════════════════
+ * ★index283: 詳細カード(#station-card)専用 シャイニー/ミシック演出
+ *   背景: 既存のレアCSSは .sc-card[data-tier] 向けだったが、実際の詳細カードは
+ *         #station-card(idのみ・sc-cardクラス無し)のため一切適用されていなかった(実装漏れ)。
+ *   方針: 詳細カードは情報量が多くメモ欄もある明るいカード。ミニカードのような全面ダーク化は
+ *         可読性を壊すため、(1)外周の額装(枠・グロー)(2)ヘッダー上部の宝石質感オーバーレイ
+ *         (3)季節モチーフの装飾を内側に薄く重ねる、で「特別な一枚」を演出する。
+ *         メモ欄・駅情報の白背景は維持し、文字は読めるまま。overflow:visibleなので装飾は枠内クリップ。
+ * ═══════════════════════════════════════════════════════════════ */
+
+/* ─── シャイニー：青の宝石フレーム＋星屑 ─── */
+#station-card[data-tier="shiny"]{
+  --card-color:#6ea8ff !important;
+  --card-glow:rgba(110,168,255,0.55) !important;
+  border-color:#6ea8ff !important;
+  box-shadow:
+    0 0 0 1px rgba(180,215,255,0.9) inset,
+    0 0 32px rgba(110,168,255,0.6),
+    0 0 64px rgba(110,168,255,0.25),
+    0 12px 40px rgba(0,0,0,0.55) !important;
+  background:
+    linear-gradient(160deg, rgba(225,238,255,0.5) 0%, transparent 42%),
+    var(--mm-bg, var(--card-bg,#eef4ff)) !important;
+}
+/* 上部の宝石ハイライト＋流れる光沢 */
+#station-card[data-tier="shiny"] .sc-content::before{
+  content:''; position:absolute; left:0; right:0; top:0; height:42%;
+  background:
+    linear-gradient(180deg, rgba(150,195,255,0.30) 0%, rgba(150,195,255,0.06) 55%, transparent 100%);
+  border-radius:20px 20px 40% 40%;
+  pointer-events:none; z-index:0;
+}
+/* 星屑（カード全体に散る） */
+#station-card[data-tier="shiny"]::before{
+  content:''; position:absolute; inset:3px; border-radius:18px; overflow:hidden;
+  pointer-events:none; z-index:0;
+  background-image:
+    radial-gradient(circle at 18% 14%, rgba(255,255,255,0.95) 0px, transparent 2.5px),
+    radial-gradient(circle at 82% 22%, rgba(150,200,255,0.9) 0px, transparent 2.5px),
+    radial-gradient(circle at 12% 52%, rgba(255,255,255,0.8) 0px, transparent 2px),
+    radial-gradient(circle at 73% 64%, rgba(200,180,255,0.85) 0px, transparent 2.5px),
+    radial-gradient(circle at 90% 84%, rgba(255,255,255,0.75) 0px, transparent 2px),
+    radial-gradient(circle at 34% 88%, rgba(160,205,255,0.8) 0px, transparent 2px);
+  animation:scShinySparkle 4s ease-in-out infinite;
+}
+@keyframes scShinySparkle{ 0%,100%{opacity:0.55} 50%{opacity:1} }
+
+/* ─── ミシック：金の宝石フレーム＋季節モチーフ ─── */
+#station-card[data-tier^="mythic"]{
+  border-color:#e8c860 !important;
+  box-shadow:
+    0 0 0 1px rgba(245,230,170,0.95) inset,
+    0 0 34px rgba(212,175,55,0.65),
+    0 0 70px rgba(212,175,55,0.28),
+    0 12px 40px rgba(0,0,0,0.55) !important;
+}
+/* 金箔ホログラムが斜めに流れる（カード枠内） */
+#station-card[data-tier^="mythic"]::after{
+  content:''; position:absolute; inset:3px; border-radius:18px; overflow:hidden;
+  pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(115deg, transparent 28%, rgba(212,175,55,0.28) 34%, transparent 41%),
+    linear-gradient(115deg, transparent 58%, rgba(255,150,200,0.22) 64%, transparent 71%);
+  background-size:200% 200%;
+  animation:scMythicShimmer 3.6s ease-in-out infinite;
+}
+@keyframes scMythicShimmer{
+  0%,100%{opacity:0.55; background-position:0% 0%, 100% 0%}
+  50%{opacity:1; background-position:40% 0%, 60% 0%}
+}
+/* 上部の宝石ハイライト */
+#station-card[data-tier^="mythic"] .sc-content::before{
+  content:''; position:absolute; left:0; right:0; top:0; height:40%;
+  background:linear-gradient(180deg, rgba(255,225,150,0.30) 0%, rgba(255,225,150,0.05) 55%, transparent 100%);
+  border-radius:20px 20px 40% 40%;
+  pointer-events:none; z-index:0;
+}
+/* 季節別 背景の差し色（上部に薄く） */
+#station-card[data-tier="mythic-spring"]{ background:linear-gradient(165deg, rgba(255,200,215,0.45) 0%, transparent 40%), var(--mm-bg, var(--card-bg,#fff0f4)) !important; }
+#station-card[data-tier="mythic-summer"]{ background:linear-gradient(165deg, rgba(130,170,255,0.40) 0%, rgba(255,150,200,0.15) 25%, transparent 45%), var(--mm-bg, var(--card-bg,#eef2ff)) !important; }
+#station-card[data-tier="mythic-autumn"]{ background:linear-gradient(165deg, rgba(232,150,80,0.42) 0%, transparent 42%), var(--mm-bg, var(--card-bg,#fff2e6)) !important; }
+#station-card[data-tier="mythic-winter"]{ background:linear-gradient(165deg, rgba(190,215,255,0.45) 0%, transparent 42%), var(--mm-bg, var(--card-bg,#eef6ff)) !important; }
+/* 季節モチーフの粒子（ヘッダー帯に散らす：桜びら/花火/紅葉/雪） */
+#station-card[data-tier^="mythic"] .sc-top::after{
+  content:''; position:absolute; left:-6px; right:-6px; top:-6px; height:120px;
+  pointer-events:none; z-index:0;
+}
+#station-card[data-tier="mythic-spring"] .sc-top::after{
+  background-image:
+    radial-gradient(ellipse 9px 12px at 14% 30%, rgba(255,170,195,0.75) 0%, transparent 65%),
+    radial-gradient(ellipse 8px 11px at 64% 18%, rgba(255,190,210,0.65) 0%, transparent 65%),
+    radial-gradient(ellipse 10px 13px at 88% 46%, rgba(255,170,195,0.6) 0%, transparent 65%),
+    radial-gradient(ellipse 7px 10px at 40% 60%, rgba(255,200,220,0.55) 0%, transparent 65%);
+}
+#station-card[data-tier="mythic-summer"] .sc-top::after{
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,200,90,0.55) 0px, rgba(255,110,180,0.22) 18px, transparent 44px),
+    radial-gradient(circle at 78% 26%, rgba(130,190,255,0.5) 0px, rgba(180,130,255,0.2) 16px, transparent 40px),
+    radial-gradient(circle at 50% 62%, rgba(255,235,120,0.45) 0px, transparent 36px);
+}
+#station-card[data-tier="mythic-autumn"] .sc-top::after{
+  background-image:
+    radial-gradient(ellipse 11px 9px at 16% 30%, rgba(232,140,60,0.75) 0%, transparent 65%),
+    radial-gradient(ellipse 9px 8px at 62% 18%, rgba(220,80,40,0.65) 0%, transparent 65%),
+    radial-gradient(ellipse 10px 8px at 88% 50%, rgba(255,180,80,0.6) 0%, transparent 65%),
+    radial-gradient(ellipse 8px 7px at 38% 62%, rgba(232,140,60,0.55) 0%, transparent 65%);
+}
+#station-card[data-tier="mythic-winter"] .sc-top::after{
+  background-image:
+    radial-gradient(circle at 16% 28%, rgba(255,255,255,0.9) 0px, transparent 4px),
+    radial-gradient(circle at 62% 18%, rgba(225,240,255,0.8) 0px, transparent 3.5px),
+    radial-gradient(circle at 88% 48%, rgba(255,255,255,0.85) 0px, transparent 4px),
+    radial-gradient(circle at 38% 60%, rgba(225,240,255,0.7) 0px, transparent 3px),
+    radial-gradient(circle at 50% 36%, rgba(255,255,255,0.6) 0px, transparent 5px);
+}
+
+/* sc-content/sc-top に z-index を与えて装飾より前面に（文字の可読性確保） */
+#station-card[data-tier] .sc-content{ position:relative; z-index:1; }
+#station-card[data-tier] .sc-top{ position:relative; z-index:1; }
+
+/* ─── tier別 ランクバッジ・駅名・スコアの発光（詳細カード） ─── */
+#station-card[data-tier] .sc-rank-badge{
+  background:linear-gradient(135deg, #f5e6a8 0%, #d4af37 50%, #b8941f 100%) !important;
+  color:#3d1f0a !important;
+  box-shadow:0 0 14px rgba(212,175,55,0.6) !important;
+}
+#station-card[data-tier="shiny"] .sc-station-name{
+  text-shadow:0 0 16px rgba(110,168,255,0.8), 0 0 5px rgba(110,168,255,0.6) !important;
+}
+#station-card[data-tier^="mythic"] .sc-station-name{
+  text-shadow:0 0 18px rgba(212,175,55,0.9), 0 0 6px rgba(255,200,210,0.55) !important;
+}
+#station-card[data-tier="shiny"] .sc-score-num{
+  filter:drop-shadow(0 0 10px rgba(110,168,255,0.7));
+}
+#station-card[data-tier^="mythic"] .sc-score-num{
+  filter:drop-shadow(0 0 12px rgba(212,175,55,0.75));
+}
+
+/* ─── tier バッジ（カード右上に「★SHINY」「✦MYTHIC 桜」等） ─── */
+#station-card[data-tier]::before{ }  /* shinyは上で星屑に使用 */
+#station-card[data-tier] .sc-tier-tag{
+  position:absolute; top:10px; left:50%; transform:translateX(-50%);
+  font-size:11px; font-weight:700; letter-spacing:2px;
+  padding:3px 14px; border-radius:0 0 10px 10px;
+  z-index:3; pointer-events:none; white-space:nowrap;
+}
+#station-card[data-tier="shiny"] .sc-tier-tag{
+  background:linear-gradient(180deg, rgba(40,70,150,0.92), rgba(20,40,100,0.92));
+  color:#bcd8ff; text-shadow:0 0 6px rgba(125,180,255,0.7);
+  border:1px solid rgba(150,195,255,0.5); border-top:none;
+}
+#station-card[data-tier^="mythic"] .sc-tier-tag{
+  background:linear-gradient(180deg, rgba(120,90,20,0.92), rgba(80,55,10,0.92));
+  color:#f5e2a0; text-shadow:0 0 6px rgba(212,175,55,0.8);
+  border:1px solid rgba(245,230,170,0.55); border-top:none;
+}
 
 /* ═══════════════════════════════════════════════════════════════
  * Step5b: ミシック出現フラッシュ演出
@@ -13358,6 +13515,19 @@ window.openCardFromHistory = async function(stationName, stationPref) {
   const score = st.scoreCard || st.score || 0;
   const rankInfo = window.getRank ? window.getRank(score) : { rank: '-', color: '#888' };
   
+  // ★index283: 詳細カードにtier(シャイニー/ミシック)を反映するため、
+  //   メモリ上のカード一覧(__mmCardListData)から該当駅のspecialを先に引いておく。
+  //   これで即時描画の時点からレア演出が出る(🎰見本・本番どちらも対応)。
+  //   Firestore再取得後にも cd.special で上書き確定する(下記)。
+  let _preSpecial = null;
+  try {
+    const _list = window.__mmCardListData;
+    if (_list && _list.length) {
+      const _hit = _list.find(c => c.stationName === stationName && c.stationPref === stationPref);
+      if (_hit) _preSpecial = _hit.special || _hit.tier || null;
+    }
+  } catch(_) {}
+  
   // 即座に描画（仮データで）
   openStationCard({
     name: stationName,
@@ -13369,7 +13539,8 @@ window.openCardFromHistory = async function(stationName, stationPref) {
     visitCount: 1,  // 後で更新
     checkinDate: null,  // 後で更新
     lines: st.lines || [],
-    memo: ''  // 後で更新
+    memo: '',  // 後で更新
+    special: _preSpecial  // ★index283: tier反映
   });
   
   // バックグラウンドでFirebase取得 → 訪問回数・メモ・日付のみ更新
@@ -13405,6 +13576,20 @@ window.openCardFromHistory = async function(stationName, stationPref) {
     // メモを更新
     const memoEl = document.getElementById('sc-memo-content');
     if (memoEl) memoEl.textContent = cd.memo || '';
+    
+    // ★index283: Firestoreに保存されたtier(special)を詳細カードに確定適用。
+    //   本番で実際にシャイニー/ミシックを引いた時、stationCardsドキュメントの
+    //   special フィールドがここで読まれ、詳細カードがレア演出になる。
+    //   ただしFirestoreにspecialが無い場合(🎰見本=メモリのみ書換のケース)は、
+    //   即時描画で適用済みの_preSpecialを維持する(undefinedで上書きして消さない)。
+    try {
+      const cardEl = document.getElementById('station-card');
+      const cdTier = cd.special || cd.tier || null;
+      if (cardEl && window.mmApplyTierToCard) {
+        const finalTier = cdTier || _preSpecial || null;
+        window.mmApplyTierToCard(cardEl, finalTier);
+      }
+    } catch(_) {}
     
   } catch (e) {
     console.error('カード取得エラー:', e);
@@ -14912,10 +15097,32 @@ window.mmShareMythic = function(tier, stationName, score, rank) {
 // ★Step5: data-tier属性を既存カード要素に付与する補助関数
 // HTMLは触らず、JSがランタイムで属性を追加するだけ
 // ═══════════════════════════════════════════════════════════════
+// ★index283: 詳細カードへのtier適用を一元管理。
+//   data-tier属性のセットに加え、カード上部の「★SHINY / ✦MYTHIC 桜」等の
+//   ラベル(.sc-tier-tag)を動的に挿入/更新/削除する。詳細カードを開く全経路から
+//   この関数が呼ばれるため、ここでタグを管理すれば表示が常に一貫する。
 window.mmApplyTierToCard = function(cardEl, tier) {
   if (!cardEl) return;
+  // 既存のtierタグを一旦除去
+  var oldTag = cardEl.querySelector(':scope > .sc-tier-tag');
+  if (oldTag) oldTag.remove();
+
   if (tier) {
     cardEl.setAttribute('data-tier', tier);
+    // ラベル文言を決定
+    var label = '';
+    if (tier === 'shiny') label = '★ SHINY';
+    else if (tier === 'mythic-spring') label = '✦ MYTHIC ✦ 桜';
+    else if (tier === 'mythic-summer') label = '✦ MYTHIC ✦ 花火';
+    else if (tier === 'mythic-autumn') label = '✦ MYTHIC ✦ 紅葉';
+    else if (tier === 'mythic-winter') label = '✦ MYTHIC ✦ 雪';
+    else if (tier.indexOf('mythic') === 0) label = '✦ MYTHIC';
+    if (label) {
+      var tag = document.createElement('div');
+      tag.className = 'sc-tier-tag';
+      tag.textContent = label;
+      cardEl.appendChild(tag);
+    }
   } else {
     cardEl.removeAttribute('data-tier');
   }
@@ -20680,7 +20887,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v282</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v283</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -20696,7 +20903,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 282', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 283', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   /* ★index278: dev/本番の表示出し分け。
      本番(machimegu.com)では開発用UI(右下バージョンバッジ・左下📋デバッグログボタン)を隠す。
@@ -20718,7 +20925,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v282';
+          mpVer.textContent = 'dev v283';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -20991,7 +21198,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v282) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v283) ===', '#88ccff');
   })();
 </script>
 
