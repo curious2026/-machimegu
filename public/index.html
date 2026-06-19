@@ -150,9 +150,8 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index284 (2026.06.19) — 【詳細カードのレア演出を全面ダーク版に刷新】v283は「明るい背景を維持して外周だけ額装」で地味すぎ、コレクション一覧の小カードのハッキリしたキラキラ感と乖離していた。対処: 詳細カード(#station-card)の背景を小カードと同様に全面ダーク化(!importantで天気背景--mm-bgに勝つ)。シャイニー=濃紺ナイトモード＋星屑10粒をカード全面に大きく散らしアニメ、ミシック=季節別ダーク背景(春紫/夏紺/秋赤茶/冬青)＋季節モチーフ粒子(桜/花火/紅葉/雪)を全面に大きく＋金箔ホロが斜めに流れる。メモ/特徴/駅情報は白いボックス自体が前面(z-index:2)に乗るのでカード地が暗くても可読。ランクバッジ金色化、駅名・スコア強発光、tierタグ(★SHINY/✦MYTHIC 桜)も維持。
-     【v283】詳細カードのtier適用経路を実装(openCardFromHistoryでspecial受渡し+Firestore確定+mmApplyTierToCard拡張)。【v282】🎰参照先を__mmCardListDataに修正。【v281】LEVEL UP共有もXなど化。【v280】常連バッジ崩れ修正+立体化、抽選毎回化、Xなど化、🎰ボタン追加。V279/V278維持。 -->
-     【v282】dev用🎰tier見本ボタンの参照先をcardListData(__mmCardListData)に修正。【v281】LEVEL UP共有ボタンもXなど化。【v280】常連バッジ崩れ修正+立体化、シャイニー/ミシック抽選を毎チェックイン化、共有ボタンXなど化、dev用🎰ボタン追加。V279/V278維持。 -->
+<!-- VERSION: index286 (2026.06.19) — 【バージョン履歴の文字列が画面上部に漏れていた致命バグを修正】HTML冒頭のVERSIONコメントを更新する際、過去の古いコメント行が消されず多重に残り、コメントの閉じ記号が3つに増殖していた。最初の閉じ記号以降のテキストがHTMLコメントの外=本文扱いになり、地図画面上部に履歴文字列(「v282 dev用tier見本ボタンの参照先を…」等)がそのまま表示されていた。対処: 残骸2行を削除し、VERSIONコメントを正しく1組に収めた。
+     【v285】レア演出に動くキラキラを大増強(星屑/モチーフ明滅、光スイープ、外周グロー脈動、駅名/タグ明滅)＋dev用tier見本ボタンを左下に移設。【v284】詳細カードのレア演出を全面ダーク版に刷新。【v283】詳細カードのtier適用経路を実装。【v282】tier見本ボタン参照先を修正。【v281】LEVEL UP共有もXなど化。【v280】常連バッジ崩れ修正+立体化、抽選毎回化、Xなど化、tier見本ボタン追加。V279/V278維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -6069,69 +6068,93 @@ body.checkin-active #checkin-indicator{
 .mp-mini-card[data-tier="mythic-winter"]::after{ content:'✦ MYTHIC ✦ 雪'; }
 
 /* ═══════════════════════════════════════════════════════════════
- * ★index284: 詳細カード(#station-card)専用 シャイニー/ミシック演出【全面ダーク版】
- *   v283は「明るい背景を維持して外周だけ額装」で地味だった。コレクション一覧の
- *   小カード(mp-mini-card)のような全面ダーク+大きいモチーフのキラキラ感を、
- *   詳細カードにもそのまま移植する。メモ欄/特徴/駅情報は白いボックス自体が乗るので
- *   カード地を暗くしても中身は読める。天気背景(--mm-bg)は!importantで上書きして勝つ。
+ * ★index285: 詳細カード(#station-card)専用 シャイニー/ミシック演出【動くキラキラ大増強版】
+ *   v284は全面ダーク化できたが「静的で地味」だった。コレクションの小カードと並べた時に
+ *   ひと目で「おっ!」と分かる動きを足す。複数のアニメーションレイヤーを重ねて立体的に光らせる:
+ *   (1)星屑/モチーフを大きく明るく+強い明滅 (2)十字スパークル(✦)が瞬く
+ *   (3)斜めの光のスイープが定期的に流れる (4)カード外周グローが脈動する
+ *   天気背景(--mm-bg)は!importantで上書き。メモ/特徴/駅情報の白ボックスはz-index:2で前面=可読。
  * ═══════════════════════════════════════════════════════════════ */
 
-/* ─── シャイニー：全面ナイトモード＋星屑 ─── */
+/* 外周グローの脈動（シャイニー=青、ミシック=金）。カード本体のbox-shadowをアニメ */
+@keyframes scShinyGlow{
+  0%,100%{ box-shadow:0 0 0 1.5px rgba(160,205,255,0.85) inset, 0 0 30px rgba(110,168,255,0.55), 0 0 60px rgba(110,168,255,0.25), 0 12px 44px rgba(0,0,0,0.6); }
+  50%{ box-shadow:0 0 0 1.5px rgba(190,220,255,0.95) inset, 0 0 52px rgba(120,180,255,0.85), 0 0 100px rgba(120,180,255,0.4), 0 12px 44px rgba(0,0,0,0.6); }
+}
+@keyframes scMythicGlow{
+  0%,100%{ box-shadow:0 0 0 1.5px rgba(245,230,170,0.9) inset, 0 0 34px rgba(212,175,55,0.6), 0 0 70px rgba(212,175,55,0.28), 0 12px 44px rgba(0,0,0,0.6); }
+  50%{ box-shadow:0 0 0 1.5px rgba(255,240,190,1) inset, 0 0 56px rgba(230,195,80,0.95), 0 0 112px rgba(230,195,80,0.45), 0 12px 44px rgba(0,0,0,0.6); }
+}
+
+/* ─── シャイニー：全面ナイトモード＋瞬く星屑＋スパークル＋光スイープ ─── */
 #station-card[data-tier="shiny"]{
   background:radial-gradient(circle at 30% 18%, #234a9a 0%, #0e1a52 55%, #050a24 100%) !important;
   border:3px solid #6ea8ff !important;
-  box-shadow:
-    0 0 0 1.5px rgba(160,205,255,0.85) inset,
-    0 0 38px rgba(110,168,255,0.65),
-    0 0 80px rgba(110,168,255,0.3),
-    0 12px 44px rgba(0,0,0,0.6) !important;
+  animation:scShinyGlow 2.6s ease-in-out infinite;
 }
-/* 星屑：カード全面に大きく散らす */
+/* 星屑レイヤー：大きく明るく、強く明滅 */
 #station-card[data-tier="shiny"]::before{
   content:''; position:absolute; inset:3px; border-radius:18px; overflow:hidden;
   pointer-events:none; z-index:0;
   background-image:
-    radial-gradient(circle at 16% 10%, rgba(255,255,255,0.98) 0px, transparent 3px),
-    radial-gradient(circle at 84% 16%, rgba(160,205,255,0.95) 0px, transparent 3px),
-    radial-gradient(circle at 10% 38%, rgba(255,255,255,0.85) 0px, transparent 2.5px),
-    radial-gradient(circle at 70% 30%, rgba(210,190,255,0.9) 0px, transparent 3px),
-    radial-gradient(circle at 92% 52%, rgba(255,255,255,0.8) 0px, transparent 2.5px),
-    radial-gradient(circle at 28% 62%, rgba(170,210,255,0.85) 0px, transparent 2.5px),
-    radial-gradient(circle at 56% 78%, rgba(255,255,255,0.9) 0px, transparent 3px),
-    radial-gradient(circle at 84% 88%, rgba(190,180,255,0.85) 0px, transparent 2.5px),
-    radial-gradient(circle at 14% 86%, rgba(255,255,255,0.8) 0px, transparent 2.5px),
-    radial-gradient(circle at 44% 44%, rgba(160,205,255,0.7) 0px, transparent 2px);
-  animation:scShinySparkle 3.5s ease-in-out infinite;
+    radial-gradient(circle at 16% 10%, rgba(255,255,255,1) 0px, transparent 3.5px),
+    radial-gradient(circle at 84% 16%, rgba(170,210,255,1) 0px, transparent 3.5px),
+    radial-gradient(circle at 10% 38%, rgba(255,255,255,0.95) 0px, transparent 3px),
+    radial-gradient(circle at 70% 30%, rgba(215,195,255,1) 0px, transparent 3.5px),
+    radial-gradient(circle at 92% 52%, rgba(255,255,255,0.9) 0px, transparent 3px),
+    radial-gradient(circle at 28% 62%, rgba(180,215,255,0.95) 0px, transparent 3px),
+    radial-gradient(circle at 56% 78%, rgba(255,255,255,1) 0px, transparent 3.5px),
+    radial-gradient(circle at 84% 88%, rgba(200,190,255,0.95) 0px, transparent 3px),
+    radial-gradient(circle at 14% 86%, rgba(255,255,255,0.9) 0px, transparent 3px),
+    radial-gradient(circle at 44% 44%, rgba(170,210,255,0.85) 0px, transparent 2.5px),
+    radial-gradient(circle at 38% 24%, rgba(255,255,255,0.8) 0px, transparent 2.5px),
+    radial-gradient(circle at 62% 56%, rgba(190,220,255,0.85) 0px, transparent 2.5px);
+  animation:scStarTwinkle 2.2s ease-in-out infinite;
 }
-@keyframes scShinySparkle{ 0%,100%{opacity:0.5} 50%{opacity:1} }
+@keyframes scStarTwinkle{ 0%,100%{opacity:0.35; transform:scale(0.96)} 50%{opacity:1; transform:scale(1.04)} }
+/* 十字スパークル＋光スイープレイヤー（sc-content::afterを使用） */
+#station-card[data-tier="shiny"] .sc-content::after{
+  content:''; position:absolute; inset:0; border-radius:18px; overflow:hidden;
+  pointer-events:none; z-index:0;
+  background-image:
+    /* 十字キラ（4点） */
+    radial-gradient(circle at 22% 26%, rgba(255,255,255,0.9) 0px, transparent 1.5px),
+    radial-gradient(circle at 78% 68%, rgba(200,225,255,0.9) 0px, transparent 1.5px),
+    /* 斜めの光スイープ */
+    linear-gradient(118deg, transparent 38%, rgba(190,220,255,0.45) 47%, rgba(255,255,255,0.6) 50%, rgba(190,220,255,0.45) 53%, transparent 62%);
+  background-size:auto, auto, 280% 280%;
+  animation:scShinySweep 3.2s ease-in-out infinite;
+}
+@keyframes scShinySweep{
+  0%{ opacity:0.7; background-position:0 0, 0 0, 120% 0%; }
+  50%{ opacity:1; background-position:0 0, 0 0, 30% 0%; }
+  100%{ opacity:0.7; background-position:0 0, 0 0, -60% 0%; }
+}
 /* シャイニー：文字を明るく */
 #station-card[data-tier="shiny"] .sc-line-text,
 #station-card[data-tier="shiny"] .sc-score-label,
 #station-card[data-tier="shiny"] .sc-checkin-label,
 #station-card[data-tier="shiny"] .sc-checkin-date{ color:#cfe2ff !important; }
 
-/* ─── ミシック：全面ダーク＋季節モチーフ＋金箔ホロ ─── */
+/* ─── ミシック：全面ダーク＋舞うモチーフ＋強い金箔ホロ＋金スイープ ─── */
 #station-card[data-tier^="mythic"]{
   border:3px solid #e8c860 !important;
-  box-shadow:
-    0 0 0 1.5px rgba(245,230,170,0.9) inset,
-    0 0 40px rgba(212,175,55,0.7),
-    0 0 84px rgba(212,175,55,0.32),
-    0 12px 44px rgba(0,0,0,0.6) !important;
+  animation:scMythicGlow 2.6s ease-in-out infinite;
 }
-/* 金箔ホログラムが斜めに流れる（全面） */
+/* 金箔ホログラム＋金の光スイープ（全面、頻繁・強め） */
 #station-card[data-tier^="mythic"]::after{
   content:''; position:absolute; inset:3px; border-radius:18px; overflow:hidden;
   pointer-events:none; z-index:1;
   background-image:
-    linear-gradient(115deg, transparent 26%, rgba(212,175,55,0.30) 33%, transparent 41%),
-    linear-gradient(115deg, transparent 56%, rgba(255,150,200,0.24) 63%, transparent 71%);
-  background-size:200% 200%;
-  animation:scMythicShimmer 3.6s ease-in-out infinite;
+    linear-gradient(118deg, transparent 30%, rgba(255,225,120,0.5) 44%, rgba(255,245,200,0.7) 50%, rgba(255,225,120,0.5) 56%, transparent 70%),
+    linear-gradient(118deg, transparent 60%, rgba(255,170,210,0.3) 66%, transparent 74%);
+  background-size:240% 240%, 240% 240%;
+  animation:scMythicSweep 2.8s ease-in-out infinite;
 }
-@keyframes scMythicShimmer{
-  0%,100%{opacity:0.55; background-position:0% 0%, 100% 0%}
-  50%{opacity:1; background-position:40% 0%, 60% 0%}
+@keyframes scMythicSweep{
+  0%{ opacity:0.65; background-position:120% 0%, 100% 0%; }
+  50%{ opacity:1; background-position:20% 0%, 50% 0%; }
+  100%{ opacity:0.65; background-position:-70% 0%, 0% 0%; }
 }
 /* ミシック：文字を明るく */
 #station-card[data-tier^="mythic"] .sc-line-text,
@@ -6139,53 +6162,55 @@ body.checkin-active #checkin-indicator{
 #station-card[data-tier^="mythic"] .sc-checkin-label,
 #station-card[data-tier^="mythic"] .sc-checkin-date{ color:#f5e2b0 !important; }
 
-/* 季節別ダーク背景（小カードと同系統） */
+/* 季節別ダーク背景 */
 #station-card[data-tier="mythic-spring"]{ background:linear-gradient(160deg, #4a2658 0%, #2e1840 50%, #1a0a30 100%) !important; }
 #station-card[data-tier="mythic-summer"]{ background:linear-gradient(180deg, #1f0050 0%, #2e1258 40%, #0c0a2c 100%) !important; }
 #station-card[data-tier="mythic-autumn"]{ background:linear-gradient(160deg, #54241f 0%, #361414 50%, #1c0a0a 100%) !important; }
 #station-card[data-tier="mythic-winter"]{ background:linear-gradient(180deg, #1e2e52 0%, #122042 50%, #060c24 100%) !important; }
 
-/* 季節モチーフ粒子：カード全面に大きく散らす */
+/* 季節モチーフ粒子：全面に大きく＋舞う（明滅＋ゆらぎ） */
 #station-card[data-tier^="mythic"]::before{
   content:''; position:absolute; inset:3px; border-radius:18px; overflow:hidden;
   pointer-events:none; z-index:0;
+  animation:scMythicMotif 3s ease-in-out infinite;
 }
+@keyframes scMythicMotif{ 0%,100%{opacity:0.5; transform:translateY(0) scale(0.98)} 50%{opacity:1; transform:translateY(-3px) scale(1.03)} }
 #station-card[data-tier="mythic-spring"]::before{
   background-image:
-    radial-gradient(ellipse 14px 18px at 14% 12%, rgba(255,183,197,0.8) 0%, transparent 62%),
-    radial-gradient(ellipse 12px 16px at 80% 20%, rgba(255,200,210,0.7) 0%, transparent 62%),
-    radial-gradient(ellipse 15px 19px at 22% 44%, rgba(255,183,197,0.7) 0%, transparent 62%),
-    radial-gradient(ellipse 11px 14px at 68% 56%, rgba(255,205,215,0.6) 0%, transparent 62%),
-    radial-gradient(ellipse 13px 17px at 88% 72%, rgba(255,183,197,0.65) 0%, transparent 62%),
-    radial-gradient(ellipse 12px 15px at 36% 82%, rgba(255,200,210,0.6) 0%, transparent 62%),
-    radial-gradient(ellipse 10px 13px at 56% 30%, rgba(255,190,205,0.55) 0%, transparent 60%);
+    radial-gradient(ellipse 16px 20px at 14% 12%, rgba(255,183,197,0.9) 0%, transparent 60%),
+    radial-gradient(ellipse 13px 17px at 80% 20%, rgba(255,200,210,0.8) 0%, transparent 60%),
+    radial-gradient(ellipse 17px 21px at 22% 44%, rgba(255,183,197,0.8) 0%, transparent 60%),
+    radial-gradient(ellipse 12px 15px at 68% 56%, rgba(255,205,215,0.7) 0%, transparent 60%),
+    radial-gradient(ellipse 15px 19px at 88% 72%, rgba(255,183,197,0.75) 0%, transparent 60%),
+    radial-gradient(ellipse 13px 16px at 36% 82%, rgba(255,200,210,0.7) 0%, transparent 60%),
+    radial-gradient(ellipse 11px 14px at 56% 30%, rgba(255,190,205,0.65) 0%, transparent 58%);
 }
 #station-card[data-tier="mythic-summer"]::before{
   background-image:
-    radial-gradient(circle at 22% 22%, rgba(255,200,90,0.6) 0px, rgba(255,110,180,0.28) 30px, transparent 78px),
-    radial-gradient(circle at 78% 30%, rgba(130,190,255,0.55) 0px, rgba(180,130,255,0.26) 26px, transparent 66px),
-    radial-gradient(circle at 50% 60%, rgba(255,235,120,0.5) 0px, rgba(255,150,90,0.24) 30px, transparent 80px),
-    radial-gradient(circle at 30% 82%, rgba(120,200,255,0.45) 0px, rgba(150,130,255,0.2) 22px, transparent 56px);
+    radial-gradient(circle at 22% 22%, rgba(255,210,100,0.75) 0px, rgba(255,120,190,0.35) 28px, transparent 76px),
+    radial-gradient(circle at 78% 30%, rgba(140,200,255,0.7) 0px, rgba(190,140,255,0.32) 24px, transparent 64px),
+    radial-gradient(circle at 50% 60%, rgba(255,240,130,0.65) 0px, rgba(255,160,100,0.3) 28px, transparent 78px),
+    radial-gradient(circle at 30% 82%, rgba(130,210,255,0.55) 0px, rgba(160,140,255,0.26) 20px, transparent 54px);
 }
 #station-card[data-tier="mythic-autumn"]::before{
   background-image:
-    radial-gradient(ellipse 16px 13px at 16% 16%, rgba(232,140,60,0.8) 0%, transparent 62%),
-    radial-gradient(ellipse 13px 11px at 78% 22%, rgba(220,80,40,0.72) 0%, transparent 62%),
-    radial-gradient(ellipse 15px 12px at 26% 48%, rgba(255,180,80,0.68) 0%, transparent 62%),
-    radial-gradient(ellipse 12px 10px at 70% 58%, rgba(232,140,60,0.6) 0%, transparent 62%),
-    radial-gradient(ellipse 14px 11px at 86% 76%, rgba(255,160,70,0.6) 0%, transparent 62%),
-    radial-gradient(ellipse 11px 9px at 38% 84%, rgba(220,90,45,0.55) 0%, transparent 62%);
+    radial-gradient(ellipse 18px 15px at 16% 16%, rgba(232,140,60,0.9) 0%, transparent 60%),
+    radial-gradient(ellipse 14px 12px at 78% 22%, rgba(225,85,45,0.82) 0%, transparent 60%),
+    radial-gradient(ellipse 16px 13px at 26% 48%, rgba(255,185,85,0.78) 0%, transparent 60%),
+    radial-gradient(ellipse 13px 11px at 70% 58%, rgba(232,140,60,0.7) 0%, transparent 60%),
+    radial-gradient(ellipse 15px 12px at 86% 76%, rgba(255,165,75,0.7) 0%, transparent 60%),
+    radial-gradient(ellipse 12px 10px at 38% 84%, rgba(225,95,50,0.65) 0%, transparent 60%);
 }
 #station-card[data-tier="mythic-winter"]::before{
   background-image:
-    radial-gradient(circle at 16% 14%, rgba(255,255,255,0.95) 0px, transparent 5px),
-    radial-gradient(circle at 80% 20%, rgba(225,240,255,0.85) 0px, transparent 4px),
-    radial-gradient(circle at 24% 44%, rgba(255,255,255,0.9) 0px, transparent 5px),
-    radial-gradient(circle at 70% 54%, rgba(225,240,255,0.8) 0px, transparent 4px),
-    radial-gradient(circle at 88% 74%, rgba(255,255,255,0.85) 0px, transparent 4.5px),
-    radial-gradient(circle at 36% 82%, rgba(225,240,255,0.75) 0px, transparent 4px),
-    radial-gradient(circle at 54% 32%, rgba(255,255,255,0.7) 0px, transparent 6px),
-    radial-gradient(circle at 50% 66%, rgba(200,225,255,0.5) 0px, transparent 7px);
+    radial-gradient(circle at 16% 14%, rgba(255,255,255,1) 0px, transparent 5.5px),
+    radial-gradient(circle at 80% 20%, rgba(230,242,255,0.95) 0px, transparent 4.5px),
+    radial-gradient(circle at 24% 44%, rgba(255,255,255,1) 0px, transparent 5.5px),
+    radial-gradient(circle at 70% 54%, rgba(230,242,255,0.9) 0px, transparent 4.5px),
+    radial-gradient(circle at 88% 74%, rgba(255,255,255,0.95) 0px, transparent 5px),
+    radial-gradient(circle at 36% 82%, rgba(230,242,255,0.85) 0px, transparent 4.5px),
+    radial-gradient(circle at 54% 32%, rgba(255,255,255,0.8) 0px, transparent 6.5px),
+    radial-gradient(circle at 50% 66%, rgba(205,228,255,0.6) 0px, transparent 7.5px);
 }
 
 /* sc-content/sc-top に z-index を与えて装飾より前面に（文字の可読性確保） */
@@ -6201,11 +6226,15 @@ body.checkin-active #checkin-indicator{
 #station-card[data-tier="shiny"] .sc-station-name{
   color:#fff !important;
   text-shadow:0 0 18px rgba(110,168,255,0.9), 0 0 6px rgba(160,205,255,0.7) !important;
+  animation:scNameGlowShiny 2.4s ease-in-out infinite;
 }
+@keyframes scNameGlowShiny{ 0%,100%{text-shadow:0 0 14px rgba(110,168,255,0.7),0 0 5px rgba(160,205,255,0.6)} 50%{text-shadow:0 0 26px rgba(130,185,255,1),0 0 10px rgba(180,215,255,0.9)} }
 #station-card[data-tier^="mythic"] .sc-station-name{
   color:#fff !important;
   text-shadow:0 0 20px rgba(212,175,55,0.95), 0 0 7px rgba(255,200,210,0.6) !important;
+  animation:scNameGlowMythic 2.4s ease-in-out infinite;
 }
+@keyframes scNameGlowMythic{ 0%,100%{text-shadow:0 0 16px rgba(212,175,55,0.85),0 0 6px rgba(255,200,210,0.5)} 50%{text-shadow:0 0 30px rgba(235,195,80,1),0 0 12px rgba(255,215,225,0.85)} }
 #station-card[data-tier="shiny"] .sc-score-num{
   filter:drop-shadow(0 0 12px rgba(110,168,255,0.8));
 }
@@ -6213,13 +6242,15 @@ body.checkin-active #checkin-indicator{
   filter:drop-shadow(0 0 14px rgba(212,175,55,0.85));
 }
 
-/* ─── tier バッジ（カード上部中央に「★SHINY」「✦MYTHIC 桜」等） ─── */
+/* ─── tier バッジ（カード上部中央に「★SHINY」「✦MYTHIC 桜」等）＋明滅 ─── */
 #station-card[data-tier] .sc-tier-tag{
   position:absolute; top:0; left:50%; transform:translateX(-50%);
   font-size:11px; font-weight:700; letter-spacing:2px;
   padding:3px 16px; border-radius:0 0 10px 10px;
   z-index:4; pointer-events:none; white-space:nowrap;
+  animation:scTagPulse 2s ease-in-out infinite;
 }
+@keyframes scTagPulse{ 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.35)} }
 #station-card[data-tier="shiny"] .sc-tier-tag{
   background:linear-gradient(180deg, rgba(40,80,170,0.95), rgba(20,45,110,0.95));
   color:#cfe2ff; text-shadow:0 0 6px rgba(125,180,255,0.8);
@@ -6230,6 +6261,7 @@ body.checkin-active #checkin-indicator{
   color:#f5e2a0; text-shadow:0 0 6px rgba(212,175,55,0.85);
   border:1px solid rgba(245,230,170,0.6); border-top:none;
 }
+
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -20894,7 +20926,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v284</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v286</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -20910,7 +20942,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 284', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 286', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   /* ★index278: dev/本番の表示出し分け。
      本番(machimegu.com)では開発用UI(右下バージョンバッジ・左下📋デバッグログボタン)を隠す。
@@ -20932,7 +20964,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v284';
+          mpVer.textContent = 'dev v286';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -20953,7 +20985,7 @@ if ('serviceWorker' in navigator) {
       b.id = 'mm-tiertest-btn';
       b.type = 'button';
       b.textContent = '🎰 tier見本';
-      b.style.cssText = 'position:fixed;bottom:max(36px,calc(env(safe-area-inset-bottom) + 30px));right:max(8px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#fff;background:rgba(120,60,160,0.85);padding:4px 9px;border-radius:6px;border:1px solid rgba(200,160,240,0.5);z-index:99999;font-family:monospace;cursor:pointer;line-height:1.4';
+      b.style.cssText = 'position:fixed;bottom:max(96px,calc(env(safe-area-inset-bottom) + 90px));left:max(8px,env(safe-area-inset-left));font-size:10px;font-weight:700;color:#fff;background:rgba(120,60,160,0.78);padding:3px 7px;border-radius:6px;border:1px solid rgba(200,160,240,0.45);z-index:99990;font-family:monospace;cursor:pointer;line-height:1.3;opacity:0.82';
       b.onclick = function(){
         try {
           var list = window.__mmCardListData;
@@ -21205,7 +21237,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v284) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v286) ===', '#88ccff');
   })();
 </script>
 
