@@ -150,8 +150,9 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index287 (2026.06.19) — 【レアカードの光スイープを"ふぁさっ"と自然な流れに変更】v285/286のスイープは光の帯がbackground-positionを左右に振りease-in-outで中央減速していたため「アコーディオンカーテンの開け閉め」のように往復して機械的に見えた。対処: シャイニー(.sc-content::after)・ミシック(::after)のスイープのみ作り直し。(1)ease-in-out→linearで中央減速を排除し等速に (2)往復をやめ一方向(右上→左下へ通り過ぎて消える) (3)光を太いヴェール＋細い筋の2本にし別速度・別タイミングで重ね「ふぁさ…ふぁさ…」の連続感を出す (4)両端でopacityフェードし柔らかく現れ柔らかく消える。新アニメ名=scShinySweepA/B,scMythicSweepA/B。星屑/モチーフ明滅・外周グロー脈動・駅名/タグ発光(v285の他要素)はそのまま維持。
-     【v286】画面上部のバージョン履歴文字列漏れ修正(VERSIONコメント多重閉じバグ)。【v285】レア演出に動くキラキラ大増強＋dev用tier見本ボタンを左下移設。【v284】詳細カードのレア演出を全面ダーク版に刷新。【v283】詳細カードのtier適用経路を実装。【v280-282】抽選毎回化・Xなど化・tier見本ボタン追加・参照先修正。V279/V278維持。 -->
+<!-- VERSION: index291 (2026.06.23) — 【マネタイズ基盤 第1便: データ提供設定＋同意フラグ】広告課金実装の土台として、users/{uid}/consents/thirdParty サブドキュメントを新設。新規ユーザー登録時に dataShareThirdParty:true / consentUpdatedAt / privacyPolicyVersion:"2026-06-23" を初期化。既存ユーザーはマイページ初回読み込み時に未設定なら同値で補完。マイページのバッジコレクションとフッターの間に「データ提供設定」セクション(トグルスイッチ)を追加し、ユーザーがいつでも第三者提供をオプトアウト可能に。OFF操作時のみ確認ダイアログ。プライバシーポリシー第6項(匿名加工情報の第三者提供・オプトアウト)に対応。consents の読み書きは本人のみ許可するため Security Rules v7 を別途更新(セット反映必須)。
+     【index290】レアカード(シャイニー/ミシック)をカード単位で出し分け。_cv_overrideIndexでmeta/collectionのcards[overrideIndex].specialを最優先参照。詳細カードの即時描画/確定適用/ミニカードの3経路改修。override無し時は駅単位フォールバック維持。
+     【v289】ミシック確率を1/200に。【v288】ミシックtierタグから季節名削除。【v287】光スイープを自然な流れに。【v286】画面上部の文字列漏れ修正。【v285】レア演出に動くキラキラ大増強＋tier見本ボタン左下移設。【v284】レア演出全面ダーク版。【v283】詳細カードtier適用経路実装。V279-282維持。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -1347,6 +1348,38 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   line-height:1.5;max-width:320px;margin-left:auto;margin-right:auto;
   opacity:0.75;
 }
+
+/* ─── ★index291: データ提供設定（第三者提供オプトアウト） ─── */
+.mp-dataconsent-card{
+  background:rgba(40,58,92,0.35);
+  border:1px solid rgba(120,150,210,0.18);
+  border-radius:12px;padding:16px;
+}
+.mp-dataconsent-row{display:flex;align-items:flex-start;gap:14px}
+.mp-dataconsent-text{flex:1;min-width:0}
+.mp-dataconsent-main{font-size:14px;font-weight:800;color:#fff;letter-spacing:0.3px;margin-bottom:6px}
+.mp-dataconsent-sub{font-size:12px;color:#a8b8d0;line-height:1.6}
+.mp-dataconsent-link{
+  display:inline-block;margin-top:12px;
+  font-size:12px;color:#88c0f0;font-weight:700;
+  text-decoration:none;letter-spacing:0.3px;
+}
+.mp-dataconsent-link:hover{text-decoration:underline}
+.mp-toggle{
+  flex-shrink:0;width:52px;height:30px;border-radius:15px;
+  background:#3a8ac4;border:none;cursor:pointer;
+  position:relative;transition:background 0.2s;padding:0;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.3);
+}
+.mp-toggle[aria-checked="false"]{background:rgba(120,140,170,0.4)}
+.mp-toggle-knob{
+  position:absolute;top:3px;left:3px;
+  width:24px;height:24px;border-radius:50%;
+  background:#fff;transition:transform 0.2s;
+  box-shadow:0 1px 4px rgba(0,0,0,0.4);
+}
+.mp-toggle[aria-checked="true"] .mp-toggle-knob{transform:translateX(22px)}
+.mp-toggle:active .mp-toggle-knob{width:28px}
 
 /* ─── マイページリンク（★index194：MAP/RANKと同じ高さで横並び、1行表示、2行時代の縦サイズ） ─── */
 .user-mypage-link{
@@ -5888,7 +5921,7 @@ body.checkin-active #checkin-indicator{
 /* ═══════════════════════════════════════════════════════════════
  * Step5: シャイニー/ミシック レアカード背景デザイン
  *   - data-tier="shiny"    → 1/30 ナイトモード（既存カード上に重ねる）
- *   - data-tier="mythic-X" → 1/500 季節モチーフ（春=桜/夏=花火/秋=紅葉/冬=雪）
+ *   - data-tier="mythic-X" → 1/200 季節モチーフ（春=桜/夏=花火/秋=紅葉/冬=雪）
  *   - HTMLは一切触らず、CSS背景のみで実装
  * ═══════════════════════════════════════════════════════════════ */
 
@@ -6062,10 +6095,10 @@ body.checkin-active #checkin-indicator{
   text-shadow:0 0 6px rgba(212,175,55,0.7);
   z-index:5;
 }
-.mp-mini-card[data-tier="mythic-spring"]::after{ content:'✦ MYTHIC ✦ 桜'; }
-.mp-mini-card[data-tier="mythic-summer"]::after{ content:'✦ MYTHIC ✦ 花火'; }
-.mp-mini-card[data-tier="mythic-autumn"]::after{ content:'✦ MYTHIC ✦ 紅葉'; }
-.mp-mini-card[data-tier="mythic-winter"]::after{ content:'✦ MYTHIC ✦ 雪'; }
+.mp-mini-card[data-tier="mythic-spring"]::after{ content:'✦ MYTHIC ✦'; }
+.mp-mini-card[data-tier="mythic-summer"]::after{ content:'✦ MYTHIC ✦'; }
+.mp-mini-card[data-tier="mythic-autumn"]::after{ content:'✦ MYTHIC ✦'; }
+.mp-mini-card[data-tier="mythic-winter"]::after{ content:'✦ MYTHIC ✦'; }
 
 /* ═══════════════════════════════════════════════════════════════
  * ★index285: 詳細カード(#station-card)専用 シャイニー/ミシック演出【動くキラキラ大増強版】
@@ -8015,7 +8048,26 @@ body.checkin-active #checkin-indicator{
         <div class="mp-empty">読み込み中...</div>
       </div>
     </div>
-    
+
+    <!-- ★index291: データ提供設定（第三者提供のオプトアウト）。プライバシーポリシー第6項に対応。 -->
+    <div class="mp-section">
+      <div class="mp-section-title">
+        <span>データ提供設定</span>
+      </div>
+      <div class="mp-dataconsent-card">
+        <div class="mp-dataconsent-row">
+          <div class="mp-dataconsent-text">
+            <div class="mp-dataconsent-main">統計データの提供に協力する</div>
+            <div class="mp-dataconsent-sub">あなたのチェックイン記録などを、個人を特定できない統計データに加工して街づくり支援などに役立てます。いつでもオフにできます。</div>
+          </div>
+          <button id="mp-dataconsent-toggle" class="mp-toggle" role="switch" aria-checked="true" onclick="toggleDataConsent()">
+            <span class="mp-toggle-knob"></span>
+          </button>
+        </div>
+        <a href="/privacy.html" target="_blank" rel="noopener" class="mp-dataconsent-link">プライバシーポリシーを見る →</a>
+      </div>
+    </div>
+
     <div class="mp-footer">
       <button class="mp-logout-btn" onclick="signOutFromMypage()">ログアウト</button>
       <div class="mp-delete-wrap">
@@ -11327,6 +11379,20 @@ window.saveProfile = async () => {
     // 編集モードは merge:true で既存値を維持
     await setDoc(doc(db, 'users', user.uid), payload, {merge: !!window._editProfileMode});
 
+    // ★index291: 新規登録時のみ consents サブドキュメントを初期化。
+    //   第三者提供への同意はデフォルトtrue（オプトイン済み扱い）。プライバシーポリシー第6項に対応。
+    //   マイページ「データ提供設定」からいつでもオプトアウト可能。
+    if (!window._editProfileMode) {
+      try {
+        await setDoc(doc(db, 'users', user.uid, 'consents', 'thirdParty'), {
+          dataShareThirdParty: true,
+          consentUpdatedAt: serverTimestamp(),
+          privacyPolicyVersion: '2026-06-23'
+        });
+        window._dataConsentCache = true;
+      } catch(e){ console.warn('[Consent] 初期化失敗(無害):', e.message); }
+    }
+
     document.getElementById('profile-modal-bg').classList.remove('open');
     const unEl = document.getElementById('userName');
     if (unEl) unEl.textContent = handleName;
@@ -13579,16 +13645,31 @@ window.openCardFromHistory = async function(stationName, stationPref) {
   const score = st.scoreCard || st.score || 0;
   const rankInfo = window.getRank ? window.getRank(score) : { rank: '-', color: '#888' };
   
-  // ★index283: 詳細カードにtier(シャイニー/ミシック)を反映するため、
-  //   メモリ上のカード一覧(__mmCardListData)から該当駅のspecialを先に引いておく。
-  //   これで即時描画の時点からレア演出が出る(🎰見本・本番どちらも対応)。
-  //   Firestore再取得後にも cd.special で上書き確定する(下記)。
+  // ★index290: 詳細カードのtier(シャイニー/ミシック)を「カード単位」で反映する。
+  //   旧(v283〜289): stationCards直下/__mmCardListDataから駅単位でspecialを引いていた。
+  //     → 同じ駅の全カード(季節天気別の複数枚)が同じtierになってしまう問題があった。
+  //   新(v290): カード一覧から特定の1枚を開いた時は _cv_overrideIndex が立つので、
+  //     meta/collectionのその駅のcards[overrideIndex].specialを最優先で使う。
+  //     これで「東陽町5枚のうち1枚だけシャイニー」のようなカード単位レアが実現する。
+  //     overrideが無い(地図から直接開く等)場合のみ、従来の駅単位フォールバックを使う。
   let _preSpecial = null;
   try {
-    const _list = window.__mmCardListData;
-    if (_list && _list.length) {
-      const _hit = _list.find(c => c.stationName === stationName && c.stationPref === stationPref);
-      if (_hit) _preSpecial = _hit.special || _hit.tier || null;
+    // ★優先1: カード単位（meta/collectionのcards[overrideIndex].special）
+    if (typeof window._cv_overrideIndex === 'number' && window._cv_overrideIndex >= 0 &&
+        typeof window.mmStationKey === 'function' && typeof window.mmCloudGetStation === 'function') {
+      const _stKeyP = window.mmStationKey({ name: stationName, pref: stationPref });
+      const _stEntryP = window.mmCloudGetStation(_stKeyP);
+      if (_stEntryP && _stEntryP.cards && _stEntryP.cards[window._cv_overrideIndex]) {
+        _preSpecial = _stEntryP.cards[window._cv_overrideIndex].special || null;
+      }
+    }
+    // ★優先2(フォールバック): 駅単位（従来の__mmCardListData）。overrideが無い時のみ。
+    if (_preSpecial === null && (typeof window._cv_overrideIndex !== 'number')) {
+      const _list = window.__mmCardListData;
+      if (_list && _list.length) {
+        const _hit = _list.find(c => c.stationName === stationName && c.stationPref === stationPref);
+        if (_hit) _preSpecial = _hit.special || _hit.tier || null;
+      }
     }
   } catch(_) {}
   
@@ -13641,16 +13722,24 @@ window.openCardFromHistory = async function(stationName, stationPref) {
     const memoEl = document.getElementById('sc-memo-content');
     if (memoEl) memoEl.textContent = cd.memo || '';
     
-    // ★index283: Firestoreに保存されたtier(special)を詳細カードに確定適用。
-    //   本番で実際にシャイニー/ミシックを引いた時、stationCardsドキュメントの
-    //   special フィールドがここで読まれ、詳細カードがレア演出になる。
-    //   ただしFirestoreにspecialが無い場合(🎰見本=メモリのみ書換のケース)は、
-    //   即時描画で適用済みの_preSpecialを維持する(undefinedで上書きして消さない)。
+    // ★index290: Firestoreに保存されたtier(special)を詳細カードに確定適用。
+    //   カード単位(_cv_overrideIndex有り=カード一覧から特定の1枚を開いた)時は、
+    //   即時描画で引いたカード単位の_preSpecialを最優先にする。
+    //   これをしないと、stationCards直下の駅単位special(cd.special)が全カードに被さり、
+    //   同じ駅の複数枚が全部同じtierになってしまう(v289以前の不具合)。
+    //   override無し(地図から直接開く等)の時のみ、従来通りcd.special(駅単位)を使う。
     try {
       const cardEl = document.getElementById('station-card');
       const cdTier = cd.special || cd.tier || null;
       if (cardEl && window.mmApplyTierToCard) {
-        const finalTier = cdTier || _preSpecial || null;
+        let finalTier;
+        if (typeof window._cv_overrideIndex === 'number' && window._cv_overrideIndex >= 0) {
+          // カード単位：_preSpecial(meta/collectionのcards[overrideIndex].special)を最優先
+          finalTier = _preSpecial || null;
+        } else {
+          // 駅単位フォールバック（従来動作）
+          finalTier = cdTier || _preSpecial || null;
+        }
         window.mmApplyTierToCard(cardEl, finalTier);
       }
     } catch(_) {}
@@ -14020,6 +14109,10 @@ window.renderCardVersion = function() {
     const div = document.createElement('div');
     div.className = 'mp-mini-card' + (isPinned ? ' is-pinned' : '');
     div.setAttribute('data-rank', rank);
+    // ★index290: カード単位のtier(シャイニー/ミシック)をミニカードにも反映。
+    //   各カードのspecialを見てdata-tierを付ける。これで「複数枚のうちレアの1枚だけ」が
+    //   一覧でも光る。specialが無い(通常)カードはdata-tier無し=通常表示。
+    if (c.special) { div.setAttribute('data-tier', c.special); }
     
     // 各カードに「季節+時刻+天気」のサブラベルを薄く表示すると、複数枚の違いが直感的に分かる
     const seasonJp = ({spring:'春', summer:'夏', autumn:'秋', winter:'冬'})[c.season] || '';
@@ -14673,6 +14766,8 @@ async function loadMypageData(uid) {
     // Phase D-2.1: バッジプレビュー＋推し街描画
     if (typeof renderMypageBadgePreview === 'function') renderMypageBadgePreview();
     if (typeof renderFavStations === 'function') renderFavStations();
+    // ★index291: データ提供設定トグルの状態を読み込んで反映（非同期・非ブロッキング）
+    if (typeof loadDataConsentState === 'function') loadDataConsentState(uid);
     console.log('[Mypage] total:', (Date.now() - _mpT0) + 'ms');
   } catch (e) {
     console.error('マイページデータ取得エラー:', e);
@@ -14682,6 +14777,72 @@ async function loadMypageData(uid) {
 }
 // ★index210 #5最重要修正: claim後にマスターパネルを再計算するため公開
 window.loadMypageData = loadMypageData;
+
+// ─── ★index291: データ提供設定（第三者提供オプトアウト） ───
+//   consents/thirdParty サブドキュメントの dataShareThirdParty を読み書き。
+//   読み＝本人のみ / 書き＝本人のみ（第三者提供への同意は本人の意思のためクライアント書込み許可。Rules v7で制御）。
+window._dataConsentCache = true;
+function _setConsentToggleUI(on){
+  const t = document.getElementById('mp-dataconsent-toggle');
+  if (t) t.setAttribute('aria-checked', on ? 'true' : 'false');
+}
+async function loadDataConsentState(uid){
+  try {
+    const ref = doc(db, 'users', uid, 'consents', 'thirdParty');
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const v = snap.data().dataShareThirdParty;
+      const on = (v !== false); // undefined/null は同意扱い
+      window._dataConsentCache = on;
+      _setConsentToggleUI(on);
+    } else {
+      // ★既存ユーザー補完: consents 未設定なら初期値（同意済み）で作成。
+      //   privacyPolicyVersion を記録し、後の規約改定時の差分管理に使う。
+      await setDoc(ref, {
+        dataShareThirdParty: true,
+        consentUpdatedAt: serverTimestamp(),
+        privacyPolicyVersion: '2026-06-23'
+      });
+      window._dataConsentCache = true;
+      _setConsentToggleUI(true);
+    }
+  } catch(e){
+    console.warn('[Consent] 読み込み失敗(同意済み扱いで表示):', e.message);
+    _setConsentToggleUI(true);
+  }
+}
+window.loadDataConsentState = loadDataConsentState;
+
+window.toggleDataConsent = async () => {
+  const user = auth.currentUser;
+  if (!user) { alert('ログインしてください'); return; }
+  const cur = window._dataConsentCache !== false;
+  const next = !cur;
+  // OFFにする時だけ確認（協力をやめる重要操作のため）
+  if (!next) {
+    const ok = confirm(
+      'データ提供をオフにしますか？\n\n' +
+      'オフにすると、今後あなたの記録は統計データの作成に使われなくなります。\n' +
+      '※すでに匿名加工して提供済みの統計データは、個人を特定できないため取り消せません。'
+    );
+    if (!ok) return;
+  }
+  // 楽観的にUI更新
+  _setConsentToggleUI(next);
+  window._dataConsentCache = next;
+  try {
+    await setDoc(doc(db, 'users', user.uid, 'consents', 'thirdParty'), {
+      dataShareThirdParty: next,
+      consentUpdatedAt: serverTimestamp(),
+      privacyPolicyVersion: '2026-06-23'
+    }, { merge: true });
+  } catch(e){
+    // 失敗したらUIを元に戻す
+    _setConsentToggleUI(cur);
+    window._dataConsentCache = cur;
+    alert('設定の保存に失敗しました。通信環境を確認してもう一度お試しください。\n' + e.message);
+  }
+};
 
 
 // ─── カード一覧専用ページ ───
@@ -15029,13 +15190,13 @@ window.mmCloudSetRecord = async function(stationKey, record) {
 /**
  * カード生成時のレア度抽選
  * - 1/30: シャイニー
- * - 1/500: ミシック（季節別：4月=春桜/8月=夏花火/11月=秋紅葉/1月=雪）
+ * - 1/200: ミシック（季節別：4月=春桜/8月=夏花火/11月=秋紅葉/1月=雪）
  * - その他: 通常
  * @returns {string} 'shiny' | 'mythic-spring' | 'mythic-summer' | 'mythic-autumn' | 'mythic-winter' | null
  */
 window.mmRollCardTier = function() {
   const r = Math.random();
-  if (r < 1/500) {
+  if (r < 1/200) {
     // ミシック：月で季節判定
     const m = new Date().getMonth() + 1;  // 1〜12
     if (m === 4) return 'mythic-spring';   // 4月：桜
@@ -15045,7 +15206,7 @@ window.mmRollCardTier = function() {
     // 季節モチーフ非対応月は一般金箔（春扱い）
     return 'mythic-spring';
   }
-  if (r < 1/30 + 1/500) {  // 1/30の確率（ミシック除く）
+  if (r < 1/30 + 1/200) {  // 1/30の確率（ミシック除く）
     return 'shiny';
   }
   return null;  // 通常
@@ -15064,10 +15225,10 @@ window.mmIsRareTier = function(tier) {
 window.mmTierLabel = function(tier) {
   if (!tier) return '';
   if (tier === 'shiny') return '★ SHINY';
-  if (tier === 'mythic-spring') return '✦ MYTHIC ✦ 桜';
-  if (tier === 'mythic-summer') return '✦ MYTHIC ✦ 花火';
-  if (tier === 'mythic-autumn') return '✦ MYTHIC ✦ 紅葉';
-  if (tier === 'mythic-winter') return '✦ MYTHIC ✦ 雪';
+  if (tier === 'mythic-spring') return '✦ MYTHIC ✦';
+  if (tier === 'mythic-summer') return '✦ MYTHIC ✦';
+  if (tier === 'mythic-autumn') return '✦ MYTHIC ✦';
+  if (tier === 'mythic-winter') return '✦ MYTHIC ✦';
   return '';
 };
 
@@ -15106,7 +15267,7 @@ window.mmShowMythicFlash = function(tier, stationName, score, rank) {
   const subEl = document.getElementById('mythic-flash-sub');
   if (subEl) {
     const label = window.mmTierLabel(tier);
-    subEl.textContent = label.replace('✦', '').replace('MYTHIC', '').trim() + ' / 500分の1の奇跡';
+    subEl.textContent = '200分の1の奇跡';
   }
   overlay.classList.add('open');
   setTimeout(() => {
@@ -15133,7 +15294,7 @@ window.mmShowAutoShareModal = function(tier, stationName, score, rank) {
       <div class="asm-title">伝説のカードを獲得！</div>
       <div class="asm-station">${stationName}</div>
       <div class="asm-score">${rank} ${score}</div>
-      <div class="asm-text">500分の1で出現するミシックカード。<br>この瞬間をXなどでシェアしませんか？</div>
+      <div class="asm-text">200分の1で出現するミシックカード。<br>この瞬間をXなどでシェアしませんか？</div>
       <div class="asm-actions">
         <button class="asm-btn asm-btn-secondary" onclick="document.getElementById('auto-share-modal').classList.remove('open')">あとで</button>
         <button class="asm-btn asm-btn-primary" onclick="window.mmShareMythic('${tier}','${stationName}',${score},'${rank}')">Xなどでシェア</button>
@@ -15148,7 +15309,7 @@ window.mmShowAutoShareModal = function(tier, stationName, score, rank) {
  */
 window.mmShareMythic = function(tier, stationName, score, rank) {
   const label = window.mmTierLabel(tier);
-  const txt = `✦ ${label} ✦\n「${stationName}駅」のミシックカードを獲得！\n街力 ${score}点（${rank}ランク）\n500分の1の奇跡。\n#街巡まちめぐ #街にでよう`;
+  const txt = `✦ ${label} ✦\n「${stationName}駅」のミシックカードを獲得！\n街力 ${score}点（${rank}ランク）\n200分の1の奇跡。\n#街巡まちめぐ #街にでよう`;
   window.open(
     'https://twitter.com/intent/tweet?text=' + encodeURIComponent(txt) +
     '&url=' + encodeURIComponent('https://machimegu.com'),
@@ -15176,10 +15337,10 @@ window.mmApplyTierToCard = function(cardEl, tier) {
     // ラベル文言を決定
     var label = '';
     if (tier === 'shiny') label = '★ SHINY';
-    else if (tier === 'mythic-spring') label = '✦ MYTHIC ✦ 桜';
-    else if (tier === 'mythic-summer') label = '✦ MYTHIC ✦ 花火';
-    else if (tier === 'mythic-autumn') label = '✦ MYTHIC ✦ 紅葉';
-    else if (tier === 'mythic-winter') label = '✦ MYTHIC ✦ 雪';
+    else if (tier === 'mythic-spring') label = '✦ MYTHIC ✦';
+    else if (tier === 'mythic-summer') label = '✦ MYTHIC ✦';
+    else if (tier === 'mythic-autumn') label = '✦ MYTHIC ✦';
+    else if (tier === 'mythic-winter') label = '✦ MYTHIC ✦';
     else if (tier.indexOf('mythic') === 0) label = '✦ MYTHIC';
     if (label) {
       var tag = document.createElement('div');
@@ -20951,7 +21112,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v287</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v291</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -20967,7 +21128,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 287', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 291', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   /* ★index278: dev/本番の表示出し分け。
      本番(machimegu.com)では開発用UI(右下バージョンバッジ・左下📋デバッグログボタン)を隠す。
@@ -20989,7 +21150,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v287';
+          mpVer.textContent = 'dev v291';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -21262,7 +21423,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v287) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v291) ===', '#88ccff');
   })();
 </script>
 
