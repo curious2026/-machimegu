@@ -150,9 +150,10 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index291 (2026.06.23) — 【マネタイズ基盤 第1便: データ提供設定＋同意フラグ】広告課金実装の土台として、users/{uid}/consents/thirdParty サブドキュメントを新設。新規ユーザー登録時に dataShareThirdParty:true / consentUpdatedAt / privacyPolicyVersion:"2026-06-23" を初期化。既存ユーザーはマイページ初回読み込み時に未設定なら同値で補完。マイページのバッジコレクションとフッターの間に「データ提供設定」セクション(トグルスイッチ)を追加し、ユーザーがいつでも第三者提供をオプトアウト可能に。OFF操作時のみ確認ダイアログ。プライバシーポリシー第6項(匿名加工情報の第三者提供・オプトアウト)に対応。consents の読み書きは本人のみ許可するため Security Rules v7 を別途更新(セット反映必須)。
-     【index290】レアカード(シャイニー/ミシック)をカード単位で出し分け。_cv_overrideIndexでmeta/collectionのcards[overrideIndex].specialを最優先参照。詳細カードの即時描画/確定適用/ミニカードの3経路改修。override無し時は駅単位フォールバック維持。
-     【v289】ミシック確率を1/200に。【v288】ミシックtierタグから季節名削除。【v287】光スイープを自然な流れに。【v286】画面上部の文字列漏れ修正。【v285】レア演出に動くキラキラ大増強＋tier見本ボタン左下移設。【v284】レア演出全面ダーク版。【v283】詳細カードtier適用経路実装。V279-282維持。 -->
+<!-- VERSION: index292 (2026.06.25) — 【データ提供設定を折りたたみ式に変更】index291で追加したマイページ「データ提供設定」が大きいカードで目立ちすぎたため、折りたたみ(アコーディオン)式に変更。普段は控えめなグレーのタイトル行「データ提供設定 ▾」のみ表示し、タップで展開。デフォルトは閉じた状態。プライバシーポリシー第6項のオプトアウト窓口要件は満たしつつ(タップで誰でも開ける)、通常時の視覚的ノイズを排除。トグル本体・確認ダイアログ・consents書込みロジックはindex291から変更なし。
+     【index291】広告課金 第1便: データ提供設定＋同意フラグ。users/{uid}/consents/thirdParty サブドキュメント新設。新規登録時 dataShareThirdParty:true 初期化、既存ユーザーは初回読込時に補完。Security Rules v7でconsentsを本人のみ読み書き可に。
+     【index290】レアカード(シャイニー/ミシック)をカード単位で出し分け。_cv_overrideIndexでcards[overrideIndex].special参照。
+     【v289】ミシック確率1/200。【v288】ミシックtierタグから季節名削除。【v287】光スイープ自然化。【v286】文字列漏れ修正。【v285】キラキラ増強＋tier見本ボタン左下移設。【v284】レア演出ダーク版。【v283】詳細カードtier適用経路実装。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -1350,6 +1351,26 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 
 /* ─── ★index291: データ提供設定（第三者提供オプトアウト） ─── */
+/* ★index292: 折りたたみ式。普段は控えめなヘッダーのみ、タップで展開。 */
+.mp-dataconsent-section{padding-top:8px;padding-bottom:8px}
+.mp-dataconsent-header{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  background:transparent;border:none;cursor:pointer;
+  padding:8px 0;color:rgba(160,180,210,0.7);
+  font-size:13px;font-weight:700;letter-spacing:0.8px;
+  transition:color 0.15s;
+}
+.mp-dataconsent-header:hover,.mp-dataconsent-header:active{color:rgba(190,210,235,0.95)}
+.mp-dataconsent-chevron{
+  font-size:12px;transition:transform 0.25s;opacity:0.7;
+}
+.mp-dataconsent-header[aria-expanded="true"] .mp-dataconsent-chevron{transform:rotate(180deg)}
+.mp-dataconsent-body{
+  max-height:0;overflow:hidden;
+  transition:max-height 0.3s ease,margin-top 0.3s ease,opacity 0.25s ease;
+  opacity:0;margin-top:0;
+}
+.mp-dataconsent-body.open{max-height:400px;opacity:1;margin-top:12px}
 .mp-dataconsent-card{
   background:rgba(40,58,92,0.35);
   border:1px solid rgba(120,150,210,0.18);
@@ -8049,22 +8070,26 @@ body.checkin-active #checkin-indicator{
       </div>
     </div>
 
-    <!-- ★index291: データ提供設定（第三者提供のオプトアウト）。プライバシーポリシー第6項に対応。 -->
-    <div class="mp-section">
-      <div class="mp-section-title">
-        <span>データ提供設定</span>
-      </div>
-      <div class="mp-dataconsent-card">
-        <div class="mp-dataconsent-row">
-          <div class="mp-dataconsent-text">
-            <div class="mp-dataconsent-main">統計データの提供に協力する</div>
-            <div class="mp-dataconsent-sub">あなたのチェックイン記録などを、個人を特定できない統計データに加工して街づくり支援などに役立てます。いつでもオフにできます。</div>
+    <!-- ★index291: データ提供設定（第三者提供のオプトアウト）。プライバシーポリシー第6項に対応。
+         ★index292: 折りたたみ式に変更。普段はタイトル行のみ、タップで展開。 -->
+    <div class="mp-section mp-dataconsent-section">
+      <button type="button" class="mp-dataconsent-header" aria-expanded="false" onclick="toggleDataConsentPanel()">
+        <span class="mp-dataconsent-headtext">データ提供設定</span>
+        <span class="mp-dataconsent-chevron">▾</span>
+      </button>
+      <div class="mp-dataconsent-body" id="mp-dataconsent-body">
+        <div class="mp-dataconsent-card">
+          <div class="mp-dataconsent-row">
+            <div class="mp-dataconsent-text">
+              <div class="mp-dataconsent-main">統計データの提供に協力する</div>
+              <div class="mp-dataconsent-sub">あなたのチェックイン記録などを、個人を特定できない統計データに加工して街づくり支援などに役立てます。いつでもオフにできます。</div>
+            </div>
+            <button id="mp-dataconsent-toggle" class="mp-toggle" role="switch" aria-checked="true" onclick="toggleDataConsent()">
+              <span class="mp-toggle-knob"></span>
+            </button>
           </div>
-          <button id="mp-dataconsent-toggle" class="mp-toggle" role="switch" aria-checked="true" onclick="toggleDataConsent()">
-            <span class="mp-toggle-knob"></span>
-          </button>
+          <a href="/privacy.html" target="_blank" rel="noopener" class="mp-dataconsent-link">プライバシーポリシーを見る →</a>
         </div>
-        <a href="/privacy.html" target="_blank" rel="noopener" class="mp-dataconsent-link">プライバシーポリシーを見る →</a>
       </div>
     </div>
 
@@ -14813,6 +14838,21 @@ async function loadDataConsentState(uid){
 }
 window.loadDataConsentState = loadDataConsentState;
 
+// ★index292: データ提供設定パネルの開閉（折りたたみ）
+window.toggleDataConsentPanel = () => {
+  const header = document.querySelector('.mp-dataconsent-header');
+  const body = document.getElementById('mp-dataconsent-body');
+  if (!header || !body) return;
+  const isOpen = body.classList.contains('open');
+  if (isOpen) {
+    body.classList.remove('open');
+    header.setAttribute('aria-expanded', 'false');
+  } else {
+    body.classList.add('open');
+    header.setAttribute('aria-expanded', 'true');
+  }
+};
+
 window.toggleDataConsent = async () => {
   const user = auth.currentUser;
   if (!user) { alert('ログインしてください'); return; }
@@ -21112,7 +21152,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v291</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v292</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -21128,7 +21168,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 291', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 292', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   /* ★index278: dev/本番の表示出し分け。
      本番(machimegu.com)では開発用UI(右下バージョンバッジ・左下📋デバッグログボタン)を隠す。
@@ -21150,7 +21190,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v291';
+          mpVer.textContent = 'dev v292';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -21423,7 +21463,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v291) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v292) ===', '#88ccff');
   })();
 </script>
 
