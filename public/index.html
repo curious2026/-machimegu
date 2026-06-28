@@ -150,8 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index297 (2026.06.27) — 【初回チュートリアル(3スライド)のビジュアル動的化】案A採用。既存の#mm-onboardingの3スライド構成・コピーは維持しつつ、各スライドのビジュアル要素を「動かす」ことで体感品質を底上げし、新規ユーザーの最初の数秒の引きを強化する。実装内容：(1)スライド1「あなたの街の街力は？」-新宿カードのスコア表示にid=mm-ob-score-numを付与し、スライドアクティブ時に0→947を約1.4秒でeaseOutQuintカウントアップ(_scoreAnimTokenで多重起動防止)。「街力がリアルタイムに弾き出される」感を演出。(2)スライド2「街にでよう」-従来全ピンが常時上下バウンドだったのを、アクティブ時に中央ピン→pin-1→pin-2→pin-3の順に300ms間隔でドロップして馴染む演出に変更。ドロップ完了後はゆるくバウンド継続。「関東各地にピンが降っていく」感が出る。(3)スライド3「街めぐマスターへ」-LV.99クラウンの周りに金色の発光リング(2.4s周期で広がって消える)を新規追加、さらにLV表示の下にXPバー(width0→100%を1.6sで駆け上がる)を新規追加。「育つ実感」を視覚化。アニメは全て.mm-ob-slide.activeセレクタ経由で「スライドが見えてる時だけ発動」する設計のため、戻ってきた時も毎回新鮮に発火する。CSS keyframes追加+JSはshowSlide内に20行ほど、HTMLはスライド3にcrown-wrap/crown-ring/xp-bar要素を追加。スライド遷移アニメ(0.5s)と被らないようカウントアップは200ms遅延。【前回からの継続】index296のプロフィール完成ボーナス機能(saveProfile→grantProfileBonusFn→祝福オーバーレイ)、cf_index.jsへのgrantProfileBonus関数追加、Rules v8(profileBonusGranted/profileBonusGrantedAtもCF専用に縛り)は完成済み・完走後のCFデプロイ待ち。
-     【index296】初回プロフィール完成スター1個プレゼント機能。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
+<!-- VERSION: index298 (2026.06.28) — 【完走前ラスト一括修正：6本立て】①チェックイン幽霊成功バグの根治：PENDING_KEYが 'machimegu_pending_checkin' で savePendingCheckin が 'mm_pending_checkin' という別キーを操作していた致命的食い違いを統一('mm_pending_checkin')。これでtryCompleteCheckin失敗時のclearPending()が正しく保存側キーを消し、再起動後のcheckPendingResumptionによる「後から成功扱い」現象が完全消滅。②GPS精度確認リトライをdev環境のみ3回(本番5回維持)に短縮、リトライ用setTimeoutをwindow._geoRetryTimerIdに保存しstartCheckin/cancelCheckin呼出時にclearTimeoutで即停止(判定中も別駅にチェックイン変更トライOK)。③路線制覇UI全面改修：新CSS bp-line-card で「左に小六角形メダル+右に路線名2行(formatLineLabelTwoLines)+下に進捗バー＋次目標テキスト」横並びレイアウト。銅獲得後も「次：銀まで○駅」が常時見える設計に。未獲得/銅/銀/金で進捗バー＆メダル色が段階表示。バー基準は r.conquered/r.total（直感的3/18表記）。④エリア制覇バッジから周辺メラメラ削除：rarityClasses(5)が返す bp-glow-5 bp-holo から bp-holo(虹色シマー回転)を除外し、bp-glow-5 も bp-glow-4 相当に弱化。SVG自体の gradient と ellipse glow と多層ポリゴンの立体感は維持され、他バッジ(路線GOLD等)と同等の落ち着いた表現に。⑤エリア5駅未満除外＋進捗バー：STATION_CITIESに伊勢原市1駅・本庄市1駅等の1〜2駅市が多数存在し、1駅チェックインで「市制覇」が誤成立していた根本原因をMIN_AREA_STATIONS=5でガード。描画側(_renderAreaBadgesV2)とCF申請側(checkAndAwardBadgesパッチ)の両方に同じフィルタを入れ、既存の不正バッジは画面に出ない(Firestore物理削除は完走後のCF v8で実施)。⑥GPS楽観的UI(粗位置即出し→高精度で補正)：gotoCurrentLocationを2段並列構造に書き換え、Step1=低精度(高精度オフ/5秒/5分キャッシュ可)で即座にflyTo、Step2=並列で高精度(高精度オン/15秒/キャッシュ不可)→100m以上ずれてたらflyToで再フォーカス、100m以内なら地図動かさずマーカーだけ更新(チラつき防止)。起動時の現在地センタリングも同様に距離100m判定→flyTo化(1段目・2段目とも)。地下や高層階で押下後の長い無反応時間が消える。【継続事項】index297のオンボーディング動的化、index296のプロフィール完成ボーナス、CF v7(grantProfileBonus含む)、Security Rules v8は完成済み・完走後のCFデプロイ待ち。【方針】CFはこの298ではいじらず、不正バッジのFirestore掃除は完走後のCF v8で実施。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -2962,6 +2961,98 @@ body:not(.splashing) #table-area{
 .bp-badge-line.bronze{
   background:linear-gradient(135deg,#e09848 0%,#a8682a 60%,#7a4818 100%);
   color:#2a1408;
+}
+
+/* ★index298: 路線制覇カード（横並び＋進捗バー追加版）
+   従来：六角形バッジに路線名だけ表示。銅獲得後に次の銀までの距離が見えない問題。
+   改修：左に小六角形メダル、右に路線名(2行)。下に「現在/総駅数」テキスト＋
+   「次：銀まで残り○駅」補助テキスト＋進捗バー。獲得済みなら次tier目標を、
+   未獲得なら銅目標(30%)を提示。獲得後も常に次の目標が見える設計。
+   既存の.bp-badge-line(詳細モーダル用六角形)は別経路で使われるため互換維持。 */
+.bp-line-card{
+  min-height:130px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(168,224,255,0.15);
+  display:flex;flex-direction:column;
+  padding:10px 8px 12px;
+  position:relative;
+  cursor:pointer;
+  transition:transform 0.18s;
+  overflow:hidden;
+}
+.bp-line-card:hover{transform:scale(1.04)}
+.bp-line-card.bp-line-earned{
+  background:rgba(255,255,255,0.06);
+  border-color:rgba(168,224,255,0.35);
+}
+.bp-line-row{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:6px;min-height:0;
+}
+.bp-line-hex{
+  width:30px;height:30px;flex:0 0 30px;
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  position:relative;
+  box-shadow:
+    inset 0 -4px 8px rgba(0,0,0,0.35),
+    inset 0 3px 5px rgba(255,255,255,0.40);
+}
+.bp-line-hex.gold{background:linear-gradient(135deg,#fbd56a 0%,#d4a020 60%,#9a6f10 100%)}
+.bp-line-hex.silver{background:linear-gradient(135deg,#e8eef4 0%,#a8b0b8 60%,#686e74 100%)}
+.bp-line-hex.bronze{background:linear-gradient(135deg,#e09848 0%,#a8682a 60%,#7a4818 100%)}
+.bp-line-hex.locked{
+  clip-path:none;
+  border-radius:6px;
+  background:rgba(255,255,255,0.05);
+  border:1px dashed rgba(168,224,255,0.3);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(168,184,208,0.55);font-size:16px;line-height:1;
+  box-shadow:none;
+}
+.bp-line-name{
+  flex:1;
+  font-size:11px;font-weight:700;
+  line-height:1.2;letter-spacing:0.3px;
+  color:#e8f0fa;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  text-shadow:0 1px 2px rgba(0,0,0,0.5);
+  word-break:break-all;
+}
+.bp-line-card.bp-line-locked .bp-line-name{
+  color:#a8b8d0;
+  text-shadow:none;
+}
+.bp-line-progress-text{
+  font-size:10px;color:#cfdaee;
+  margin-top:auto;
+  font-weight:700;
+  letter-spacing:0.3px;
+}
+.bp-line-card.bp-line-locked .bp-line-progress-text{
+  color:#7a96b6;
+}
+.bp-line-next-text{
+  font-size:9px;color:#88aacc;font-weight:600;
+  margin-top:1px;margin-bottom:4px;
+  letter-spacing:0.2px;
+}
+.bp-line-card.bp-line-earned .bp-line-next-text{
+  color:#a8c8e8;
+}
+@media (max-width:520px){
+  .bp-line-card{
+    min-height:108px;padding:7px 5px 9px;
+  }
+  .bp-line-hex{width:26px;height:26px;flex:0 0 26px}
+  .bp-line-hex.locked{font-size:14px}
+  .bp-line-name{font-size:10px}
+  .bp-line-progress-text{font-size:9px}
+  .bp-line-next-text{font-size:8px}
+  .bp-line-row{gap:6px;margin-bottom:4px}
 }
 
 /* ランク制覇：円形（立体的に強化） */
@@ -9448,32 +9539,108 @@ function toggleLegend(){
 }
 
 let userMarker=null;
+// ★index298: GPSボタン押下→現在地表示の体感改善（楽観的UIパターン）
+//   旧：1発の getCurrentPosition を待つだけ。地下や高層階で数十秒固まる体感。
+//   新：(1)即・低精度で粗い位置に飛ばす→(2)並列で高精度を取得→(3)100m以上ずれてたら
+//      flyTo で滑らかに補正、100m以内なら地図は動かさずマーカーだけ更新（チラつき防止）。
+//   良環境なら高精度がほぼ瞬時に返り、Step1の粗位置は実質スキップされ従来体験。
 function gotoCurrentLocation(){
   if(!navigator.geolocation){alert('位置情報が使えません');return;}
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const{latitude:lat,longitude:lng,accuracy}=pos.coords;
-    // ★index236: 取得値を内部キャッシュへ流し込む（以降の経路はOSを叩かない）
-    if (typeof window._setGeoCache === 'function') window._setGeoCache(lat, lng, accuracy || 50);
-    lmap.setView([lat,lng],15);
-    // currentLocationを更新（watchPositionと同期）
+
+  let roughLat = null, roughLng = null, hasRough = false;
+  let highResolved = false;
+
+  // 共通：地図を当該座標へ。withFly=true なら flyTo（滑らか）、false なら setView（即時）。
+  const moveMap = (lat, lng, accuracy, withFly) => {
+    try {
+      if (withFly && typeof lmap.flyTo === 'function') {
+        lmap.flyTo([lat, lng], 15, { duration: 0.6 });
+      } else {
+        lmap.setView([lat, lng], 15);
+      }
+    } catch(e){ lmap.setView([lat, lng], 15); }
     if (typeof currentLocation !== 'undefined') {
       currentLocation = { lat, lng, accuracy: accuracy || 50 };
     }
-    // 旧 userMarker は使わない（updateUserLocationMarkerに統一）
-    if (userMarker) { lmap.removeLayer(userMarker); userMarker = null; }
-    // userLocationMarker（watchPositionが管理する正規ピン）を即時更新
+    if (userMarker) { try { lmap.removeLayer(userMarker); } catch(e){} userMarker = null; }
     if (typeof updateUserLocationMarker === 'function') {
-      updateUserLocationMarker(lat, lng, accuracy || 50);
+      try { updateUserLocationMarker(lat, lng, accuracy || 50); } catch(e){}
     }
-    // 最寄り駅検索
-    let nearest=null,minDist=Infinity;
-    stationData.forEach(st=>{
-      if(!st.score)return;
-      const d=Math.hypot(st.lat-lat,st.lng-lng);
-      if(d<minDist){minDist=d;nearest=st;}
-    });
-    if(nearest)showInfo(nearest);
-  },()=>alert('位置情報を取得できませんでした'));
+    if (typeof window._setGeoCache === 'function') {
+      window._setGeoCache(lat, lng, accuracy || 50);
+    }
+  };
+
+  const showNearest = (lat, lng) => {
+    try {
+      let nearest = null, minDist = Infinity;
+      stationData.forEach(st => {
+        if (!st.score) return;
+        const d = Math.hypot(st.lat - lat, st.lng - lng);
+        if (d < minDist) { minDist = d; nearest = st; }
+      });
+      if (nearest && typeof showInfo === 'function') showInfo(nearest);
+    } catch(e){}
+  };
+
+  // Step1: 即・低精度で粗位置を取りに行く（5秒タイムアウト・直近5分キャッシュ許容）
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      if (highResolved) return;  // 既に高精度が先に解決していたらStep1は捨てる
+      roughLat = pos.coords.latitude;
+      roughLng = pos.coords.longitude;
+      hasRough = true;
+      moveMap(roughLat, roughLng, pos.coords.accuracy || 200, true);
+      showNearest(roughLat, roughLng);
+    },
+    err => {
+      console.warn('[gpsBtn] 粗位置取得失敗（高精度の結果を待つ）:', err.code, err.message);
+    },
+    { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+  );
+
+  // Step2: 並列で高精度を取りに行く（15秒タイムアウト・キャッシュ不許容）
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = pos.coords.accuracy || 50;
+      highResolved = true;
+      if (!hasRough) {
+        // Step1がまだ返ってない or 失敗 → ここでまず表示
+        moveMap(lat, lng, acc, true);
+        showNearest(lat, lng);
+        return;
+      }
+      // 粗位置との距離を測り、100m以上ずれていれば滑らかに補正
+      const distM = (typeof getDistanceM === 'function')
+        ? getDistanceM(roughLat, roughLng, lat, lng)
+        : Math.hypot(roughLat - lat, roughLng - lng) * 111000;
+      if (distM > 100) {
+        moveMap(lat, lng, acc, true);
+        showNearest(lat, lng);
+      } else {
+        // 100m以内：地図は動かさずマーカー＆currentLocationだけ高精度に差し替え
+        if (typeof currentLocation !== 'undefined') {
+          currentLocation = { lat, lng, accuracy: acc };
+        }
+        if (typeof updateUserLocationMarker === 'function') {
+          try { updateUserLocationMarker(lat, lng, acc); } catch(e){}
+        }
+        if (typeof window._setGeoCache === 'function') {
+          window._setGeoCache(lat, lng, acc);
+        }
+      }
+    },
+    err => {
+      // 高精度失敗。粗位置が出ていれば何もしない（粗位置でフィードバック済み）
+      if (!hasRough) {
+        // 両方失敗
+        alert('位置情報を取得できませんでした');
+      }
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
 }
 
 // ═══ カード基準半径（カードのスコア・ランク・5軸はこの半径で固定表示）═══
@@ -11124,8 +11291,25 @@ if (navigator.geolocation) {
       lmap.off('movestart', closeInfo);
       
       try {
-        // まず3km圏でセンタリング
-        lmap.setView([lat, lng], 13);
+        // ★index298: 前回位置(_initCenter)と現在地の距離で動きを変える。
+        //   100m以内：地図を動かさず ズームだけ調整（チラつき防止）
+        //   100m以上：flyTo で滑らかに移動。
+        //   良環境＝ほぼ同地点での起動なら従来通り瞬時、転居後など乖離があれば滑らかに飛ぶ。
+        try {
+          const _ic = lmap.getCenter();
+          const _dM = (typeof getDistanceM === 'function')
+            ? getDistanceM(_ic.lat, _ic.lng, lat, lng)
+            : Math.hypot(_ic.lat - lat, _ic.lng - lng) * 111000;
+          if (_dM <= 100 && typeof lmap.setZoom === 'function') {
+            lmap.setZoom(13);
+          } else if (typeof lmap.flyTo === 'function') {
+            lmap.flyTo([lat, lng], 13, { duration: 0.8 });
+          } else {
+            lmap.setView([lat, lng], 13);
+          }
+        } catch(_) {
+          lmap.setView([lat, lng], 13);
+        }
         
         // 「現在地を上から4割の位置に」するため、地図を下にパンする
         // ★index257: 過去スレ「まちめぐ6」で動作確認されていたパラメータに戻す。
@@ -11220,7 +11404,22 @@ if (navigator.geolocation) {
             console.log('[起動・リトライ成功] startupPhase=true');
             lmap.off('movestart', closeInfo);
             try {
-              lmap.setView([lat2, lng2], 13);
+              // ★index298: 1段目と同じく距離判定→flyTo
+              try {
+                const _ic2 = lmap.getCenter();
+                const _dM2 = (typeof getDistanceM === 'function')
+                  ? getDistanceM(_ic2.lat, _ic2.lng, lat2, lng2)
+                  : Math.hypot(_ic2.lat - lat2, _ic2.lng - lng2) * 111000;
+                if (_dM2 <= 100 && typeof lmap.setZoom === 'function') {
+                  lmap.setZoom(13);
+                } else if (typeof lmap.flyTo === 'function') {
+                  lmap.flyTo([lat2, lng2], 13, { duration: 0.8 });
+                } else {
+                  lmap.setView([lat2, lng2], 13);
+                }
+              } catch(_) {
+                lmap.setView([lat2, lng2], 13);
+              }
               const tryPanBy2 = (attemptCount) => {
                 try {
                   const mapEl = document.getElementById('leaflet-map');
@@ -11905,7 +12104,13 @@ function showProfileSetupModal(user) {
 const CHECKIN_DURATION_MS = 5 * 60 * 1000; // 5分
 const CHECKIN_RADIUS_M = 500;
 const DAILY_LIMIT = 3;
-const PENDING_KEY = 'machimegu_pending_checkin';
+// ★index298: クリティカルバグ修正。これまで PENDING_KEY と savePendingCheckin/loadPendingCheckin
+//   が別キーを操作していた（'machimegu_pending_checkin' vs 'mm_pending_checkin'）。
+//   結果、tryCompleteCheckin 失敗時の clearPending() が存在しないキーを消すだけになり、
+//   savePendingCheckin が保存した 'mm_pending_checkin' は残存。アプリ再起動時に
+//   checkPendingResumption() が拾って後から「成功扱い」になり、デイリーミッション・カード・統計が
+//   後追い更新される幽霊チェックイン現象が発生していた。キーを統一して根治。
+const PENDING_KEY = 'mm_pending_checkin';
 
 let currentLocation = null; // { lat, lng, accuracy }
 let watchId = null;
@@ -12571,6 +12776,12 @@ window.startCheckin = async (name, pref, lat, lng) => {
     }
     // 既存チェックインをキャンセル（cancelCheckin の確認なし版）
     if (checkinTimer) { clearInterval(checkinTimer); checkinTimer = null; }
+    // ★index298: 判定中(成立確認リトライタイマー実行中)でも別駅へ切替可能にする。
+    //   リトライ用 setTimeout を即クリアし、古いstationLatに対する判定が走らないようにする。
+    if (window._geoRetryTimerId) {
+      clearTimeout(window._geoRetryTimerId);
+      window._geoRetryTimerId = null;
+    }
     clearPending();
     hideCheckinIndicator();
     // 続けて新しいチェックインへ進む
@@ -12628,6 +12839,11 @@ window.startCheckin = async (name, pref, lat, lng) => {
 window.cancelCheckin = () => {
   if (!confirm('チェックインをキャンセルしますか？')) return;
   if (checkinTimer) { clearInterval(checkinTimer); checkinTimer = null; }
+  // ★index298: 判定中リトライタイマーも止める
+  if (window._geoRetryTimerId) {
+    clearTimeout(window._geoRetryTimerId);
+    window._geoRetryTimerId = null;
+  }
   clearPending();
   hideCheckinIndicator();
   // ★index276: スター後払い方式のためフラグもクリア（スターは未消費＝損失なし）
@@ -12722,8 +12938,12 @@ async function tryCompleteCheckin(retryCount) {
 
   // ★index295: リトライ回数管理（無言の無限ループを廃止）。
   //   位置確認の失敗・低精度は最大5回まで20秒間隔で再試行。超えたら明示エラー＋手動リトライ。
+  // ★index298: dev環境では3回に短縮（テスト効率化）。本番(machimegu.com)では5回維持。
+  //   さらにリトライ用 setTimeout の id を _geoRetryTimerId に保存し、別駅startCheckin呼出時に
+  //   外からclearTimeoutできるようにする（判定中も別駅にチェックイン変更トライOKを実現）。
   const _retry = (typeof retryCount === 'number') ? retryCount : 0;
-  const MAX_GEO_RETRY = 5;
+  const _isDevHost = !(window.__MM_IS_PROD__ === true);
+  const MAX_GEO_RETRY = _isDevHost ? 3 : 5;
 
   // 最終位置確認（成立確認なので直近20秒のキャッシュは許容＝早く返す）
   let finalPos;
@@ -12733,7 +12953,11 @@ async function tryCompleteCheckin(retryCount) {
     if (_retry < MAX_GEO_RETRY) {
       // ★無言ループをやめ、インジケーターに状況を表示してから再試行
       showCheckinRetryStatus('位置を確認中…（' + (_retry + 1) + '/' + MAX_GEO_RETRY + '）');
-      setTimeout(() => tryCompleteCheckin(_retry + 1), 20000);
+      if (window._geoRetryTimerId) clearTimeout(window._geoRetryTimerId);
+      window._geoRetryTimerId = setTimeout(() => {
+        window._geoRetryTimerId = null;
+        tryCompleteCheckin(_retry + 1);
+      }, 20000);
     } else {
       // 上限到達：固まらせず、明示的にエラー＆手動リトライ手段を出す
       showCheckinManualRetry('位置情報が取得できませんでした');
@@ -12748,7 +12972,11 @@ async function tryCompleteCheckin(retryCount) {
     console.warn(`位置精度が低い（±${Math.round(finalPos.accuracy)}m）`);
     if (_retry < MAX_GEO_RETRY) {
       showCheckinRetryStatus('位置の精度を確認中…（' + (_retry + 1) + '/' + MAX_GEO_RETRY + '）');
-      setTimeout(() => tryCompleteCheckin(_retry + 1), 20000);
+      if (window._geoRetryTimerId) clearTimeout(window._geoRetryTimerId);
+      window._geoRetryTimerId = setTimeout(() => {
+        window._geoRetryTimerId = null;
+        tryCompleteCheckin(_retry + 1);
+      }, 20000);
     } else {
       // 精度が出ないままでも、距離判定は試みる（駅500m圏内なら成立させる救済）
       console.warn('精度リトライ上限。距離判定にフォールバック');
@@ -17766,28 +17994,60 @@ function renderLineBadges(lineResults, userBadges) {
     const lineShort = (window.shortLineName ? window.shortLineName(r.line) : r.line)
       .replace(/^東京メトロ/,'').replace(/^メトロ/,'');  // マップ外の保険として正規表現も残す
     // 路線名を意味のあるところで2行に分割（最大4文字+残り、または半分）
-    const lineLabel = window.formatLineLabelTwoLines ? window.formatLineLabelTwoLines(lineShort) : lineShort;
+    const lineLabel = window.formatLineLabelTwoLines ? window.formatLineLabelTwoLines(lineShort) : escapeHtml(lineShort);
+
+    // ★index298: 次tier目標テキスト計算（銅獲得後も次の銀までの道のりが見える）
+    let nextLabel = '';
+    if (r.tier === 'gold') {
+      nextLabel = '完全制覇';
+    } else if (r.tier === 'silver') {
+      const remain = Math.max(0, r.total - r.conquered);
+      nextLabel = remain === 0 ? '完全制覇' : '次：金まで' + remain + '駅';
+    } else if (r.tier === 'bronze') {
+      const silverTarget = Math.ceil(r.total * 0.6);
+      const remain = Math.max(0, silverTarget - r.conquered);
+      nextLabel = '次：銀まで' + remain + '駅';
+    } else {
+      const bronzeTarget = Math.max(1, Math.ceil(r.total * 0.3));
+      const remain = Math.max(0, bronzeTarget - r.conquered);
+      nextLabel = '次：銅まで' + remain + '駅';
+    }
+
+    // 進捗バーは「現在制覇数/総駅数」基準（直感的な3/18表記と整合）
+    const progressBar = window.bpProgressBar ? window.bpProgressBar(r.conquered, r.total) : '';
+
     if (r.tier) {
+      // 獲得済み：左に該当tier六角形メダル、右に路線名2行、下に進捗バー＋次目標
       const id = `line_${r.line}_${r.tier}`;
-      const rarity = window.bpRarityLine(r.tier);
-      const rarityClasses = window.bpRarityClasses(rarity);
-      const badgeData = userBadges.get(id) || { id, type:'line', line:r.line, tier:r.tier, conquered:r.conquered, total:r.total, name:`${r.line} ${tierJa(r.tier)}`, desc:`${r.line}の駅を制覇` };
+      const rarity = window.bpRarityLine ? window.bpRarityLine(r.tier) : 1;
+      const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+      const badgeData = userBadges.get(id) || {
+        id, type:'line', line:r.line, tier:r.tier,
+        conquered:r.conquered, total:r.total,
+        name:`${r.line} ${tierJa(r.tier)}`,
+        desc:`${r.line}の駅を制覇`
+      };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      // ★index196：銅/銀取得後の「次tierまでのバー」はバッジ内に入れない（文字バランス崩れる）。
-      //   元の素のバッジ表示に戻す。
-      return `<div class="bp-badge bp-badge-line ${r.tier}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
-        ${window.bpStarsHTML(rarity)}
-        <div class="bp-name">${lineLabel}</div>
-        <div class="bp-sub">${tierJa(r.tier)}</div>
+      return `<div class="bp-line-card bp-line-earned${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
+        ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
+        <div class="bp-line-row">
+          <div class="bp-line-hex ${r.tier}"></div>
+          <div class="bp-line-name">${lineLabel}</div>
+        </div>
+        <div class="bp-line-progress-text">${r.conquered}/${r.total}駅</div>
+        <div class="bp-line-next-text">${nextLabel}</div>
+        ${progressBar}
       </div>`;
     } else {
-      // 未獲得：進捗バー追加（bronze閾値=30%が次の目標）
-      const nextTarget = Math.max(1, Math.ceil(r.total * 0.3));
-      return `<div class="bp-badge-locked">
-        <div class="bp-icon">🚃</div>
-        <div class="bp-name">${lineLabel}</div>
-        <div class="bp-progress">${r.conquered}/${r.total}駅</div>
-        ${window.bpProgressBar(r.conquered, nextTarget)}
+      // 未獲得：未取得アイコン＋路線名、銅(30%)までの進捗
+      return `<div class="bp-line-card bp-line-locked">
+        <div class="bp-line-row">
+          <div class="bp-line-hex locked">🚃</div>
+          <div class="bp-line-name">${lineLabel}</div>
+        </div>
+        <div class="bp-line-progress-text">${r.conquered}/${r.total}駅</div>
+        <div class="bp-line-next-text">${nextLabel}</div>
+        ${progressBar}
       </div>`;
     }
   }
@@ -18532,7 +18792,14 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
   }
   
   const areaMaster = buildAreaMaster();
-  const areaResults = calcAreaConquest(areaMaster, userCards).filter(r => r.total > 0);
+  // ★index298: 5駅未満の市はエリア判定対象から除外。
+  //   理由：STATION_CITIES上で1〜2駅しか登録されてない市が大量にある（伊勢原市1駅・本庄市1駅等）。
+  //   そのまま判定すると1駅チェックインで「市制覇」が誤って成立する。
+  //   ホワイトリスト（23区+4大都市）は r.total >= 5 を当然満たすので影響なし。
+  //   既存の不正バッジ（5駅未満で獲得済み）はこのフィルタで画面に出ない。Firestoreの掃除は
+  //   完走後のCF v8デプロイで実施。
+  const MIN_AREA_STATIONS = 5;
+  const areaResults = calcAreaConquest(areaMaster, userCards).filter(r => r.total >= MIN_AREA_STATIONS);
   
   // 仕分け
   // - defaultAreas: 23区＋4大都市（常に表示）
@@ -18570,8 +18837,13 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
         desc:`${r.city}の全${r.total}駅を制覇`
       };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      const rarity = 5;  // エリア制覇は最高レア
-      const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+      const rarity = 5;  // エリア制覇は最高レア扱い（★5表示は維持）
+      // ★index298: メラメラ削除。bpRarityClasses(5)が返す 'bp-glow-5 bp-holo' から
+      //   bp-holo（虹色シマー回転）を除外し、bp-glow-5 もbp-glow-4相当に弱める。
+      //   SVG自体に gradient+ellipse glow+多層ポリゴンの立体感があるので
+      //   他バッジ（路線GOLD等）と同等の落ち着いた立体表現にする。
+      const rarityRaw = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+      const rarityClasses = rarityRaw.replace(/\s*bp-holo\b/g, '').replace(/\s*bp-glow-5\b/g, ' bp-glow-4');
       // ★ 詳細モーダル側と統一：SVG版バッジ（8角形）を使う
       const svgInner = window.renderAreaBadgeSVG ? window.renderAreaBadgeSVG(badgeData) : '';
       return `<div class="bp-badge bp-badge-area-wrap${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')" style="position:relative;padding:0;background:none;border:none;cursor:pointer">
@@ -18638,7 +18910,10 @@ checkAndAwardBadges = async function(uid) {
       const userCards = await fetchUserStationCards(uid);
       const userBadges = await fetchUserBadges(uid);
       const areaMaster = buildAreaMaster();
+      // ★index298: 5駅未満の市は判定対象外（描画側と整合）
+      const _MIN_AREA = 5;
       calcAreaConquest(areaMaster, userCards).forEach(({city, ratio, conquered, total}) => {
+        if (total < _MIN_AREA) return;
         if (ratio >= 1.0 && total > 0) {
           const id = `area_${city}`;
           if (!userBadges.has(id)) {
@@ -21796,7 +22071,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v297</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v298</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -21812,7 +22087,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 297', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 298', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   /* ★index278: dev/本番の表示出し分け。
      本番(machimegu.com)では開発用UI(右下バージョンバッジ・左下📋デバッグログボタン)を隠す。
@@ -21834,7 +22109,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v297';
+          mpVer.textContent = 'dev v298';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -22107,7 +22382,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v297) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v298) ===', '#88ccff');
   })();
 </script>
 
