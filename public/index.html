@@ -150,8 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index290 (2026.06.19) — 【レアカード(シャイニー/ミシック)をカード単位で出し分けるよう改修】v289以前は詳細カードのtierをstationCardsドキュメント直下のspecial(=駅単位)から読んでいたため、同じ駅の季節天気別カード(東陽町5枚/東京3枚など)が全部同じtierになってしまう不具合があった(手動でstationCards直下にspecialを入れた東京が3枚全部ミシックになった事例)。対処: カード一覧から特定の1枚を開いた時に立つ_cv_overrideIndexを使い、meta/collectionのその駅のcards[overrideIndex].specialを最優先で参照するよう、詳細カードの即時描画(_preSpecial取得)と確定適用(mmApplyTierToCard)の両方を改修。さらにカード一覧のミニカードにもc.specialを見てdata-tierを付与し、複数枚のうちレアの1枚だけが光るようにした。override無し(地図から直接開く)時は従来の駅単位フォールバックを維持。
-     【v289】ミシック確率を1/200に。【v288】ミシックtierタグから季節名削除。【v287】光スイープを自然な流れに。【v286】画面上部の文字列漏れ修正。【v285】レア演出に動くキラキラ大増強＋tier見本ボタン左下移設。【v284】レア演出全面ダーク版。【v283】詳細カードtier適用経路実装。V279-282維持。 -->
+<!-- VERSION: index301 (2026.06.28) — 【路線UI仕上げ：銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一】ともきフィードバック3点反映。①メインページの.bp-sub-topを font-size 18px→13px（モバイル 16px→11px）に調整し、路線名(.bp-name=13px/11px)と同じサイズに揃えた（前回大きすぎたので戻す）。②外箱内の bp-badge.bp-badge-line を width:78px→width:100% に拡大し、外箱内幅ギリギリまで広げてバッジの存在感を最大化。aspect-ratio:1 維持で長い路線名も収まる。bp-badge-locked も aspect-ratio:1 に統一して獲得済みとサイズを揃え、🚃アイコンも 30px→36px に拡大。③表示経路を全て「銅/銀/金が上、路線名が下」で統一：renderBadgeHTML（マイページ抜粋プレビュー・他用途）のCSS版で bp-name と bp-sub の順序を逆転、SVG版バッジ（詳細モーダル・共有カード）も subLabel と line1/line2 の y座標を入れ替えて銅を上、路線名を下に配置。これでメインページ・マイページ抜粋・詳細モーダル・共有カード全てで一貫した表示順になり「細かいところまで合わせて調整」のフィードバックに応える。【継続】①②④⑤⑥は299/300までの実装を継続。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅（マイページ抜粋経路）。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -1347,6 +1346,135 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   line-height:1.5;max-width:320px;margin-left:auto;margin-right:auto;
   opacity:0.75;
 }
+
+/* ─── ★index293: ショップ（Pro版＋スター購入） ─── */
+.mp-shop-section{border-top:1px solid rgba(120,150,210,0.12)}
+/* Pro版カード */
+.mp-shop-pro{
+  background:linear-gradient(135deg, rgba(58,138,196,0.18), rgba(120,90,200,0.15));
+  border:1.5px solid rgba(130,160,230,0.35);
+  border-radius:16px;padding:18px;margin-bottom:20px;
+  position:relative;overflow:hidden;
+}
+.mp-shop-pro-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.mp-shop-pro-badge{
+  background:linear-gradient(135deg,#ffd700,#ff9d00);
+  color:#2a1a00;font-weight:900;font-size:15px;letter-spacing:1px;
+  padding:7px 13px;border-radius:9px;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(255,160,0,0.4);
+}
+.mp-shop-pro-titlewrap{flex:1;min-width:0}
+.mp-shop-pro-title{font-size:18px;font-weight:900;color:#fff;letter-spacing:0.5px}
+.mp-shop-pro-price{font-size:14px;color:#a8c8e8;font-weight:700;margin-top:2px}
+.mp-shop-pro-feats{
+  list-style:none;padding:0;margin:0 0 16px;
+}
+.mp-shop-pro-feats li{
+  font-size:14px;color:#d8e4f0;padding:5px 0 5px 24px;position:relative;line-height:1.4;
+}
+.mp-shop-pro-feats li::before{
+  content:'✓';position:absolute;left:0;top:5px;
+  color:#5fd0a0;font-weight:900;font-size:15px;
+}
+.mp-shop-pro-btn{
+  width:100%;padding:14px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,#3a8ac4,#5b6ed8);
+  color:#fff;font-size:16px;font-weight:900;letter-spacing:1px;cursor:pointer;
+  box-shadow:0 3px 12px rgba(70,110,210,0.4);transition:transform 0.12s,box-shadow 0.12s;
+}
+.mp-shop-pro-btn:active{transform:scale(0.97);box-shadow:0 1px 6px rgba(70,110,210,0.3)}
+.mp-shop-pro-owned{
+  text-align:center;padding:13px;border-radius:12px;
+  background:rgba(95,208,160,0.15);border:1.5px solid rgba(95,208,160,0.4);
+  color:#5fd0a0;font-size:16px;font-weight:900;letter-spacing:0.5px;
+}
+/* スター購入 */
+.mp-shop-stars-head{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+}
+.mp-shop-stars-icon{font-size:18px}
+.mp-shop-stars-label{font-size:15px;font-weight:900;color:#fff;letter-spacing:0.8px}
+.mp-shop-stars-bal{font-size:13px;color:#a8b8d0;font-weight:700;margin-left:14px}
+.mp-shop-stars-bal strong{color:#ffd700;font-size:15px;margin-left:2px}
+.mp-shop-stars-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.mp-shop-star-card{
+  position:relative;background:rgba(40,58,92,0.5);
+  border:1.5px solid rgba(120,150,210,0.25);border-radius:14px;
+  padding:16px 8px 14px;cursor:pointer;text-align:center;
+  transition:transform 0.12s,border-color 0.12s,background 0.12s;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.mp-shop-star-card:active{transform:scale(0.95)}
+.mp-shop-star-popular{border-color:rgba(255,180,80,0.55);background:rgba(80,60,30,0.4)}
+.mp-shop-star-best{border-color:rgba(255,210,80,0.6);background:rgba(80,70,20,0.45)}
+.mp-shop-star-num{font-size:22px;font-weight:900;color:#ffd700;letter-spacing:0.5px}
+.mp-shop-star-price{font-size:16px;font-weight:900;color:#fff}
+.mp-shop-star-off{font-size:11px;color:#5fd0a0;font-weight:800}
+.mp-shop-star-ribbon{
+  position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  font-size:11px;font-weight:900;letter-spacing:0.5px;
+  padding:2px 10px;border-radius:8px;white-space:nowrap;
+}
+.mp-shop-star-popular .mp-shop-star-ribbon{background:#ff9d00;color:#2a1a00}
+.mp-shop-star-best .mp-shop-star-ribbon{background:#ffd700;color:#2a1a00}
+.mp-shop-note{
+  margin-top:14px;font-size:12px;line-height:1.5;color:#90a4c0;text-align:center;
+}
+.mp-shop-note:empty{display:none}
+
+
+/* ★index292: 折りたたみ式。普段は控えめなヘッダーのみ、タップで展開。 */
+.mp-dataconsent-section{padding-top:8px;padding-bottom:8px}
+.mp-dataconsent-header{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  background:transparent;border:none;cursor:pointer;
+  padding:8px 0;color:rgba(160,180,210,0.7);
+  font-size:13px;font-weight:700;letter-spacing:0.8px;
+  transition:color 0.15s;
+}
+.mp-dataconsent-header:hover,.mp-dataconsent-header:active{color:rgba(190,210,235,0.95)}
+.mp-dataconsent-chevron{
+  font-size:12px;transition:transform 0.25s;opacity:0.7;
+}
+.mp-dataconsent-header[aria-expanded="true"] .mp-dataconsent-chevron{transform:rotate(180deg)}
+.mp-dataconsent-body{
+  max-height:0;overflow:hidden;
+  transition:max-height 0.3s ease,margin-top 0.3s ease,opacity 0.25s ease;
+  opacity:0;margin-top:0;
+}
+.mp-dataconsent-body.open{max-height:400px;opacity:1;margin-top:12px}
+.mp-dataconsent-card{
+  background:rgba(40,58,92,0.35);
+  border:1px solid rgba(120,150,210,0.18);
+  border-radius:12px;padding:16px;
+}
+.mp-dataconsent-row{display:flex;align-items:flex-start;gap:14px}
+.mp-dataconsent-text{flex:1;min-width:0}
+.mp-dataconsent-main{font-size:14px;font-weight:800;color:#fff;letter-spacing:0.3px;margin-bottom:6px}
+.mp-dataconsent-sub{font-size:12px;color:#a8b8d0;line-height:1.6}
+.mp-dataconsent-link{
+  display:inline-block;margin-top:12px;
+  font-size:12px;color:#88c0f0;font-weight:700;
+  text-decoration:none;letter-spacing:0.3px;
+}
+.mp-dataconsent-link:hover{text-decoration:underline}
+.mp-toggle{
+  flex-shrink:0;width:52px;height:30px;border-radius:15px;
+  background:#3a8ac4;border:none;cursor:pointer;
+  position:relative;transition:background 0.2s;padding:0;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.3);
+}
+.mp-toggle[aria-checked="false"]{background:rgba(120,140,170,0.4)}
+.mp-toggle-knob{
+  position:absolute;top:3px;left:3px;
+  width:24px;height:24px;border-radius:50%;
+  background:#fff;transition:transform 0.2s;
+  box-shadow:0 1px 4px rgba(0,0,0,0.4);
+}
+.mp-toggle[aria-checked="true"] .mp-toggle-knob{transform:translateX(22px)}
+.mp-toggle:active .mp-toggle-knob{width:28px}
 
 /* ─── マイページリンク（★index194：MAP/RANKと同じ高さで横並び、1行表示、2行時代の縦サイズ） ─── */
 .user-mypage-link{
@@ -2833,6 +2961,107 @@ body:not(.splashing) #table-area{
 .bp-badge-line.bronze{
   background:linear-gradient(135deg,#e09848 0%,#a8682a 60%,#7a4818 100%);
   color:#2a1408;
+}
+
+/* ★index299→300: ともきフィードバック反映。エリア制覇と同じく
+   四角の枠線つき外箱の中に「バッジ＋路線名＋3/N駅＋進捗バー」を全て収める。
+   これで一画面に表示される路線数が回復し、進捗バーがバッジから横にはみ出る形でも
+   セル全体の高さは抑えられる。さらに銅/銀/金の文字を大きくして達成感を演出。
+   未獲得時はdashed枠、獲得済みはsolid枠で差別化。 */
+.bp-line-wrap{
+  min-height:130px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.04);
+  border:1px dashed rgba(168,224,255,0.25);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;
+  text-align:center;
+  padding:8px 6px 10px;
+  position:relative;
+  gap:3px;
+  min-width:0;
+  overflow:hidden;
+}
+.bp-line-wrap.earned{
+  /* 獲得済みは実線＋少し明るい背景で「持ってる感」を出す */
+  border-style:solid;
+  border-color:rgba(168,224,255,0.4);
+  background:rgba(255,255,255,0.07);
+}
+/* 外箱内の bp-badge.bp-badge-line（六角形）を外箱内幅ギリギリまで拡大 */
+.bp-line-wrap > .bp-badge.bp-badge-line{
+  aspect-ratio:1;
+  width:100%;
+  max-width:none;
+  margin:0 auto;
+  padding:6px 4px;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:0 0 auto;
+}
+/* 外箱内の未獲得 bp-badge-locked は外箱と二重枠を避けるため枠線・背景・min-heightを打ち消し */
+.bp-line-wrap > .bp-badge-locked{
+  min-height:auto !important;
+  background:transparent !important;
+  border:none !important;
+  padding:0 !important;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;
+  margin:0 auto;
+  width:100%;
+  aspect-ratio:1;
+}
+.bp-line-wrap > .bp-badge-locked .bp-icon{
+  font-size:36px !important;
+  margin-bottom:4px !important;
+}
+/* 銅/銀/金（一文字）を路線名の上に配置。サイズは路線名(.bp-name=13px PC/11px Mobile)と同じに揃える */
+.bp-line-wrap .bp-sub-top{
+  font-size:13px !important;
+  font-weight:900 !important;
+  letter-spacing:0.5px;
+  line-height:1.2;
+  margin:0 0 2px 0 !important;
+  text-shadow:0 1px 2px rgba(0,0,0,0.5);
+}
+/* 「3/25駅」テキスト */
+.bp-line-wrap .bp-line-progress-text{
+  font-size:10px;font-weight:700;color:#cfdaee;
+  letter-spacing:0.3px;
+  margin-top:auto;
+}
+.bp-line-wrap:not(.earned) .bp-line-progress-text{
+  color:#7a96b6;
+}
+/* 進捗バーは外箱の幅にフィット（バッジから横にはみ出る形でOK） */
+.bp-line-wrap .bp-progress-bar{
+  width:100%;
+}
+@media (max-width:520px){
+  .bp-line-wrap{
+    min-height:108px;
+    padding:6px 4px 8px;
+    gap:2px;
+  }
+  .bp-line-wrap > .bp-badge.bp-badge-line{
+    width:100%;
+    padding:5px 3px;
+  }
+  .bp-line-wrap > .bp-badge-locked .bp-icon{
+    font-size:30px !important;
+  }
+  .bp-line-wrap .bp-sub-top{
+    font-size:11px !important;
+  }
+  .bp-line-wrap .bp-badge.bp-badge-line .bp-name{
+    font-size:11px !important;
+  }
+  .bp-line-wrap .bp-badge-locked .bp-name{
+    font-size:11px !important;
+  }
+  .bp-line-wrap .bp-line-progress-text{
+    font-size:9px;
+  }
 }
 
 /* ランク制覇：円形（立体的に強化） */
@@ -5167,6 +5396,21 @@ body.checkin-active #checkin-indicator{
   </div>
 </div>
 
+<!-- ★index296: 初回プロフィール完成ボーナス 祝福オーバーレイ -->
+<div id="mm-profile-bonus-bg" onclick="if(event.target===this)window._closeProfileBonusCelebration()">
+  <div class="mm-pb-card">
+    <div class="mm-pb-emoji">⭐</div>
+    <div class="mm-pb-title">プロフィール完成！</div>
+    <div class="mm-pb-subtitle">ステーションスターを1個プレゼント</div>
+    <div class="mm-pb-stars-now" id="mm-pb-stars-now">所持スター：1</div>
+    <div class="mm-pb-desc">
+      ステーションスターは、<strong>1日のチェックイン上限を超えたとき</strong>に1個=1駅で使える便利アイテム。<br>
+      <span style="display:inline-block;margin-top:6px">ショップで購入もできるよ。</span>
+    </div>
+    <button class="mm-pb-ok-btn" onclick="window._closeProfileBonusCelebration()">街に出よう</button>
+  </div>
+</div>
+
 <!-- トリセツモーダル（★index179: 全面改訂 - 最新仕様反映＋大きめ文字） -->
 <div id="torisetsu-modal-bg" onclick="if(event.target===this)closeTorisetsuModal()">
   <div id="torisetsu-modal" onclick="event.stopPropagation()">
@@ -6833,9 +7077,32 @@ body.checkin-active #checkin-indicator{
   width:32px;height:40px;
   animation:mm-ob-pin-bounce 1.5s ease-in-out infinite;
 }
-.mm-ob-map-visual .mm-ob-pin-1{top:25%;left:18%;animation-delay:0s}
-.mm-ob-map-visual .mm-ob-pin-2{top:30%;right:18%;animation-delay:0.5s}
-.mm-ob-map-visual .mm-ob-pin-3{bottom:22%;left:22%;animation-delay:1s}
+.mm-ob-map-visual .mm-ob-pin-1{top:25%;left:18%}
+.mm-ob-map-visual .mm-ob-pin-2{top:30%;right:18%}
+.mm-ob-map-visual .mm-ob-pin-3{bottom:22%;left:22%}
+/* ★index297: スライド2のピンを「順番に降ってきて馴染む」アニメに変更。
+   関東各地にピンが落ちていく感を演出する。
+   .mm-ob-slide.active になった時だけ発動するよう .active 経由でアニメ起動。 */
+.mm-ob-slide.active .mm-ob-map-visual .mm-ob-pin-center{
+  animation: mm-ob-pin-drop 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+}
+.mm-ob-slide.active .mm-ob-map-visual .mm-ob-pin-1{
+  animation: mm-ob-pin-drop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.7s both,
+             mm-ob-pin-bounce 1.8s ease-in-out 1.6s infinite;
+}
+.mm-ob-slide.active .mm-ob-map-visual .mm-ob-pin-2{
+  animation: mm-ob-pin-drop 0.6s cubic-bezier(0.34,1.56,0.64,1) 1.0s both,
+             mm-ob-pin-bounce 1.8s ease-in-out 1.9s infinite;
+}
+.mm-ob-slide.active .mm-ob-map-visual .mm-ob-pin-3{
+  animation: mm-ob-pin-drop 0.6s cubic-bezier(0.34,1.56,0.64,1) 1.3s both,
+             mm-ob-pin-bounce 1.8s ease-in-out 2.2s infinite;
+}
+@keyframes mm-ob-pin-drop{
+  0%   { transform: translateY(-160%) scale(0.6); opacity: 0; }
+  60%  { transform: translateY(8%) scale(1.05); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
 @keyframes mm-ob-pin-bounce{
   0%,100% { transform:translateY(0) }
   50%    { transform:translateY(-10px) }
@@ -6849,9 +7116,31 @@ body.checkin-active #checkin-indicator{
   border-radius:50%;
   position:relative;
 }
+/* ★index297: クラウン発光リング。スライド3表示時に金色の輪が広がって消える演出を3秒間隔で繰り返す */
+.mm-ob-lv-crown-wrap{
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  width:80px;height:80px;
+}
+.mm-ob-lv-crown-ring{
+  position:absolute;inset:0;
+  border-radius:50%;
+  border:2px solid rgba(251,213,106,0.7);
+  opacity:0;
+  pointer-events:none;
+}
+.mm-ob-slide.active .mm-ob-lv-crown-ring{
+  animation: mm-ob-crown-ring 2.4s ease-out 0.6s infinite;
+}
+@keyframes mm-ob-crown-ring{
+  0%   { transform: scale(0.6); opacity: 0; }
+  20%  { opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
 .mm-ob-lv-crown{
   font-size:48px;
   animation:mm-ob-crown-float 2s ease-in-out infinite;
+  position:relative;z-index:2;
 }
 @keyframes mm-ob-crown-float{
   0%,100% { transform:translateY(0) }
@@ -6868,6 +7157,30 @@ body.checkin-active #checkin-indicator{
   font-size:14px;font-weight:900;color:#fff;
   margin-top:6px;letter-spacing:2px;
   text-shadow:0 0 8px rgba(251,213,106,0.4);
+}
+/* ★index297: XPバー（スライド3表示時に0→満タンに駆け上がるアニメ） */
+.mm-ob-xp-bar{
+  width:140px;height:6px;
+  background:rgba(255,255,255,0.08);
+  border-radius:3px;
+  margin-top:14px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);
+}
+.mm-ob-xp-bar-fill{
+  position:absolute;left:0;top:0;bottom:0;
+  width:0%;
+  background:linear-gradient(90deg,#fbd56a 0%,#ffe890 50%,#fbd56a 100%);
+  border-radius:3px;
+  box-shadow:0 0 8px rgba(251,213,106,0.7);
+}
+.mm-ob-slide.active .mm-ob-xp-bar-fill{
+  animation: mm-ob-xp-fill 1.6s cubic-bezier(0.65,0,0.35,1) 0.4s forwards;
+}
+@keyframes mm-ob-xp-fill{
+  0%   { width: 0%; }
+  100% { width: 100%; }
 }
 
 /* オンボーディングのフッター（ドット＋ボタン） */
@@ -7774,8 +8087,107 @@ body.checkin-active #checkin-indicator{
    ★index249 Android最終調整 ここまで
    ════════════════════════════════════════════════════════════════ */
 
+/* ════════════════════════════════════════════════════════════════
+   ★index296: 初回プロフィール完成ボーナス祝福演出
+   - 初回プロフィール完成時、スター1個プレゼントを祝う全画面オーバーレイ
+   - スターという課金アイテムを最初に手にする「最初の感動」を作る重要演出
+   - ショップ誘導の文言も添える（マネタイズ導線）
+   ════════════════════════════════════════════════════════════════ */
+#mm-profile-bonus-bg{
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse at center, rgba(20,30,55,0.92) 0%, rgba(8,12,28,0.96) 80%);
+  z-index:99999;
+  display:none;
+  align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  animation:mm-pb-fade-in 0.4s ease-out;
+}
+#mm-profile-bonus-bg.open{display:flex}
+@keyframes mm-pb-fade-in{
+  from{opacity:0}
+  to{opacity:1}
+}
+.mm-pb-card{
+  width:88%;max-width:340px;
+  background:linear-gradient(180deg,#1a2540 0%,#0f1830 100%);
+  border:2px solid #4a7bd5;
+  border-radius:20px;
+  padding:32px 24px 24px;
+  text-align:center;
+  box-shadow:0 0 40px rgba(120,180,255,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  animation:mm-pb-pop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative;overflow:hidden;
+}
+@keyframes mm-pb-pop{
+  0%{transform:scale(0.6);opacity:0}
+  60%{transform:scale(1.05);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+.mm-pb-card::before{
+  /* 背景キラキラ */
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,220,100,0.15) 0%, transparent 30%),
+    radial-gradient(circle at 80% 70%, rgba(150,200,255,0.15) 0%, transparent 30%);
+  pointer-events:none;
+}
+.mm-pb-emoji{
+  font-size:64px;
+  line-height:1;
+  margin-bottom:8px;
+  display:inline-block;
+  animation:mm-pb-star-spin 1.2s ease-out;
+  filter:drop-shadow(0 0 16px rgba(255,200,80,0.7));
+}
+@keyframes mm-pb-star-spin{
+  0%{transform:scale(0) rotate(-180deg);opacity:0}
+  60%{transform:scale(1.3) rotate(20deg);opacity:1}
+  100%{transform:scale(1) rotate(0deg);opacity:1}
+}
+.mm-pb-title{
+  font-size:22px;font-weight:800;
+  color:#fff;letter-spacing:0.5px;
+  margin-bottom:6px;
+  text-shadow:0 2px 8px rgba(255,200,80,0.5);
+}
+.mm-pb-subtitle{
+  font-size:15px;color:#a8d8f0;
+  font-weight:600;
+  margin-bottom:18px;
+}
+.mm-pb-stars-now{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:14px;color:#fbd56a;
+  background:rgba(251,213,106,0.1);
+  border:1px solid rgba(251,213,106,0.3);
+  padding:6px 14px;border-radius:20px;
+  margin-bottom:18px;font-weight:700;
+}
+.mm-pb-desc{
+  font-size:13px;color:#cfe0f0;
+  line-height:1.7;
+  margin-bottom:20px;
+  text-align:left;
+  background:rgba(255,255,255,0.04);
+  border-radius:10px;
+  padding:12px 14px;
+}
+.mm-pb-desc strong{color:#fbd56a;font-weight:700}
+.mm-pb-ok-btn{
+  display:block;width:100%;
+  background:linear-gradient(180deg,#5a9bff 0%,#3a7bd5 100%);
+  color:#fff;font-size:16px;font-weight:800;
+  border:none;border-radius:12px;
+  padding:14px 0;
+  cursor:pointer;
+  letter-spacing:1px;
+  box-shadow:0 4px 12px rgba(58,123,213,0.4);
+  transition:transform 0.15s ease;
+}
+.mm-pb-ok-btn:active{transform:scale(0.97)}
 
 </style>
+
 
 <!-- ステーションカード モーダル -->
 <div id="card-modal-bg" onclick="closeCardModal(event)">
@@ -8015,7 +8427,85 @@ body.checkin-active #checkin-indicator{
         <div class="mp-empty">読み込み中...</div>
       </div>
     </div>
-    
+
+    <!-- ★index293: ショップ（Pro版＋スター購入）。TWA内でのみDigital Goods APIが動作。
+         非TWA環境では「アプリ版で購入可能」と案内。価格はPlay Consoleから自動取得。 -->
+    <div class="mp-section mp-shop-section">
+      <div class="mp-section-title">
+        <span>🛒 ショップ</span>
+      </div>
+
+      <!-- Pro版カード（買い切り、購入済み表示あり） -->
+      <div class="mp-shop-pro" id="mp-shop-pro">
+        <div class="mp-shop-pro-head">
+          <div class="mp-shop-pro-badge">PRO</div>
+          <div class="mp-shop-pro-titlewrap">
+            <div class="mp-shop-pro-title">街巡 Pro</div>
+            <div class="mp-shop-pro-price" id="mp-shop-pro-price">¥500 買い切り</div>
+          </div>
+        </div>
+        <ul class="mp-shop-pro-feats">
+          <li>広告を非表示</li>
+          <li>推し街の登録上限を解放</li>
+          <li>訪問記録をCSVで出力</li>
+          <li>プロフィールにProバッジ</li>
+        </ul>
+        <button class="mp-shop-pro-btn" id="mp-shop-pro-btn" onclick="buyProduct('pro_lifetime')">Pro版を購入</button>
+        <div class="mp-shop-pro-owned" id="mp-shop-pro-owned" style="display:none;">
+          <span>✓ Pro版をご利用中</span>
+        </div>
+      </div>
+
+      <!-- スター購入（消耗品、何度でも購入可・購入済み表示なし） -->
+      <div class="mp-shop-stars-head">
+        <span class="mp-shop-stars-icon">⭐</span>
+        <span class="mp-shop-stars-label">スターを購入</span>
+        <span class="mp-shop-stars-bal">所持: <strong id="mp-shop-star-bal">0</strong></span>
+      </div>
+      <div class="mp-shop-stars-grid">
+        <button class="mp-shop-star-card" onclick="buyProduct('stars_1')">
+          <div class="mp-shop-star-num">⭐1</div>
+          <div class="mp-shop-star-price">¥100</div>
+        </button>
+        <button class="mp-shop-star-card mp-shop-star-popular" onclick="buyProduct('stars_6')">
+          <div class="mp-shop-star-ribbon">お得</div>
+          <div class="mp-shop-star-num">⭐6</div>
+          <div class="mp-shop-star-price">¥500</div>
+          <div class="mp-shop-star-off">17%OFF</div>
+        </button>
+        <button class="mp-shop-star-card mp-shop-star-best" onclick="buyProduct('stars_15')">
+          <div class="mp-shop-star-ribbon">最安</div>
+          <div class="mp-shop-star-num">⭐15</div>
+          <div class="mp-shop-star-price">¥1000</div>
+          <div class="mp-shop-star-off">33%OFF</div>
+        </button>
+      </div>
+      <div class="mp-shop-note" id="mp-shop-note"></div>
+    </div>
+
+    <!-- ★index291: データ提供設定（第三者提供のオプトアウト）。プライバシーポリシー第6項に対応。
+         ★index292: 折りたたみ式に変更。普段はタイトル行のみ、タップで展開。 -->
+    <div class="mp-section mp-dataconsent-section">
+      <button type="button" class="mp-dataconsent-header" aria-expanded="false" onclick="toggleDataConsentPanel()">
+        <span class="mp-dataconsent-headtext">データ提供設定</span>
+        <span class="mp-dataconsent-chevron">▾</span>
+      </button>
+      <div class="mp-dataconsent-body" id="mp-dataconsent-body">
+        <div class="mp-dataconsent-card">
+          <div class="mp-dataconsent-row">
+            <div class="mp-dataconsent-text">
+              <div class="mp-dataconsent-main">統計データの提供に協力する</div>
+              <div class="mp-dataconsent-sub">あなたのチェックイン記録などを、個人を特定できない統計データに加工して街づくり支援などに役立てます。いつでもオフにできます。</div>
+            </div>
+            <button id="mp-dataconsent-toggle" class="mp-toggle" role="switch" aria-checked="true" onclick="toggleDataConsent()">
+              <span class="mp-toggle-knob"></span>
+            </button>
+          </div>
+          <a href="/privacy.html" target="_blank" rel="noopener" class="mp-dataconsent-link">プライバシーポリシーを見る →</a>
+        </div>
+      </div>
+    </div>
+
     <div class="mp-footer">
       <button class="mp-logout-btn" onclick="signOutFromMypage()">ログアウト</button>
       <div class="mp-delete-wrap">
@@ -9058,32 +9548,108 @@ function toggleLegend(){
 }
 
 let userMarker=null;
+// ★index298: GPSボタン押下→現在地表示の体感改善（楽観的UIパターン）
+//   旧：1発の getCurrentPosition を待つだけ。地下や高層階で数十秒固まる体感。
+//   新：(1)即・低精度で粗い位置に飛ばす→(2)並列で高精度を取得→(3)100m以上ずれてたら
+//      flyTo で滑らかに補正、100m以内なら地図は動かさずマーカーだけ更新（チラつき防止）。
+//   良環境なら高精度がほぼ瞬時に返り、Step1の粗位置は実質スキップされ従来体験。
 function gotoCurrentLocation(){
   if(!navigator.geolocation){alert('位置情報が使えません');return;}
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const{latitude:lat,longitude:lng,accuracy}=pos.coords;
-    // ★index236: 取得値を内部キャッシュへ流し込む（以降の経路はOSを叩かない）
-    if (typeof window._setGeoCache === 'function') window._setGeoCache(lat, lng, accuracy || 50);
-    lmap.setView([lat,lng],15);
-    // currentLocationを更新（watchPositionと同期）
+
+  let roughLat = null, roughLng = null, hasRough = false;
+  let highResolved = false;
+
+  // 共通：地図を当該座標へ。withFly=true なら flyTo（滑らか）、false なら setView（即時）。
+  const moveMap = (lat, lng, accuracy, withFly) => {
+    try {
+      if (withFly && typeof lmap.flyTo === 'function') {
+        lmap.flyTo([lat, lng], 15, { duration: 0.6 });
+      } else {
+        lmap.setView([lat, lng], 15);
+      }
+    } catch(e){ lmap.setView([lat, lng], 15); }
     if (typeof currentLocation !== 'undefined') {
       currentLocation = { lat, lng, accuracy: accuracy || 50 };
     }
-    // 旧 userMarker は使わない（updateUserLocationMarkerに統一）
-    if (userMarker) { lmap.removeLayer(userMarker); userMarker = null; }
-    // userLocationMarker（watchPositionが管理する正規ピン）を即時更新
+    if (userMarker) { try { lmap.removeLayer(userMarker); } catch(e){} userMarker = null; }
     if (typeof updateUserLocationMarker === 'function') {
-      updateUserLocationMarker(lat, lng, accuracy || 50);
+      try { updateUserLocationMarker(lat, lng, accuracy || 50); } catch(e){}
     }
-    // 最寄り駅検索
-    let nearest=null,minDist=Infinity;
-    stationData.forEach(st=>{
-      if(!st.score)return;
-      const d=Math.hypot(st.lat-lat,st.lng-lng);
-      if(d<minDist){minDist=d;nearest=st;}
-    });
-    if(nearest)showInfo(nearest);
-  },()=>alert('位置情報を取得できませんでした'));
+    if (typeof window._setGeoCache === 'function') {
+      window._setGeoCache(lat, lng, accuracy || 50);
+    }
+  };
+
+  const showNearest = (lat, lng) => {
+    try {
+      let nearest = null, minDist = Infinity;
+      stationData.forEach(st => {
+        if (!st.score) return;
+        const d = Math.hypot(st.lat - lat, st.lng - lng);
+        if (d < minDist) { minDist = d; nearest = st; }
+      });
+      if (nearest && typeof showInfo === 'function') showInfo(nearest);
+    } catch(e){}
+  };
+
+  // Step1: 即・低精度で粗位置を取りに行く（5秒タイムアウト・直近5分キャッシュ許容）
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      if (highResolved) return;  // 既に高精度が先に解決していたらStep1は捨てる
+      roughLat = pos.coords.latitude;
+      roughLng = pos.coords.longitude;
+      hasRough = true;
+      moveMap(roughLat, roughLng, pos.coords.accuracy || 200, true);
+      showNearest(roughLat, roughLng);
+    },
+    err => {
+      console.warn('[gpsBtn] 粗位置取得失敗（高精度の結果を待つ）:', err.code, err.message);
+    },
+    { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+  );
+
+  // Step2: 並列で高精度を取りに行く（15秒タイムアウト・キャッシュ不許容）
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = pos.coords.accuracy || 50;
+      highResolved = true;
+      if (!hasRough) {
+        // Step1がまだ返ってない or 失敗 → ここでまず表示
+        moveMap(lat, lng, acc, true);
+        showNearest(lat, lng);
+        return;
+      }
+      // 粗位置との距離を測り、100m以上ずれていれば滑らかに補正
+      const distM = (typeof getDistanceM === 'function')
+        ? getDistanceM(roughLat, roughLng, lat, lng)
+        : Math.hypot(roughLat - lat, roughLng - lng) * 111000;
+      if (distM > 100) {
+        moveMap(lat, lng, acc, true);
+        showNearest(lat, lng);
+      } else {
+        // 100m以内：地図は動かさずマーカー＆currentLocationだけ高精度に差し替え
+        if (typeof currentLocation !== 'undefined') {
+          currentLocation = { lat, lng, accuracy: acc };
+        }
+        if (typeof updateUserLocationMarker === 'function') {
+          try { updateUserLocationMarker(lat, lng, acc); } catch(e){}
+        }
+        if (typeof window._setGeoCache === 'function') {
+          window._setGeoCache(lat, lng, acc);
+        }
+      }
+    },
+    err => {
+      // 高精度失敗。粗位置が出ていれば何もしない（粗位置でフィードバック済み）
+      if (!hasRough) {
+        // 両方失敗
+        alert('位置情報を取得できませんでした');
+      }
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
 }
 
 // ═══ カード基準半径（カードのスコア・ランク・5軸はこの半径で固定表示）═══
@@ -10734,8 +11300,25 @@ if (navigator.geolocation) {
       lmap.off('movestart', closeInfo);
       
       try {
-        // まず3km圏でセンタリング
-        lmap.setView([lat, lng], 13);
+        // ★index298: 前回位置(_initCenter)と現在地の距離で動きを変える。
+        //   100m以内：地図を動かさず ズームだけ調整（チラつき防止）
+        //   100m以上：flyTo で滑らかに移動。
+        //   良環境＝ほぼ同地点での起動なら従来通り瞬時、転居後など乖離があれば滑らかに飛ぶ。
+        try {
+          const _ic = lmap.getCenter();
+          const _dM = (typeof getDistanceM === 'function')
+            ? getDistanceM(_ic.lat, _ic.lng, lat, lng)
+            : Math.hypot(_ic.lat - lat, _ic.lng - lng) * 111000;
+          if (_dM <= 100 && typeof lmap.setZoom === 'function') {
+            lmap.setZoom(13);
+          } else if (typeof lmap.flyTo === 'function') {
+            lmap.flyTo([lat, lng], 13, { duration: 0.8 });
+          } else {
+            lmap.setView([lat, lng], 13);
+          }
+        } catch(_) {
+          lmap.setView([lat, lng], 13);
+        }
         
         // 「現在地を上から4割の位置に」するため、地図を下にパンする
         // ★index257: 過去スレ「まちめぐ6」で動作確認されていたパラメータに戻す。
@@ -10830,7 +11413,22 @@ if (navigator.geolocation) {
             console.log('[起動・リトライ成功] startupPhase=true');
             lmap.off('movestart', closeInfo);
             try {
-              lmap.setView([lat2, lng2], 13);
+              // ★index298: 1段目と同じく距離判定→flyTo
+              try {
+                const _ic2 = lmap.getCenter();
+                const _dM2 = (typeof getDistanceM === 'function')
+                  ? getDistanceM(_ic2.lat, _ic2.lng, lat2, lng2)
+                  : Math.hypot(_ic2.lat - lat2, _ic2.lng - lng2) * 111000;
+                if (_dM2 <= 100 && typeof lmap.setZoom === 'function') {
+                  lmap.setZoom(13);
+                } else if (typeof lmap.flyTo === 'function') {
+                  lmap.flyTo([lat2, lng2], 13, { duration: 0.8 });
+                } else {
+                  lmap.setView([lat2, lng2], 13);
+                }
+              } catch(_) {
+                lmap.setView([lat2, lng2], 13);
+              }
               const tryPanBy2 = (attemptCount) => {
                 try {
                   const mapEl = document.getElementById('leaflet-map');
@@ -10885,13 +11483,13 @@ if (navigator.geolocation) {
           err2 => {
             console.warn('[起動・リトライ] 高精度モードも失敗:', 'code=' + err2.code, err2.message, '→ 東京中心のまま');
           },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
         );
       } else {
         console.log('[起動] 位置情報取得失敗 (code=' + err.code + ')、東京中心のまま:', err.message);
       }
     },
-    { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
   );
 }
 // ★ ログイン後にpendingCheckin救済を試行
@@ -10988,6 +11586,8 @@ const recordCheckinFn = httpsCallable(functions, 'recordCheckin');
 const awardBadgesFn = httpsCallable(functions, 'awardBadges');
 const updateDailyStateFn = httpsCallable(functions, 'updateDailyState');
 const updateMetaCollectionFn = httpsCallable(functions, 'updateMetaCollection');
+// ★index296: 初回プロフィール完成ボーナス（スター1個プレゼント）の付与CF
+const grantProfileBonusFn = httpsCallable(functions, 'grantProfileBonus');
 
 // ★index244 (2026-06-06): 全CF Fn を window 公開（クラシック script からのアクセス用）
 //   真因: updateDailyStateFn が module 内 const 宣言なので mmSetDailyState (classic script内)
@@ -11000,6 +11600,7 @@ window.recordCheckinFn = recordCheckinFn;
 window.awardBadgesFn = awardBadgesFn;
 window.updateDailyStateFn = updateDailyStateFn;
 window.updateMetaCollectionFn = updateMetaCollectionFn;
+window.grantProfileBonusFn = grantProfileBonusFn;
 console.log('[Functions] 初期化完了（asia-northeast1）');
 
 // ═══ index174緊急修正：Firestore IndexedDBのみクリーンアップ（Authは絶対保持） ═══
@@ -11327,6 +11928,36 @@ window.saveProfile = async () => {
     // 編集モードは merge:true で既存値を維持
     await setDoc(doc(db, 'users', user.uid), payload, {merge: !!window._editProfileMode});
 
+    // ★index291: 新規登録時のみ consents サブドキュメントを初期化。
+    //   第三者提供への同意はデフォルトtrue（オプトイン済み扱い）。プライバシーポリシー第6項に対応。
+    //   マイページ「データ提供設定」からいつでもオプトアウト可能。
+    if (!window._editProfileMode) {
+      try {
+        await setDoc(doc(db, 'users', user.uid, 'consents', 'thirdParty'), {
+          dataShareThirdParty: true,
+          consentUpdatedAt: serverTimestamp(),
+          privacyPolicyVersion: '2026-06-23'
+        });
+        window._dataConsentCache = true;
+      } catch(e){ console.warn('[Consent] 初期化失敗(無害):', e.message); }
+    }
+
+    // ★index296: 初回プロフィール完成ボーナス - スター1個プレゼント。
+    //   CF grantProfileBonus が profileBonusGranted フラグで二重付与を防止するため、
+    //   新規/編集を問わず安全に呼んで「未付与なら付与、付与済みなら何もしない」を任せる。
+    //   既存テスター23人もフラグ未設定なので、編集時に通っても初回扱いで1回だけ拾える。
+    try {
+      const grantResult = await grantProfileBonusFn({});
+      const r = grantResult && grantResult.data;
+      if (r && r.success && r.granted) {
+        // 付与成功時のみ祝福演出を表示
+        window._showProfileBonusCelebration(r.newStarsCount);
+      }
+    } catch (e) {
+      // ボーナス付与失敗はプロフィール保存自体には影響させない（無害扱い）
+      console.warn('[ProfileBonus] 付与処理スキップ:', e.message || e);
+    }
+
     document.getElementById('profile-modal-bg').classList.remove('open');
     const unEl = document.getElementById('userName');
     if (unEl) unEl.textContent = handleName;
@@ -11347,6 +11978,31 @@ window.saveProfile = async () => {
     saveBtn.disabled = false;
     saveBtn.textContent = 'プロフィールを保存';
   }
+};
+
+// ★index296: 初回プロフィール完成ボーナス 祝福オーバーレイの表示・非表示
+window._showProfileBonusCelebration = function(newStarsCount) {
+  const bg = document.getElementById('mm-profile-bonus-bg');
+  const starsEl = document.getElementById('mm-pb-stars-now');
+  if (!bg) return;
+  if (starsEl && typeof newStarsCount === 'number') {
+    starsEl.textContent = '所持スター：' + newStarsCount;
+  }
+  // プロフィールモーダルが閉じた後に表示するため少し遅らせる（重なり防止）
+  setTimeout(() => bg.classList.add('open'), 200);
+  // 画面上のスター表示も更新（マイページ等の即時反映）
+  try {
+    if (typeof newStarsCount === 'number' && window._currentUserStars !== undefined) {
+      window._currentUserStars = newStarsCount;
+    }
+    const starCountEls = document.querySelectorAll('[data-mm-star-count]');
+    starCountEls.forEach(el => { el.textContent = String(newStarsCount); });
+  } catch(_) {}
+  console.log('[ProfileBonus] 祝福演出を表示 stars=' + newStarsCount);
+};
+window._closeProfileBonusCelebration = function() {
+  const bg = document.getElementById('mm-profile-bonus-bg');
+  if (bg) bg.classList.remove('open');
 };
 
 // ─── アバターボタン確実バインド（DOMロード後＆マイページ表示時） ───
@@ -11457,7 +12113,13 @@ function showProfileSetupModal(user) {
 const CHECKIN_DURATION_MS = 5 * 60 * 1000; // 5分
 const CHECKIN_RADIUS_M = 500;
 const DAILY_LIMIT = 3;
-const PENDING_KEY = 'machimegu_pending_checkin';
+// ★index298: クリティカルバグ修正。これまで PENDING_KEY と savePendingCheckin/loadPendingCheckin
+//   が別キーを操作していた（'machimegu_pending_checkin' vs 'mm_pending_checkin'）。
+//   結果、tryCompleteCheckin 失敗時の clearPending() が存在しないキーを消すだけになり、
+//   savePendingCheckin が保存した 'mm_pending_checkin' は残存。アプリ再起動時に
+//   checkPendingResumption() が拾って後から「成功扱い」になり、デイリーミッション・カード・統計が
+//   後追い更新される幽霊チェックイン現象が発生していた。キーを統一して根治。
+const PENDING_KEY = 'mm_pending_checkin';
 
 let currentLocation = null; // { lat, lng, accuracy }
 let watchId = null;
@@ -11571,7 +12233,11 @@ function getCurrentPos() {
 //     2段目=低精度(ネット測位)・15秒・直近30秒キャッシュ許容 で妥協値を取得。
 //   2段目の30秒キャッシュは移動距離がわずかで500m判定に実害なし。
 //   精度が粗い場合でも、呼び出し側の半径500m判定で自然にガードされる。
-function getFreshPosition() {
+function getFreshPosition(maxAgeMs) {
+  // ★index295: maxAgeMs で「許容するキャッシュの古さ」を指定可能に。
+  //   未指定なら 1段目=15秒許容（従来の0は厳しすぎてTimeout頻発の主因だった）。
+  //   チェックイン開始時は緩め(45秒)、成立確認時はやや厳しめ(20秒)で呼び分ける。
+  const age1 = (typeof maxAgeMs === 'number') ? maxAgeMs : 15000;
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) { reject(new Error('位置情報が利用できません')); return; }
     const onOk = (pos) => {
@@ -11579,27 +12245,27 @@ function getFreshPosition() {
       _setGeoCache(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
       resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
     };
-    // 1段目：高精度・10秒（短めで早く見切り、間に合えば最も正確）
+    // 1段目：高精度・12秒（直近キャッシュ許容で早く返す。間に合えば最も正確）
     navigator.geolocation.getCurrentPosition(
       onOk,
       (err1) => {
         // TIMEOUT(3) or POSITION_UNAVAILABLE(2) のときだけ2段目へ
         if (err1.code === 3 || err1.code === 2) {
           console.warn('[checkin-geo] 高精度1段目失敗 → 低精度で再試行:', 'code=' + err1.code, err1.message);
-          // 2段目：低精度(ネット測位許可)・15秒・直近30秒キャッシュ許容
+          // 2段目：低精度(ネット測位許可)・15秒・直近60秒キャッシュ許容
           navigator.geolocation.getCurrentPosition(
             onOk,
             (err2) => {
               console.warn('[checkin-geo] 低精度2段目も失敗:', 'code=' + err2.code, err2.message);
               reject(err2);
             },
-            { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
           );
         } else {
           reject(err1);
         }
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: age1 }
     );
   });
 }
@@ -12119,6 +12785,12 @@ window.startCheckin = async (name, pref, lat, lng) => {
     }
     // 既存チェックインをキャンセル（cancelCheckin の確認なし版）
     if (checkinTimer) { clearInterval(checkinTimer); checkinTimer = null; }
+    // ★index298: 判定中(成立確認リトライタイマー実行中)でも別駅へ切替可能にする。
+    //   リトライ用 setTimeout を即クリアし、古いstationLatに対する判定が走らないようにする。
+    if (window._geoRetryTimerId) {
+      clearTimeout(window._geoRetryTimerId);
+      window._geoRetryTimerId = null;
+    }
     clearPending();
     hideCheckinIndicator();
     // 続けて新しいチェックインへ進む
@@ -12136,7 +12808,9 @@ window.startCheckin = async (name, pref, lat, lng) => {
   // 改めて現在地確認
   try {
     // ★index279: チェックイン本体も二段構えで粘る（TWA初回/高層階対策）
-    currentLocation = await getFreshPosition();
+    // ★index295: 開始時は直近45秒のキャッシュを許容して早く返す（ボタン連打の主因を解消）。
+    //   開始判定が多少緩くても、5分後の成立確認で再度距離を見るので問題ない。
+    currentLocation = await getFreshPosition(45000);
   } catch (e) {
     const msg = (e && (e.code === 3 || /timeout/i.test(e.message || '')))
       ? '位置情報の取得に時間がかかっています。高層階や電波の弱い場所では取得しにくいことがあります。少し移動して、もう一度お試しください。'
@@ -12174,6 +12848,11 @@ window.startCheckin = async (name, pref, lat, lng) => {
 window.cancelCheckin = () => {
   if (!confirm('チェックインをキャンセルしますか？')) return;
   if (checkinTimer) { clearInterval(checkinTimer); checkinTimer = null; }
+  // ★index298: 判定中リトライタイマーも止める
+  if (window._geoRetryTimerId) {
+    clearTimeout(window._geoRetryTimerId);
+    window._geoRetryTimerId = null;
+  }
   clearPending();
   hideCheckinIndicator();
   // ★index276: スター後払い方式のためフラグもクリア（スターは未消費＝損失なし）
@@ -12225,8 +12904,39 @@ function hideCheckinIndicator() {
   document.getElementById('checkin-indicator').classList.remove('show');
 }
 
+// ★index295: チェックイン成立確認のリトライ中、インジケーターに状況を表示（無言の固まりを解消）
+function showCheckinRetryStatus(msg) {
+  const ind = document.getElementById('checkin-indicator');
+  const nameEl = document.getElementById('ci-ind-name');
+  const timeEl = document.getElementById('ci-ind-time');
+  if (ind) ind.classList.add('show');
+  if (nameEl && pendingCheckin) nameEl.textContent = pendingCheckin.stationName + '駅 ' + msg;
+  if (timeEl) timeEl.textContent = '⏳';
+}
+
+// ★index295: 位置確認リトライ上限到達時、固まらせず手動リトライ手段を提示
+function showCheckinManualRetry(reason) {
+  const ind = document.getElementById('checkin-indicator');
+  const nameEl = document.getElementById('ci-ind-name');
+  const timeEl = document.getElementById('ci-ind-time');
+  if (ind) ind.classList.add('show');
+  if (nameEl && pendingCheckin) nameEl.textContent = (reason || '位置確認に失敗') + '（タップで再試行）';
+  if (timeEl) timeEl.textContent = '↻';
+  // インジケーターのタップで手動リトライ（既存のトグルメニューより手動リトライを優先）
+  if (ind) {
+    ind.onclick = (ev) => {
+      ev.stopPropagation();
+      ind.onclick = null; // 二重起動防止
+      showCheckinRetryStatus('再確認中…');
+      tryCompleteCheckin(0); // リトライ回数リセットして再挑戦
+    };
+  }
+  // 5分以上経っているので、ユーザーがすぐ気づけるよう軽い通知も
+  console.warn('[checkin] 位置確認リトライ上限。手動リトライ待ち:', reason);
+}
+
 // チェックイン成立処理
-async function tryCompleteCheckin() {
+async function tryCompleteCheckin(retryCount) {
   if (!pendingCheckin) return;
   const user = auth.currentUser;
   if (!user || user.uid !== pendingCheckin.uid) {
@@ -12235,21 +12945,52 @@ async function tryCompleteCheckin() {
     return;
   }
 
-  // 最終位置確認（鮮度を確保するため強制再取得）
+  // ★index295: リトライ回数管理（無言の無限ループを廃止）。
+  //   位置確認の失敗・低精度は最大5回まで20秒間隔で再試行。超えたら明示エラー＋手動リトライ。
+  // ★index298: dev環境では3回に短縮（テスト効率化）。本番(machimegu.com)では5回維持。
+  //   さらにリトライ用 setTimeout の id を _geoRetryTimerId に保存し、別駅startCheckin呼出時に
+  //   外からclearTimeoutできるようにする（判定中も別駅にチェックイン変更トライOKを実現）。
+  const _retry = (typeof retryCount === 'number') ? retryCount : 0;
+  const _isDevHost = !(window.__MM_IS_PROD__ === true);
+  const MAX_GEO_RETRY = _isDevHost ? 3 : 5;
+
+  // 最終位置確認（成立確認なので直近20秒のキャッシュは許容＝早く返す）
   let finalPos;
   try {
-    finalPos = await getFreshPosition();
+    finalPos = await getFreshPosition(20000);
   } catch (e) {
-    alert('チェックイン成立確認のため位置情報が必要です。位置情報を許可してください');
-    setTimeout(() => tryCompleteCheckin(), 30000);
+    if (_retry < MAX_GEO_RETRY) {
+      // ★無言ループをやめ、インジケーターに状況を表示してから再試行
+      showCheckinRetryStatus('位置を確認中…（' + (_retry + 1) + '/' + MAX_GEO_RETRY + '）');
+      if (window._geoRetryTimerId) clearTimeout(window._geoRetryTimerId);
+      window._geoRetryTimerId = setTimeout(() => {
+        window._geoRetryTimerId = null;
+        tryCompleteCheckin(_retry + 1);
+      }, 20000);
+    } else {
+      // 上限到達：固まらせず、明示的にエラー＆手動リトライ手段を出す
+      showCheckinManualRetry('位置情報が取得できませんでした');
+    }
     return;
   }
 
-  // ★ 精度チェック：accuracy が大きすぎる（不正確）場合は再試行
-  if (finalPos.accuracy && finalPos.accuracy > 300) {
-    console.warn(`位置精度が低い（±${Math.round(finalPos.accuracy)}m）、30秒後に再試行`);
-    setTimeout(() => tryCompleteCheckin(), 30000);
-    return;
+  // ★ 精度チェック：accuracy が大きすぎる（不正確）場合は再試行。
+  //   ★index295: しきい値 300m→500m に緩和（チェックイン半径と同じ。街中GPSは±300m超も普通）。
+  //   サーバ側(recordCheckin CF)でも距離検証するため、ここを緩めても不正の穴にはならない。
+  if (finalPos.accuracy && finalPos.accuracy > 500) {
+    console.warn(`位置精度が低い（±${Math.round(finalPos.accuracy)}m）`);
+    if (_retry < MAX_GEO_RETRY) {
+      showCheckinRetryStatus('位置の精度を確認中…（' + (_retry + 1) + '/' + MAX_GEO_RETRY + '）');
+      if (window._geoRetryTimerId) clearTimeout(window._geoRetryTimerId);
+      window._geoRetryTimerId = setTimeout(() => {
+        window._geoRetryTimerId = null;
+        tryCompleteCheckin(_retry + 1);
+      }, 20000);
+    } else {
+      // 精度が出ないままでも、距離判定は試みる（駅500m圏内なら成立させる救済）
+      console.warn('精度リトライ上限。距離判定にフォールバック');
+    }
+    if (_retry < MAX_GEO_RETRY) return;
   }
 
   const dist = getDistanceM(finalPos.lat, finalPos.lng, pendingCheckin.stationLat, pendingCheckin.stationLng);
@@ -14624,9 +15365,11 @@ async function loadMypageData(uid) {
       // エリア
       badgeTotal += 27;
       // earned側は userBadges の実数（ミッション系除く）— プレビュー表示の「N個」と完全に一致
+      // ★index299: 5駅未満エリアの誤獲得バッジもカウントから除外（renderMypageBadgePreview と整合）
       try {
         const filteredBadges = [...userBadges.values()].filter(
           b => b && b.type !== 'mission' && b.type !== 'mission_milestone'
+                && !(b.type === 'area' && (Number(b.total) || 0) < 5)
         );
         badgeEarned = filteredBadges.length;
       } catch(_) { badgeEarned = 0; }
@@ -14700,6 +15443,10 @@ async function loadMypageData(uid) {
     // Phase D-2.1: バッジプレビュー＋推し街描画
     if (typeof renderMypageBadgePreview === 'function') renderMypageBadgePreview();
     if (typeof renderFavStations === 'function') renderFavStations();
+    // ★index291: データ提供設定トグルの状態を読み込んで反映（非同期・非ブロッキング）
+    if (typeof loadDataConsentState === 'function') loadDataConsentState(uid);
+    // ★index293: ショップUI初期化（価格取得・Pro状態反映・未処理購入復旧、非ブロッキング）
+    if (typeof initShopUI === 'function') initShopUI();
     console.log('[Mypage] total:', (Date.now() - _mpT0) + 'ms');
   } catch (e) {
     console.error('マイページデータ取得エラー:', e);
@@ -14709,6 +15456,278 @@ async function loadMypageData(uid) {
 }
 // ★index210 #5最重要修正: claim後にマスターパネルを再計算するため公開
 window.loadMypageData = loadMypageData;
+
+// ─── ★index291: データ提供設定（第三者提供オプトアウト） ───
+//   consents/thirdParty サブドキュメントの dataShareThirdParty を読み書き。
+//   読み＝本人のみ / 書き＝本人のみ（第三者提供への同意は本人の意思のためクライアント書込み許可。Rules v7で制御）。
+window._dataConsentCache = true;
+function _setConsentToggleUI(on){
+  const t = document.getElementById('mp-dataconsent-toggle');
+  if (t) t.setAttribute('aria-checked', on ? 'true' : 'false');
+}
+async function loadDataConsentState(uid){
+  try {
+    const ref = doc(db, 'users', uid, 'consents', 'thirdParty');
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const v = snap.data().dataShareThirdParty;
+      const on = (v !== false); // undefined/null は同意扱い
+      window._dataConsentCache = on;
+      _setConsentToggleUI(on);
+    } else {
+      // ★既存ユーザー補完: consents 未設定なら初期値（同意済み）で作成。
+      //   privacyPolicyVersion を記録し、後の規約改定時の差分管理に使う。
+      await setDoc(ref, {
+        dataShareThirdParty: true,
+        consentUpdatedAt: serverTimestamp(),
+        privacyPolicyVersion: '2026-06-23'
+      });
+      window._dataConsentCache = true;
+      _setConsentToggleUI(true);
+    }
+  } catch(e){
+    console.warn('[Consent] 読み込み失敗(同意済み扱いで表示):', e.message);
+    _setConsentToggleUI(true);
+  }
+}
+window.loadDataConsentState = loadDataConsentState;
+
+// ★index292: データ提供設定パネルの開閉（折りたたみ）
+window.toggleDataConsentPanel = () => {
+  const header = document.querySelector('.mp-dataconsent-header');
+  const body = document.getElementById('mp-dataconsent-body');
+  if (!header || !body) return;
+  const isOpen = body.classList.contains('open');
+  if (isOpen) {
+    body.classList.remove('open');
+    header.setAttribute('aria-expanded', 'false');
+  } else {
+    body.classList.add('open');
+    header.setAttribute('aria-expanded', 'true');
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ★index293: ショップ（Pro版＋スター購入）— Digital Goods API + Play Billing
+// ═══════════════════════════════════════════════════════════════
+// 設計:
+//   - TWA内でのみ window.getDigitalGoodsService が存在（PWA/ブラウザでは無い）
+//   - getDetails()でPlay Console設定の価格を取得しUIに反映（価格ハードコードしない）
+//   - 購入: PaymentRequest(supportedMethods:'https://play.google.com/billing', data:{sku})
+//   - 購入トークンをCF verifyPurchase に送って検証→Firestore反映→consume/acknowledge
+//   - 起動時 listPurchases() で未処理購入を復旧（ネット切断等の取りこぼし救済）
+// ═══════════════════════════════════════════════════════════════
+const MM_BILLING_METHOD = 'https://play.google.com/billing';
+const MM_SHOP_SKUS = ['pro_lifetime', 'stars_1', 'stars_6', 'stars_15'];
+let _mmDigitalGoodsService = null;
+
+// Digital Goods サービスを取得（TWA環境のみ成功）
+async function mmGetBillingService() {
+  if (_mmDigitalGoodsService) return _mmDigitalGoodsService;
+  if (!('getDigitalGoodsService' in window)) return null;
+  try {
+    _mmDigitalGoodsService = await window.getDigitalGoodsService(MM_BILLING_METHOD);
+    return _mmDigitalGoodsService;
+  } catch (e) {
+    console.warn('[Shop] getDigitalGoodsService失敗:', e && e.message);
+    return null;
+  }
+}
+
+// ショップUIの初期化（マイページ表示時に呼ぶ）
+async function initShopUI() {
+  const noteEl = document.getElementById('mp-shop-note');
+  const starBalEl = document.getElementById('mp-shop-star-bal');
+  // スター残高を反映
+  if (starBalEl) starBalEl.textContent = (window._userStarsCache || 0);
+  // Pro状態を反映
+  await refreshProStatusUI();
+
+  const service = await mmGetBillingService();
+  if (!service) {
+    // 非TWA環境（ブラウザ/dev）: 購入不可の案内
+    if (noteEl) noteEl.textContent = 'アプリ版（Google Play）でご購入いただけます。';
+    return;
+  }
+  // TWA環境: Play Consoleから価格を取得して表示
+  try {
+    const details = await service.getDetails(MM_SHOP_SKUS);
+    for (const item of details) {
+      if (item.itemId === 'pro_lifetime') {
+        const priceEl = document.getElementById('mp-shop-pro-price');
+        if (priceEl && item.price) {
+          const p = new Intl.NumberFormat(navigator.language, {
+            style: 'currency', currency: item.price.currency
+          }).format(item.price.value);
+          priceEl.textContent = p + ' 買い切り';
+        }
+      }
+      // スターの価格はUIに固定表示（¥100/500/1000）。getDetailsで取れるが表示は既存のまま。
+    }
+  } catch (e) {
+    console.warn('[Shop] getDetails失敗:', e && e.message);
+  }
+  // 起動時の未処理購入を復旧
+  await recoverPendingPurchases(service);
+}
+window.initShopUI = initShopUI;
+
+// Pro状態をUIに反映
+async function refreshProStatusUI() {
+  const user = auth.currentUser;
+  const btn = document.getElementById('mp-shop-pro-btn');
+  const owned = document.getElementById('mp-shop-pro-owned');
+  if (!user || !btn || !owned) return;
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    const pro = snap.exists() && snap.data().proStatus;
+    if (pro && pro.type) {
+      btn.style.display = 'none';
+      owned.style.display = 'block';
+      window._userIsPro = true;
+    } else {
+      btn.style.display = 'block';
+      owned.style.display = 'none';
+      window._userIsPro = false;
+    }
+  } catch (e) {
+    console.warn('[Shop] Pro状態取得失敗:', e && e.message);
+  }
+}
+window.refreshProStatusUI = refreshProStatusUI;
+
+// 商品を購入
+window.buyProduct = async (sku) => {
+  const user = auth.currentUser;
+  if (!user) { alert('購入にはログインが必要です'); return; }
+
+  const service = await mmGetBillingService();
+  if (!service) {
+    alert('購入はGoogle Playアプリ版でのみ可能です。\nアプリ版をインストールしてご利用ください。');
+    return;
+  }
+
+  try {
+    // PaymentRequestで購入フロー起動
+    const paymentMethods = [{
+      supportedMethods: MM_BILLING_METHOD,
+      data: { sku: sku }
+    }];
+    // total は Play Billing では使われないがAPI仕様上必須（ダミー）
+    const paymentDetails = {
+      total: { label: 'Total', amount: { currency: 'JPY', value: '0' } }
+    };
+    const request = new PaymentRequest(paymentMethods, paymentDetails);
+    const response = await request.show();
+
+    // 購入トークン取得（新仕様purchaseToken優先、旧tokenフォールバック）
+    const purchaseToken = response.details.purchaseToken || response.details.token;
+    if (!purchaseToken) {
+      await response.complete('fail');
+      alert('購入情報の取得に失敗しました');
+      return;
+    }
+
+    // CFで検証→Firestore反映
+    const verify = httpsCallable(functions, 'verifyPurchase');
+    const result = await verify({ productId: sku, purchaseToken: purchaseToken });
+
+    if (result && result.data && result.data.success) {
+      await response.complete('success');
+      await onPurchaseSuccess(sku);
+    } else {
+      await response.complete('fail');
+      alert('購入の検証に失敗しました。時間をおいて再度お試しください。');
+    }
+  } catch (e) {
+    // ユーザーキャンセルは正常系（AbortError）
+    if (e && e.name === 'AbortError') {
+      console.log('[Shop] 購入キャンセル');
+      return;
+    }
+    console.error('[Shop] 購入エラー:', e);
+    alert('購入処理でエラーが発生しました。\n' + (e && e.message ? e.message : ''));
+  }
+};
+
+// 購入成功後のUI更新
+async function onPurchaseSuccess(sku) {
+  if (sku === 'pro_lifetime') {
+    alert('Pro版へようこそ！広告非表示などの特典が有効になりました。');
+    await refreshProStatusUI();
+    // 広告の非表示を即反映（広告実装後に有効）
+    if (typeof applyProAdState === 'function') applyProAdState();
+  } else if (sku.indexOf('stars_') === 0) {
+    // スター残高を再取得
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        const newStars = (snap.exists() && snap.data().stars) || 0;
+        window._userStarsCache = newStars;
+        const balEl = document.getElementById('mp-shop-star-bal');
+        if (balEl) balEl.textContent = newStars;
+        if (typeof updateStarDisplay === 'function') updateStarDisplay(newStars);
+      } catch (e) {}
+    }
+    const added = sku === 'stars_1' ? 1 : sku === 'stars_6' ? 6 : 15;
+    alert('スターを' + added + '個追加しました！');
+  }
+}
+
+// 起動時の未処理購入を復旧（ネット切断等で検証が完了しなかった購入を救済）
+async function recoverPendingPurchases(service) {
+  try {
+    if (!service.listPurchases) return;
+    const purchases = await service.listPurchases();
+    if (!purchases || purchases.length === 0) return;
+    const verify = httpsCallable(functions, 'verifyPurchase');
+    for (const p of purchases) {
+      // 未acknowledge or 未consumeの購入をCFに通して確定させる（冪等なので二重付与しない）
+      try {
+        await verify({ productId: p.itemId, purchaseToken: p.purchaseToken });
+      } catch (e) {
+        console.warn('[Shop] 復旧検証スキップ:', p.itemId, e && e.message);
+      }
+    }
+    // Pro状態を再反映
+    await refreshProStatusUI();
+  } catch (e) {
+    console.warn('[Shop] listPurchases失敗:', e && e.message);
+  }
+}
+
+
+window.toggleDataConsent = async () => {
+  const user = auth.currentUser;
+  if (!user) { alert('ログインしてください'); return; }
+  const cur = window._dataConsentCache !== false;
+  const next = !cur;
+  // OFFにする時だけ確認（協力をやめる重要操作のため）
+  if (!next) {
+    const ok = confirm(
+      'データ提供をオフにしますか？\n\n' +
+      'オフにすると、今後あなたの記録は統計データの作成に使われなくなります。\n' +
+      '※すでに匿名加工して提供済みの統計データは、個人を特定できないため取り消せません。'
+    );
+    if (!ok) return;
+  }
+  // 楽観的にUI更新
+  _setConsentToggleUI(next);
+  window._dataConsentCache = next;
+  try {
+    await setDoc(doc(db, 'users', user.uid, 'consents', 'thirdParty'), {
+      dataShareThirdParty: next,
+      consentUpdatedAt: serverTimestamp(),
+      privacyPolicyVersion: '2026-06-23'
+    }, { merge: true });
+  } catch(e){
+    // 失敗したらUIを元に戻す
+    _setConsentToggleUI(cur);
+    window._dataConsentCache = cur;
+    alert('設定の保存に失敗しました。通信環境を確認してもう一度お試しください。\n' + e.message);
+  }
+};
 
 
 // ─── カード一覧専用ページ ───
@@ -16305,10 +17324,12 @@ function renderBadgeHTML(b, big) {
     const lineLabel = window.formatLineLabelTwoLines ? window.formatLineLabelTwoLines(lineShort) : lineShort;
     const rarity = window.bpRarityLine ? window.bpRarityLine(b.tier) : 0;
     const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+    // ★index301: 銅/銀/金を路線名の上に配置（メインの路線制覇ページと表示順を統一）。
+    //   マイページのバッジコレクション抜粋・他のrenderBadgeHTML呼出元でも一貫性を確保。
     return `<div class="bp-badge bp-badge-line ${b.tier}${rarityClasses}">
       ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
-      <div class="bp-name">${lineLabel}</div>
       <div class="bp-sub">${tierJa(b.tier)}</div>
+      <div class="bp-name">${lineLabel}</div>
     </div>`;
   }
   if (b.type === 'rank') {
@@ -16464,6 +17485,7 @@ window.renderBadgeForShare = function(b){
       }
     }
     const subLabel = b.tier === 'gold' ? '制覇' : b.tier === 'silver' ? '銀' : '銅';
+    // ★index301: 銅/銀/金を上に、路線名を下に。メイン路線制覇ページと表示順を統一。
     return `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:${size}px;height:${size}px;display:block">
       <defs>
         <linearGradient id="${id}-bg" x1="0" y1="0" x2="0.7" y2="1">
@@ -16479,13 +17501,13 @@ window.renderBadgeForShare = function(b){
       </defs>
       <polygon points="${hex}" fill="url(#${id}-bg)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
       <polygon points="${cx},10 ${size-10},${size*0.27} ${size-10},${size*0.55} ${cx},${size*0.5} 10,${size*0.55} 10,${size*0.27}" fill="url(#${id}-hi)"/>
+      <text x="${cx}" y="${size*0.36}" text-anchor="middle" fill="${cc.text}" font-size="22" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${subLabel}</text>
       ${line2 ? `
-        <text x="${cx}" y="${size*0.42}" text-anchor="middle" fill="${cc.text}" font-size="20" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${escapeHtml(line1)}</text>
-        <text x="${cx}" y="${size*0.58}" text-anchor="middle" fill="${cc.text}" font-size="20" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${escapeHtml(line2)}</text>
+        <text x="${cx}" y="${size*0.60}" text-anchor="middle" fill="${cc.text}" font-size="20" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${escapeHtml(line1)}</text>
+        <text x="${cx}" y="${size*0.78}" text-anchor="middle" fill="${cc.text}" font-size="20" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${escapeHtml(line2)}</text>
       ` : `
-        <text x="${cx}" y="${size*0.52}" text-anchor="middle" fill="${cc.text}" font-size="22" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${escapeHtml(line1)}</text>
+        <text x="${cx}" y="${size*0.66}" text-anchor="middle" fill="${cc.text}" font-size="22" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${escapeHtml(line1)}</text>
       `}
-      <text x="${cx}" y="${size*0.78}" text-anchor="middle" fill="${cc.text}" font-size="22" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${subLabel}</text>
     </svg>`;
   }
   
@@ -16986,28 +18008,45 @@ function renderLineBadges(lineResults, userBadges) {
     const lineShort = (window.shortLineName ? window.shortLineName(r.line) : r.line)
       .replace(/^東京メトロ/,'').replace(/^メトロ/,'');  // マップ外の保険として正規表現も残す
     // 路線名を意味のあるところで2行に分割（最大4文字+残り、または半分）
-    const lineLabel = window.formatLineLabelTwoLines ? window.formatLineLabelTwoLines(lineShort) : lineShort;
+    const lineLabel = window.formatLineLabelTwoLines ? window.formatLineLabelTwoLines(lineShort) : escapeHtml(lineShort);
+
+    // ★index299: A案採用。元の六角形バッジ表示に戻し、「銅/銀/金（上）→路線名（下）」順に
+    //   変更。バッジ本体の下に「3/25駅」テキスト＋進捗バーを追加。
+    //   「次：銀まで○駅」のような次tier目標は、バッジ詳細モーダル(showBadgeDetail)側で
+    //   表示する方針（スペース十分なため）。バッジ本体の存在感を最優先で維持。
+    const progressBar = window.bpProgressBar ? window.bpProgressBar(r.conquered, r.total) : '';
+    const progressText = `${r.conquered}/${r.total}駅`;
+
     if (r.tier) {
+      // 獲得済み：元の六角形バッジ＋下に進捗
       const id = `line_${r.line}_${r.tier}`;
-      const rarity = window.bpRarityLine(r.tier);
-      const rarityClasses = window.bpRarityClasses(rarity);
-      const badgeData = userBadges.get(id) || { id, type:'line', line:r.line, tier:r.tier, conquered:r.conquered, total:r.total, name:`${r.line} ${tierJa(r.tier)}`, desc:`${r.line}の駅を制覇` };
+      const rarity = window.bpRarityLine ? window.bpRarityLine(r.tier) : 1;
+      const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+      const badgeData = userBadges.get(id) || {
+        id, type:'line', line:r.line, tier:r.tier,
+        conquered:r.conquered, total:r.total,
+        name:`${r.line} ${tierJa(r.tier)}`,
+        desc:`${r.line}の駅を制覇`
+      };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      // ★index196：銅/銀取得後の「次tierまでのバー」はバッジ内に入れない（文字バランス崩れる）。
-      //   元の素のバッジ表示に戻す。
-      return `<div class="bp-badge bp-badge-line ${r.tier}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
-        ${window.bpStarsHTML(rarity)}
-        <div class="bp-name">${lineLabel}</div>
-        <div class="bp-sub">${tierJa(r.tier)}</div>
+      return `<div class="bp-line-wrap earned">
+        <div class="bp-badge bp-badge-line ${r.tier}${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')">
+          ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
+          <div class="bp-sub bp-sub-top">${tierJa(r.tier)}</div>
+          <div class="bp-name">${lineLabel}</div>
+        </div>
+        <div class="bp-line-progress-text">${progressText}</div>
+        ${progressBar}
       </div>`;
     } else {
-      // 未獲得：進捗バー追加（bronze閾値=30%が次の目標）
-      const nextTarget = Math.max(1, Math.ceil(r.total * 0.3));
-      return `<div class="bp-badge-locked">
-        <div class="bp-icon">🚃</div>
-        <div class="bp-name">${lineLabel}</div>
-        <div class="bp-progress">${r.conquered}/${r.total}駅</div>
-        ${window.bpProgressBar(r.conquered, nextTarget)}
+      // 未獲得：従来通りのbp-badge-locked＋下に進捗バー
+      return `<div class="bp-line-wrap">
+        <div class="bp-badge-locked">
+          <div class="bp-icon">🚃</div>
+          <div class="bp-name">${lineLabel}</div>
+        </div>
+        <div class="bp-line-progress-text">${progressText}</div>
+        ${progressBar}
       </div>`;
     }
   }
@@ -17752,7 +18791,14 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
   }
   
   const areaMaster = buildAreaMaster();
-  const areaResults = calcAreaConquest(areaMaster, userCards).filter(r => r.total > 0);
+  // ★index298: 5駅未満の市はエリア判定対象から除外。
+  //   理由：STATION_CITIES上で1〜2駅しか登録されてない市が大量にある（伊勢原市1駅・本庄市1駅等）。
+  //   そのまま判定すると1駅チェックインで「市制覇」が誤って成立する。
+  //   ホワイトリスト（23区+4大都市）は r.total >= 5 を当然満たすので影響なし。
+  //   既存の不正バッジ（5駅未満で獲得済み）はこのフィルタで画面に出ない。Firestoreの掃除は
+  //   完走後のCF v8デプロイで実施。
+  const MIN_AREA_STATIONS = 5;
+  const areaResults = calcAreaConquest(areaMaster, userCards).filter(r => r.total >= MIN_AREA_STATIONS);
   
   // 仕分け
   // - defaultAreas: 23区＋4大都市（常に表示）
@@ -17790,8 +18836,15 @@ window._renderAreaBadgesV2 = function(userCards, userBadges) {
         desc:`${r.city}の全${r.total}駅を制覇`
       };
       const enc = encodeURIComponent(JSON.stringify(badgeData));
-      const rarity = 5;  // エリア制覇は最高レア
-      const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+      const rarity = 5;  // エリア制覇は最高レア扱い（★5表示は維持）
+      // ★index298→299: メラメラ削除。bpRarityClasses(5)が返す 'bp-glow-5 bp-holo' から
+      //   bp-holo（虹色シマー回転アニメ）だけを除外する。bp-glow-5（drop-shadowによる外周ピンクグロー）
+      //   は静的なので「メラメラ」の正体ではない＝立体感のために維持する。
+      //   index298ではbp-glow-5もbp-glow-4に弱めていたが、結果として「他のバッジと比べて
+      //   立体感がなくなった」とのフィードバックを受け、外周グローは元に戻して
+      //   動きのある演出（bp-holo）だけを取り除く方針に修正。
+      const rarityRaw = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
+      const rarityClasses = rarityRaw.replace(/\s*bp-holo\b/g, '');
       // ★ 詳細モーダル側と統一：SVG版バッジ（8角形）を使う
       const svgInner = window.renderAreaBadgeSVG ? window.renderAreaBadgeSVG(badgeData) : '';
       return `<div class="bp-badge bp-badge-area-wrap${rarityClasses}" onclick="window.bpTapPulse(this);showBadgeDetail('${enc}')" style="position:relative;padding:0;background:none;border:none;cursor:pointer">
@@ -17858,7 +18911,10 @@ checkAndAwardBadges = async function(uid) {
       const userCards = await fetchUserStationCards(uid);
       const userBadges = await fetchUserBadges(uid);
       const areaMaster = buildAreaMaster();
+      // ★index298: 5駅未満の市は判定対象外（描画側と整合）
+      const _MIN_AREA = 5;
       calcAreaConquest(areaMaster, userCards).forEach(({city, ratio, conquered, total}) => {
+        if (total < _MIN_AREA) return;
         if (ratio >= 1.0 && total > 0) {
           const id = `area_${city}`;
           if (!userBadges.has(id)) {
@@ -18278,8 +19334,13 @@ async function renderMypageBadgePreview() {
     // ★index176: 週間ミッション系（mission / mission_milestone）はマイページプレビューから除外
     //   理由：マイページのバッジコレクションは「街」「路線」「ランク」「エリア」「チェックイン」「同じ街」を見せる場。
     //         ミッション達成バッジはバッジページ専用セクションで完結させる。
+    // ★index299: 5駅未満エリアの誤獲得バッジ（伊勢原市1駅等）もプレビューから除外。
+    //   描画ルート(renderBadgeHTML→renderAreaBadgeSVG)は元の獲得済バッジを無条件描画するため、
+    //   filter段階でガードする必要があった（_renderAreaBadgesV2 のフィルタはバッジ一覧ページ専用）。
+    //   Firestore物理削除はCF v8で実施予定、それまでは画面に出さないことで対応。
     const arr = [...userBadges.values()]
       .filter(b => b.type !== 'mission' && b.type !== 'mission_milestone')
+      .filter(b => !(b.type === 'area' && (Number(b.total) || 0) < 5))
       .sort((a, b) => {
       const ta = a.earnedAt && a.earnedAt.toMillis ? a.earnedAt.toMillis() : 
                  (a.earnedAt && a.earnedAt.seconds ? a.earnedAt.seconds*1000 : 0);
@@ -19421,7 +20482,7 @@ if ('serviceWorker' in navigator) {
         <div class="mm-ob-sample-card">
           <div class="mm-ob-card-rank">S</div>
           <div class="mm-ob-card-name">新宿</div>
-          <div class="mm-ob-card-score">947</div>
+          <div class="mm-ob-card-score" id="mm-ob-score-num">947</div>
         </div>
       </div>
       <div class="mm-ob-title">あなたの街の「街力」は？</div>
@@ -19451,9 +20512,13 @@ if ('serviceWorker' in navigator) {
     <div class="mm-ob-slide" data-idx="2">
       <div class="mm-ob-visual">
         <div class="mm-ob-lv-visual">
-          <div class="mm-ob-lv-crown">👑</div>
+          <div class="mm-ob-lv-crown-wrap">
+            <div class="mm-ob-lv-crown-ring"></div>
+            <div class="mm-ob-lv-crown">👑</div>
+          </div>
           <div class="mm-ob-lv-text">LV.99</div>
           <div class="mm-ob-lv-tier">街マスター</div>
+          <div class="mm-ob-xp-bar"><div class="mm-ob-xp-bar-fill" id="mm-ob-xp-fill"></div></div>
         </div>
       </div>
       <div class="mm-ob-title">街めぐマスターへ</div>
@@ -19505,6 +20570,33 @@ if ('serviceWorker' in navigator) {
   const TOTAL_SLIDES = 3;
   let currentSlide = 0;
   
+  // ★index297: スライド1のスコアカウントアップ用ヘルパー。
+  //   表示するたびに0→947を約1.4秒で駆け上がる演出。
+  //   何度もスライド遷移する可能性があるので、_animTokenで多重起動を防止する。
+  let _scoreAnimToken = 0;
+  function animateScoreCountUp(target, durationMs){
+    const el = document.getElementById('mm-ob-score-num');
+    if (!el) return;
+    const myToken = ++_scoreAnimToken;
+    const startTime = performance.now();
+    const startVal = 0;
+    const tgt = (typeof target === 'number') ? target : 947;
+    const dur = (typeof durationMs === 'number') ? durationMs : 1400;
+    function step(now){
+      if (myToken !== _scoreAnimToken) return; // 後発に上書きされたら中止
+      const elapsed = now - startTime;
+      const t = Math.min(1, elapsed / dur);
+      // easeOutQuint: 最後の伸びを少しゆっくり、止まる感を出す
+      const eased = 1 - Math.pow(1 - t, 5);
+      const v = Math.round(startVal + (tgt - startVal) * eased);
+      el.textContent = String(v);
+      if (t < 1) requestAnimationFrame(step);
+      else el.textContent = String(tgt);
+    }
+    el.textContent = '0';
+    requestAnimationFrame(step);
+  }
+
   function showSlide(idx){
     const slides = document.querySelectorAll('.mm-ob-slide');
     const dots = document.querySelectorAll('.mm-ob-dot');
@@ -19526,6 +20618,13 @@ if ('serviceWorker' in navigator) {
     if (nextBtn) {
       nextBtn.textContent = (idx >= TOTAL_SLIDES - 1) ? 'ログインしてはじめる' : 'つぎへ';
     }
+    
+    // ★index297: スライド1表示時にスコアカウントアップを発火（戻ってきた時も再発火）。
+    //   スライド遷移アニメ（0.5s）と被らないよう200ms遅らせる。
+    if (idx === 0) {
+      setTimeout(() => animateScoreCountUp(947, 1400), 200);
+    }
+    
     currentSlide = idx;
   }
   
@@ -20978,7 +22077,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v290</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v301</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -20994,7 +22093,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 290', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 301', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   /* ★index278: dev/本番の表示出し分け。
      本番(machimegu.com)では開発用UI(右下バージョンバッジ・左下📋デバッグログボタン)を隠す。
@@ -21016,7 +22115,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v290';
+          mpVer.textContent = 'dev v301';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -21289,7 +22388,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v290) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v301) ===', '#88ccff');
   })();
 </script>
 
