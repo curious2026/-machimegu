@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index301 (2026.06.28) — 【路線UI仕上げ：銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一】ともきフィードバック3点反映。①メインページの.bp-sub-topを font-size 18px→13px（モバイル 16px→11px）に調整し、路線名(.bp-name=13px/11px)と同じサイズに揃えた（前回大きすぎたので戻す）。②外箱内の bp-badge.bp-badge-line を width:78px→width:100% に拡大し、外箱内幅ギリギリまで広げてバッジの存在感を最大化。aspect-ratio:1 維持で長い路線名も収まる。bp-badge-locked も aspect-ratio:1 に統一して獲得済みとサイズを揃え、🚃アイコンも 30px→36px に拡大。③表示経路を全て「銅/銀/金が上、路線名が下」で統一：renderBadgeHTML（マイページ抜粋プレビュー・他用途）のCSS版で bp-name と bp-sub の順序を逆転、SVG版バッジ（詳細モーダル・共有カード）も subLabel と line1/line2 の y座標を入れ替えて銅を上、路線名を下に配置。これでメインページ・マイページ抜粋・詳細モーダル・共有カード全てで一貫した表示順になり「細かいところまで合わせて調整」のフィードバックに応える。【継続】①②④⑤⑥は299/300までの実装を継続。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅（マイページ抜粋経路）。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
+<!-- VERSION: index303 (2026.06.28) — 【マイページ下部の整理＋トリセツ4点更新】①ショップ上の細い境界線（border-top:1px）を撤去し、HTMLに <div class="mp-rainbow-divider"></div>（既存のオレンジ線・LV21街角ウォッチャーの上端と同じ #ff9040/height:2px/opacity:0.85）を挿入。②データ提供設定の直上にも同じ mp-rainbow-divider を追加し、③その下に公式SNS横並びリンク（X @machimegux / Instagram @machimegu2026）を新設。新CSS .mp-sns-row / .mp-sns-link でアイコン+ID表示、min-height:44pxのタップ領域確保、ホバー/アクティブで微縮小アニメ。Xロゴ・Instagramロゴは公式SNSへのリンクとしてSVGで描画（商標利用は公式SNSへの誘導用途で問題なし）。④トリセツ更新：(a)4章「チェックインのコツ」に「1日に最大3駅までチェックイン可能」を追加（メモリに記載の重要仕様だが従来トリセツに抜けていた）。(b)6章「バッジコレクション（6種類）」の箇条書きが5項目しかなかった整合性問題を解消し、6番目に「🎯ミッション達成：週間ミッションをクリアして専用バッジ＆マイルストーンを獲得」を追加。(c)新章「12. ショップ」を「11. よくある質問」と注意事項の間に挿入し、Pro¥500買い切りとスター課金（1個¥100〜、まとめ買い割引）を簡潔に紹介。任意購入・無くても全機能遊べる旨を明記し押しつけ感を回避。「注意事項」を13章に繰り下げ。(d)末尾「街にでよう」の下に公式SNSセクションを追加し、X @machimegux と Instagram @machimegu2026 を「最新情報・新機能のお知らせは公式SNSで発信中」と紹介。【継続】①②④⑤⑥は297〜302までの実装を継続。【index302】銅フォント統一(.bp-sub-topグローバル化＋15px/13px)＋チェックイン3段階フォールバック(自前キャッシュ→watchPosition→getFreshPosition)。【index301】銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -1055,6 +1055,38 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   background:#ff9040;
   opacity:0.85;
 }
+/* ★index303: 公式SNS横並びリンク（マイページ最下部、データ提供設定の直上）。
+   X(@machimegux) と Instagram(@machimegu2026) をアイコン+IDで横並び表示。タップでアプリ/ブラウザに遷移。 */
+.mp-sns-row{
+  display:flex;align-items:stretch;justify-content:center;
+  gap:14px;
+  padding:8px 16px 18px;
+  flex-wrap:wrap;
+}
+.mp-sns-link{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(168,224,255,0.18);
+  border-radius:10px;
+  color:#cfdaee;
+  text-decoration:none;
+  font-size:13px;font-weight:700;
+  letter-spacing:0.3px;
+  transition:background 0.18s, transform 0.12s, border-color 0.18s;
+  min-height:44px;
+}
+.mp-sns-link:hover,.mp-sns-link:active{
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(168,224,255,0.35);
+  transform:scale(0.97);
+}
+.mp-sns-link svg{
+  width:18px;height:18px;flex-shrink:0;
+}
+.mp-sns-link .mp-sns-id{font-family:monospace;font-size:12px}
+.mp-sns-x svg{color:#fff}
+.mp-sns-ig svg{color:#e4405f}
 .mp-master-label{
   display:flex;align-items:center;gap:8px;
   font-size:11px;font-weight:900;color:#a8b8d0;
@@ -1348,7 +1380,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 
 /* ─── ★index293: ショップ（Pro版＋スター購入） ─── */
-.mp-shop-section{border-top:1px solid rgba(120,150,210,0.12)}
+.mp-shop-section{}
+/* ★index303: ショップ上の細い境界線を削除（直前に.mp-rainbow-dividerをHTMLに置く方式に変更） */
 /* Pro版カード */
 .mp-shop-pro{
   background:linear-gradient(135deg, rgba(58,138,196,0.18), rgba(120,90,200,0.15));
@@ -3015,9 +3048,11 @@ body:not(.splashing) #table-area{
   font-size:36px !important;
   margin-bottom:4px !important;
 }
-/* 銅/銀/金（一文字）を路線名の上に配置。サイズは路線名(.bp-name=13px PC/11px Mobile)と同じに揃える */
-.bp-line-wrap .bp-sub-top{
-  font-size:13px !important;
+/* ★index302: bp-sub-top のCSSを.bp-line-wrap配下からグローバルに昇格。
+   renderBadgeHTML経由の詳細モーダル・マイページ抜粋でも同じ太字スタイルが適用される。
+   フォントサイズも 13px→15px（モバイル 11px→13px）にもう一段アップし、銅メダルの存在感を強化。 */
+.bp-sub-top{
+  font-size:15px !important;
   font-weight:900 !important;
   letter-spacing:0.5px;
   line-height:1.2;
@@ -3050,9 +3085,6 @@ body:not(.splashing) #table-area{
   .bp-line-wrap > .bp-badge-locked .bp-icon{
     font-size:30px !important;
   }
-  .bp-line-wrap .bp-sub-top{
-    font-size:11px !important;
-  }
   .bp-line-wrap .bp-badge.bp-badge-line .bp-name{
     font-size:11px !important;
   }
@@ -3061,6 +3093,12 @@ body:not(.splashing) #table-area{
   }
   .bp-line-wrap .bp-line-progress-text{
     font-size:9px;
+  }
+}
+/* ★index302: モバイル時もグローバルセレクタで bp-sub-top を制御（メイン・詳細モーダル共通） */
+@media (max-width:520px){
+  .bp-sub-top{
+    font-size:13px !important;
   }
 }
 
@@ -5482,6 +5520,7 @@ body.checkin-active #checkin-indicator{
       <div class="tori-notes">
         <div class="tori-notes-item">駅から<strong style="color:#a8e0c8">半径500m以内＋5分滞在</strong>でチェックイン成立</div>
         <div class="tori-notes-item">途中で離れても、戻れば<strong style="color:#a8e0c8">5分以内なら自動で再開</strong>される</div>
+        <div class="tori-notes-item">1日に<strong style="color:#a8e0c8">最大3駅</strong>までチェックイン可能</div>
         <div class="tori-notes-item">同じ駅は<strong style="color:#a8e0c8">1日1回まで</strong>（日本時間0時にリセット）</div>
         <div class="tori-notes-item">何度も訪問するとカードの<strong style="color:#a8e0c8">訪問回数</strong>がカウントアップ</div>
         <div class="tori-notes-item">途中キャンセルも自由</div>
@@ -5512,6 +5551,7 @@ body.checkin-active #checkin-indicator{
         <div class="tori-notes-item">🛡 <strong style="color:#a8e0c8">エリア制覇</strong>：同じ市区町村の駅を一定数で獲得</div>
         <div class="tori-notes-item">📍 <strong style="color:#a8e0c8">チェックイン数</strong>：累計10/50/100/500/1000…で獲得</div>
         <div class="tori-notes-item">☕ <strong style="color:#a8e0c8">同じ街リピート</strong>：1駅に何度も通うと「常連→マニア→生き字引→神」</div>
+        <div class="tori-notes-item">🎯 <strong style="color:#a8e0c8">ミッション達成</strong>：週間ミッションをクリアして専用バッジ＆マイルストーンを獲得</div>
         
       </div>
     </div>
@@ -5586,7 +5626,19 @@ body.checkin-active #checkin-indicator{
     </div>
 
     <div class="tori-section">
-      <div class="tori-h">12. 注意事項</div>
+      <div class="tori-h">12. ショップ</div>
+      <div class="tori-p">
+        マイページ下部の「🛒 ショップ」から、より快適に街巡を楽しむためのアイテムが買えるよ（任意・購入しなくても全機能遊べる）。
+      </div>
+      <div class="tori-notes" style="margin-top:6px">
+        <div class="tori-notes-item"><strong style="color:#a8e0c8">街巡 Pro</strong>（¥500・買い切り）：広告非表示／推し街の登録上限を解放／訪問記録をCSV出力／プロフィールにProバッジ</div>
+        <div class="tori-notes-item"><strong style="color:#a8e0c8">スター</strong>（消耗品・1個¥100〜）：1日3駅の上限に達した日でも、スター1個でその日もう1駅チェックインできる</div>
+        <div class="tori-notes-item">まとめ買いほどお得（6個¥500=17%OFF／15個¥1000=33%OFF）</div>
+      </div>
+    </div>
+
+    <div class="tori-section">
+      <div class="tori-h">13. 注意事項</div>
       <div class="tori-notes">
         <div class="tori-notes-item">スコアはあくまで<strong style="color:#a8e0c8">商業活力の指標</strong>。居住の快適度や治安・教育環境は別物です</div>
         <div class="tori-notes-item">店舗データは<strong style="color:#a8e0c8">Overture Maps</strong>（Meta・Microsoft・Amazon等提供のオープンデータ）を使用</div>
@@ -5599,6 +5651,10 @@ body.checkin-active #checkin-indicator{
       <strong style="color:#fff;font-size:16px">街巡-まちめぐ-は、「ふと知らない街に行きたくなる」きっかけを作るアプリ。</strong><br>
       スコアだけじゃなく、コメントも読んで街の個性を感じてほしい。<br>
       さぁ、街にでよう。
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.12);font-size:13px;color:#cfdaee;line-height:1.7">
+        最新情報・新機能のお知らせは公式SNSで発信中📣<br>
+        <a href="https://x.com/machimegux" target="_blank" rel="noopener" style="color:#a8e0c8;text-decoration:underline;font-weight:700">𝕏 @machimegux</a>　/　<a href="https://www.instagram.com/machimegu2026/" target="_blank" rel="noopener" style="color:#a8e0c8;text-decoration:underline;font-weight:700">📷 @machimegu2026</a>
+      </div>
       <div class="tori-end-sig">作：ともき（個人開発）　/　技術：クロ（AI）</div>
     </div>
 
@@ -8428,6 +8484,9 @@ body.checkin-active #checkin-indicator{
       </div>
     </div>
 
+    <!-- ★index303: バッジコレクションとショップの間のセクション区切り（オレンジ線・LV21街角ウォッチャーの上端と同じスタイル） -->
+    <div class="mp-rainbow-divider"></div>
+
     <!-- ★index293: ショップ（Pro版＋スター購入）。TWA内でのみDigital Goods APIが動作。
          非TWA環境では「アプリ版で購入可能」と案内。価格はPlay Consoleから自動取得。 -->
     <div class="mp-section mp-shop-section">
@@ -8481,6 +8540,21 @@ body.checkin-active #checkin-indicator{
         </button>
       </div>
       <div class="mp-shop-note" id="mp-shop-note"></div>
+    </div>
+
+    <!-- ★index303: ショップとデータ提供設定の間のセクション区切り（オレンジ線） -->
+    <div class="mp-rainbow-divider"></div>
+
+    <!-- ★index303: 公式SNS横並びリンク（X・Instagram）。タップでブラウザ/アプリ起動。 -->
+    <div class="mp-sns-row">
+      <a class="mp-sns-link mp-sns-x" href="https://x.com/machimegux" target="_blank" rel="noopener" aria-label="街巡公式X">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
+        <span class="mp-sns-id">@machimegux</span>
+      </a>
+      <a class="mp-sns-link mp-sns-ig" href="https://www.instagram.com/machimegu2026/" target="_blank" rel="noopener" aria-label="街巡公式Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        <span class="mp-sns-id">@machimegu2026</span>
+      </a>
     </div>
 
     <!-- ★index291: データ提供設定（第三者提供のオプトアウト）。プライバシーポリシー第6項に対応。
@@ -12806,18 +12880,40 @@ window.startCheckin = async (name, pref, lat, lng) => {
   }
 
   // 改めて現在地確認
-  try {
-    // ★index279: チェックイン本体も二段構えで粘る（TWA初回/高層階対策）
-    // ★index295: 開始時は直近45秒のキャッシュを許容して早く返す（ボタン連打の主因を解消）。
-    //   開始判定が多少緩くても、5分後の成立確認で再度距離を見るので問題ない。
-    currentLocation = await getFreshPosition(45000);
-  } catch (e) {
-    const msg = (e && (e.code === 3 || /timeout/i.test(e.message || '')))
-      ? '位置情報の取得に時間がかかっています。高層階や電波の弱い場所では取得しにくいことがあります。少し移動して、もう一度お試しください。'
-      : '位置情報の取得に失敗しました';
-    alert(msg);
-    return;
+  // ★index302: チェックイン押下→カウントダウン開始の長い待ち時間を解消。
+  //   旧：getFreshPosition(45000) を呼ぶ → ブラウザ内部キャッシュ(maximumAge)に依存していたが
+  //     iOS Safari では効きが弱く、起動直後は実GPS取得が走って10秒以上待たされる症状が頻発。
+  //   新：3段階フォールバック方式に変更。
+  //     ①自前キャッシュ(_geoCache)が直近60秒以内ならOS問い合わせなしで即使用
+  //     ②watchPositionで更新中の currentLocation が有効なら即使用
+  //     ③①②とも無ければ getFreshPosition にフォールバック（タイムアウト短縮で粘らない）
+  //   500m判定は半径が大きく、直近60秒のキャッシュで十分精度は確保される。
+  //   5分後の成立確認時には改めて getFreshPosition で最新位置を取り直すので不正の穴にもならない。
+  let _ckLoc = null;
+  // ① 自前キャッシュ優先（acquirePosition経路と同じ判定）
+  if (typeof _geoCache !== 'undefined' && _geoCache && (Date.now() - _geoCache.time) < 60000) {
+    _ckLoc = { lat: _geoCache.lat, lng: _geoCache.lng, accuracy: _geoCache.accuracy };
+    console.log('[checkin-geo] 自前キャッシュ採用（経過' + Math.round((Date.now()-_geoCache.time)/1000) + '秒）');
   }
+  // ② watchPositionで更新中のcurrentLocation
+  else if (currentLocation && typeof currentLocation.lat === 'number' && typeof currentLocation.lng === 'number') {
+    _ckLoc = currentLocation;
+    console.log('[checkin-geo] watchPosition のcurrentLocation採用');
+  }
+  // ③ フォールバック：getFreshPosition（タイムアウト短縮で素早く諦める）
+  else {
+    try {
+      console.log('[checkin-geo] キャッシュなし → getFreshPosition 実行');
+      _ckLoc = await getFreshPosition(60000);
+    } catch (e) {
+      const msg = (e && (e.code === 3 || /timeout/i.test(e.message || '')))
+        ? '位置情報の取得に時間がかかっています。高層階や電波の弱い場所では取得しにくいことがあります。少し移動して、もう一度お試しください。'
+        : '位置情報の取得に失敗しました';
+      alert(msg);
+      return;
+    }
+  }
+  currentLocation = _ckLoc;
 
   const dist = getDistanceM(currentLocation.lat, currentLocation.lng, lat, lng);
   if (dist > CHECKIN_RADIUS_M) {
@@ -17326,9 +17422,11 @@ function renderBadgeHTML(b, big) {
     const rarityClasses = window.bpRarityClasses ? window.bpRarityClasses(rarity) : '';
     // ★index301: 銅/銀/金を路線名の上に配置（メインの路線制覇ページと表示順を統一）。
     //   マイページのバッジコレクション抜粋・他のrenderBadgeHTML呼出元でも一貫性を確保。
+    // ★index302: bp-sub-topクラスも付与し、詳細モーダルでメイン路線ページと同じ
+    //   太字・サイズ・shadowで表示する（旧：bp-sub単独だと細い11px/700だった）。
     return `<div class="bp-badge bp-badge-line ${b.tier}${rarityClasses}">
       ${window.bpStarsHTML ? window.bpStarsHTML(rarity) : ''}
-      <div class="bp-sub">${tierJa(b.tier)}</div>
+      <div class="bp-sub bp-sub-top">${tierJa(b.tier)}</div>
       <div class="bp-name">${lineLabel}</div>
     </div>`;
   }
@@ -22077,7 +22175,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v301</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v303</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -22093,7 +22191,7 @@ if ('serviceWorker' in navigator) {
   <div id="mm-debug-content" style="flex:1;overflow-y:auto;padding:6px 8px;-webkit-overflow-scrolling:touch;word-break:break-all"></div>
 </div>
 <script>
-  console.log('%c[街巡] index version: 301', 'color:#88ccff;font-weight:bold;font-size:14px');
+  console.log('%c[街巡] index version: 303', 'color:#88ccff;font-weight:bold;font-size:14px');
 
   /* ★index278: dev/本番の表示出し分け。
      本番(machimegu.com)では開発用UI(右下バージョンバッジ・左下📋デバッグログボタン)を隠す。
@@ -22115,7 +22213,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v301';
+          mpVer.textContent = 'dev v303';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -22388,7 +22486,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v301) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v303) ===', '#88ccff');
   })();
 </script>
 
