@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index304 (2026.06.28) — 【公式SNSをアピール感のあるカード型に再設計＋トリセツ仕上げ】ともきフィードバック「味気ない」を反映し、マイページ・トリセツ両方の公式SNS表示を全面リニューアル。①CSS全面書き換え：従来の「アイコン+@ID」のフラットなボタンを廃止し、Xはブラックグラデ(linear-gradient(135deg,#1a1a1a,#000))、Instagramはブランド3色グラデ(#833ab4→#fd1d1d→#fcb045)の大型カード型に。32pxアイコン+「公式 X / 公式 Instagram」タイトル+「フォローして最新情報をGET / 街の風景をシェア中」誘導文の3段構成、min-height:96px、box-shadow付きでタップしたくなる存在感に。@IDは表記から外しリンク先のみで遷移（ともき指示）。②トリセツ末尾にも同じカード型SNS表示を追加し「📣 最新情報・新機能のお知らせは公式SNSで！」見出しを付与。③トリセツ冒頭の「BETA / ようこそ！今は身近な人にテストしてもらってる…」セクションを全削除（製品版申請後を見据えて）。④トリセツ末尾署名「作：ともき（個人開発）／技術：クロ（AI）」を「作：まちめぐ製作委員会」のみに簡素化（個人事業者名義に統一）。【継続】①②④⑤⑥は297〜303までの実装を継続。【index303】マイページ下部にオレンジ区切り線2本＋公式SNS追加＋トリセツ4点更新（1日3駅・バッジ6種目・ショップ章・SNS）。【index302】銅フォント統一＋チェックイン3段階フォールバック。【index301】銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
+<!-- VERSION: index305 (2026.07.03) — 【応援者バッジ＋応援チップ導入＋トリセツ正式リリース化】①ショップに「応援チップ」セクション新設（tip_100/¥100・tip_500/¥500・tip_1000/¥1,000、Play Console登録済み商品にアプリ側の購入UIがなかった問題を解消。MM_SHOP_SKUSに3種追加、buyProduct/recoverPendingPurchases流用）。②tip_1000特典「応援者バッジ」実装：金縁メダル＋夕焼けの街＋クラウン＋SUPPORTERリボンのSVG（mmSupporterBadgeSVG関数）。説明文「あなたの応援が、街巡を灯します」。表示場所は(a)バッジページのコレクション統計パネル右側（未獲得時はグレーシルエット＋タップでショップ誘導confirm）(b)マイページのニックネーム直下に小型バッジ（Pro小型バッジも同時新設、mm-mini-badges）。付与はCF verifyPurchase側でsupporterBadgeフィールド書込（CF v8で対応、クライアントは読取専用）。③onPurchaseSuccessにtip系処理追加（100/500=感謝アラート、1000=バッジ授与演出）。④トリセツ正式リリース化：FAQ2箇所の「ともきまで」→「公式SNSまで」、注意事項の「ベータ期間中〜ともきにフィードバック」→「不具合を見つけたら公式SNSへフィードバック大歓迎」、ショップ章に応援チップ項目追加。【index304】【公式SNSをアピール感のあるカード型に再設計＋トリセツ仕上げ】ともきフィードバック「味気ない」を反映し、マイページ・トリセツ両方の公式SNS表示を全面リニューアル。①CSS全面書き換え：従来の「アイコン+@ID」のフラットなボタンを廃止し、Xはブラックグラデ(linear-gradient(135deg,#1a1a1a,#000))、Instagramはブランド3色グラデ(#833ab4→#fd1d1d→#fcb045)の大型カード型に。32pxアイコン+「公式 X / 公式 Instagram」タイトル+「フォローして最新情報をGET / 街の風景をシェア中」誘導文の3段構成、min-height:96px、box-shadow付きでタップしたくなる存在感に。@IDは表記から外しリンク先のみで遷移（ともき指示）。②トリセツ末尾にも同じカード型SNS表示を追加し「📣 最新情報・新機能のお知らせは公式SNSで！」見出しを付与。③トリセツ冒頭の「BETA / ようこそ！今は身近な人にテストしてもらってる…」セクションを全削除（製品版申請後を見据えて）。④トリセツ末尾署名「作：ともき（個人開発）／技術：クロ（AI）」を「作：まちめぐ製作委員会」のみに簡素化（個人事業者名義に統一）。【継続】①②④⑤⑥は297〜303までの実装を継続。【index303】マイページ下部にオレンジ区切り線2本＋公式SNS追加＋トリセツ4点更新（1日3駅・バッジ6種目・ショップ章・SNS）。【index302】銅フォント統一＋チェックイン3段階フォールバック。【index301】銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -3476,6 +3476,57 @@ body:not(.splashing) #table-area{
 }
 .bp-cs-cat.complete .bp-cs-cat-value{color:#fbd56a;text-shadow:0 0 6px rgba(251,213,106,0.5)}
 
+/* ═══ ★index305: 応援者バッジ＋応援チップ＋小型バッジ ═══ */
+/* バッジページ統計パネル右側の応援者バッジスロット */
+.bp-cs-main{padding-right:82px}
+.bp-collection-stats .bp-cs-bar{margin-right:82px}
+.bp-cs-supporter{
+  position:absolute;right:14px;top:32px;
+  width:68px;height:76px;padding:0;border:none;background:none;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.bp-cs-supporter svg{width:100%;height:100%;display:block}
+.bp-cs-supporter.locked svg{filter:grayscale(1) brightness(0.55);opacity:0.7}
+.bp-cs-supporter .bp-cs-sup-lock{
+  position:absolute;right:2px;bottom:14px;font-size:15px;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+.bp-cs-supporter .bp-cs-sup-label{
+  position:absolute;left:0;right:0;bottom:-4px;
+  font-size:8px;font-weight:700;color:#a8b8d0;letter-spacing:0.5px;
+  text-align:center;white-space:nowrap;
+}
+.bp-cs-supporter.owned .bp-cs-sup-label{color:#fbd56a}
+/* マイページ：ニックネーム直下の小型バッジ行 */
+.mm-mini-badges{
+  display:flex;align-items:center;gap:6px;margin:2px 0 4px;min-height:0;
+}
+.mm-mini-badges:empty{display:none}
+.mm-mini-pro{
+  display:inline-flex;align-items:center;
+  font-size:9px;font-weight:900;color:#0d1a2e;letter-spacing:1px;
+  background:linear-gradient(135deg,#a8e0c8 0%,#5db8a0 100%);
+  border-radius:6px;padding:2px 7px;height:18px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.4);
+}
+.mm-mini-supporter{
+  display:inline-flex;align-items:center;height:22px;
+}
+.mm-mini-supporter svg{height:22px;width:auto;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))}
+/* ショップ：応援チップ */
+.mp-shop-tips-head{display:flex;align-items:center;gap:8px;margin:18px 0 4px}
+.mp-shop-tips-icon{font-size:18px}
+.mp-shop-tips-label{font-size:15px;font-weight:900;color:#fff;letter-spacing:0.8px}
+.mp-shop-tips-copy{font-size:12px;color:#a8b8d0;margin-bottom:12px;letter-spacing:0.3px}
+.mp-shop-tip-special{
+  border-color:rgba(251,213,106,0.55) !important;
+  background:linear-gradient(160deg,rgba(60,50,30,0.55) 0%,rgba(40,58,92,0.5) 70%) !important;
+}
+.mp-shop-tip-ribbon{background:linear-gradient(135deg,#fbd56a,#e8a53a) !important;color:#3a2a08 !important}
+.mp-shop-tip-badge-mini{display:flex;justify-content:center;align-items:center;height:34px;margin-bottom:2px}
+.mp-shop-tip-badge-mini svg{height:34px;width:auto}
+.mp-shop-tip-note{font-size:11px;color:#a8b8d0;margin-top:8px;line-height:1.5}
+
 /* セクションタイトルに「○/○」進捗を併記 */
 .bp-section-count{
   font-size:13px;font-weight:700;color:#cfdaee;letter-spacing:1px;margin-left:auto;
@@ -5619,10 +5670,10 @@ body.checkin-active #checkin-indicator{
       <div class="tori-faq-a">街は生き物。お店の開店・閉店でデータも動きます。でも<strong style="color:#fff">カードに記録された初回スコアは永遠保存</strong>されます。</div>
       
       <div class="tori-faq-q">Q. コメントが「データ整備中」になってる</div>
-      <div class="tori-faq-a">マイナー駅は順次キュレーション中！おすすめ駅やコメント案があればともきまで💬</div>
+      <div class="tori-faq-a">マイナー駅は順次キュレーション中！おすすめ駅やコメント案があれば公式SNSまで💬</div>
       
       <div class="tori-faq-q">Q. 自分の家の最寄り駅がない！</div>
-      <div class="tori-faq-a">ともきまで連絡を。追加リクエスト受付中。今は関東1都6県中心ですが、PMFが見えたら全国展開予定。</div>
+      <div class="tori-faq-a">公式SNSまで連絡を。追加リクエスト受付中。今は関東1都6県中心ですが、全国展開も計画中です。</div>
       
       <div class="tori-faq-q">Q. スコアと自分の実感がズレる</div>
       <div class="tori-faq-a">街巡は主に「商業活力」を見てるので、神社仏閣・大学・閑静な住宅街の魅力は反映しづらいです。そこは街コメントで補ってます！</div>
@@ -5640,6 +5691,7 @@ body.checkin-active #checkin-indicator{
         <div class="tori-notes-item"><strong style="color:#a8e0c8">街巡 Pro</strong>（¥500・買い切り）：広告非表示／推し街の登録上限を解放／訪問記録をCSV出力／プロフィールにProバッジ</div>
         <div class="tori-notes-item"><strong style="color:#a8e0c8">スター</strong>（消耗品・1個¥100〜）：1日3駅の上限に達した日でも、スター1個でその日もう1駅チェックインできる</div>
         <div class="tori-notes-item">まとめ買いほどお得（6個¥500=17%OFF／15個¥1000=33%OFF）</div>
+        <div class="tori-notes-item"><strong style="color:#a8e0c8">応援チップ</strong>（¥100／¥500／¥1,000）：開発を応援できる投げ銭。¥1,000チップで限定<strong style="color:#fbd56a">「応援者バッジ」</strong>をプレゼント。あなたの応援が、街巡を灯します</div>
       </div>
     </div>
 
@@ -5648,7 +5700,7 @@ body.checkin-active #checkin-indicator{
       <div class="tori-notes">
         <div class="tori-notes-item">スコアはあくまで<strong style="color:#a8e0c8">商業活力の指標</strong>。居住の快適度や治安・教育環境は別物です</div>
         <div class="tori-notes-item">店舗データは<strong style="color:#a8e0c8">Overture Maps</strong>（Meta・Microsoft・Amazon等提供のオープンデータ）を使用</div>
-        <div class="tori-notes-item">ベータ期間中はバグや表示崩れがあるかも。発見次第ともきにフィードバックお願い</div>
+        <div class="tori-notes-item">不具合や表示崩れを見つけたら、公式SNSへのフィードバック大歓迎</div>
         <div class="tori-notes-item">不動産選び・引っ越しなどの参考の一つにどうぞ（決め手にはしないで）</div>
       </div>
     </div>
@@ -8375,6 +8427,8 @@ body.checkin-active #checkin-indicator{
           <img id="mp-avatar" class="mp-avatar" src="" alt="">
         </div>
         <div class="mp-handle" id="mp-handle">-</div>
+        <!-- ★index305: Pro/応援者の小型バッジ行（該当なしなら:emptyで非表示） -->
+        <div class="mm-mini-badges" id="mm-mini-badges"></div>
         <div class="mp-meta" id="mp-meta">-</div>
         <button class="mp-formula-link" type="button" onclick="closeMypageForce();setTimeout(()=>{const m=document.getElementById('modal-bg');if(m)m.classList.add('open');document.body.style.overflow='hidden';},250)">街力の<br>算出方法</button>
         <button class="mp-formula-link mp-torisetsu-link" type="button" onclick="openTorisetsuModal()">トリセツ</button>
@@ -8556,6 +8610,28 @@ body.checkin-active #checkin-indicator{
           <div class="mp-shop-star-off">33%OFF</div>
         </button>
       </div>
+      <!-- ★index305: 応援チップ（消耗品・投げ銭。tip_1000で応援者バッジ付与） -->
+      <div class="mp-shop-tips-head">
+        <span class="mp-shop-tips-icon">💛</span>
+        <span class="mp-shop-tips-label">応援チップ</span>
+      </div>
+      <div class="mp-shop-tips-copy">あなたの応援が、街巡を灯します</div>
+      <div class="mp-shop-stars-grid">
+        <button class="mp-shop-star-card" onclick="buyProduct('tip_100')">
+          <div class="mp-shop-star-num">💛</div>
+          <div class="mp-shop-star-price">¥100</div>
+        </button>
+        <button class="mp-shop-star-card" onclick="buyProduct('tip_500')">
+          <div class="mp-shop-star-num">💛💛</div>
+          <div class="mp-shop-star-price">¥500</div>
+        </button>
+        <button class="mp-shop-star-card mp-shop-tip-special" onclick="buyProduct('tip_1000')">
+          <div class="mp-shop-star-ribbon mp-shop-tip-ribbon">バッジ付</div>
+          <div class="mp-shop-tip-badge-mini" id="mp-shop-tip-badge-mini"></div>
+          <div class="mp-shop-star-price">¥1000</div>
+        </button>
+      </div>
+      <div class="mp-shop-tip-note">¥1,000チップで限定「応援者バッジ」をお贈りします（何度でも購入できます）</div>
       <div class="mp-shop-note" id="mp-shop-note"></div>
     </div>
 
@@ -8719,6 +8795,8 @@ body.checkin-active #checkin-indicator{
       </div>
       <div id="bp-collection-stats" class="bp-collection-stats" style="display:none">
         <div class="bp-cs-title">📒 バッジコレクション</div>
+        <!-- ★index305: 応援者バッジ（tip_1000特典）。未獲得=グレー＋錠前、タップでショップ誘導 -->
+        <button type="button" class="bp-cs-supporter locked" id="bp-cs-supporter" onclick="window.mmSupporterTap()" aria-label="応援者バッジ"></button>
         <div class="bp-cs-main">
           <span class="bp-cs-percentage" id="bp-cs-percentage">0%</span>
           <span class="bp-cs-fraction" id="bp-cs-fraction">0 / 0</span>
@@ -15183,6 +15261,8 @@ window.openMypage = async () => {
     if (data.nearestStation) meta.push(`${data.nearestStation}駅`);
     if (data.prefecture) meta.push(data.prefecture);
     document.getElementById('mp-meta').textContent = meta.join(' · ') || '-';
+    // ★index305: Pro/応援者の小型バッジ（追加読取なし、取得済みdataを流用）
+    if (typeof renderMiniBadges === 'function') renderMiniBadges(data);
   } catch (e) {
     console.error('プロフィール取得エラー:', e);
   }
@@ -15633,7 +15713,7 @@ window.toggleDataConsentPanel = () => {
 //   - 起動時 listPurchases() で未処理購入を復旧（ネット切断等の取りこぼし救済）
 // ═══════════════════════════════════════════════════════════════
 const MM_BILLING_METHOD = 'https://play.google.com/billing';
-const MM_SHOP_SKUS = ['pro_lifetime', 'stars_1', 'stars_6', 'stars_15'];
+const MM_SHOP_SKUS = ['pro_lifetime', 'stars_1', 'stars_6', 'stars_15', 'tip_100', 'tip_500', 'tip_1000']; // ★index305: 応援チップ3種追加
 let _mmDigitalGoodsService = null;
 
 // Digital Goods サービスを取得（TWA環境のみ成功）
@@ -15657,6 +15737,9 @@ async function initShopUI() {
   if (starBalEl) starBalEl.textContent = (window._userStarsCache || 0);
   // Pro状態を反映
   await refreshProStatusUI();
+  // ★index305: tip_1000カード内のミニバッジ描画（初期IIFE取りこぼしの保険）
+  const tipBadgeEl = document.getElementById('mp-shop-tip-badge-mini');
+  if (tipBadgeEl && !tipBadgeEl.innerHTML) tipBadgeEl.innerHTML = mmSupporterBadgeSVG();
 
   const service = await mmGetBillingService();
   if (!service) {
@@ -15787,6 +15870,13 @@ async function onPurchaseSuccess(sku) {
     }
     const added = sku === 'stars_1' ? 1 : sku === 'stars_6' ? 6 : 15;
     alert('スターを' + added + '個追加しました！');
+  } else if (sku === 'tip_1000') {
+    // ★index305: ¥1,000チップ＝応援者バッジ授与
+    alert('応援ありがとうございます！\n限定「応援者バッジ」をお贈りしました🎖\n\nあなたの応援が、街巡を灯します。');
+    await refreshSupporterBadgeUI();
+  } else if (sku.indexOf('tip_') === 0) {
+    // ★index305: ¥100/¥500チップ
+    alert('応援ありがとうございます！💛\nいただいたチップは街巡の開発・運営に大切に使わせていただきます。');
   }
 }
 
@@ -15811,6 +15901,119 @@ async function recoverPendingPurchases(service) {
     console.warn('[Shop] listPurchases失敗:', e && e.message);
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// ★index305: 応援者バッジ（tip_1000特典）
+//   - SVGはクライアント生成（金縁メダル＋夕焼けの街＋クラウン＋SUPPORTERリボン）
+//   - 付与判定は users/{uid}.supporterBadge（CF verifyPurchase が書き込む。クライアントは読取のみ）
+//   - 表示場所: バッジページ統計パネル右／マイページ小型バッジ行／ショップtip_1000カード
+// ═══════════════════════════════════════════════════════════════
+window._userIsSupporter = false;
+
+// 応援者バッジSVG。リボンは横一線ピル型（幅96・フォント10.5・字間1.2で見切れ解消済み）
+function mmSupporterBadgeSVG() {
+  return '<svg viewBox="42 38 176 196" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    + '<defs>'
+    + '<linearGradient id="mmSbRim" x1="0" y1="0" x2="0.7" y2="1"><stop offset="0%" stop-color="#FFE9A0"/><stop offset="35%" stop-color="#D4AF37"/><stop offset="70%" stop-color="#9C7A1E"/><stop offset="100%" stop-color="#E8C55A"/></linearGradient>'
+    + '<linearGradient id="mmSbSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#232F4B"/><stop offset="45%" stop-color="#6E4468"/><stop offset="78%" stop-color="#D9713E"/><stop offset="100%" stop-color="#F2A45C"/></linearGradient>'
+    + '<linearGradient id="mmSbGlass" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/><stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.12"/><stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>'
+    + '<linearGradient id="mmSbCrown" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFE9A0"/><stop offset="60%" stop-color="#E8C55A"/><stop offset="100%" stop-color="#B8942A"/></linearGradient>'
+    + '<linearGradient id="mmSbRibbon" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E04A50"/><stop offset="100%" stop-color="#A81E24"/></linearGradient>'
+    + '<clipPath id="mmSbFace"><circle cx="130" cy="140" r="62"/></clipPath>'
+    + '</defs>'
+    + '<circle cx="130" cy="140" r="78" fill="url(#mmSbRim)"/>'
+    + '<circle cx="130" cy="140" r="78" fill="none" stroke="#8A6A14" stroke-width="1"/>'
+    + '<circle cx="130" cy="140" r="70" fill="none" stroke="#FFF3C4" stroke-width="1.5" opacity="0.8"/>'
+    + '<g fill="#FFF3C4"><circle cx="130" cy="66" r="2.5"/><circle cx="158.3" cy="71.6" r="2.5"/><circle cx="182.3" cy="87.7" r="2.5"/><circle cx="198.4" cy="111.7" r="2.5"/><circle cx="204" cy="140" r="2.5"/><circle cx="198.4" cy="168.3" r="2.5"/><circle cx="182.3" cy="192.3" r="2.5"/><circle cx="158.3" cy="208.4" r="2.5"/><circle cx="130" cy="214" r="2.5"/><circle cx="101.7" cy="208.4" r="2.5"/><circle cx="77.7" cy="192.3" r="2.5"/><circle cx="61.6" cy="168.3" r="2.5"/><circle cx="56" cy="140" r="2.5"/><circle cx="61.6" cy="111.7" r="2.5"/><circle cx="77.7" cy="87.7" r="2.5"/><circle cx="101.7" cy="71.6" r="2.5"/></g>'
+    + '<circle cx="130" cy="140" r="62" fill="url(#mmSbSky)" stroke="#8A6A14" stroke-width="1.5"/>'
+    + '<g clip-path="url(#mmSbFace)">'
+    + '<circle cx="155" cy="110" r="11" fill="#FFF3D6"/><circle cx="155" cy="110" r="15" fill="#FFF3D6" opacity="0.25"/>'
+    + '<circle cx="102" cy="94" r="1.5" fill="#FFE9A0" opacity="0.9"/><circle cx="176" cy="90" r="1.3" fill="#FFE9A0" opacity="0.8"/>'
+    + '<g fill="#141E33"><rect x="78" y="134" width="20" height="70"/><rect x="102" y="116" width="24" height="88"/><rect x="130" y="142" width="16" height="62"/><rect x="150" y="124" width="22" height="80"/><rect x="176" y="148" width="18" height="56"/></g>'
+    + '<g fill="#2A3A5C"><rect x="78" y="134" width="4" height="70"/><rect x="102" y="116" width="4" height="88"/><rect x="130" y="142" width="4" height="62"/><rect x="150" y="124" width="4" height="80"/><rect x="176" y="148" width="4" height="56"/></g>'
+    + '<g fill="#FFD966"><rect x="83" y="140" width="4" height="5"/><rect x="91" y="140" width="4" height="5"/><rect x="83" y="152" width="4" height="5"/><rect x="91" y="164" width="4" height="5"/><rect x="83" y="176" width="4" height="5"/><rect x="107" y="122" width="4.5" height="5.5"/><rect x="116" y="122" width="4.5" height="5.5"/><rect x="107" y="134" width="4.5" height="5.5"/><rect x="116" y="146" width="4.5" height="5.5"/><rect x="107" y="158" width="4.5" height="5.5"/><rect x="116" y="170" width="4.5" height="5.5"/><rect x="133" y="148" width="4" height="5"/><rect x="133" y="160" width="4" height="5"/><rect x="139" y="172" width="4" height="5"/><rect x="154" y="130" width="4.5" height="5.5"/><rect x="163" y="130" width="4.5" height="5.5"/><rect x="154" y="142" width="4.5" height="5.5"/><rect x="163" y="154" width="4.5" height="5.5"/><rect x="154" y="166" width="4.5" height="5.5"/><rect x="180" y="154" width="4" height="5"/><rect x="180" y="166" width="4" height="5"/></g>'
+    + '<path d="M 68 140 A 62 62 0 0 1 192 140 L 192 88 L 68 88 Z" fill="url(#mmSbGlass)"/>'
+    + '</g>'
+    + '<path d="M 76 100 A 62 62 0 0 1 116 80" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.75"/>'
+    + '<path d="M 178 190 A 62 62 0 0 1 154 202" fill="none" stroke="#FFE9A0" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>'
+    + '<path d="M 106 74 L 112 56 L 121 68 L 130 50 L 139 68 L 148 56 L 154 74 Z" fill="url(#mmSbCrown)" stroke="#8A6A14" stroke-width="1"/>'
+    + '<path d="M 109 72 L 113 60 L 120 69" fill="none" stroke="#FFF8DC" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>'
+    + '<circle cx="112" cy="53" r="2.8" fill="#FFE9A0" stroke="#B8942A" stroke-width="0.8"/><circle cx="130" cy="47" r="3.2" fill="#FFE9A0" stroke="#B8942A" stroke-width="0.8"/><circle cx="148" cy="53" r="2.8" fill="#FFE9A0" stroke="#B8942A" stroke-width="0.8"/><circle cx="129" cy="46" r="1.1" fill="#FFFFFF"/>'
+    + '<rect x="82" y="200" width="96" height="21" rx="10.5" fill="url(#mmSbRibbon)" stroke="#7A1216" stroke-width="1"/>'
+    + '<path d="M 89 204 Q 130 200 171 204" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity="0.45"/>'
+    + '<text x="130" y="214.5" text-anchor="middle" style="font-size:10.5px;font-weight:700;fill:#FFFFFF;letter-spacing:1.2px;font-family:sans-serif">SUPPORTER</text>'
+    + '</svg>';
+}
+window.mmSupporterBadgeSVG = mmSupporterBadgeSVG;
+
+// バッジページ統計パネルの応援者バッジ描画（userProfileはopenBadgePageで取得済みのものを渡す）
+function renderSupporterInStats(userProfile) {
+  const slot = document.getElementById('bp-cs-supporter');
+  if (!slot) return;
+  const owned = !!(userProfile && userProfile.supporterBadge);
+  window._userIsSupporter = owned;
+  slot.classList.toggle('owned', owned);
+  slot.classList.toggle('locked', !owned);
+  slot.innerHTML = mmSupporterBadgeSVG()
+    + (owned ? '' : '<span class="bp-cs-sup-lock">🔒</span>')
+    + '<span class="bp-cs-sup-label">' + (owned ? '応援者' : '？？？') + '</span>';
+}
+window.renderSupporterInStats = renderSupporterInStats;
+
+// 応援者バッジタップ時（獲得済=説明、未獲得=ショップ誘導）
+window.mmSupporterTap = () => {
+  if (window._userIsSupporter) {
+    alert('🎖 応援者バッジ\n\nあなたの応援が、街巡を灯します。\n街巡を支えてくださって、本当にありがとうございます！');
+    return;
+  }
+  const go = confirm('🎖 応援者バッジ\n\nあなたの応援が、街巡を灯します。\n\nマイページのショップで「応援チップ ¥1,000」を贈ると獲得できる限定バッジです。\nショップを見に行きますか？');
+  if (!go) return;
+  if (typeof closeBadgePage === 'function') closeBadgePage();
+  setTimeout(async () => {
+    if (typeof window.openMypage === 'function') await window.openMypage();
+    const shop = document.querySelector('.mp-shop-section');
+    if (shop) shop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 250);
+};
+
+// マイページ小型バッジ行の描画（openMypageで取得済みのuserDoc dataを渡す）
+function renderMiniBadges(data) {
+  const wrap = document.getElementById('mm-mini-badges');
+  if (!wrap) return;
+  let html = '';
+  if (data && data.proStatus && data.proStatus.type) {
+    html += '<span class="mm-mini-pro" title="街巡 Pro">PRO</span>';
+  }
+  if (data && data.supporterBadge) {
+    window._userIsSupporter = true;
+    html += '<span class="mm-mini-supporter" title="応援者バッジ">' + mmSupporterBadgeSVG() + '</span>';
+  }
+  wrap.innerHTML = html;
+}
+window.renderMiniBadges = renderMiniBadges;
+
+// 購入直後などにFirestoreから読み直してUI反映
+async function refreshSupporterBadgeUI() {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    const data = snap.exists() ? snap.data() : {};
+    window._userIsSupporter = !!data.supporterBadge;
+    renderMiniBadges(data);
+    const slot = document.getElementById('bp-cs-supporter');
+    if (slot) renderSupporterInStats(data);
+  } catch (e) {
+    console.warn('[Supporter] 状態取得失敗:', e && e.message);
+  }
+}
+window.refreshSupporterBadgeUI = refreshSupporterBadgeUI;
+
+// ショップのtip_1000カード内ミニバッジを描画（初期化時1回）
+(function mmInitTipCardBadge(){
+  const el = document.getElementById('mp-shop-tip-badge-mini');
+  if (el) el.innerHTML = mmSupporterBadgeSVG();
+})();
 
 
 window.toggleDataConsent = async () => {
@@ -17853,6 +18056,9 @@ window.openBadgePage = async () => {
   ]);
   const userProfile = userDocSnap.exists() ? userDocSnap.data() : null;
   const totalCheckins = userProfile ? (userProfile.totalCheckins || 0) : 0;
+  
+  // ★index305: 統計パネル右の応援者バッジ（追加読取なし、取得済みuserProfileを流用）
+  if (typeof renderSupporterInStats === 'function') renderSupporterInStats(userProfile);
   
   // 週間ミッション
   await renderWeeklyMission(user.uid, userCards, userProfile);
@@ -22194,7 +22400,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v304</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v305</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -22232,7 +22438,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v304';
+          mpVer.textContent = 'dev v305';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -22505,7 +22711,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v304) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v305) ===', '#88ccff');
   })();
 </script>
 
