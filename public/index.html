@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index308 (2026.07.04) — 【カード・図鑑ブラッシュアップ3点セット(採用案1/6/8)】①図鑑に駅名検索：カードコレクションのソート行上に検索ボックス(cl-search、履歴のhist-searchと同スタイル)。cardSearchQueryで駅名/都道府県の部分一致フィルタ(mmCardSearchInput→renderCardListSorted内で適用)。0件時は既存の「該当するカードがありません」表示。openCardListPageで開き直す度にリセット。②再訪ミニ演出：完了画面の「n回目の訪問！」を強化。訪問回数の数字を金色22pxでポップアニメ(csm-visit-num/csmNumPop 0.5s)。節目メッセージ=5回🌟/10回=常連🏅/30回=マニア🎖/50回=生き字引👑/100回=神🎊(リピートバッジの称号と整合)。③レア度確率の公式明示：実装値(mmRollCardTier)=シャイニー1/30・ミシック1/200を(a)図鑑ソート行下の注記(cl-rarity-note) (b)トリセツのカード章 (c)トリセツFAQ の3箇所に明記。ガチャ透明性の担保。【index307】【チェックイン体験ブラッシュアップ5点セット(採用案9/10/11/12/13)】①チェックイン成立バイブ：showCheckinSuccess冒頭でnavigator.vibrate([60,40,120])。②チェックイン効果音：WebAudio合成の2音チャイム(E5→A5、外部ファイル不要)。デフォルトOFF、マイページ設定「チェックイン演出」トグルでON(localStorage mm_sound)。ON操作時とstartCheckin時にAudioContextをresume(autoplay policy対策)。③完了画面にストリーク表示：csm-quota下に「🔥n日連続」(csm-streak)。mmProcessLoginBonusの結果を_mmStreakCacheにキャッシュ、モーダル表示後に非同期挿入。④マップ左下に本日残数ピル(mm-quota-badge、z-index:900でモーダル時は下に隠れる)：「本日 X/3駅」、上限時は金色＋⭐所持数。更新は起動時/セクション描画時/成立時。⑤圏内マーカー脈動：updateUserLocationMarkerで全表示マーカーとの距離計算、500m以内×本日未チェックインの.mk-innerに.mm-near-pulse付与(金色明滅1.6s)。本日済み駅は対象外。【index306】【Pro特典の実体化：推し街10枠＋CSV出力＋ProバッジP1メダル化】①推し街上限を動的化：mmFavLimit()=Pro10枠/無料3枠。マイページ表示は上位3件＋「▼残りn件を見る」で展開(toggleFavMore)。無料ユーザーが上限で追加すると Pro誘導confirm→ショップへスクロール。空メッセージ・追加ボタン・addFavガードすべて上限関数参照に統一。②訪問記録CSV出力：ショップ「✓ Pro版をご利用中」内に📊ボタン新設→CF既存のexportCheckinCSV呼出(Pro判定・BOM付き10列CSVはCF v7側で完備、デプロイ不要)→Web Share API優先(TWA対応)/Blobダウンロードフォールバックの2段構え。③ProバッジP1メダル化：mmProBadgeSVG()新設(ティール金属縁の盾＋コンパスローズ＋シアン北針＋青PROリボン、応援者バッジ=丸/金/夕焼けとの対デザイン)。マイページ小型バッジのPROピル→P1盾24px、ショップPro商品アイコンの金箱→P1盾46pxに差し替え。④トリセツ推し街章に「Pro版なら10」併記。⑤dev確認FB反映: 無課金×3枠埋まり時に追加ボタンが消えてピッカー(=Pro誘導)への入口が無かった設計穴を修正→「🔒 Proで10枠に拡張」ボタン(mmFavProUpsell)を表示しconfirm→ショップスクロール。【index305】【応援者バッジ＋応援チップ導入＋トリセツ正式リリース化】①ショップに「応援チップ」セクション新設（tip_100/¥100・tip_500/¥500・tip_1000/¥1,000、Play Console登録済み商品にアプリ側の購入UIがなかった問題を解消。MM_SHOP_SKUSに3種追加、buyProduct/recoverPendingPurchases流用）。②tip_1000特典「応援者バッジ」実装：金縁メダル＋夕焼けの街＋クラウン＋SUPPORTERリボンのSVG（mmSupporterBadgeSVG関数）。説明文「あなたの応援が、街巡を灯します」。表示場所は(a)バッジページのコレクション統計パネル右側（未獲得時はグレーシルエット＋タップでショップ誘導confirm）(b)マイページのニックネーム直下に小型バッジ（Pro小型バッジも同時新設、mm-mini-badges）。付与はCF verifyPurchase側でsupporterBadgeフィールド書込（CF v8で対応、クライアントは読取専用）。③onPurchaseSuccessにtip系処理追加（100/500=感謝アラート、1000=バッジ授与演出）。④判定仕様: CF v7のsupporterBadgeは¥100チップでも作られる(tier=最高支援額)ため、バッジ獲得判定はtier>=1000限定で実装(3箇所)。CF側は変更不要(v7 verifyPurchaseがtip系処理済み)。⑤トリセツ正式リリース化：FAQ2箇所の「ともきまで」→「公式SNSまで」、注意事項の「ベータ期間中〜ともきにフィードバック」→「不具合を見つけたら公式SNSへフィードバック大歓迎」、ショップ章に応援チップ項目追加。【index304】【公式SNSをアピール感のあるカード型に再設計＋トリセツ仕上げ】ともきフィードバック「味気ない」を反映し、マイページ・トリセツ両方の公式SNS表示を全面リニューアル。①CSS全面書き換え：従来の「アイコン+@ID」のフラットなボタンを廃止し、Xはブラックグラデ(linear-gradient(135deg,#1a1a1a,#000))、Instagramはブランド3色グラデ(#833ab4→#fd1d1d→#fcb045)の大型カード型に。32pxアイコン+「公式 X / 公式 Instagram」タイトル+「フォローして最新情報をGET / 街の風景をシェア中」誘導文の3段構成、min-height:96px、box-shadow付きでタップしたくなる存在感に。@IDは表記から外しリンク先のみで遷移（ともき指示）。②トリセツ末尾にも同じカード型SNS表示を追加し「📣 最新情報・新機能のお知らせは公式SNSで！」見出しを付与。③トリセツ冒頭の「BETA / ようこそ！今は身近な人にテストしてもらってる…」セクションを全削除（製品版申請後を見据えて）。④トリセツ末尾署名「作：ともき（個人開発）／技術：クロ（AI）」を「作：まちめぐ製作委員会」のみに簡素化（個人事業者名義に統一）。【継続】①②④⑤⑥は297〜303までの実装を継続。【index303】マイページ下部にオレンジ区切り線2本＋公式SNS追加＋トリセツ4点更新（1日3駅・バッジ6種目・ショップ章・SNS）。【index302】銅フォント統一＋チェックイン3段階フォールバック。【index301】銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
+<!-- VERSION: index309 (2026.07.04) — 【バッジ・Pro・収益ブラッシュアップ6点セット(採用案14/15/16/20/24/25)】①リーチバッジ強調：次の目標カードで残り1のとき.bp-ng-reachクラス付与=金枠＋パルスアニメ＋タイトルに🔔リーチ！。②Pro盾を統計パネルへ：応援者バッジの左隣(bp-cs-pro、right:92px)にP1盾。未所有はグレー＋🔒＋「？？？」→タップでPro説明confirm→ショップ誘導(mmProShieldTap、mmSupporterTapと同パターン)。所有時はラベル「PRO」。renderSupporterInStats内から連動描画(renderProShieldInStats)、bp-cs-barのmargin-rightを82→164pxに拡張。③バッジシェア画像に獲得日：b.earnedAtから「YYYY.M.D 獲得」を生成しバッジ名の下に焼き込み(bp-share-date、無ければ非表示)。④次階級予告：マイページLVパネルのバー直下に「LV.n0で『次階級名』に昇格」(mp-master-next-tier、BP_TIER_NAMES[tier+1]、MAX時非表示)。⑤Proサンクス演出：pro_lifetime購入成功時のalertを廃止→mmShowProThanks()=フルスクリーンオーバーレイにP1盾150pxがポップイン＋特典一覧＋タップで閉じる(z-index:9200、動的DOM生成で自己完結)。⑥上限時スター導線：情報パネルの上限到達×スター0の「明日また来てね」の下に「⭐ スターを入手する」ボタン→mmGoShopForStars()=マイページを開いてショップへ自動スクロール。4駅目を諦めさせない収益導線。【index308】【カード・図鑑ブラッシュアップ3点セット(採用案1/6/8)】①図鑑に駅名検索：カードコレクションのソート行上に検索ボックス(cl-search、履歴のhist-searchと同スタイル)。cardSearchQueryで駅名/都道府県の部分一致フィルタ(mmCardSearchInput→renderCardListSorted内で適用)。0件時は既存の「該当するカードがありません」表示。openCardListPageで開き直す度にリセット。②再訪ミニ演出：完了画面の「n回目の訪問！」を強化。訪問回数の数字を金色22pxでポップアニメ(csm-visit-num/csmNumPop 0.5s)。節目メッセージ=5回🌟/10回=常連🏅/30回=マニア🎖/50回=生き字引👑/100回=神🎊(リピートバッジの称号と整合)。③レア度確率の公式明示：実装値(mmRollCardTier)=シャイニー1/30・ミシック1/200を(a)図鑑ソート行下の注記(cl-rarity-note) (b)トリセツのカード章 (c)トリセツFAQ の3箇所に明記。ガチャ透明性の担保。【index307】【チェックイン体験ブラッシュアップ5点セット(採用案9/10/11/12/13)】①チェックイン成立バイブ：showCheckinSuccess冒頭でnavigator.vibrate([60,40,120])。②チェックイン効果音：WebAudio合成の2音チャイム(E5→A5、外部ファイル不要)。デフォルトOFF、マイページ設定「チェックイン演出」トグルでON(localStorage mm_sound)。ON操作時とstartCheckin時にAudioContextをresume(autoplay policy対策)。③完了画面にストリーク表示：csm-quota下に「🔥n日連続」(csm-streak)。mmProcessLoginBonusの結果を_mmStreakCacheにキャッシュ、モーダル表示後に非同期挿入。④マップに本日残数ピル(mm-quota-badge、z-index:900でモーダル時は下に隠れる)。★dev確認FB反映: 当初の左下配置はスマホで常駐する#legend(ランク凡例、bottom:20px/left:14px)とバッティング→右下のバージョン表示直上(right:20px/bottom:+28px)へ移設：「本日 X/3駅」、上限時は金色＋⭐所持数。更新は起動時/セクション描画時/成立時。⑤圏内マーカー脈動：updateUserLocationMarkerで全表示マーカーとの距離計算、500m以内×本日未チェックインの.mk-innerに.mm-near-pulse付与(金色明滅1.6s)。本日済み駅は対象外。【index306】【Pro特典の実体化：推し街10枠＋CSV出力＋ProバッジP1メダル化】①推し街上限を動的化：mmFavLimit()=Pro10枠/無料3枠。マイページ表示は上位3件＋「▼残りn件を見る」で展開(toggleFavMore)。無料ユーザーが上限で追加すると Pro誘導confirm→ショップへスクロール。空メッセージ・追加ボタン・addFavガードすべて上限関数参照に統一。②訪問記録CSV出力：ショップ「✓ Pro版をご利用中」内に📊ボタン新設→CF既存のexportCheckinCSV呼出(Pro判定・BOM付き10列CSVはCF v7側で完備、デプロイ不要)→Web Share API優先(TWA対応)/Blobダウンロードフォールバックの2段構え。③ProバッジP1メダル化：mmProBadgeSVG()新設(ティール金属縁の盾＋コンパスローズ＋シアン北針＋青PROリボン、応援者バッジ=丸/金/夕焼けとの対デザイン)。マイページ小型バッジのPROピル→P1盾24px、ショップPro商品アイコンの金箱→P1盾46pxに差し替え。④トリセツ推し街章に「Pro版なら10」併記。⑤dev確認FB反映: 無課金×3枠埋まり時に追加ボタンが消えてピッカー(=Pro誘導)への入口が無かった設計穴を修正→「🔒 Proで10枠に拡張」ボタン(mmFavProUpsell)を表示しconfirm→ショップスクロール。【index305】【応援者バッジ＋応援チップ導入＋トリセツ正式リリース化】①ショップに「応援チップ」セクション新設（tip_100/¥100・tip_500/¥500・tip_1000/¥1,000、Play Console登録済み商品にアプリ側の購入UIがなかった問題を解消。MM_SHOP_SKUSに3種追加、buyProduct/recoverPendingPurchases流用）。②tip_1000特典「応援者バッジ」実装：金縁メダル＋夕焼けの街＋クラウン＋SUPPORTERリボンのSVG（mmSupporterBadgeSVG関数）。説明文「あなたの応援が、街巡を灯します」。表示場所は(a)バッジページのコレクション統計パネル右側（未獲得時はグレーシルエット＋タップでショップ誘導confirm）(b)マイページのニックネーム直下に小型バッジ（Pro小型バッジも同時新設、mm-mini-badges）。付与はCF verifyPurchase側でsupporterBadgeフィールド書込（CF v8で対応、クライアントは読取専用）。③onPurchaseSuccessにtip系処理追加（100/500=感謝アラート、1000=バッジ授与演出）。④判定仕様: CF v7のsupporterBadgeは¥100チップでも作られる(tier=最高支援額)ため、バッジ獲得判定はtier>=1000限定で実装(3箇所)。CF側は変更不要(v7 verifyPurchaseがtip系処理済み)。⑤トリセツ正式リリース化：FAQ2箇所の「ともきまで」→「公式SNSまで」、注意事項の「ベータ期間中〜ともきにフィードバック」→「不具合を見つけたら公式SNSへフィードバック大歓迎」、ショップ章に応援チップ項目追加。【index304】【公式SNSをアピール感のあるカード型に再設計＋トリセツ仕上げ】ともきフィードバック「味気ない」を反映し、マイページ・トリセツ両方の公式SNS表示を全面リニューアル。①CSS全面書き換え：従来の「アイコン+@ID」のフラットなボタンを廃止し、Xはブラックグラデ(linear-gradient(135deg,#1a1a1a,#000))、Instagramはブランド3色グラデ(#833ab4→#fd1d1d→#fcb045)の大型カード型に。32pxアイコン+「公式 X / 公式 Instagram」タイトル+「フォローして最新情報をGET / 街の風景をシェア中」誘導文の3段構成、min-height:96px、box-shadow付きでタップしたくなる存在感に。@IDは表記から外しリンク先のみで遷移（ともき指示）。②トリセツ末尾にも同じカード型SNS表示を追加し「📣 最新情報・新機能のお知らせは公式SNSで！」見出しを付与。③トリセツ冒頭の「BETA / ようこそ！今は身近な人にテストしてもらってる…」セクションを全削除（製品版申請後を見据えて）。④トリセツ末尾署名「作：ともき（個人開発）／技術：クロ（AI）」を「作：まちめぐ製作委員会」のみに簡素化（個人事業者名義に統一）。【継続】①②④⑤⑥は297〜303までの実装を継続。【index303】マイページ下部にオレンジ区切り線2本＋公式SNS追加＋トリセツ4点更新（1日3駅・バッジ6種目・ショップ章・SNS）。【index302】銅フォント統一＋チェックイン3段階フォールバック。【index301】銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -675,7 +675,8 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
 }
 .mk-inner.mm-near-pulse{animation:mmNearPulse 1.6s ease-in-out infinite}
 #mm-quota-badge{
-  position:fixed;left:12px;bottom:max(8px,env(safe-area-inset-bottom));
+  position:fixed;right:max(20px,env(safe-area-inset-right));
+  bottom:calc(max(6px,env(safe-area-inset-bottom)) + 28px);
   z-index:900;pointer-events:none;
   background:rgba(5,12,22,0.72);border:1px solid rgba(120,150,210,0.4);
   color:#dce8f8;font-size:12px;font-weight:900;letter-spacing:0.5px;
@@ -3535,7 +3536,44 @@ body:not(.splashing) #table-area{
 /* ═══ ★index305: 応援者バッジ＋応援チップ＋小型バッジ ═══ */
 /* バッジページ統計パネル右側の応援者バッジスロット */
 .bp-cs-main{padding-right:82px}
-.bp-collection-stats .bp-cs-bar{margin-right:82px}
+.bp-collection-stats .bp-cs-bar{margin-right:164px}
+/* ═══ ★index309: Pro盾（統計パネル、応援者の左隣） ═══ */
+.bp-cs-pro{
+  position:absolute;right:92px;top:34px;
+  width:62px;height:74px;padding:0;border:none;background:none;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.bp-cs-pro svg{width:100%;height:100%;display:block}
+.bp-cs-pro.locked svg{filter:grayscale(1) brightness(0.55);opacity:0.7}
+.bp-cs-pro .bp-cs-pro-lock{
+  position:absolute;top:26%;left:50%;transform:translate(-50%,-50%);
+  font-size:17px;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+}
+.bp-cs-pro .bp-cs-pro-label{
+  position:absolute;left:0;right:0;bottom:-14px;text-align:center;
+  font-size:10px;font-weight:900;color:#8FF0D6;letter-spacing:0.5px;
+}
+.bp-cs-pro.locked .bp-cs-pro-label{color:#7a96b6}
+/* ★index309: リーチバッジ強調（次の目標であと1） */
+@keyframes bpNgReachPulse{
+  0%,100%{box-shadow:0 0 5px 1px rgba(255,215,0,0.35)}
+  50%{box-shadow:0 0 14px 4px rgba(255,215,0,0.75)}
+}
+.bp-next-goal.bp-ng-reach{
+  border-color:rgba(255,215,0,0.85) !important;
+  animation:bpNgReachPulse 1.8s ease-in-out infinite;
+}
+/* ★index309: シェア画像の獲得日 */
+.bp-share-date{
+  font-size:14px;font-weight:700;color:#d8c078;letter-spacing:1px;
+  text-align:center;margin-top:6px;
+}
+.bp-share-date:empty{display:none}
+/* ★index309: 次階級予告 */
+.mp-master-next-tier{
+  font-size:11px;font-weight:700;color:#c8a84a;margin-top:6px;
+  letter-spacing:0.4px;
+}
 .bp-cs-supporter{
   position:absolute;right:14px;top:32px;
   width:68px;height:76px;padding:0;border:none;background:none;
@@ -8545,6 +8583,7 @@ body.checkin-active #checkin-indicator{
       <div class="mp-master-bar">
         <div class="mp-master-bar-fill" id="mp-master-bar-fill" style="width:0%"></div>
       </div>
+      <div class="mp-master-next-tier" id="mp-master-next-tier" style="display:none"></div>
       <div class="mp-master-breakdown">
         <div class="mp-master-bd-item">
           <span>💎 カード</span>
@@ -8898,6 +8937,7 @@ body.checkin-active #checkin-indicator{
       <div id="bp-collection-stats" class="bp-collection-stats" style="display:none">
         <div class="bp-cs-title">📒 バッジコレクション</div>
         <!-- ★index305: 応援者バッジ（tip_1000特典）。未獲得=グレー＋錠前、タップでショップ誘導 -->
+        <button type="button" class="bp-cs-pro locked" id="bp-cs-pro" onclick="window.mmProShieldTap()" aria-label="Proバッジ"></button>
         <button type="button" class="bp-cs-supporter locked" id="bp-cs-supporter" onclick="window.mmSupporterTap()" aria-label="応援者バッジ"></button>
         <div class="bp-cs-main">
           <span class="bp-cs-percentage" id="bp-cs-percentage">0%</span>
@@ -13048,8 +13088,9 @@ window.renderCheckinSection = async function(st, userOverride) {
         sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br><span style="font-size:11px;opacity:0.85">⭐ スター ${stars}個 所持中</span><br><span style="font-size:11px;opacity:0.85">駅まであと ${Math.round(distHere)}m</span></div>
           <button class="ip-ci-btn" style="background:linear-gradient(135deg,#ffb060,#ff9040);color:#1a1408;font-weight:900" onclick="consumeStarForExtraCheckin('${st.name.replace(/'/g,"\\'")}','${st.pref}',${st.lat},${st.lng})">⭐ スターを使ってもう1駅</button>`;
       } else {
-        // スターなし：従来通り
-        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br>明日また来てね<br><span style="font-size:11px;opacity:0.85">駅まであと ${Math.round(distHere)}m</span></div>`;
+        // ★index309: スターなし＝一番買いたい瞬間。ショップ導線を出す
+        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br>明日また来てね<br><span style="font-size:11px;opacity:0.85">駅まであと ${Math.round(distHere)}m</span></div>
+          <button class="ip-ci-btn" style="background:linear-gradient(135deg,#2E8B78,#14584A);color:#E8FBF6;font-weight:900;border:1px solid rgba(143,240,214,0.45)" onclick="mmGoShopForStars()">⭐ スターを入手する</button>`;
       }
       return;
     }
@@ -15745,6 +15786,17 @@ async function loadMypageData(uid) {
       
       if (lvEl) lvEl.textContent = info.level;
       if (tierEl) tierEl.textContent = info.tierName;
+      // ★index309: 次階級予告（LV.n0で『○○』に昇格。最上位/MAX時は非表示）
+      const nextTierEl = document.getElementById('mp-master-next-tier');
+      if (nextTierEl) {
+        if (!info.isMax && info.tier < 9) {
+          const nextLv = (info.tier + 1) * 10;
+          nextTierEl.textContent = '⬆ LV.' + nextLv + ' で「' + window.BP_TIER_NAMES[info.tier + 1] + '」に昇格';
+          nextTierEl.style.display = '';
+        } else {
+          nextTierEl.style.display = 'none';
+        }
+      }
       if (xpCurEl) xpCurEl.textContent = info.totalXP.toLocaleString();
       if (nextEl) {
         nextEl.textContent = info.isMax ? '☆ MAX LEVEL ☆' : 
@@ -16105,9 +16157,27 @@ window.buyProduct = async (sku) => {
 };
 
 // 購入成功後のUI更新
+// ★index309: Pro購入サンクス演出（alertの代わりにP1盾ポップイン。動的DOMで自己完結）
+window.mmShowProThanks = function() {
+  try {
+    const bg = document.createElement('div');
+    bg.id = 'mm-pro-thanks';
+    bg.style.cssText = 'position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:9200;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:30px;cursor:pointer;';
+    bg.innerHTML =
+      '<div style="width:150px;animation:csmNumPop 0.7s cubic-bezier(0.2,1.6,0.4,1)">' + mmProBadgeSVG() + '</div>'
+      + '<div style="font-size:22px;font-weight:900;color:#8FF0D6;margin-top:20px;letter-spacing:1px">Pro版へようこそ！</div>'
+      + '<div style="font-size:13px;color:#dce8f8;margin-top:14px;line-height:2;text-align:center">推し街 10枠に拡張 ／ 訪問記録CSV出力<br>広告非表示（対応後） ／ Proバッジ<br>すべて有効になりました</div>'
+      + '<div style="font-size:12px;color:#a8b8d0;margin-top:24px">タップで閉じる</div>';
+    bg.onclick = () => bg.remove();
+    document.body.appendChild(bg);
+  } catch (e) {
+    alert('Pro版へようこそ！特典が有効になりました。');
+  }
+};
+
 async function onPurchaseSuccess(sku) {
   if (sku === 'pro_lifetime') {
-    alert('Pro版へようこそ！広告非表示などの特典が有効になりました。');
+    window.mmShowProThanks();
     await refreshProStatusUI();
     // 広告の非表示を即反映（広告実装後に有効）
     if (typeof applyProAdState === 'function') applyProAdState();
@@ -16203,9 +16273,41 @@ function mmSupporterBadgeSVG() {
 window.mmSupporterBadgeSVG = mmSupporterBadgeSVG;
 
 // バッジページ統計パネルの応援者バッジ描画（userProfileはopenBadgePageで取得済みのものを渡す）
+// ★index309: バッジページ統計パネルのPro盾描画（応援者バッジと同パターン）
+function renderProShieldInStats(userProfile) {
+  const slot = document.getElementById('bp-cs-pro');
+  if (!slot) return;
+  const owned = !!(userProfile && userProfile.proStatus && userProfile.proStatus.type);
+  window._userIsPro = owned;
+  slot.classList.toggle('owned', owned);
+  slot.classList.toggle('locked', !owned);
+  slot.innerHTML = mmProBadgeSVG()
+    + (owned ? '' : '<span class="bp-cs-pro-lock">🔒</span>')
+    + '<span class="bp-cs-pro-label">' + (owned ? 'PRO' : '？？？') + '</span>';
+}
+window.renderProShieldInStats = renderProShieldInStats;
+
+// ★index309: Pro盾タップ時（所有=説明、未所有=ショップ誘導）
+window.mmProShieldTap = () => {
+  if (window._userIsPro) {
+    alert('🛡 街巡 Pro\n\nご利用ありがとうございます！\n推し街10枠・訪問記録CSV出力・広告非表示（対応後）が有効です。');
+    return;
+  }
+  const go = confirm('🛡 街巡 Pro（¥500 買い切り）\n\n推し街10枠・訪問記録CSV出力・広告非表示などの特典が使える買い切りプランです。\nショップを見に行きますか？');
+  if (!go) return;
+  if (typeof closeBadgePage === 'function') closeBadgePage();
+  setTimeout(async () => {
+    if (typeof window.openMypage === 'function') await window.openMypage();
+    const shop = document.querySelector('.mp-shop-section');
+    if (shop) shop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 250);
+};
+
 function renderSupporterInStats(userProfile) {
   const slot = document.getElementById('bp-cs-supporter');
   if (!slot) return;
+  // ★index309: Pro盾も同じデータで連動描画（呼び出し元の変更不要）
+  renderProShieldInStats(userProfile);
   // ★CF仕様: supporterBadgeは¥100チップでも作られる（tier=最高支援額）。バッジは tier>=1000 限定
   const owned = !!(userProfile && userProfile.supporterBadge && (userProfile.supporterBadge.tier || 0) >= 1000);
   window._userIsSupporter = owned;
@@ -18303,6 +18405,15 @@ window.shareBadge = async function(){
       <div class="bp-share-badge-zone">${window.renderBadgeForShare(b)}</div>
       <div class="bp-share-name">${escapeHtml(b.name || '')}</div>
       <div class="bp-share-desc">${escapeHtml(b.desc || '')}</div>
+      <div class="bp-share-date">${(function(){
+        try {
+          if (b.earnedAt) {
+            const ms = b.earnedAt.toMillis ? b.earnedAt.toMillis() : (b.earnedAt.seconds || 0) * 1000;
+            if (ms) { const d = new Date(ms); return d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate() + ' 獲得'; }
+          }
+        } catch(e) {}
+        return '';
+      })()}</div>
       <div class="bp-share-cta"><strong>バッジ獲得!</strong></div>
     `;
     shareContainer.appendChild(card);
@@ -19294,8 +19405,10 @@ window.updateNextGoal = function(rankResults, lineResults, totalCheckins){
   const el = document.getElementById('bp-next-goal');
   if (!el) return;
   el.style.display = '';
-  document.getElementById('bp-ng-title').textContent = top.title;
   const remain = Math.max(0, top.target - top.current);
+  // ★index309: 残り1=リーチ！金枠パルス＋🔔で煽る
+  el.classList.toggle('bp-ng-reach', remain === 1);
+  document.getElementById('bp-ng-title').textContent = (remain === 1 ? '🔔リーチ！ ' : '') + top.title;
   document.getElementById('bp-ng-progress').innerHTML = 
     `あと <strong>${remain}${top.unit}</strong>（${top.current}/${top.target}）`;
   
@@ -19305,8 +19418,10 @@ window.updateNextGoal = function(rankResults, lineResults, totalCheckins){
   if (el2) {
     if (second) {
       el2.style.display = '';
-      document.getElementById('bp-ng-title2').textContent = second.title;
       const remain2 = Math.max(0, second.target - second.current);
+      // ★index309: 2枠目もリーチ強調
+      el2.classList.toggle('bp-ng-reach', remain2 === 1);
+      document.getElementById('bp-ng-title2').textContent = (remain2 === 1 ? '🔔リーチ！ ' : '') + second.title;
       document.getElementById('bp-ng-progress2').innerHTML = 
         `あと <strong>${remain2}${second.unit}</strong>（${second.current}/${second.target}）`;
     } else {
@@ -19672,6 +19787,16 @@ window.mmFavProUpsell = function() {
   if (!go) return;
   const shop = document.querySelector('.mp-shop-section');
   if (shop) shop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+// ★index309: マップ情報パネル(上限到達×スター0)からショップへの導線
+window.mmGoShopForStars = async function() {
+  try {
+    if (typeof window.openMypage === 'function') await window.openMypage();
+    setTimeout(() => {
+      const shop = document.querySelector('.mp-shop-section');
+      if (shop) shop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 400);
+  } catch (e) {}
 };
 
 // ─── 推し街取得 ───
@@ -22794,7 +22919,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v308</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v309</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -22832,7 +22957,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v308';
+          mpVer.textContent = 'dev v309';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -23105,7 +23230,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v308) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v309) ===', '#88ccff');
   })();
 </script>
 
