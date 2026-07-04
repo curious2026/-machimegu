@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index318 (2026.07.04) — 【dev確認FB反映：スワイプ時の旧カード一瞬再表示(サブリミナルチカチカ)の根治】真因=旧フローは「swipe-in入場開始→openCardFromHistoryで中身書き換え(非同期)」の順のため、入場アニメの前半は旧カード(西葛西)の中身のまま表示され、途中で新カード(中野)にすり替わっていた。→順序を逆転：①_navCard冒頭でwrapを透明(opacity:0)に維持＋_swipeNavigatingフラグON ②openCardFromHistoryをawaitして中身の書き換えを完了 ③さらにrAF×3待機(openStationCard内の重いDOM更新はrAF×2遅延のため、その後を保証) ④swipe-in入場アニメ開始(from opacity:0なので透明から滑らかに入場)＋フラグ解除。openStationCard内のアニメ再起動スキップ判定(317)も「swipe-inクラス or _swipeNavigatingフラグ」に拡張(新フローでは再起動時点でクラス未付与のため)。結果=西葛西→フリック→(透明)→中野が入場、の一発遷移。矢印ボタン経由も同フローで改善。【index317】【dev確認FB反映3点＋カードシェア画像失敗の根治】①★カードシェアが「テキスト+URLのみ」になる致命バグの原因特定＆修正：埋め込む天気SVG(mmShareWeatherSVG)のルートタグには元からwidth="100%"/height/preserveAspectRatioが付いており、315の埋め込み処理が同名属性を二重追加→HTMLパーサは重複属性を許すがSVG画像=厳格XMLではパースエラー→img読み込み失敗→catchのテキストのみ共有へフォールバックしていた(ローカルでXMLパーサにより再現・確定)。→ルートタグをviewBoxだけ引き継いで丸ごと再構成する安全な埋め込みヘルパーmmEmbedSvgを新設し天気・5軸両方に適用。修正後の全パターン(通常/レア/天気4種)をXML検証済み。②路線名スクリムの文字が黒のままだった件：新指定のセレクタ詳細度(1,1,0)が夕方パッチ(1,2,0)に負けていた→#station-card[data-rank] .sc-line-text(1,2,0)へ格上げ=同点後勝ちで全時間帯白文字に。③カード詳細の横スワイプのひっかかり根治：真因=スワイプ確定→_navCard→openCardFromHistory→openStationCard内の「回転アニメ再起動」(wrap.style.animation='none'→reflow→復活)が進行中のswipe-in入場アニメ(0.25s)を強制的に殺していた。swipe-in-left/rightクラスが付いている間は再起動をスキップする分岐を追加。さらに飛び去りtransition(0.18s)に対しsetTimeout 160msで20ms早く打ち切っていた微カクも185msに調整。【index316】【dev確認FB反映：文字縁取りの微細化＋ランクバッジへの適用】①駅名・スコア数字の黒縁(index311)を細く：8方向オフセット1px→0.5px、ぼかし・濃度も微減=縁取り感を残しつつ上品に。②左上のランクバッジ(S/A等62pxのランク色文字、背景なし=暗背景で沈む同構造)にも同じ細縁取りを適用(既存の--card-glowグローは維持)。シャイニー/ミシック時は金背景バッジに変わるためtext-shadow:noneで縁取り除外。【index315】【dev確認FB反映3点＋シェア見直し第2弾：駅カードシェアのSVG完結生成】①箔演出=キラン方式を撤回し、旧「ふぁさっと流れるヴェール」の見た目をtransform実装で完全再現：太ヴェール4.6s(ミシック4.2s)+細筋3.1s(同2.9s)がlinear等速で横断、opacity12%/88%フェード、ミシック細筋は桃色。GPU完結(実DOM+transform)なのでカクつかない=「さっきの方がいい」と「カクつき根治」の両立。②シャイニー星屑の明滅周期を2.2s→4.4s(半分のゆっくり)。③路線名(.sc-line-text)にinfo-gridと同じスクリム帯改善を適用：rgba(8,14,26,0.36)+blur+radius+白文字固定(時間帯パッチより後方カスケードで恒久上書き)。④駅カードシェアのSVG化：renderCardShareSVG新設(720×1080)=季節×時間帯16種の背景グラデ辞書(CSS--mm-bg移植)+既存SVG部品(mmShareAxesSVG5軸/mmShareWeatherSVG天気)埋込+ランクバッジ/駅名/路線色帯/スコア/info/特徴/日付/ロゴ+シャイニー・ミシックは静止映え仕上げ(金縁+対角光帯+キラ粒子焼込)。shareCard側もhtml2canvas廃止しmmSvgToCanvasパイプラインへ。【index314】【dev確認FB反映2点：カウントアップの発動限定＋シャイニー/ミシック箔演出のGPU再設計】①スコアカウントアップの発動を「チェックイン成立の初回登場」のみに限定：条件をdata.isShortAnim===false(成立×派手アニメ時のみtrueになる厳密判定)へ変更。図鑑・履歴から開いた時(isShortAnim未定義)とduplicate短縮時は即値表示。②箔演出カクつきの根治：旧実装の「流れる光」はbackground-positionアニメ=GPU非対応で毎フレーム再描画(paint)が走る方式だった(220%グラデ2枚×2アニメ同時、そこにカウントアップの毎フレームtextContent更新が重なり描画飽和=312からのカクつきと整合)。→実DOM光帯(sc-kiran×2本、専用overflow:hiddenコンテナsc-kiran-wrap内)を純transform(translateX+rotate18deg)で走らせるGPU完結方式に全面転換。演出も「常時流れる」から「周期4.8sの大半は待機→一瞬だけ細い帯が2本時間差でキランッと走る」に再設計(ともき要望の киран感)。シャイニー=白銀、ミシック=金の帯。挿入/除去はmmApplyTierToCard内(tierタグと同パターン)。既存の::afterスイープはanimation停止+光帯グラデ除去(shinyの固定十字キラのみ残置)。カードシェアSVG化は315で。【index313】【シェア見直し第1弾：バッジシェアのSVG完結生成(見直しテーマ⑤)】①html2canvas廃止：バッジシェア画像をSVG文字列として完全生成→Image→canvas→PNG化(mmSvgToCanvas)。html2canvasの再現性問題(background-clip:text非対応=金帯バグ、アニメ/フィルタ脱落)から完全に解放。②静止画として完成したデザイン(mmBadgeShareSVG、1080×1440)：濃紺グラデ背景＋淡色radial装飾＋バッジ背後の放射光線24本(sunburst)＋金の後光＋sin-fractハッシュ配置のキラ粒子18個＋単色金ロゴ(バグ根治)＋バッジ名/説明＋獲得日リボン(金帯+濃紺文字、両端ノッチ)＋CTA。③repeatバッジ(常連系)を円形メダルに格上げ：rank系と同構造のradialグラデ+上部ハイライト+金属リング。絵文字(☕🔥📚⛩)を廃止し自前SVGパスアイコン(カップ/炎/本/鳥居)に=SVG→PNG変換の端末依存リスクゼロ＋大人の品位。checkinバッジは数字主体の現デザイン維持。④共有フロー(Web Share API/DL+X intent)は完全流用。駅カード側シェアは314で。【index312】【カード磨き込み第3弾：登場演出の格上げ(見直しテーマ④)＋雨の初動修正】①★dev確認FB反映=雨の「最初の10秒が横一線/局所的な塊」問題の根治：旧実装は等差数列mod方式の擬似乱数(seed*(i+3)*9301+49297)%233280で、iに対する規則性から横位置が等間隔の縞・開始タイミングが揃う欠陥があった(しかも長さと開始が同一乱数r1で相関)。雪がindex223で採用済みのsin-fractハッシュ(Math.sin(n)*43758.5453のfract)に統一し、長さ/横位置/落下時間/開始タイミングを4系列の無相関乱数に分離→最初のフレームから定常状態の降り方に。②スコアカウントアップ(mmCountUpScore)：カード回転と併走して0→実スコアへ900msロールアップ(easeOutCubic、開始300ms遅延でGPUレイヤー確立を優先=index199の教訓踏襲)。duplicate短縮アニメ時は即値表示。③ランク別の登場格差：S=赤の強い後光＋内側白ハイライト(箔の内光)、A=橙の中後光。box-shadowは!important無し=シャイニー/ミシックの箔シャドウ(!important付き)が常に優先され競合しない設計。「Sを引いた！」の特別感。【index311】【カード磨き込み第2弾：文字視認性の恒久解決(見直しテーマ②)】16種の背景(季節4×時間帯4)への個別パッチ方式をやめ「文字を背景に依存させない」設計へ転換。①駅名(.sc-station-name)：従来の濃紺#1a2030固定(時間帯対応なし=夜に沈む主因)→白＋濃紺8方向縁取り＋ソフトシャドウの多層text-shadowに統一。どの背景でも読める。②スコア数字(.sc-score-num)：ランク色は維持(アイデンティティ)しつつ濃紺縁取りを追加=暗背景での沈み防止。③情報グリッド(開業/接続/乗降客/所在地)：すりガラス風スクリム帯(rgba(8,14,26,0.36)+blur2px+radius12px)を敷き、値=白/ラベル=淡青グレーに固定。既存のevening/night個別調整は残置したまま後方カスケード(!important同点=後勝ち)で恒久版が上書き。④聖域：路線UIの銅文字(index300-302の作り込み)、シャイニー/ミシック専用文字色(属性セレクタの詳細度で勝つ=維持)、特徴コメント(白ピル=既に背景非依存)は一切触らず。将来の季節カード追加でも文字が二度と沈まない構造に。【index310】【カード磨き込み第1弾：天気プリフェッチ＋晴れ・曇りアニメ(見直しテーマ③①)】①天気プリフェッチ：startCheckin(5分滞在の開始時点)でmmGetWeather(lat,lng)を投げっぱなし実行(await無し・失敗無視)→座標キャッシュ(0.01度精度・10分有効)が温まる→成立時の天気取得が即キャッシュhit＝簡易デコを経由せず初回から天気エフェクト込みの完成カードで登場。圏外時は既存の後追い取得がそのまま保険。②晴れに動き：光源の呼吸(mmSunBreath 5s明滅+微拡大)＋レンズフレア光条のスイング(mmFlareSwing 7s角度往復)＋きらめく光の粒3つ(mm-sunspark、JS挿入・CSS明滅)。③曇りに動き：雲塊3つの超スロー漂い(mmCloudDrift 75/95/85s往復、nth-childで無相関バラし)＋雲間から差す光(cloudy::after、18s周期で数秒だけ淡い光がすっと現れて消える)。すべて雨雪と同じ「CSS/GPUのみ・メインスレッド不可侵」設計で負荷ほぼゼロ。シェア側SVG再現(mmShareWeatherSVG)は静止画のため変更不要。【index309】【バッジ・Pro・収益ブラッシュアップ6点セット(採用案14/15/16/20/24/25)】①リーチバッジ強調：次の目標カードで残り1のとき.bp-ng-reachクラス付与=金枠＋パルスアニメ＋タイトルに🔔リーチ！。②Pro盾を統計パネルへ：応援者バッジの左隣(bp-cs-pro、right:92px)にP1盾。未所有はグレー＋🔒＋「？？？」→タップでPro説明confirm→ショップ誘導(mmProShieldTap、mmSupporterTapと同パターン)。所有時はラベル「PRO」。renderSupporterInStats内から連動描画(renderProShieldInStats)、bp-cs-barのmargin-rightを82→164pxに拡張。③バッジシェア画像に獲得日：b.earnedAtから「YYYY.M.D 獲得」を生成しバッジ名の下に焼き込み(bp-share-date、無ければ非表示)。④次階級予告：マイページLVパネルのバー直下に「LV.n0で『次階級名』に昇格」(mp-master-next-tier、BP_TIER_NAMES[tier+1]、MAX時非表示)。⑤Proサンクス演出：pro_lifetime購入成功時のalertを廃止→mmShowProThanks()=フルスクリーンオーバーレイにP1盾150pxがポップイン＋特典一覧＋タップで閉じる(z-index:9200、動的DOM生成で自己完結)。★dev確認FB反映3点: (a)図鑑の確率注記「(チェックインごとに抽選)」を改行 (b)Pro盾の🔒/？？？の位置・フォントを応援者バッジと完全統一(右下🔒15px・直下？？？8px) (c)リーチの🔔をタイトルからラベル行(「次の目標」「その次」の位置)へ移動=ミッション名の見切れ解消。⑥上限時スター導線：情報パネルの上限到達×スター0の「明日また来てね」の下に「⭐ スターを入手する」ボタン→mmGoShopForStars()=マイページを開いてショップへ自動スクロール。4駅目を諦めさせない収益導線。【index308】【カード・図鑑ブラッシュアップ3点セット(採用案1/6/8)】①図鑑に駅名検索：カードコレクションのソート行上に検索ボックス(cl-search、履歴のhist-searchと同スタイル)。cardSearchQueryで駅名/都道府県の部分一致フィルタ(mmCardSearchInput→renderCardListSorted内で適用)。0件時は既存の「該当するカードがありません」表示。openCardListPageで開き直す度にリセット。②再訪ミニ演出：完了画面の「n回目の訪問！」を強化。訪問回数の数字を金色22pxでポップアニメ(csm-visit-num/csmNumPop 0.5s)。節目メッセージ=5回🌟/10回=常連🏅/30回=マニア🎖/50回=生き字引👑/100回=神🎊(リピートバッジの称号と整合)。③レア度確率の公式明示：実装値(mmRollCardTier)=シャイニー1/30・ミシック1/200を(a)図鑑ソート行下の注記(cl-rarity-note) (b)トリセツのカード章 (c)トリセツFAQ の3箇所に明記。ガチャ透明性の担保。【index307】【チェックイン体験ブラッシュアップ5点セット(採用案9/10/11/12/13)】①チェックイン成立バイブ：showCheckinSuccess冒頭でnavigator.vibrate([60,40,120])。②チェックイン効果音：WebAudio合成の2音チャイム(E5→A5、外部ファイル不要)。デフォルトOFF、マイページ設定「チェックイン演出」トグルでON(localStorage mm_sound)。ON操作時とstartCheckin時にAudioContextをresume(autoplay policy対策)。③完了画面にストリーク表示：csm-quota下に「🔥n日連続」(csm-streak)。mmProcessLoginBonusの結果を_mmStreakCacheにキャッシュ、モーダル表示後に非同期挿入。④マップに本日残数ピル(mm-quota-badge、z-index:900でモーダル時は下に隠れる)。★dev確認FB反映: 当初の左下配置はスマホで常駐する#legend(ランク凡例、bottom:20px/left:14px)とバッティング→右下のバージョン表示直上(right:20px/bottom:+28px)へ移設：「本日 X/3駅」、上限時は金色＋⭐所持数。更新は起動時/セクション描画時/成立時。⑤圏内マーカー脈動：updateUserLocationMarkerで全表示マーカーとの距離計算、500m以内×本日未チェックインの.mk-innerに.mm-near-pulse付与(金色明滅1.6s)。本日済み駅は対象外。【index306】【Pro特典の実体化：推し街10枠＋CSV出力＋ProバッジP1メダル化】①推し街上限を動的化：mmFavLimit()=Pro10枠/無料3枠。マイページ表示は上位3件＋「▼残りn件を見る」で展開(toggleFavMore)。無料ユーザーが上限で追加すると Pro誘導confirm→ショップへスクロール。空メッセージ・追加ボタン・addFavガードすべて上限関数参照に統一。②訪問記録CSV出力：ショップ「✓ Pro版をご利用中」内に📊ボタン新設→CF既存のexportCheckinCSV呼出(Pro判定・BOM付き10列CSVはCF v7側で完備、デプロイ不要)→Web Share API優先(TWA対応)/Blobダウンロードフォールバックの2段構え。③ProバッジP1メダル化：mmProBadgeSVG()新設(ティール金属縁の盾＋コンパスローズ＋シアン北針＋青PROリボン、応援者バッジ=丸/金/夕焼けとの対デザイン)。マイページ小型バッジのPROピル→P1盾24px、ショップPro商品アイコンの金箱→P1盾46pxに差し替え。④トリセツ推し街章に「Pro版なら10」併記。⑤dev確認FB反映: 無課金×3枠埋まり時に追加ボタンが消えてピッカー(=Pro誘導)への入口が無かった設計穴を修正→「🔒 Proで10枠に拡張」ボタン(mmFavProUpsell)を表示しconfirm→ショップスクロール。【index305】【応援者バッジ＋応援チップ導入＋トリセツ正式リリース化】①ショップに「応援チップ」セクション新設（tip_100/¥100・tip_500/¥500・tip_1000/¥1,000、Play Console登録済み商品にアプリ側の購入UIがなかった問題を解消。MM_SHOP_SKUSに3種追加、buyProduct/recoverPendingPurchases流用）。②tip_1000特典「応援者バッジ」実装：金縁メダル＋夕焼けの街＋クラウン＋SUPPORTERリボンのSVG（mmSupporterBadgeSVG関数）。説明文「あなたの応援が、街巡を灯します」。表示場所は(a)バッジページのコレクション統計パネル右側（未獲得時はグレーシルエット＋タップでショップ誘導confirm）(b)マイページのニックネーム直下に小型バッジ（Pro小型バッジも同時新設、mm-mini-badges）。付与はCF verifyPurchase側でsupporterBadgeフィールド書込（CF v8で対応、クライアントは読取専用）。③onPurchaseSuccessにtip系処理追加（100/500=感謝アラート、1000=バッジ授与演出）。④判定仕様: CF v7のsupporterBadgeは¥100チップでも作られる(tier=最高支援額)ため、バッジ獲得判定はtier>=1000限定で実装(3箇所)。CF側は変更不要(v7 verifyPurchaseがtip系処理済み)。⑤トリセツ正式リリース化：FAQ2箇所の「ともきまで」→「公式SNSまで」、注意事項の「ベータ期間中〜ともきにフィードバック」→「不具合を見つけたら公式SNSへフィードバック大歓迎」、ショップ章に応援チップ項目追加。【index304】【公式SNSをアピール感のあるカード型に再設計＋トリセツ仕上げ】ともきフィードバック「味気ない」を反映し、マイページ・トリセツ両方の公式SNS表示を全面リニューアル。①CSS全面書き換え：従来の「アイコン+@ID」のフラットなボタンを廃止し、Xはブラックグラデ(linear-gradient(135deg,#1a1a1a,#000))、Instagramはブランド3色グラデ(#833ab4→#fd1d1d→#fcb045)の大型カード型に。32pxアイコン+「公式 X / 公式 Instagram」タイトル+「フォローして最新情報をGET / 街の風景をシェア中」誘導文の3段構成、min-height:96px、box-shadow付きでタップしたくなる存在感に。@IDは表記から外しリンク先のみで遷移（ともき指示）。②トリセツ末尾にも同じカード型SNS表示を追加し「📣 最新情報・新機能のお知らせは公式SNSで！」見出しを付与。③トリセツ冒頭の「BETA / ようこそ！今は身近な人にテストしてもらってる…」セクションを全削除（製品版申請後を見据えて）。④トリセツ末尾署名「作：ともき（個人開発）／技術：クロ（AI）」を「作：まちめぐ製作委員会」のみに簡素化（個人事業者名義に統一）。【継続】①②④⑤⑥は297〜303までの実装を継続。【index303】マイページ下部にオレンジ区切り線2本＋公式SNS追加＋トリセツ4点更新（1日3駅・バッジ6種目・ショップ章・SNS）。【index302】銅フォント統一＋チェックイン3段階フォールバック。【index301】銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
+<!-- VERSION: index319 (2026.07.04) — 【カードシェア画像の方式転換：ネストSVG全廃＋多層合成】317のXML修正後も実機で失敗継続(バッジ成功/カード失敗の非対称)→残る差分は「カードだけSVG内にSVG(天気・5軸)をネスト」している点。Android系のSVG画像読み込みはネストSVGの扱いが保守的でここが実機死因の最有力(通常=天気ネストで即失敗、ミシック=5軸ネストでハング、と症状も整合)。→バッジで実績ある「単独SVG→Image→canvas」だけで構成する多層合成方式へ全面転換：①mmLoadSvgImage新設(mmSvgToCanvasの読込部を関数化、バッジ側は挙動不変) ②renderCardShareSVGにpart引数(bg=台紙/影/カード地グラデ、fg=レア装飾/ランク/テキスト/色帯/info/特徴/ブランド、省略時=従来の全部入り) ③shareCard側で4層合成：背景層→天気層(通常のみ、roundRectクリップで角丸内に)→前景層→5軸層を順にdrawImage。各層は独立SVGドキュメント=ネスト起因の問題を構造的に排除、層単位の失敗は握り潰して他layerは描く。④一時デバッグ:shareCard/shareBadgeのcatchでエラーname/messageをalert表示(原因の実機可視化、判明後に除去予定)。【index318】【dev確認FB反映：スワイプ時の旧カード一瞬再表示(サブリミナルチカチカ)の根治】真因=旧フローは「swipe-in入場開始→openCardFromHistoryで中身書き換え(非同期)」の順のため、入場アニメの前半は旧カード(西葛西)の中身のまま表示され、途中で新カード(中野)にすり替わっていた。→順序を逆転：①_navCard冒頭でwrapを透明(opacity:0)に維持＋_swipeNavigatingフラグON ②openCardFromHistoryをawaitして中身の書き換えを完了 ③さらにrAF×3待機(openStationCard内の重いDOM更新はrAF×2遅延のため、その後を保証) ④swipe-in入場アニメ開始(from opacity:0なので透明から滑らかに入場)＋フラグ解除。openStationCard内のアニメ再起動スキップ判定(317)も「swipe-inクラス or _swipeNavigatingフラグ」に拡張(新フローでは再起動時点でクラス未付与のため)。結果=西葛西→フリック→(透明)→中野が入場、の一発遷移。矢印ボタン経由も同フローで改善。【index317】【dev確認FB反映3点＋カードシェア画像失敗の根治】①★カードシェアが「テキスト+URLのみ」になる致命バグの原因特定＆修正：埋め込む天気SVG(mmShareWeatherSVG)のルートタグには元からwidth="100%"/height/preserveAspectRatioが付いており、315の埋め込み処理が同名属性を二重追加→HTMLパーサは重複属性を許すがSVG画像=厳格XMLではパースエラー→img読み込み失敗→catchのテキストのみ共有へフォールバックしていた(ローカルでXMLパーサにより再現・確定)。→ルートタグをviewBoxだけ引き継いで丸ごと再構成する安全な埋め込みヘルパーmmEmbedSvgを新設し天気・5軸両方に適用。修正後の全パターン(通常/レア/天気4種)をXML検証済み。②路線名スクリムの文字が黒のままだった件：新指定のセレクタ詳細度(1,1,0)が夕方パッチ(1,2,0)に負けていた→#station-card[data-rank] .sc-line-text(1,2,0)へ格上げ=同点後勝ちで全時間帯白文字に。③カード詳細の横スワイプのひっかかり根治：真因=スワイプ確定→_navCard→openCardFromHistory→openStationCard内の「回転アニメ再起動」(wrap.style.animation='none'→reflow→復活)が進行中のswipe-in入場アニメ(0.25s)を強制的に殺していた。swipe-in-left/rightクラスが付いている間は再起動をスキップする分岐を追加。さらに飛び去りtransition(0.18s)に対しsetTimeout 160msで20ms早く打ち切っていた微カクも185msに調整。【index316】【dev確認FB反映：文字縁取りの微細化＋ランクバッジへの適用】①駅名・スコア数字の黒縁(index311)を細く：8方向オフセット1px→0.5px、ぼかし・濃度も微減=縁取り感を残しつつ上品に。②左上のランクバッジ(S/A等62pxのランク色文字、背景なし=暗背景で沈む同構造)にも同じ細縁取りを適用(既存の--card-glowグローは維持)。シャイニー/ミシック時は金背景バッジに変わるためtext-shadow:noneで縁取り除外。【index315】【dev確認FB反映3点＋シェア見直し第2弾：駅カードシェアのSVG完結生成】①箔演出=キラン方式を撤回し、旧「ふぁさっと流れるヴェール」の見た目をtransform実装で完全再現：太ヴェール4.6s(ミシック4.2s)+細筋3.1s(同2.9s)がlinear等速で横断、opacity12%/88%フェード、ミシック細筋は桃色。GPU完結(実DOM+transform)なのでカクつかない=「さっきの方がいい」と「カクつき根治」の両立。②シャイニー星屑の明滅周期を2.2s→4.4s(半分のゆっくり)。③路線名(.sc-line-text)にinfo-gridと同じスクリム帯改善を適用：rgba(8,14,26,0.36)+blur+radius+白文字固定(時間帯パッチより後方カスケードで恒久上書き)。④駅カードシェアのSVG化：renderCardShareSVG新設(720×1080)=季節×時間帯16種の背景グラデ辞書(CSS--mm-bg移植)+既存SVG部品(mmShareAxesSVG5軸/mmShareWeatherSVG天気)埋込+ランクバッジ/駅名/路線色帯/スコア/info/特徴/日付/ロゴ+シャイニー・ミシックは静止映え仕上げ(金縁+対角光帯+キラ粒子焼込)。shareCard側もhtml2canvas廃止しmmSvgToCanvasパイプラインへ。【index314】【dev確認FB反映2点：カウントアップの発動限定＋シャイニー/ミシック箔演出のGPU再設計】①スコアカウントアップの発動を「チェックイン成立の初回登場」のみに限定：条件をdata.isShortAnim===false(成立×派手アニメ時のみtrueになる厳密判定)へ変更。図鑑・履歴から開いた時(isShortAnim未定義)とduplicate短縮時は即値表示。②箔演出カクつきの根治：旧実装の「流れる光」はbackground-positionアニメ=GPU非対応で毎フレーム再描画(paint)が走る方式だった(220%グラデ2枚×2アニメ同時、そこにカウントアップの毎フレームtextContent更新が重なり描画飽和=312からのカクつきと整合)。→実DOM光帯(sc-kiran×2本、専用overflow:hiddenコンテナsc-kiran-wrap内)を純transform(translateX+rotate18deg)で走らせるGPU完結方式に全面転換。演出も「常時流れる」から「周期4.8sの大半は待機→一瞬だけ細い帯が2本時間差でキランッと走る」に再設計(ともき要望の киран感)。シャイニー=白銀、ミシック=金の帯。挿入/除去はmmApplyTierToCard内(tierタグと同パターン)。既存の::afterスイープはanimation停止+光帯グラデ除去(shinyの固定十字キラのみ残置)。カードシェアSVG化は315で。【index313】【シェア見直し第1弾：バッジシェアのSVG完結生成(見直しテーマ⑤)】①html2canvas廃止：バッジシェア画像をSVG文字列として完全生成→Image→canvas→PNG化(mmSvgToCanvas)。html2canvasの再現性問題(background-clip:text非対応=金帯バグ、アニメ/フィルタ脱落)から完全に解放。②静止画として完成したデザイン(mmBadgeShareSVG、1080×1440)：濃紺グラデ背景＋淡色radial装飾＋バッジ背後の放射光線24本(sunburst)＋金の後光＋sin-fractハッシュ配置のキラ粒子18個＋単色金ロゴ(バグ根治)＋バッジ名/説明＋獲得日リボン(金帯+濃紺文字、両端ノッチ)＋CTA。③repeatバッジ(常連系)を円形メダルに格上げ：rank系と同構造のradialグラデ+上部ハイライト+金属リング。絵文字(☕🔥📚⛩)を廃止し自前SVGパスアイコン(カップ/炎/本/鳥居)に=SVG→PNG変換の端末依存リスクゼロ＋大人の品位。checkinバッジは数字主体の現デザイン維持。④共有フロー(Web Share API/DL+X intent)は完全流用。駅カード側シェアは314で。【index312】【カード磨き込み第3弾：登場演出の格上げ(見直しテーマ④)＋雨の初動修正】①★dev確認FB反映=雨の「最初の10秒が横一線/局所的な塊」問題の根治：旧実装は等差数列mod方式の擬似乱数(seed*(i+3)*9301+49297)%233280で、iに対する規則性から横位置が等間隔の縞・開始タイミングが揃う欠陥があった(しかも長さと開始が同一乱数r1で相関)。雪がindex223で採用済みのsin-fractハッシュ(Math.sin(n)*43758.5453のfract)に統一し、長さ/横位置/落下時間/開始タイミングを4系列の無相関乱数に分離→最初のフレームから定常状態の降り方に。②スコアカウントアップ(mmCountUpScore)：カード回転と併走して0→実スコアへ900msロールアップ(easeOutCubic、開始300ms遅延でGPUレイヤー確立を優先=index199の教訓踏襲)。duplicate短縮アニメ時は即値表示。③ランク別の登場格差：S=赤の強い後光＋内側白ハイライト(箔の内光)、A=橙の中後光。box-shadowは!important無し=シャイニー/ミシックの箔シャドウ(!important付き)が常に優先され競合しない設計。「Sを引いた！」の特別感。【index311】【カード磨き込み第2弾：文字視認性の恒久解決(見直しテーマ②)】16種の背景(季節4×時間帯4)への個別パッチ方式をやめ「文字を背景に依存させない」設計へ転換。①駅名(.sc-station-name)：従来の濃紺#1a2030固定(時間帯対応なし=夜に沈む主因)→白＋濃紺8方向縁取り＋ソフトシャドウの多層text-shadowに統一。どの背景でも読める。②スコア数字(.sc-score-num)：ランク色は維持(アイデンティティ)しつつ濃紺縁取りを追加=暗背景での沈み防止。③情報グリッド(開業/接続/乗降客/所在地)：すりガラス風スクリム帯(rgba(8,14,26,0.36)+blur2px+radius12px)を敷き、値=白/ラベル=淡青グレーに固定。既存のevening/night個別調整は残置したまま後方カスケード(!important同点=後勝ち)で恒久版が上書き。④聖域：路線UIの銅文字(index300-302の作り込み)、シャイニー/ミシック専用文字色(属性セレクタの詳細度で勝つ=維持)、特徴コメント(白ピル=既に背景非依存)は一切触らず。将来の季節カード追加でも文字が二度と沈まない構造に。【index310】【カード磨き込み第1弾：天気プリフェッチ＋晴れ・曇りアニメ(見直しテーマ③①)】①天気プリフェッチ：startCheckin(5分滞在の開始時点)でmmGetWeather(lat,lng)を投げっぱなし実行(await無し・失敗無視)→座標キャッシュ(0.01度精度・10分有効)が温まる→成立時の天気取得が即キャッシュhit＝簡易デコを経由せず初回から天気エフェクト込みの完成カードで登場。圏外時は既存の後追い取得がそのまま保険。②晴れに動き：光源の呼吸(mmSunBreath 5s明滅+微拡大)＋レンズフレア光条のスイング(mmFlareSwing 7s角度往復)＋きらめく光の粒3つ(mm-sunspark、JS挿入・CSS明滅)。③曇りに動き：雲塊3つの超スロー漂い(mmCloudDrift 75/95/85s往復、nth-childで無相関バラし)＋雲間から差す光(cloudy::after、18s周期で数秒だけ淡い光がすっと現れて消える)。すべて雨雪と同じ「CSS/GPUのみ・メインスレッド不可侵」設計で負荷ほぼゼロ。シェア側SVG再現(mmShareWeatherSVG)は静止画のため変更不要。【index309】【バッジ・Pro・収益ブラッシュアップ6点セット(採用案14/15/16/20/24/25)】①リーチバッジ強調：次の目標カードで残り1のとき.bp-ng-reachクラス付与=金枠＋パルスアニメ＋タイトルに🔔リーチ！。②Pro盾を統計パネルへ：応援者バッジの左隣(bp-cs-pro、right:92px)にP1盾。未所有はグレー＋🔒＋「？？？」→タップでPro説明confirm→ショップ誘導(mmProShieldTap、mmSupporterTapと同パターン)。所有時はラベル「PRO」。renderSupporterInStats内から連動描画(renderProShieldInStats)、bp-cs-barのmargin-rightを82→164pxに拡張。③バッジシェア画像に獲得日：b.earnedAtから「YYYY.M.D 獲得」を生成しバッジ名の下に焼き込み(bp-share-date、無ければ非表示)。④次階級予告：マイページLVパネルのバー直下に「LV.n0で『次階級名』に昇格」(mp-master-next-tier、BP_TIER_NAMES[tier+1]、MAX時非表示)。⑤Proサンクス演出：pro_lifetime購入成功時のalertを廃止→mmShowProThanks()=フルスクリーンオーバーレイにP1盾150pxがポップイン＋特典一覧＋タップで閉じる(z-index:9200、動的DOM生成で自己完結)。★dev確認FB反映3点: (a)図鑑の確率注記「(チェックインごとに抽選)」を改行 (b)Pro盾の🔒/？？？の位置・フォントを応援者バッジと完全統一(右下🔒15px・直下？？？8px) (c)リーチの🔔をタイトルからラベル行(「次の目標」「その次」の位置)へ移動=ミッション名の見切れ解消。⑥上限時スター導線：情報パネルの上限到達×スター0の「明日また来てね」の下に「⭐ スターを入手する」ボタン→mmGoShopForStars()=マイページを開いてショップへ自動スクロール。4駅目を諦めさせない収益導線。【index308】【カード・図鑑ブラッシュアップ3点セット(採用案1/6/8)】①図鑑に駅名検索：カードコレクションのソート行上に検索ボックス(cl-search、履歴のhist-searchと同スタイル)。cardSearchQueryで駅名/都道府県の部分一致フィルタ(mmCardSearchInput→renderCardListSorted内で適用)。0件時は既存の「該当するカードがありません」表示。openCardListPageで開き直す度にリセット。②再訪ミニ演出：完了画面の「n回目の訪問！」を強化。訪問回数の数字を金色22pxでポップアニメ(csm-visit-num/csmNumPop 0.5s)。節目メッセージ=5回🌟/10回=常連🏅/30回=マニア🎖/50回=生き字引👑/100回=神🎊(リピートバッジの称号と整合)。③レア度確率の公式明示：実装値(mmRollCardTier)=シャイニー1/30・ミシック1/200を(a)図鑑ソート行下の注記(cl-rarity-note) (b)トリセツのカード章 (c)トリセツFAQ の3箇所に明記。ガチャ透明性の担保。【index307】【チェックイン体験ブラッシュアップ5点セット(採用案9/10/11/12/13)】①チェックイン成立バイブ：showCheckinSuccess冒頭でnavigator.vibrate([60,40,120])。②チェックイン効果音：WebAudio合成の2音チャイム(E5→A5、外部ファイル不要)。デフォルトOFF、マイページ設定「チェックイン演出」トグルでON(localStorage mm_sound)。ON操作時とstartCheckin時にAudioContextをresume(autoplay policy対策)。③完了画面にストリーク表示：csm-quota下に「🔥n日連続」(csm-streak)。mmProcessLoginBonusの結果を_mmStreakCacheにキャッシュ、モーダル表示後に非同期挿入。④マップに本日残数ピル(mm-quota-badge、z-index:900でモーダル時は下に隠れる)。★dev確認FB反映: 当初の左下配置はスマホで常駐する#legend(ランク凡例、bottom:20px/left:14px)とバッティング→右下のバージョン表示直上(right:20px/bottom:+28px)へ移設：「本日 X/3駅」、上限時は金色＋⭐所持数。更新は起動時/セクション描画時/成立時。⑤圏内マーカー脈動：updateUserLocationMarkerで全表示マーカーとの距離計算、500m以内×本日未チェックインの.mk-innerに.mm-near-pulse付与(金色明滅1.6s)。本日済み駅は対象外。【index306】【Pro特典の実体化：推し街10枠＋CSV出力＋ProバッジP1メダル化】①推し街上限を動的化：mmFavLimit()=Pro10枠/無料3枠。マイページ表示は上位3件＋「▼残りn件を見る」で展開(toggleFavMore)。無料ユーザーが上限で追加すると Pro誘導confirm→ショップへスクロール。空メッセージ・追加ボタン・addFavガードすべて上限関数参照に統一。②訪問記録CSV出力：ショップ「✓ Pro版をご利用中」内に📊ボタン新設→CF既存のexportCheckinCSV呼出(Pro判定・BOM付き10列CSVはCF v7側で完備、デプロイ不要)→Web Share API優先(TWA対応)/Blobダウンロードフォールバックの2段構え。③ProバッジP1メダル化：mmProBadgeSVG()新設(ティール金属縁の盾＋コンパスローズ＋シアン北針＋青PROリボン、応援者バッジ=丸/金/夕焼けとの対デザイン)。マイページ小型バッジのPROピル→P1盾24px、ショップPro商品アイコンの金箱→P1盾46pxに差し替え。④トリセツ推し街章に「Pro版なら10」併記。⑤dev確認FB反映: 無課金×3枠埋まり時に追加ボタンが消えてピッカー(=Pro誘導)への入口が無かった設計穴を修正→「🔒 Proで10枠に拡張」ボタン(mmFavProUpsell)を表示しconfirm→ショップスクロール。【index305】【応援者バッジ＋応援チップ導入＋トリセツ正式リリース化】①ショップに「応援チップ」セクション新設（tip_100/¥100・tip_500/¥500・tip_1000/¥1,000、Play Console登録済み商品にアプリ側の購入UIがなかった問題を解消。MM_SHOP_SKUSに3種追加、buyProduct/recoverPendingPurchases流用）。②tip_1000特典「応援者バッジ」実装：金縁メダル＋夕焼けの街＋クラウン＋SUPPORTERリボンのSVG（mmSupporterBadgeSVG関数）。説明文「あなたの応援が、街巡を灯します」。表示場所は(a)バッジページのコレクション統計パネル右側（未獲得時はグレーシルエット＋タップでショップ誘導confirm）(b)マイページのニックネーム直下に小型バッジ（Pro小型バッジも同時新設、mm-mini-badges）。付与はCF verifyPurchase側でsupporterBadgeフィールド書込（CF v8で対応、クライアントは読取専用）。③onPurchaseSuccessにtip系処理追加（100/500=感謝アラート、1000=バッジ授与演出）。④判定仕様: CF v7のsupporterBadgeは¥100チップでも作られる(tier=最高支援額)ため、バッジ獲得判定はtier>=1000限定で実装(3箇所)。CF側は変更不要(v7 verifyPurchaseがtip系処理済み)。⑤トリセツ正式リリース化：FAQ2箇所の「ともきまで」→「公式SNSまで」、注意事項の「ベータ期間中〜ともきにフィードバック」→「不具合を見つけたら公式SNSへフィードバック大歓迎」、ショップ章に応援チップ項目追加。【index304】【公式SNSをアピール感のあるカード型に再設計＋トリセツ仕上げ】ともきフィードバック「味気ない」を反映し、マイページ・トリセツ両方の公式SNS表示を全面リニューアル。①CSS全面書き換え：従来の「アイコン+@ID」のフラットなボタンを廃止し、Xはブラックグラデ(linear-gradient(135deg,#1a1a1a,#000))、Instagramはブランド3色グラデ(#833ab4→#fd1d1d→#fcb045)の大型カード型に。32pxアイコン+「公式 X / 公式 Instagram」タイトル+「フォローして最新情報をGET / 街の風景をシェア中」誘導文の3段構成、min-height:96px、box-shadow付きでタップしたくなる存在感に。@IDは表記から外しリンク先のみで遷移（ともき指示）。②トリセツ末尾にも同じカード型SNS表示を追加し「📣 最新情報・新機能のお知らせは公式SNSで！」見出しを付与。③トリセツ冒頭の「BETA / ようこそ！今は身近な人にテストしてもらってる…」セクションを全削除（製品版申請後を見据えて）。④トリセツ末尾署名「作：ともき（個人開発）／技術：クロ（AI）」を「作：まちめぐ製作委員会」のみに簡素化（個人事業者名義に統一）。【継続】①②④⑤⑥は297〜303までの実装を継続。【index303】マイページ下部にオレンジ区切り線2本＋公式SNS追加＋トリセツ4点更新（1日3駅・バッジ6種目・ショップ章・SNS）。【index302】銅フォント統一＋チェックイン3段階フォールバック。【index301】銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -14607,7 +14607,7 @@ window.mmShareAxesSVG = function(axes){
 //   - 天気: 既存mmShareWeatherSVGをネスト埋込 / 5軸: 既存mmShareAxesSVGをネスト埋込
 //   - シャイニー/ミシック: 静止画映え仕上げ（専用背景+金/銀縁+対角光帯+キラ粒子焼込）
 // ═══════════════════════════════════════════════════════════════
-window.renderCardShareSVG = function(ctx) {
+window.renderCardShareSVG = function(ctx, part) {
   const W = 900, H = 1280;         // 台紙（濃紺）
   const CX0 = 90, CY0 = 100;       // カード左上
   const CW = 720, CH = 1080;       // カード
@@ -14646,40 +14646,11 @@ window.renderCardShareSVG = function(ctx) {
   const tSub = dark ? '#b8c8e0' : '#5a6a7e';
   const logoCol = dark ? '#fbd56a' : '#b0871e';
 
-  // ── ネストSVGの安全な埋め込み（★index317: ルートタグをviewBoxだけ引き継ぎ丸ごと再構成。
-  //    元ルートのwidth/height/preserveAspectRatio/class/styleとの属性重複=XMLパースエラーを根治） ──
-  const embedSvg = function(svgStr, x, y, w, h, par) {
-    const src = String(svgStr || '');
-    const m = src.match(/^<svg\b[^>]*?viewBox="([^"]*)"/);
-    const vb = m ? m[1] : '0 0 100 100';
-    return src.replace(/^<svg\b[^>]*>/,
-      '<svg x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" viewBox="' + vb + '"'
-      + (par ? ' preserveAspectRatio="' + par + '"' : '')
-      + ' xmlns="http://www.w3.org/2000/svg">');
-  };
-
-  // ── 天気（通常カードのみ・全面ネスト埋込） ──
-  let weatherSVG = '';
-  if (!isRare && ctx.weather && typeof window.mmShareWeatherSVG === 'function') {
-    try {
-      weatherSVG = embedSvg(window.mmShareWeatherSVG(ctx.weather, d.name || ''), CX0, CY0, CW, CH, 'none');
-    } catch (e) { weatherSVG = ''; }
-  }
-
-  // ── 5軸（既存SVGをネスト埋込） ──
-  let axesSVG = '';
-  try {
-    const det = d.details || {};
-    const gv = function(k) { return (det[k] && det[k].pts) || 0; };
-    axesSVG = window.mmShareAxesSVG([
-      { name: '飲食', val: gv('飲食'), color: '#ff4466' },
-      { name: '商業', val: gv('商業'), color: '#9070ff' },
-      { name: '生活', val: gv('生活'), color: '#3aa0ff' },
-      { name: '医療', val: gv('医療'), color: '#f09030' },
-      { name: 'ボーナス', val: gv('ボーナス'), color: '#d4a020' }
-    ]) || '';
-    axesSVG = embedSvg(axesSVG, CX0 + 30, CY0 + 470, CW - 60, 200, '');
-  } catch (e) { axesSVG = ''; }
+  // ★index319: ネストSVG埋込を全廃（実機のSVG-in-imgがネストSVGを保守的に扱い
+  //   読み込み失敗/ハングする問題の構造的排除）。天気・5軸はshareCard側で
+  //   独立レイヤーとしてcanvasへ多層合成する。本関数はbg/fgの自作部分のみを返す。
+  const weatherSVG = '';
+  const axesSVG = '';
 
   // ── 路線色帯（lineBarHTMLから色抽出→等分矩形） ──
   const barCols = [];
@@ -14754,16 +14725,17 @@ window.renderCardShareSVG = function(ctx) {
       + '<text x="' + (CX0 + 94) + '" y="' + (fy + 31) + '" fill="#1a2030" font-size="21" font-weight="700" font-family="' + FONT + '">' + mmEscXml(f) + '</text>';
   });
 
-  return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'
+  const head = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'
     + '<defs>'
     + '<linearGradient id="mmCsBg" x1="' + gx1 + '" y1="' + gy1 + '" x2="' + gx2 + '" y2="' + gy2 + '">' + stopsSVG + '</linearGradient>'
     + '<clipPath id="mmCsClip"><rect x="' + CX0 + '" y="' + CY0 + '" width="' + CW + '" height="' + CH + '" rx="36"/></clipPath>'
-    + '</defs>'
-    + '<rect width="' + W + '" height="' + H + '" fill="#0d1420"/>'
+    + '</defs>';
+  const bgBody = '<rect width="' + W + '" height="' + H + '" fill="#0d1420"/>'
     + '<rect x="' + (CX0 + 6) + '" y="' + (CY0 + 14) + '" width="' + CW + '" height="' + CH + '" rx="36" fill="rgba(0,0,0,0.45)"/>'
-    + '<rect x="' + CX0 + '" y="' + CY0 + '" width="' + CW + '" height="' + CH + '" rx="36" fill="url(#mmCsBg)"/>'
-    + weatherSVG
-    + rareDeco
+    + '<rect x="' + CX0 + '" y="' + CY0 + '" width="' + CW + '" height="' + CH + '" rx="36" fill="url(#mmCsBg)"/>';
+  if (part === 'bg') return head + bgBody + '</svg>';
+  void weatherSVG; void axesSVG;
+  const fgBody = rareDeco
     + cardStroke
     + '<circle cx="' + (CX0 + 84) + '" cy="' + (CY0 + 88) + '" r="46" fill="' + rankCol + '"/>'
     + '<text x="' + (CX0 + 84) + '" y="' + (CY0 + 105) + '" text-anchor="middle" fill="#fff" font-size="46" font-weight="900" font-family="' + FONT + '">' + mmEscXml(rank) + '</text>'
@@ -14782,8 +14754,9 @@ window.renderCardShareSVG = function(ctx) {
     + axesSVG
     + infoSVG
     + featsSVG
-    + '<text x="' + (CX0 + CW / 2) + '" y="' + (CY0 + CH - 34) + '" text-anchor="middle" fill="' + tSub + '" font-size="21" font-weight="700" font-family="' + FONT + '" letter-spacing="2">街にでよう ー 街巡-まちめぐ-</text>'
-    + '</svg>';
+    + '<text x="' + (CX0 + CW / 2) + '" y="' + (CY0 + CH - 34) + '" text-anchor="middle" fill="' + tSub + '" font-size="21" font-weight="700" font-family="' + FONT + '" letter-spacing="2">街にでよう ー 街巡-まちめぐ-</text>';
+  if (part === 'fg') return head + fgBody + '</svg>';
+  return head + bgBody + fgBody + '</svg>';  // 従来互換（全部入り、検証用）
 };
 
 window.renderCardForShare = function(stationData){
@@ -14898,15 +14871,68 @@ window.shareCard = async function() {
   let shareContainer = null;
 
   try {
-    // ★index315: SVG完結生成（html2canvas廃止・バッジ側と同パイプライン）
-    const canvas = await mmTimeout(
-      window.mmSvgToCanvas(
-        window.renderCardShareSVG({ d: cardData, bgGrad: mmBgGrad, isDark: isDark, tier: cardTier, weather: mmWeather }),
-        900, 1280
-      ),
-      15000,
-      '画像生成タイムアウト'
-    );
+    // ★index319: 多層合成（ネストSVG全廃）。各層は独立SVG=バッジで実績ある読み込みのみ使用
+    const shareCtx = { d: cardData, bgGrad: mmBgGrad, isDark: isDark, tier: cardTier, weather: mmWeather };
+    const isRareShare = (cardTier === 'shiny' || String(cardTier).indexOf('mythic') === 0);
+    // 天気層・5軸層のSVGを絶対サイズの独立ドキュメントとして用意
+    const absRoot = function(svgStr, w, h, par) {
+      const src = String(svgStr || '');
+      const m = src.match(/^<svg\b[^>]*?viewBox="([^"]*)"/);
+      const vb = m ? m[1] : '0 0 100 100';
+      return src.replace(/^<svg\b[^>]*>/,
+        '<svg width="' + w + '" height="' + h + '" viewBox="' + vb + '"'
+        + (par ? ' preserveAspectRatio="' + par + '"' : '')
+        + ' xmlns="http://www.w3.org/2000/svg">');
+    };
+    let weatherAbs = '';
+    if (!isRareShare && mmWeather && typeof window.mmShareWeatherSVG === 'function') {
+      try { weatherAbs = absRoot(window.mmShareWeatherSVG(mmWeather, cardData.name || ''), 720, 1080, 'none'); } catch (e) {}
+    }
+    let axesAbs = '';
+    try {
+      const gvp = function(k) { return (cardData.details && cardData.details[k] && cardData.details[k].pts) || 0; };
+      axesAbs = absRoot(window.mmShareAxesSVG([
+        { name: '飲食', val: gvp('飲食'), color: '#ff4466' },
+        { name: '商業', val: gvp('商業'), color: '#9070ff' },
+        { name: '生活', val: gvp('生活'), color: '#3aa0ff' },
+        { name: '医療', val: gvp('医療'), color: '#f09030' },
+        { name: 'ボーナス', val: gvp('ボーナス'), color: '#d4a020' }
+      ]), 660, 200, '');
+    } catch (e) {}
+
+    const canvas = await mmTimeout((async function() {
+      const cv = document.createElement('canvas');
+      cv.width = 900; cv.height = 1280;
+      const c2d = cv.getContext('2d');
+      // L1: 背景層（台紙+影+カード地グラデ）
+      const bg = await window.mmLoadSvgImage(window.renderCardShareSVG(shareCtx, 'bg'));
+      c2d.drawImage(bg.img, 0, 0, 900, 1280); bg.release();
+      // L2: 天気層（角丸クリップ内に。層失敗は握り潰して他は描く）
+      if (weatherAbs) {
+        try {
+          const wimg = await window.mmLoadSvgImage(weatherAbs);
+          c2d.save();
+          try {
+            c2d.beginPath();
+            if (c2d.roundRect) c2d.roundRect(90, 100, 720, 1080, 36); else c2d.rect(90, 100, 720, 1080);
+            c2d.clip();
+            c2d.drawImage(wimg.img, 90, 100, 720, 1080);
+          } finally { c2d.restore(); wimg.release(); }
+        } catch (e) {}
+      }
+      // L3: 前景層（レア装飾/縁/ランク/テキスト/色帯/info/特徴/ブランド）
+      const fg = await window.mmLoadSvgImage(window.renderCardShareSVG(shareCtx, 'fg'));
+      c2d.drawImage(fg.img, 0, 0, 900, 1280); fg.release();
+      // L4: 5軸層
+      if (axesAbs) {
+        try {
+          const aimg = await window.mmLoadSvgImage(axesAbs);
+          c2d.drawImage(aimg.img, 120, 570, 660, 200);
+          aimg.release();
+        } catch (e) {}
+      }
+      return cv;
+    })(), 15000, '画像生成タイムアウト');
 
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1.0));
     if (!blob) throw new Error('Blob生成失敗');
@@ -14930,6 +14956,8 @@ window.shareCard = async function() {
   } catch (e) {
     console.error('シェアエラー:', e);
     if (e.name !== 'AbortError') {
+      // ★index319 一時デバッグ: 実機での失敗原因を可視化（原因判明後に除去予定）
+      try { alert('【デバッグ】画像生成失敗\n[' + (e && e.name) + '] ' + ((e && e.message) || e)); } catch (_) {}
       const isTimeout = (e.message || '').includes('タイムアウト');
       if (isTimeout) alert('画像生成に時間がかかっています。\nテキストのみでシェアします。');
       if (navigator.share) {
@@ -18675,12 +18703,13 @@ window.renderBadgeForShare = function(b){
 // ★index313: SVG完結のシェア画像生成（html2canvas廃止）
 // ═══════════════════════════════════════════════════════════════
 
-// SVG文字列 → canvas（Image経由。日本語はシステムフォントで描画される）
-window.mmSvgToCanvas = function(svgStr, w, h) {
+// ★index319: SVG文字列 → Image（単独SVGドキュメントとして読み込み。制御文字サニタイズ込み）
+window.mmLoadSvgImage = function(svgStr) {
   return new Promise(function(resolve, reject) {
     try {
+      const clean = String(svgStr || '').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
       const img = new Image();
-      const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+      const svgBlob = new Blob([clean], { type: 'image/svg+xml;charset=utf-8' });
       const objUrl = URL.createObjectURL(svgBlob);
       const timer = setTimeout(function() {
         URL.revokeObjectURL(objUrl);
@@ -18688,14 +18717,7 @@ window.mmSvgToCanvas = function(svgStr, w, h) {
       }, 8000);
       img.onload = function() {
         clearTimeout(timer);
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          URL.revokeObjectURL(objUrl);
-          resolve(canvas);
-        } catch (e) { URL.revokeObjectURL(objUrl); reject(e); }
+        resolve({ img: img, release: function() { URL.revokeObjectURL(objUrl); } });
       };
       img.onerror = function() {
         clearTimeout(timer);
@@ -18704,6 +18726,18 @@ window.mmSvgToCanvas = function(svgStr, w, h) {
       };
       img.src = objUrl;
     } catch (e) { reject(e); }
+  });
+};
+
+// SVG文字列 → canvas（バッジシェア等の一枚岩SVG用。挙動は従来どおり）
+window.mmSvgToCanvas = function(svgStr, w, h) {
+  return window.mmLoadSvgImage(svgStr).then(function(r) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(r.img, 0, 0, w, h);
+    r.release();
+    return canvas;
   });
 };
 
@@ -18884,6 +18918,8 @@ window.shareBadge = async function(){
   } catch (e) {
     console.error('バッジシェアエラー:', e);
     if (e.name !== 'AbortError') {
+      // ★index319 一時デバッグ: 実機での失敗原因を可視化（原因判明後に除去予定）
+      try { alert('【デバッグ】バッジ画像生成失敗\n[' + (e && e.name) + '] ' + ((e && e.message) || e)); } catch (_) {}
       if (navigator.share) {
         try { await navigator.share({ title: '街巡-まちめぐ-', text, url }); } catch(_) {}
       } else {
@@ -23355,7 +23391,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v318</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v319</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -23393,7 +23429,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v318';
+          mpVer.textContent = 'dev v319';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -23666,7 +23702,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v318) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v319) ===', '#88ccff');
   })();
 </script>
 
