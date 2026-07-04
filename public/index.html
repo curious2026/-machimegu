@@ -150,7 +150,7 @@ window.mmEnableSentry = function(){
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- VERSION: index306 (2026.07.03) — 【Pro特典の実体化：推し街10枠＋CSV出力＋ProバッジP1メダル化】①推し街上限を動的化：mmFavLimit()=Pro10枠/無料3枠。マイページ表示は上位3件＋「▼残りn件を見る」で展開(toggleFavMore)。無料ユーザーが上限で追加すると Pro誘導confirm→ショップへスクロール。空メッセージ・追加ボタン・addFavガードすべて上限関数参照に統一。②訪問記録CSV出力：ショップ「✓ Pro版をご利用中」内に📊ボタン新設→CF既存のexportCheckinCSV呼出(Pro判定・BOM付き10列CSVはCF v7側で完備、デプロイ不要)→Web Share API優先(TWA対応)/Blobダウンロードフォールバックの2段構え。③ProバッジP1メダル化：mmProBadgeSVG()新設(ティール金属縁の盾＋コンパスローズ＋シアン北針＋青PROリボン、応援者バッジ=丸/金/夕焼けとの対デザイン)。マイページ小型バッジのPROピル→P1盾24px、ショップPro商品アイコンの金箱→P1盾46pxに差し替え。④トリセツ推し街章に「Pro版なら10」併記。⑤dev確認FB反映: 無課金×3枠埋まり時に追加ボタンが消えてピッカー(=Pro誘導)への入口が無かった設計穴を修正→「🔒 Proで10枠に拡張」ボタン(mmFavProUpsell)を表示しconfirm→ショップスクロール。【index305】【応援者バッジ＋応援チップ導入＋トリセツ正式リリース化】①ショップに「応援チップ」セクション新設（tip_100/¥100・tip_500/¥500・tip_1000/¥1,000、Play Console登録済み商品にアプリ側の購入UIがなかった問題を解消。MM_SHOP_SKUSに3種追加、buyProduct/recoverPendingPurchases流用）。②tip_1000特典「応援者バッジ」実装：金縁メダル＋夕焼けの街＋クラウン＋SUPPORTERリボンのSVG（mmSupporterBadgeSVG関数）。説明文「あなたの応援が、街巡を灯します」。表示場所は(a)バッジページのコレクション統計パネル右側（未獲得時はグレーシルエット＋タップでショップ誘導confirm）(b)マイページのニックネーム直下に小型バッジ（Pro小型バッジも同時新設、mm-mini-badges）。付与はCF verifyPurchase側でsupporterBadgeフィールド書込（CF v8で対応、クライアントは読取専用）。③onPurchaseSuccessにtip系処理追加（100/500=感謝アラート、1000=バッジ授与演出）。④判定仕様: CF v7のsupporterBadgeは¥100チップでも作られる(tier=最高支援額)ため、バッジ獲得判定はtier>=1000限定で実装(3箇所)。CF側は変更不要(v7 verifyPurchaseがtip系処理済み)。⑤トリセツ正式リリース化：FAQ2箇所の「ともきまで」→「公式SNSまで」、注意事項の「ベータ期間中〜ともきにフィードバック」→「不具合を見つけたら公式SNSへフィードバック大歓迎」、ショップ章に応援チップ項目追加。【index304】【公式SNSをアピール感のあるカード型に再設計＋トリセツ仕上げ】ともきフィードバック「味気ない」を反映し、マイページ・トリセツ両方の公式SNS表示を全面リニューアル。①CSS全面書き換え：従来の「アイコン+@ID」のフラットなボタンを廃止し、Xはブラックグラデ(linear-gradient(135deg,#1a1a1a,#000))、Instagramはブランド3色グラデ(#833ab4→#fd1d1d→#fcb045)の大型カード型に。32pxアイコン+「公式 X / 公式 Instagram」タイトル+「フォローして最新情報をGET / 街の風景をシェア中」誘導文の3段構成、min-height:96px、box-shadow付きでタップしたくなる存在感に。@IDは表記から外しリンク先のみで遷移（ともき指示）。②トリセツ末尾にも同じカード型SNS表示を追加し「📣 最新情報・新機能のお知らせは公式SNSで！」見出しを付与。③トリセツ冒頭の「BETA / ようこそ！今は身近な人にテストしてもらってる…」セクションを全削除（製品版申請後を見据えて）。④トリセツ末尾署名「作：ともき（個人開発）／技術：クロ（AI）」を「作：まちめぐ製作委員会」のみに簡素化（個人事業者名義に統一）。【継続】①②④⑤⑥は297〜303までの実装を継続。【index303】マイページ下部にオレンジ区切り線2本＋公式SNS追加＋トリセツ4点更新（1日3駅・バッジ6種目・ショップ章・SNS）。【index302】銅フォント統一＋チェックイン3段階フォールバック。【index301】銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
+<!-- VERSION: index323 (2026.07.04) — 【複数カード駅の代表カード直表示＋シェアのレア輝き・後光刷新】①深い層直行の廃止：openCardFromHistoryの「2枚以上→バージョンモーダル」分岐を撤去し常に代表カードを直表示。枚数はwindow._mmOtherCardsCountに保持し、閉じるボタンの右に「🗂 他のカード(n)」ボタン(sc-others-btn、2枚以上のみ表示)→タップでカードを閉じてからopenCardVersionへ。深い層がスワイプを邪魔しない構造に。★「時々回転して出てくる」の残存源も深い層経由(バージョンモーダルから開く=新規オープン扱いで意図的に回転)が最有力のため、この直表示化で発生源ごと消える見込み。②シェア台紙のtier対応：mmCardShareFrameSVGにtier引数。シャイニー=銀藍台紙+白銀後光+青白キラ/ミシック=金黒台紙+強い二重金後光+金キラ増量/通常=光線を半分に間引き細く+後光を控えめに(センス改善)。③レア箔の前景焼き込み：mmCardShareFoilSVG新設=カード上に対角光帯2本(シャイニー白銀/ミシック金+桃)+カード内キラ10個を角丸クリップ内に合成→「輝いてる」静止画に。【index322】【スワイプ回転の完全根治＋シェア「祝祭台紙」ハイブリッド】①回転根治の設計転換：時間ガード(1.5秒)はゆっくり閲覧→フリックでガード切れ=回転復活する欠陥があった。「card-modal-bgがopenクラスを持つ(=モーダル開きっぱなし)間のopenStationCardは回転再起動もfirst-visitクラス付与も一切しない」経路判定に置換。回転は新規オープン時だけの演出という本来の意味に整理(成立フロー/図鑑からの新規openは従来通り回転)。_lastCardAnimTs/時間ガードは撤去。②swipe-in入場を写真アプリ風に：40px→64%の大きな横スライド(0.28s ease-out)で「隣から来た」連続感。③シェアのハイブリッド化=「実物コピー(html2canvas)はそのまま＋バッジの祝祭装飾を外側に合成」：mmCardShareFrameSVG新設(濃紺グラデ台紙+カード裏からはみ出す金後光+放射光線24本+キラ粒子14個)→html2canvasの実物コピーcanvasを台紙SVGの上に角丸クリップ+影付きで合成(319のmmLoadSvgImage合成技術を流用)。④シェア用テンプレート(mcs-*)に今日の改善を反映：駅名=白+0.5px濃紺縁取り固定/スコア=縁取り追加/路線名=スクリム帯+白/info=スクリム帯(html2canvasはbackdrop-filter非対応のためblurなしrgba帯)。CSSの!importantはJSインラインstyleに勝つためisDark切替の上書きも吸収。【index321】【カードシェアをhtml2canvas方式へ完全復帰＋スワイプ回転出現の根治】①ともきFB「昨日までの方がずっと良かった」を受けカードシェアの方式判断を撤回：SVG再構成版は実物カードの再現度で及ばず「オリジナルとは別物」。314のhtml2canvas方式(実物カードのコピー+実背景吸い出し+mmShareTierStyleレア処理)のtryブロック一式(6444文字)を丸ごと復元。バッジシェアはSVG版好評のため維持(元が簡素だった→SVG再設計で改善、カードは元が完成形→コピー方式が正解、という使い分けに帰着)。renderCardShareSVG等319関数群は未使用のまま残置(将来のリベンジ素材)。②スワイプで「回転して出てくる駅が散在」の根治：正体は(a)first-visitクラスの付け外しでanimationプロパティが変化しcardEnterFirstが再走=初訪問きりの駅に差し掛かった時だけ回転(散在の説明) (b)fetch後の2回目openStationCard呼び出しがフラグ切れ後に再起動。→スワイプ遷移中はfirst-visitクラスを付与しない＋アニメ再起動に1.5秒の時間ガード(直近再起動からの再走を抑止、fetch後の2回目呼び出し対策)。③シェアのデバッグalertは安定確認まで残置。【index320】【シェア画像失敗の真犯人確定＆修正＋スワイプ複数枚駅問題の修正】①319のデバッグalertが真因を吐いた：[ReferenceError] Can't find variable: cardData。実は315のhtml2canvas差し替え時、置換範囲(6444文字)に「カードデータ吸い出しコード一式」(realCard→--mm-bg/data-mm-time/data-tier/天気クラス、cardData=Object.assign+スコア5軸DOM実値+日付/訪問/路線/lineBarHTML/駅情報/特徴)が含まれており丸ごと削除していた。315以降の「テキスト+URLのみ共有」はすべてこれが原因(XML修正317・ネスト廃止319は真因の手前で死んでいたため効果が見えなかった。LINEに出る「まちめぐ広告画像」はテキスト内URLへのOGPプレビュー=画像添付失敗の現れ)。→try冒頭に吸い出しコード一式を復元。多層合成(319)はそのまま活きる。②スワイプで複数カード駅に差し掛かると止まりバージョンモーダル階層に落ちる問題：openCardFromHistoryの「2枚以上→バージョン選択モーダル」分岐が_cv_forceSingleフラグの受け渡しレースで発動していた→分岐条件に!window._swipeNavigatingを追加し「スワイプ遷移中は絶対に踏まない」構造ガードに。③_swipeNavigatingに1.6秒の自動解除保険(立てっぱなし事故防止)。デバッグalertは動作確認まで残置。【index319】【カードシェア画像の方式転換：ネストSVG全廃＋多層合成】317のXML修正後も実機で失敗継続(バッジ成功/カード失敗の非対称)→残る差分は「カードだけSVG内にSVG(天気・5軸)をネスト」している点。Android系のSVG画像読み込みはネストSVGの扱いが保守的でここが実機死因の最有力(通常=天気ネストで即失敗、ミシック=5軸ネストでハング、と症状も整合)。→バッジで実績ある「単独SVG→Image→canvas」だけで構成する多層合成方式へ全面転換：①mmLoadSvgImage新設(mmSvgToCanvasの読込部を関数化、バッジ側は挙動不変) ②renderCardShareSVGにpart引数(bg=台紙/影/カード地グラデ、fg=レア装飾/ランク/テキスト/色帯/info/特徴/ブランド、省略時=従来の全部入り) ③shareCard側で4層合成：背景層→天気層(通常のみ、roundRectクリップで角丸内に)→前景層→5軸層を順にdrawImage。各層は独立SVGドキュメント=ネスト起因の問題を構造的に排除、層単位の失敗は握り潰して他layerは描く。④一時デバッグ:shareCard/shareBadgeのcatchでエラーname/messageをalert表示(原因の実機可視化、判明後に除去予定)。【index318】【dev確認FB反映：スワイプ時の旧カード一瞬再表示(サブリミナルチカチカ)の根治】真因=旧フローは「swipe-in入場開始→openCardFromHistoryで中身書き換え(非同期)」の順のため、入場アニメの前半は旧カード(西葛西)の中身のまま表示され、途中で新カード(中野)にすり替わっていた。→順序を逆転：①_navCard冒頭でwrapを透明(opacity:0)に維持＋_swipeNavigatingフラグON ②openCardFromHistoryをawaitして中身の書き換えを完了 ③さらにrAF×3待機(openStationCard内の重いDOM更新はrAF×2遅延のため、その後を保証) ④swipe-in入場アニメ開始(from opacity:0なので透明から滑らかに入場)＋フラグ解除。openStationCard内のアニメ再起動スキップ判定(317)も「swipe-inクラス or _swipeNavigatingフラグ」に拡張(新フローでは再起動時点でクラス未付与のため)。結果=西葛西→フリック→(透明)→中野が入場、の一発遷移。矢印ボタン経由も同フローで改善。【index317】【dev確認FB反映3点＋カードシェア画像失敗の根治】①★カードシェアが「テキスト+URLのみ」になる致命バグの原因特定＆修正：埋め込む天気SVG(mmShareWeatherSVG)のルートタグには元からwidth="100%"/height/preserveAspectRatioが付いており、315の埋め込み処理が同名属性を二重追加→HTMLパーサは重複属性を許すがSVG画像=厳格XMLではパースエラー→img読み込み失敗→catchのテキストのみ共有へフォールバックしていた(ローカルでXMLパーサにより再現・確定)。→ルートタグをviewBoxだけ引き継いで丸ごと再構成する安全な埋め込みヘルパーmmEmbedSvgを新設し天気・5軸両方に適用。修正後の全パターン(通常/レア/天気4種)をXML検証済み。②路線名スクリムの文字が黒のままだった件：新指定のセレクタ詳細度(1,1,0)が夕方パッチ(1,2,0)に負けていた→#station-card[data-rank] .sc-line-text(1,2,0)へ格上げ=同点後勝ちで全時間帯白文字に。③カード詳細の横スワイプのひっかかり根治：真因=スワイプ確定→_navCard→openCardFromHistory→openStationCard内の「回転アニメ再起動」(wrap.style.animation='none'→reflow→復活)が進行中のswipe-in入場アニメ(0.25s)を強制的に殺していた。swipe-in-left/rightクラスが付いている間は再起動をスキップする分岐を追加。さらに飛び去りtransition(0.18s)に対しsetTimeout 160msで20ms早く打ち切っていた微カクも185msに調整。【index316】【dev確認FB反映：文字縁取りの微細化＋ランクバッジへの適用】①駅名・スコア数字の黒縁(index311)を細く：8方向オフセット1px→0.5px、ぼかし・濃度も微減=縁取り感を残しつつ上品に。②左上のランクバッジ(S/A等62pxのランク色文字、背景なし=暗背景で沈む同構造)にも同じ細縁取りを適用(既存の--card-glowグローは維持)。シャイニー/ミシック時は金背景バッジに変わるためtext-shadow:noneで縁取り除外。【index315】【dev確認FB反映3点＋シェア見直し第2弾：駅カードシェアのSVG完結生成】①箔演出=キラン方式を撤回し、旧「ふぁさっと流れるヴェール」の見た目をtransform実装で完全再現：太ヴェール4.6s(ミシック4.2s)+細筋3.1s(同2.9s)がlinear等速で横断、opacity12%/88%フェード、ミシック細筋は桃色。GPU完結(実DOM+transform)なのでカクつかない=「さっきの方がいい」と「カクつき根治」の両立。②シャイニー星屑の明滅周期を2.2s→4.4s(半分のゆっくり)。③路線名(.sc-line-text)にinfo-gridと同じスクリム帯改善を適用：rgba(8,14,26,0.36)+blur+radius+白文字固定(時間帯パッチより後方カスケードで恒久上書き)。④駅カードシェアのSVG化：renderCardShareSVG新設(720×1080)=季節×時間帯16種の背景グラデ辞書(CSS--mm-bg移植)+既存SVG部品(mmShareAxesSVG5軸/mmShareWeatherSVG天気)埋込+ランクバッジ/駅名/路線色帯/スコア/info/特徴/日付/ロゴ+シャイニー・ミシックは静止映え仕上げ(金縁+対角光帯+キラ粒子焼込)。shareCard側もhtml2canvas廃止しmmSvgToCanvasパイプラインへ。【index314】【dev確認FB反映2点：カウントアップの発動限定＋シャイニー/ミシック箔演出のGPU再設計】①スコアカウントアップの発動を「チェックイン成立の初回登場」のみに限定：条件をdata.isShortAnim===false(成立×派手アニメ時のみtrueになる厳密判定)へ変更。図鑑・履歴から開いた時(isShortAnim未定義)とduplicate短縮時は即値表示。②箔演出カクつきの根治：旧実装の「流れる光」はbackground-positionアニメ=GPU非対応で毎フレーム再描画(paint)が走る方式だった(220%グラデ2枚×2アニメ同時、そこにカウントアップの毎フレームtextContent更新が重なり描画飽和=312からのカクつきと整合)。→実DOM光帯(sc-kiran×2本、専用overflow:hiddenコンテナsc-kiran-wrap内)を純transform(translateX+rotate18deg)で走らせるGPU完結方式に全面転換。演出も「常時流れる」から「周期4.8sの大半は待機→一瞬だけ細い帯が2本時間差でキランッと走る」に再設計(ともき要望の киран感)。シャイニー=白銀、ミシック=金の帯。挿入/除去はmmApplyTierToCard内(tierタグと同パターン)。既存の::afterスイープはanimation停止+光帯グラデ除去(shinyの固定十字キラのみ残置)。カードシェアSVG化は315で。【index313】【シェア見直し第1弾：バッジシェアのSVG完結生成(見直しテーマ⑤)】①html2canvas廃止：バッジシェア画像をSVG文字列として完全生成→Image→canvas→PNG化(mmSvgToCanvas)。html2canvasの再現性問題(background-clip:text非対応=金帯バグ、アニメ/フィルタ脱落)から完全に解放。②静止画として完成したデザイン(mmBadgeShareSVG、1080×1440)：濃紺グラデ背景＋淡色radial装飾＋バッジ背後の放射光線24本(sunburst)＋金の後光＋sin-fractハッシュ配置のキラ粒子18個＋単色金ロゴ(バグ根治)＋バッジ名/説明＋獲得日リボン(金帯+濃紺文字、両端ノッチ)＋CTA。③repeatバッジ(常連系)を円形メダルに格上げ：rank系と同構造のradialグラデ+上部ハイライト+金属リング。絵文字(☕🔥📚⛩)を廃止し自前SVGパスアイコン(カップ/炎/本/鳥居)に=SVG→PNG変換の端末依存リスクゼロ＋大人の品位。checkinバッジは数字主体の現デザイン維持。④共有フロー(Web Share API/DL+X intent)は完全流用。駅カード側シェアは314で。【index312】【カード磨き込み第3弾：登場演出の格上げ(見直しテーマ④)＋雨の初動修正】①★dev確認FB反映=雨の「最初の10秒が横一線/局所的な塊」問題の根治：旧実装は等差数列mod方式の擬似乱数(seed*(i+3)*9301+49297)%233280で、iに対する規則性から横位置が等間隔の縞・開始タイミングが揃う欠陥があった(しかも長さと開始が同一乱数r1で相関)。雪がindex223で採用済みのsin-fractハッシュ(Math.sin(n)*43758.5453のfract)に統一し、長さ/横位置/落下時間/開始タイミングを4系列の無相関乱数に分離→最初のフレームから定常状態の降り方に。②スコアカウントアップ(mmCountUpScore)：カード回転と併走して0→実スコアへ900msロールアップ(easeOutCubic、開始300ms遅延でGPUレイヤー確立を優先=index199の教訓踏襲)。duplicate短縮アニメ時は即値表示。③ランク別の登場格差：S=赤の強い後光＋内側白ハイライト(箔の内光)、A=橙の中後光。box-shadowは!important無し=シャイニー/ミシックの箔シャドウ(!important付き)が常に優先され競合しない設計。「Sを引いた！」の特別感。【index311】【カード磨き込み第2弾：文字視認性の恒久解決(見直しテーマ②)】16種の背景(季節4×時間帯4)への個別パッチ方式をやめ「文字を背景に依存させない」設計へ転換。①駅名(.sc-station-name)：従来の濃紺#1a2030固定(時間帯対応なし=夜に沈む主因)→白＋濃紺8方向縁取り＋ソフトシャドウの多層text-shadowに統一。どの背景でも読める。②スコア数字(.sc-score-num)：ランク色は維持(アイデンティティ)しつつ濃紺縁取りを追加=暗背景での沈み防止。③情報グリッド(開業/接続/乗降客/所在地)：すりガラス風スクリム帯(rgba(8,14,26,0.36)+blur2px+radius12px)を敷き、値=白/ラベル=淡青グレーに固定。既存のevening/night個別調整は残置したまま後方カスケード(!important同点=後勝ち)で恒久版が上書き。④聖域：路線UIの銅文字(index300-302の作り込み)、シャイニー/ミシック専用文字色(属性セレクタの詳細度で勝つ=維持)、特徴コメント(白ピル=既に背景非依存)は一切触らず。将来の季節カード追加でも文字が二度と沈まない構造に。【index310】【カード磨き込み第1弾：天気プリフェッチ＋晴れ・曇りアニメ(見直しテーマ③①)】①天気プリフェッチ：startCheckin(5分滞在の開始時点)でmmGetWeather(lat,lng)を投げっぱなし実行(await無し・失敗無視)→座標キャッシュ(0.01度精度・10分有効)が温まる→成立時の天気取得が即キャッシュhit＝簡易デコを経由せず初回から天気エフェクト込みの完成カードで登場。圏外時は既存の後追い取得がそのまま保険。②晴れに動き：光源の呼吸(mmSunBreath 5s明滅+微拡大)＋レンズフレア光条のスイング(mmFlareSwing 7s角度往復)＋きらめく光の粒3つ(mm-sunspark、JS挿入・CSS明滅)。③曇りに動き：雲塊3つの超スロー漂い(mmCloudDrift 75/95/85s往復、nth-childで無相関バラし)＋雲間から差す光(cloudy::after、18s周期で数秒だけ淡い光がすっと現れて消える)。すべて雨雪と同じ「CSS/GPUのみ・メインスレッド不可侵」設計で負荷ほぼゼロ。シェア側SVG再現(mmShareWeatherSVG)は静止画のため変更不要。【index309】【バッジ・Pro・収益ブラッシュアップ6点セット(採用案14/15/16/20/24/25)】①リーチバッジ強調：次の目標カードで残り1のとき.bp-ng-reachクラス付与=金枠＋パルスアニメ＋タイトルに🔔リーチ！。②Pro盾を統計パネルへ：応援者バッジの左隣(bp-cs-pro、right:92px)にP1盾。未所有はグレー＋🔒＋「？？？」→タップでPro説明confirm→ショップ誘導(mmProShieldTap、mmSupporterTapと同パターン)。所有時はラベル「PRO」。renderSupporterInStats内から連動描画(renderProShieldInStats)、bp-cs-barのmargin-rightを82→164pxに拡張。③バッジシェア画像に獲得日：b.earnedAtから「YYYY.M.D 獲得」を生成しバッジ名の下に焼き込み(bp-share-date、無ければ非表示)。④次階級予告：マイページLVパネルのバー直下に「LV.n0で『次階級名』に昇格」(mp-master-next-tier、BP_TIER_NAMES[tier+1]、MAX時非表示)。⑤Proサンクス演出：pro_lifetime購入成功時のalertを廃止→mmShowProThanks()=フルスクリーンオーバーレイにP1盾150pxがポップイン＋特典一覧＋タップで閉じる(z-index:9200、動的DOM生成で自己完結)。★dev確認FB反映3点: (a)図鑑の確率注記「(チェックインごとに抽選)」を改行 (b)Pro盾の🔒/？？？の位置・フォントを応援者バッジと完全統一(右下🔒15px・直下？？？8px) (c)リーチの🔔をタイトルからラベル行(「次の目標」「その次」の位置)へ移動=ミッション名の見切れ解消。⑥上限時スター導線：情報パネルの上限到達×スター0の「明日また来てね」の下に「⭐ スターを入手する」ボタン→mmGoShopForStars()=マイページを開いてショップへ自動スクロール。4駅目を諦めさせない収益導線。【index308】【カード・図鑑ブラッシュアップ3点セット(採用案1/6/8)】①図鑑に駅名検索：カードコレクションのソート行上に検索ボックス(cl-search、履歴のhist-searchと同スタイル)。cardSearchQueryで駅名/都道府県の部分一致フィルタ(mmCardSearchInput→renderCardListSorted内で適用)。0件時は既存の「該当するカードがありません」表示。openCardListPageで開き直す度にリセット。②再訪ミニ演出：完了画面の「n回目の訪問！」を強化。訪問回数の数字を金色22pxでポップアニメ(csm-visit-num/csmNumPop 0.5s)。節目メッセージ=5回🌟/10回=常連🏅/30回=マニア🎖/50回=生き字引👑/100回=神🎊(リピートバッジの称号と整合)。③レア度確率の公式明示：実装値(mmRollCardTier)=シャイニー1/30・ミシック1/200を(a)図鑑ソート行下の注記(cl-rarity-note) (b)トリセツのカード章 (c)トリセツFAQ の3箇所に明記。ガチャ透明性の担保。【index307】【チェックイン体験ブラッシュアップ5点セット(採用案9/10/11/12/13)】①チェックイン成立バイブ：showCheckinSuccess冒頭でnavigator.vibrate([60,40,120])。②チェックイン効果音：WebAudio合成の2音チャイム(E5→A5、外部ファイル不要)。デフォルトOFF、マイページ設定「チェックイン演出」トグルでON(localStorage mm_sound)。ON操作時とstartCheckin時にAudioContextをresume(autoplay policy対策)。③完了画面にストリーク表示：csm-quota下に「🔥n日連続」(csm-streak)。mmProcessLoginBonusの結果を_mmStreakCacheにキャッシュ、モーダル表示後に非同期挿入。④マップに本日残数ピル(mm-quota-badge、z-index:900でモーダル時は下に隠れる)。★dev確認FB反映: 当初の左下配置はスマホで常駐する#legend(ランク凡例、bottom:20px/left:14px)とバッティング→右下のバージョン表示直上(right:20px/bottom:+28px)へ移設：「本日 X/3駅」、上限時は金色＋⭐所持数。更新は起動時/セクション描画時/成立時。⑤圏内マーカー脈動：updateUserLocationMarkerで全表示マーカーとの距離計算、500m以内×本日未チェックインの.mk-innerに.mm-near-pulse付与(金色明滅1.6s)。本日済み駅は対象外。【index306】【Pro特典の実体化：推し街10枠＋CSV出力＋ProバッジP1メダル化】①推し街上限を動的化：mmFavLimit()=Pro10枠/無料3枠。マイページ表示は上位3件＋「▼残りn件を見る」で展開(toggleFavMore)。無料ユーザーが上限で追加すると Pro誘導confirm→ショップへスクロール。空メッセージ・追加ボタン・addFavガードすべて上限関数参照に統一。②訪問記録CSV出力：ショップ「✓ Pro版をご利用中」内に📊ボタン新設→CF既存のexportCheckinCSV呼出(Pro判定・BOM付き10列CSVはCF v7側で完備、デプロイ不要)→Web Share API優先(TWA対応)/Blobダウンロードフォールバックの2段構え。③ProバッジP1メダル化：mmProBadgeSVG()新設(ティール金属縁の盾＋コンパスローズ＋シアン北針＋青PROリボン、応援者バッジ=丸/金/夕焼けとの対デザイン)。マイページ小型バッジのPROピル→P1盾24px、ショップPro商品アイコンの金箱→P1盾46pxに差し替え。④トリセツ推し街章に「Pro版なら10」併記。⑤dev確認FB反映: 無課金×3枠埋まり時に追加ボタンが消えてピッカー(=Pro誘導)への入口が無かった設計穴を修正→「🔒 Proで10枠に拡張」ボタン(mmFavProUpsell)を表示しconfirm→ショップスクロール。【index305】【応援者バッジ＋応援チップ導入＋トリセツ正式リリース化】①ショップに「応援チップ」セクション新設（tip_100/¥100・tip_500/¥500・tip_1000/¥1,000、Play Console登録済み商品にアプリ側の購入UIがなかった問題を解消。MM_SHOP_SKUSに3種追加、buyProduct/recoverPendingPurchases流用）。②tip_1000特典「応援者バッジ」実装：金縁メダル＋夕焼けの街＋クラウン＋SUPPORTERリボンのSVG（mmSupporterBadgeSVG関数）。説明文「あなたの応援が、街巡を灯します」。表示場所は(a)バッジページのコレクション統計パネル右側（未獲得時はグレーシルエット＋タップでショップ誘導confirm）(b)マイページのニックネーム直下に小型バッジ（Pro小型バッジも同時新設、mm-mini-badges）。付与はCF verifyPurchase側でsupporterBadgeフィールド書込（CF v8で対応、クライアントは読取専用）。③onPurchaseSuccessにtip系処理追加（100/500=感謝アラート、1000=バッジ授与演出）。④判定仕様: CF v7のsupporterBadgeは¥100チップでも作られる(tier=最高支援額)ため、バッジ獲得判定はtier>=1000限定で実装(3箇所)。CF側は変更不要(v7 verifyPurchaseがtip系処理済み)。⑤トリセツ正式リリース化：FAQ2箇所の「ともきまで」→「公式SNSまで」、注意事項の「ベータ期間中〜ともきにフィードバック」→「不具合を見つけたら公式SNSへフィードバック大歓迎」、ショップ章に応援チップ項目追加。【index304】【公式SNSをアピール感のあるカード型に再設計＋トリセツ仕上げ】ともきフィードバック「味気ない」を反映し、マイページ・トリセツ両方の公式SNS表示を全面リニューアル。①CSS全面書き換え：従来の「アイコン+@ID」のフラットなボタンを廃止し、Xはブラックグラデ(linear-gradient(135deg,#1a1a1a,#000))、Instagramはブランド3色グラデ(#833ab4→#fd1d1d→#fcb045)の大型カード型に。32pxアイコン+「公式 X / 公式 Instagram」タイトル+「フォローして最新情報をGET / 街の風景をシェア中」誘導文の3段構成、min-height:96px、box-shadow付きでタップしたくなる存在感に。@IDは表記から外しリンク先のみで遷移（ともき指示）。②トリセツ末尾にも同じカード型SNS表示を追加し「📣 最新情報・新機能のお知らせは公式SNSで！」見出しを付与。③トリセツ冒頭の「BETA / ようこそ！今は身近な人にテストしてもらってる…」セクションを全削除（製品版申請後を見据えて）。④トリセツ末尾署名「作：ともき（個人開発）／技術：クロ（AI）」を「作：まちめぐ製作委員会」のみに簡素化（個人事業者名義に統一）。【継続】①②④⑤⑥は297〜303までの実装を継続。【index303】マイページ下部にオレンジ区切り線2本＋公式SNS追加＋トリセツ4点更新（1日3駅・バッジ6種目・ショップ章・SNS）。【index302】銅フォント統一＋チェックイン3段階フォールバック。【index301】銅文字サイズ調整・バッジ拡大・全表示経路で銅を上に統一。【index300】路線UI枠付き外箱化＋銅文字大型化（過剰）。【index299】路線UI A案＋エリアバッジ立体感復活＋伊勢原市バッジ撲滅。【index298】①PENDING_KEY統一＋②GPS精度確認3/3＋③路線UI改修v1＋④エリアメラメラ削除＋⑤エリア5駅未満除外＋⑥GPS楽観的UI。【index297】初回チュートリアル(3スライド)のビジュアル動的化。【index296】初回プロフィール完成スター1個プレゼント。【index295】チェックイン安定化:GPS取得3大不具合修正。【index294】Pro特典文言簡潔化+TWA広告不可で2段階戦略。【index293】課金UI実装。 -->
 <title>街巡-まちめぐ- | 街にでよう</title>
 
 <!-- ═══ Open Graph / SNSシェア用メタタグ ═══ -->
@@ -668,6 +668,47 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   border-radius:2px;transition:width 0.5s linear}
 
 /* ── チェックイン成功モーダル ── */
+/* ═══ ★index307: チェックイン体験ブラッシュアップ ═══ */
+@keyframes mmNearPulse{
+  0%,100%{box-shadow:0 0 6px 2px rgba(255,215,0,0.5)}
+  50%{box-shadow:0 0 20px 8px rgba(255,215,0,0.95)}
+}
+.mk-inner.mm-near-pulse{animation:mmNearPulse 1.6s ease-in-out infinite}
+#mm-quota-badge{
+  position:fixed;right:max(20px,env(safe-area-inset-right));
+  bottom:calc(max(6px,env(safe-area-inset-bottom)) + 28px);
+  z-index:900;pointer-events:none;
+  background:rgba(5,12,22,0.72);border:1px solid rgba(120,150,210,0.4);
+  color:#dce8f8;font-size:12px;font-weight:900;letter-spacing:0.5px;
+  padding:5px 11px;border-radius:999px;display:none;
+  text-shadow:0 1px 2px rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+}
+#mm-quota-badge.limit{
+  border-color:rgba(255,215,0,0.65);color:#ffd966;
+  background:rgba(40,32,8,0.78);
+}
+.csm-streak{
+  margin-top:8px;font-size:14px;font-weight:900;color:#ff9d5c;
+  letter-spacing:0.5px;min-height:0;
+}
+.csm-streak:empty{display:none}
+.mp-fx-section{margin:14px 0 4px}
+.mp-fx-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(40,58,92,0.4);border:1px solid rgba(120,150,210,0.25);
+  border-radius:12px;padding:11px 14px;
+}
+.mp-fx-label{font-size:13px;font-weight:700;color:#dce8f8}
+.mp-fx-sub{font-size:11px;color:#a8b8d0;margin-top:2px}
+.mp-fx-toggle{
+  min-width:64px;padding:7px 0;border-radius:999px;font-size:13px;font-weight:900;
+  border:1.5px solid rgba(120,150,210,0.45);background:rgba(20,30,50,0.6);
+  color:#a8b8d0;cursor:pointer;letter-spacing:1px;
+}
+.mp-fx-toggle.on{
+  background:linear-gradient(135deg,#2E8B78,#14584A);
+  border-color:rgba(143,240,214,0.55);color:#E8FBF6;
+}
 #checkin-success-bg{position:fixed;inset:0;background:rgba(5,12,22,0.93);z-index:7500;
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
 #checkin-success-bg.open{display:flex}
@@ -888,6 +929,17 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   margin-top:6px;
 }
 .sc-close-btn:hover{transform:translateY(-2px)}
+/* ★index323: 「この駅の他のカード」ボタン（閉じるの右、2枚以上の駅のみ表示） */
+.sc-others-btn{
+  display:inline-block;margin-top:6px;margin-left:10px;
+  padding:13px 16px;border-radius:24px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(212,175,55,0.55);
+  color:#fbd56a;font-size:13px;font-weight:900;letter-spacing:0.5px;
+  cursor:pointer;vertical-align:top;
+  transition:transform 0.15s ease;
+}
+.sc-others-btn:hover{transform:translateY(-2px)}
 .sc-close-btn:active{transform:translateY(0)}
 
 /* ─── ランク別カラー定義（やわらか背景色） ─── */
@@ -2114,7 +2166,7 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   padding-bottom:14px;border-bottom:1px solid rgba(120,150,210,0.15);
   margin-bottom:14px;
 }
-#hist-search{
+#hist-search,#cl-search{
   width:100%;padding:11px 14px;border-radius:24px;
   background:rgba(255,255,255,0.06);
   border:1px solid rgba(120,150,210,0.25);
@@ -2122,8 +2174,24 @@ html,body{height:100%;background:#0f1830;color:#d8e8f8;font-family:'Inter','Noto
   outline:none;
   transition:border-color 0.15s;
 }
-#hist-search:focus{border-color:#58a8e0;background:rgba(255,255,255,0.08)}
-#hist-search::placeholder{color:#7a96b6}
+#hist-search:focus,#cl-search:focus{border-color:#58a8e0;background:rgba(255,255,255,0.08)}
+#hist-search::placeholder,#cl-search::placeholder{color:#7a96b6}
+#cl-search{margin-bottom:10px}
+/* ═══ ★index308: 再訪ミニ演出＋レア度確率注記 ═══ */
+.csm-visit-num{
+  display:inline-block;font-size:22px;font-weight:900;color:#ffd966;
+  animation:csmNumPop 0.55s cubic-bezier(0.2,1.6,0.4,1);
+  text-shadow:0 0 10px rgba(255,215,0,0.45);margin-right:1px;
+}
+@keyframes csmNumPop{
+  0%{transform:scale(0.3);opacity:0}
+  60%{transform:scale(1.3)}
+  100%{transform:scale(1);opacity:1}
+}
+.cl-rarity-note{
+  font-size:11px;color:#a8b8d0;text-align:center;margin:-4px 0 10px;
+  letter-spacing:0.3px;
+}
 
 .hist-sort-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .hist-sort-label{font-size:11px;color:#7a96b6;letter-spacing:1px;margin-right:4px}
@@ -3479,7 +3547,46 @@ body:not(.splashing) #table-area{
 /* ═══ ★index305: 応援者バッジ＋応援チップ＋小型バッジ ═══ */
 /* バッジページ統計パネル右側の応援者バッジスロット */
 .bp-cs-main{padding-right:82px}
-.bp-collection-stats .bp-cs-bar{margin-right:82px}
+.bp-collection-stats .bp-cs-bar{margin-right:164px}
+/* ═══ ★index309: Pro盾（統計パネル、応援者の左隣） ═══ */
+.bp-cs-pro{
+  position:absolute;right:92px;top:32px;
+  width:64px;height:76px;padding:0;border:none;background:none;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.bp-cs-pro svg{width:100%;height:100%;display:block}
+.bp-cs-pro.locked svg{filter:grayscale(1) brightness(0.55);opacity:0.7}
+/* ★FB反映: 🔒と？？？の位置・フォントを応援者バッジ(.bp-cs-sup-*)と完全統一 */
+.bp-cs-pro .bp-cs-pro-lock{
+  position:absolute;right:2px;bottom:14px;font-size:15px;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));pointer-events:none;
+}
+.bp-cs-pro .bp-cs-pro-label{
+  position:absolute;left:0;right:0;bottom:-4px;
+  font-size:8px;font-weight:700;color:#a8b8d0;letter-spacing:0.5px;
+  text-align:center;white-space:nowrap;
+}
+.bp-cs-pro.owned .bp-cs-pro-label{color:#8FF0D6;font-weight:900}
+/* ★index309: リーチバッジ強調（次の目標であと1） */
+@keyframes bpNgReachPulse{
+  0%,100%{box-shadow:0 0 5px 1px rgba(255,215,0,0.35)}
+  50%{box-shadow:0 0 14px 4px rgba(255,215,0,0.75)}
+}
+.bp-next-goal.bp-ng-reach{
+  border-color:rgba(255,215,0,0.85) !important;
+  animation:bpNgReachPulse 1.8s ease-in-out infinite;
+}
+/* ★index309: シェア画像の獲得日 */
+.bp-share-date{
+  font-size:14px;font-weight:700;color:#d8c078;letter-spacing:1px;
+  text-align:center;margin-top:6px;
+}
+.bp-share-date:empty{display:none}
+/* ★index309: 次階級予告 */
+.mp-master-next-tier{
+  font-size:11px;font-weight:700;color:#c8a84a;margin-top:6px;
+  letter-spacing:0.4px;
+}
 .bp-cs-supporter{
   position:absolute;right:14px;top:32px;
   width:68px;height:76px;padding:0;border:none;background:none;
@@ -5008,16 +5115,17 @@ body.checkin-active #checkin-indicator{
 }
 
 /* カードスワイプアニメ */
+/* ★index322: 写真アプリ風の大きな横スライド（「隣から来た」連続感） */
 @keyframes swipeLeftIn {
-  from { transform: translateX(40px); opacity: 0; }
+  from { transform: translateX(64%); opacity: 0.35; }
   to { transform: translateX(0); opacity: 1; }
 }
 @keyframes swipeRightIn {
-  from { transform: translateX(-40px); opacity: 0; }
+  from { transform: translateX(-64%); opacity: 0.35; }
   to { transform: translateX(0); opacity: 1; }
 }
-#card-flip-wrap.swipe-in-left { animation: swipeLeftIn 0.25s ease-out; }
-#card-flip-wrap.swipe-in-right { animation: swipeRightIn 0.25s ease-out; }
+#card-flip-wrap.swipe-in-left { animation: swipeLeftIn 0.28s cubic-bezier(0.22,0.8,0.3,1); }
+#card-flip-wrap.swipe-in-right { animation: swipeRightIn 0.28s cubic-bezier(0.22,0.8,0.3,1); }
 
 /* ─── トリセツボタン（街力の算出方法と並ぶ） ─── */
 .mp-torisetsu-link{
@@ -5621,7 +5729,7 @@ body.checkin-active #checkin-indicator{
       <div class="tori-notes" style="margin-top:10px">
         <div class="tori-notes-item">スコア・ランクは<strong style="color:#a8e0c8">初訪問時のまま固定</strong>（街が変わっても自分の記録は変わらない）</div>
         <div class="tori-notes-item">街コメントは後から更新されることがあるよ（街の進化を反映）</div>
-        <div class="tori-notes-item"><strong style="color:#fbd56a">✨ シャイニー</strong>・<strong style="color:#ff80ff">💎 ミシック</strong>のレアカードがたまに出現！同じ駅でも光り方が違う</div>
+        <div class="tori-notes-item"><strong style="color:#fbd56a">✨ シャイニー</strong>・<strong style="color:#ff80ff">💎 ミシック</strong>のレアカードがたまに出現！同じ駅でも光り方が違う（出現率：シャイニー約1/30・ミシック約1/200）</div>
       </div>
     </div>
 
@@ -5707,7 +5815,7 @@ body.checkin-active #checkin-indicator{
       <div class="tori-faq-a">街巡は主に「商業活力」を見てるので、神社仏閣・大学・閑静な住宅街の魅力は反映しづらいです。そこは街コメントで補ってます！</div>
       
       <div class="tori-faq-q">Q. シャイニー／ミシックって何？</div>
-      <div class="tori-faq-a">同じ駅でもまれに出現する<strong style="color:#fbd56a">光るレアカード</strong>。シャイニーは控えめにキラキラ、ミシックはド派手にホログラム発光。コレクター心くすぐる仕掛け。</div>
+      <div class="tori-faq-a">同じ駅でもまれに出現する<strong style="color:#fbd56a">光るレアカード</strong>。シャイニーは控えめにキラキラ、ミシックはド派手にホログラム発光。出現率はシャイニーが<strong style="color:#fbd56a">約1/30</strong>、ミシックが<strong style="color:#ff80ff">約1/200</strong>で、チェックインのたびに抽選されるよ。コレクター心くすぐる仕掛け。</div>
     </div>
 
     <div class="tori-section">
@@ -5773,6 +5881,9 @@ body.checkin-active #checkin-indicator{
 </div>
 
 <!-- チェックイン成功 ミニ通知 -->
+<!-- ★index307: マップ左下の本日チェックイン残数ピル -->
+<div id="mm-quota-badge"></div>
+
 <div id="checkin-success-bg">
   <div id="checkin-success-mini">
     <span class="csm-emoji">✨</span>
@@ -5780,6 +5891,7 @@ body.checkin-active #checkin-indicator{
     <div class="csm-station" id="csm-station"></div>
     <div class="csm-badge" id="csm-badge"></div>
     <div class="csm-quota" id="csm-quota"></div>
+    <div class="csm-streak" id="csm-streak"></div>
   </div>
 </div>
 
@@ -5890,6 +6002,94 @@ body.checkin-active #checkin-indicator{
   color: #d8e0ec !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+ * ★index311: 文字視認性の恒久解決（背景非依存化）
+ *   方針: 16背景×個別パッチの追いかけっこをやめ、ガチャゲーの鉄則
+ *   「文字を背景に依存させない」へ転換。既存パッチより後方に置くことで
+ *   カスケード(!important同点=後勝ち)により恒久版が優先される。
+ *   シャイニー/ミシックの専用文字色は属性セレクタの詳細度が上なので維持される。
+ * ═══════════════════════════════════════════════════════════════ */
+
+/* ★index312: ランク別の登場格差（後光＋内側の箔ハイライト）。
+   !important無し＝シャイニー/ミシックの箔シャドウ(!important付き)が常に優先される設計 */
+#station-card[data-rank="S"]{
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,0.15),
+    0 0 40px 8px rgba(255,60,100,0.45),
+    0 0 90px 22px rgba(255,60,100,0.16);
+}
+#station-card[data-rank="A"]{
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,0.11),
+    0 0 30px 6px rgba(255,140,40,0.38),
+    0 0 68px 14px rgba(255,140,40,0.13);
+}
+
+/* 主役文字＝駅名：白＋濃紺の8方向縁取り＋ソフトシャドウ。全16背景で読める */
+/* ★index316: FB反映=縁取りを細く(1px→0.5px、ぼかし・濃度微減) */
+#station-card .sc-station-name{
+  color: #ffffff !important;
+  text-shadow:
+    -0.5px -0.5px 0 rgba(10,21,36,0.8),
+     0.5px -0.5px 0 rgba(10,21,36,0.8),
+    -0.5px  0.5px 0 rgba(10,21,36,0.8),
+     0.5px  0.5px 0 rgba(10,21,36,0.8),
+     0 0 4px rgba(10,21,36,0.45),
+     0 2px 10px rgba(0,0,0,0.3) !important;
+}
+
+/* スコア数字：ランク色は維持しつつ縁取りで沈み防止 */
+#station-card .sc-score-num{
+  text-shadow:
+    -0.5px -0.5px 0 rgba(10,21,36,0.45),
+     0.5px -0.5px 0 rgba(10,21,36,0.45),
+    -0.5px  0.5px 0 rgba(10,21,36,0.45),
+     0.5px  0.5px 0 rgba(10,21,36,0.45),
+     0 0 14px rgba(10,21,36,0.28) !important;
+}
+
+/* ★index316: FB反映=左上のランクバッジ(S/A等)にも同じ細縁取り(--card-glowグローは維持) */
+#station-card .sc-rank-badge{
+  text-shadow:
+    -0.5px -0.5px 0 rgba(10,21,36,0.45),
+     0.5px -0.5px 0 rgba(10,21,36,0.45),
+    -0.5px  0.5px 0 rgba(10,21,36,0.45),
+     0.5px  0.5px 0 rgba(10,21,36,0.45),
+     0 0 14px rgba(10,21,36,0.28),
+     0 0 24px var(--card-glow) !important;
+}
+
+/* 情報グリッド：すりガラスのスクリム帯＋文字色固定（時間帯調整を恒久的に不要化） */
+#station-card .sc-info-grid{
+  background: rgba(8,14,26,0.36) !important;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  border-top: none !important;
+}
+#station-card .sc-info-grid .sc-info-val{
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+}
+#station-card .sc-info-grid .sc-info-lbl{
+  color: #b8c8e0 !important;
+  text-shadow: none !important;
+}
+
+/* ★index315: FB反映=路線名にもinfo-gridと同じスクリム改善を適用（千代田線などの沈み解消）
+   ★index317: セレクタを[data-rank]付き(1,2,0)に格上げ。旧(1,1,0)は夕方パッチ(1,2,0)に
+   詳細度で負けて文字が黒のままだった。同点なら後方=こちらが勝つ→全時間帯で白文字。 */
+#station-card[data-rank] .sc-line-text{
+  background: rgba(8,14,26,0.36) !important;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border-radius: 10px !important;
+  padding: 6px 10px !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+}
+
 /* 天気モード有効時：背景をベースで上書き */
 #station-card[data-mm-active="true"]{
   background: var(--mm-bg, var(--card-bg)) !important;
@@ -5922,7 +6122,7 @@ body.checkin-active #checkin-indicator{
   border-radius: 20px;
 }
 
-/* 晴：強い光＋レンズフレア二本 */
+/* 晴：強い光＋レンズフレア二本（★index310: 呼吸＋スイングの動きを追加） */
 .mm-weather-overlay.sunny::before{
   content: '';
   position: absolute;
@@ -5931,6 +6131,16 @@ body.checkin-active #checkin-indicator{
   width: 180%;
   height: 180%;
   background: radial-gradient(circle, rgba(255,250,210,0.85) 0%, rgba(255,228,130,0.45) 15%, rgba(255,210,80,0.2) 32%, rgba(255,200,100,0.08) 55%, transparent 85%);
+  animation: mmSunBreath 5s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+@keyframes mmSunBreath{
+  0%,100%{ opacity: 0.82; transform: scale(1); }
+  50%{ opacity: 1; transform: scale(1.04); }
+}
+@keyframes mmFlareSwing{
+  0%,100%{ transform: rotate(-22deg); opacity: 0.72; }
+  50%{ transform: rotate(-18.5deg); opacity: 1; }
 }
 .mm-weather-overlay.sunny::after{
   content: '';
@@ -5942,6 +6152,8 @@ body.checkin-active #checkin-indicator{
   background: linear-gradient(90deg, transparent, rgba(255,235,150,0.9), transparent);
   transform: rotate(-22deg);
   filter: blur(1px);
+  animation: mmFlareSwing 7s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 /* 曇：上から灰のもや＋3つの雲塊（雲塊はJSで挿入） */
@@ -5956,6 +6168,48 @@ body.checkin-active #checkin-indicator{
   background: radial-gradient(ellipse, rgba(255,255,255,0.85) 0%, rgba(245,245,250,0.45) 40%, transparent 75%);
   border-radius: 50%;
   pointer-events: none;
+  /* ★index310: 超スローの漂い（「気づいたら動いてる」速度。GPUのみ） */
+  animation: mmCloudDrift ease-in-out infinite;
+  will-change: transform;
+}
+.mm-cloud-blob:nth-child(1){ animation-duration: 75s; }
+.mm-cloud-blob:nth-child(2){ animation-duration: 95s; animation-delay: -30s; }
+.mm-cloud-blob:nth-child(3){ animation-duration: 85s; animation-delay: -60s; }
+@keyframes mmCloudDrift{
+  0%,100%{ transform: translateX(0); }
+  50%{ transform: translateX(9%); }
+}
+/* ★index310: 雲間から差す光。18秒周期の終盤に数秒だけ、淡い光がすっと現れて消える */
+.mm-weather-overlay.cloudy::after{
+  content: '';
+  position: absolute;
+  top: -10%; left: 30%; width: 34%; height: 82%;
+  background: linear-gradient(175deg, rgba(255,248,214,0.5) 0%, rgba(255,248,214,0.12) 55%, transparent 80%);
+  transform: skewX(-12deg);
+  filter: blur(6px);
+  opacity: 0;
+  animation: mmCloudRay 18s linear infinite;
+  pointer-events: none;
+}
+@keyframes mmCloudRay{
+  0%, 82%, 100%{ opacity: 0; }
+  88%{ opacity: 0.34; }
+  93%{ opacity: 0.26; }
+  97%{ opacity: 0; }
+}
+/* ★index310: 晴れのきらめく光粒（JS挿入・CSS明滅のみ） */
+.mm-sunspark{
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255,250,220,0.95) 0%, rgba(255,235,150,0.5) 45%, transparent 70%);
+  opacity: 0;
+  animation: mmSparkTwinkle ease-in-out infinite;
+  will-change: opacity, transform;
+}
+@keyframes mmSparkTwinkle{
+  0%,100%{ opacity: 0; transform: scale(0.6); }
+  50%{ opacity: 0.9; transform: scale(1); }
 }
 
 /* 雨：index222 落下する雨脚（白ベース＋夕方のみ金混じり）
@@ -6506,26 +6760,21 @@ body.checkin-active #checkin-indicator{
     radial-gradient(circle at 44% 44%, rgba(170,210,255,0.85) 0px, transparent 2.5px),
     radial-gradient(circle at 38% 24%, rgba(255,255,255,0.8) 0px, transparent 2.5px),
     radial-gradient(circle at 62% 56%, rgba(190,220,255,0.85) 0px, transparent 2.5px);
-  animation:scStarTwinkle 2.2s ease-in-out infinite;
+  animation:scStarTwinkle 4.4s ease-in-out infinite;  /* ★index315: FB反映=周期2倍のゆっくり明滅 */
 }
 @keyframes scStarTwinkle{ 0%,100%{opacity:0.35; transform:scale(0.96)} 50%{opacity:1; transform:scale(1.04)} }
 /* 十字スパークル＋光スイープレイヤー（sc-content::afterを使用）
    ★index287: 往復(アコーディオン)をやめ、一方向に流れて自然に消える「ふぁさっ」とした光に。
    光の帯を複数本、太さ・速さを変えて重ね、linearで等速に流すことで有機的な流れを作る。 */
+/* ★index314: background-positionスイープ廃止（paint飽和=カクつきの根治）。
+   十字キラの固定点のみ残し、流れる光は実DOM(.sc-kiran)の純transformへ移行 */
 #station-card[data-tier="shiny"] .sc-content::after{
   content:''; position:absolute; inset:0; border-radius:18px; overflow:hidden;
   pointer-events:none; z-index:0;
   background-image:
-    /* 十字キラ（4点・固定、明滅は星屑側で担当） */
     radial-gradient(circle at 22% 26%, rgba(255,255,255,0.9) 0px, transparent 1.5px),
-    radial-gradient(circle at 78% 68%, rgba(200,225,255,0.9) 0px, transparent 1.5px),
-    /* 太い光のヴェール（ゆっくり） */
-    linear-gradient(108deg, transparent 30%, rgba(190,220,255,0.32) 44%, rgba(255,255,255,0.5) 50%, rgba(190,220,255,0.32) 56%, transparent 70%),
-    /* 細い光の筋（速い、時間差） */
-    linear-gradient(108deg, transparent 42%, rgba(220,238,255,0.55) 49%, rgba(255,255,255,0.7) 50.5%, rgba(220,238,255,0.55) 52%, transparent 60%);
-  background-size:auto, auto, 220% 100%, 220% 100%;
-  background-repeat:no-repeat, no-repeat, no-repeat, no-repeat;
-  animation:scShinySweepA 4.6s linear infinite, scShinySweepB 3.1s linear infinite;
+    radial-gradient(circle at 78% 68%, rgba(200,225,255,0.9) 0px, transparent 1.5px);
+  background-repeat:no-repeat, no-repeat;
 }
 /* 太いヴェール：右上から左下へ一方向、端で柔らかくフェード */
 @keyframes scShinySweepA{
@@ -6554,15 +6803,9 @@ body.checkin-active #checkin-indicator{
 }
 /* 金箔ホログラム＋金の光スイープ（全面）
    ★index287: 往復をやめ、金の光が一方向に流れて自然に消える。太い金＋細い桃の2本を時間差で。 */
+/* ★index314: 金スイープも実DOM(.sc-kiran.gold)へ移行（::afterのpaintアニメ廃止） */
 #station-card[data-tier^="mythic"]::after{
-  content:''; position:absolute; inset:3px; border-radius:18px; overflow:hidden;
-  pointer-events:none; z-index:1;
-  background-image:
-    linear-gradient(108deg, transparent 30%, rgba(255,225,120,0.4) 44%, rgba(255,245,200,0.62) 50%, rgba(255,225,120,0.4) 56%, transparent 70%),
-    linear-gradient(108deg, transparent 44%, rgba(255,185,215,0.4) 49.5%, rgba(255,220,235,0.55) 50.5%, rgba(255,185,215,0.4) 52%, transparent 60%);
-  background-size:220% 100%, 220% 100%;
-  background-repeat:no-repeat, no-repeat;
-  animation:scMythicSweepA 4.2s linear infinite, scMythicSweepB 2.9s linear infinite;
+  content:none;
 }
 /* 太い金のヴェール：一方向、端で柔らかくフェード */
 @keyframes scMythicSweepA{
@@ -6577,6 +6820,55 @@ body.checkin-active #checkin-indicator{
   20%{ opacity:0.9; }
   80%{ opacity:0.9; }
   100%{ background-position:0 0, -30% 0; opacity:0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * ★index314: キラン光帯（純transform=GPU完結。カクつきの根治版）
+ *   周期4.8sの大半は待機し、一瞬だけ太帯＋細帯が時間差で走る「キランッ」。
+ *   要素はmmApplyTierToCardが挿入する実DOM（背景paintアニメを使わない）。
+ * ═══════════════════════════════════════════════════════════════ */
+.sc-kiran-wrap{
+  position:absolute; inset:0; border-radius:18px; overflow:hidden;
+  pointer-events:none; z-index:3;
+}
+/* ★index315: FB反映=キラン方式を撤回し、旧「ふぁさっと流れるヴェール」(index287)の
+   見た目をtransform実装でカンコピ再現。linear等速・opacity12/88フェード・2本時間差。
+   GPU完結（実DOM+transform）なのでカクつきは戻らない。 */
+.sc-kiran{
+  position:absolute; top:-35%; bottom:-35%; left:0;
+  width:44%;
+  background:linear-gradient(90deg, transparent, rgba(190,220,255,0.32) 35%, rgba(255,255,255,0.5) 50%, rgba(190,220,255,0.32) 65%, transparent);
+  transform:translateX(-240%) rotate(18deg);
+  opacity:0;
+  will-change:transform,opacity;
+}
+.sc-kiran.gold{
+  background:linear-gradient(90deg, transparent, rgba(255,225,120,0.4) 35%, rgba(255,245,200,0.62) 50%, rgba(255,225,120,0.4) 65%, transparent);
+}
+.sc-kiran-a{ animation:scKiranA 4.6s linear infinite; }
+.sc-kiran-b{
+  width:16%;
+  background:linear-gradient(90deg, transparent, rgba(220,238,255,0.55) 38%, rgba(255,255,255,0.7) 50%, rgba(220,238,255,0.55) 62%, transparent);
+  animation:scKiranB 3.1s linear infinite;
+}
+/* ミシックの細筋は旧実装同様の桃色 */
+.sc-kiran-b.gold{
+  background:linear-gradient(90deg, transparent, rgba(255,185,215,0.4) 38%, rgba(255,220,235,0.55) 50%, rgba(255,185,215,0.4) 62%, transparent);
+}
+/* ミシックは旧実装の周期（金4.2s＋桃2.9s） */
+#station-card[data-tier^="mythic"] .sc-kiran-a{ animation-duration:4.2s; }
+#station-card[data-tier^="mythic"] .sc-kiran-b{ animation-duration:2.9s; }
+@keyframes scKiranA{
+  0%{ transform:translateX(-240%) rotate(18deg); opacity:0; }
+  12%{ opacity:0.9; }
+  88%{ opacity:0.9; }
+  100%{ transform:translateX(330%) rotate(18deg); opacity:0; }
+}
+@keyframes scKiranB{
+  0%{ transform:translateX(-640%) rotate(18deg); opacity:0; }
+  18%{ opacity:1; }
+  82%{ opacity:1; }
+  100%{ transform:translateX(900%) rotate(18deg); opacity:0; }
 }
 /* ミシック：文字を明るく */
 #station-card[data-tier^="mythic"] .sc-line-text,
@@ -6644,6 +6936,7 @@ body.checkin-active #checkin-indicator{
   background:linear-gradient(135deg, #f5e6a8 0%, #d4af37 50%, #b8941f 100%) !important;
   color:#3d1f0a !important;
   box-shadow:0 0 16px rgba(212,175,55,0.65) !important;
+  text-shadow:none !important;  /* ★index316: 金背景バッジに縁取りは不要 */
 }
 #station-card[data-tier="shiny"] .sc-station-name{
   color:#fff !important;
@@ -7915,6 +8208,44 @@ body.checkin-active #checkin-indicator{
 .mc-share-card.mcs-rare .mcs-name{ color:#ffffff; text-shadow:0 0 14px rgba(125,180,255,0.7),0 0 4px rgba(125,180,255,0.5); }
 .mc-share-card.mcs-rare .mcs-score-num{ color:#ffffff; filter:drop-shadow(0 0 8px rgba(125,180,255,0.6)); }
 .mc-share-card.mcs-rare .mcs-checkin-date{ color:#ffffff; }
+/* ═══ ★index322: シェア画像にも実カードの視認性改善(311/315/316)を反映 ═══
+   !importantはJSインラインstyle(isDark切替)にも勝つ=全背景で統一の恒久解決 */
+.mc-share-card .mcs-name{
+  color:#ffffff !important;
+  text-shadow:
+    -1px -1px 0 rgba(10,21,36,0.8),
+     1px -1px 0 rgba(10,21,36,0.8),
+    -1px  1px 0 rgba(10,21,36,0.8),
+     1px  1px 0 rgba(10,21,36,0.8),
+     0 2px 8px rgba(0,0,0,0.35) !important;
+}
+.mc-share-card .mcs-score-num{
+  text-shadow:
+    -1px -1px 0 rgba(10,21,36,0.45),
+     1px -1px 0 rgba(10,21,36,0.45),
+    -1px  1px 0 rgba(10,21,36,0.45),
+     1px  1px 0 rgba(10,21,36,0.45) !important;
+}
+.mc-share-card .mcs-line-text{
+  background: rgba(8,14,26,0.4) !important;
+  border-radius: 8px !important;
+  padding: 4px 9px !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+}
+.mc-share-card .mcs-info-grid{
+  background: rgba(8,14,26,0.38) !important;
+  border-radius: 10px !important;
+  padding: 9px 10px !important;
+  border-top: none !important;
+}
+.mc-share-card .mcs-info-val{
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+}
+.mc-share-card .mcs-info-lbl{
+  color: #b8c8e0 !important;
+}
 .mc-share-card.mcs-rare .mcs-info-val{ color:#ffffff; }
 .mc-share-card.mcs-rare .mcs-info-lbl{ color:rgba(255,255,255,0.7); }
 .mc-share-card.mcs-rare .mcs-line-text{ color:rgba(255,255,255,0.8); }
@@ -8422,7 +8753,7 @@ body.checkin-active #checkin-indicator{
         </div>
       </div>
     </div>
-    <button class="sc-close-btn" onclick="closeCardModal()">閉じる</button>
+    <button class="sc-close-btn" onclick="closeCardModal()">閉じる</button><button class="sc-others-btn" id="sc-others-btn" onclick="window.mmOpenOthers()" style="display:none" type="button">🗂 他のカード</button>
   </div>
 
   <!-- ★index93修正：next矢印をcard-modalの後ろに配置（flexで右側に並ぶ） -->
@@ -8485,6 +8816,7 @@ body.checkin-active #checkin-indicator{
       <div class="mp-master-bar">
         <div class="mp-master-bar-fill" id="mp-master-bar-fill" style="width:0%"></div>
       </div>
+      <div class="mp-master-next-tier" id="mp-master-next-tier" style="display:none"></div>
       <div class="mp-master-breakdown">
         <div class="mp-master-bd-item">
           <span>💎 カード</span>
@@ -8681,6 +9013,17 @@ body.checkin-active #checkin-indicator{
       </a>
     </div>
 
+    <!-- ★index307: チェックイン演出設定（効果音トグル。バイブは端末設定に従い常時） -->
+    <div class="mp-section mp-fx-section">
+      <div class="mp-fx-row">
+        <div>
+          <div class="mp-fx-label">🔔 チェックイン効果音</div>
+          <div class="mp-fx-sub">成立時にチャイムを鳴らします</div>
+        </div>
+        <button type="button" class="mp-fx-toggle" id="mm-sound-toggle" onclick="mmToggleSound()">OFF</button>
+      </div>
+    </div>
+
     <!-- ★index291: データ提供設定（第三者提供のオプトアウト）。プライバシーポリシー第6項に対応。
          ★index292: 折りたたみ式に変更。普段はタイトル行のみ、タップで展開。 -->
     <div class="mp-section mp-dataconsent-section">
@@ -8769,6 +9112,7 @@ body.checkin-active #checkin-indicator{
       </div>
       
       <div class="hist-controls" style="margin-bottom:14px">
+        <input type="text" id="cl-search" placeholder="🔍 駅名・都道府県で検索" oninput="mmCardSearchInput(this.value)">
         <div class="hist-sort-row">
           <span class="hist-sort-label">並び順</span>
           <button class="hist-sort-btn active" data-key="date" onclick="toggleCardSort('date')"><span>日付</span><span class="hs-arrow">↓</span></button>
@@ -8777,6 +9121,7 @@ body.checkin-active #checkin-indicator{
           <button class="hist-sort-btn" data-key="pref" onclick="toggleCardSort('pref')"><span>県</span><span class="hs-arrow">↓</span></button>
         </div>
       </div>
+      <div class="cl-rarity-note">✨シャイニー：約1/30 ｜ 💎ミシック：約1/200<br>（チェックインごとに抽選）</div>
       <div class="mp-card-grid" id="cl-grid"></div>
     </div>
   </div>
@@ -8825,6 +9170,7 @@ body.checkin-active #checkin-indicator{
       <div id="bp-collection-stats" class="bp-collection-stats" style="display:none">
         <div class="bp-cs-title">📒 バッジコレクション</div>
         <!-- ★index305: 応援者バッジ（tip_1000特典）。未獲得=グレー＋錠前、タップでショップ誘導 -->
+        <button type="button" class="bp-cs-pro locked" id="bp-cs-pro" onclick="window.mmProShieldTap()" aria-label="Proバッジ"></button>
         <button type="button" class="bp-cs-supporter locked" id="bp-cs-supporter" onclick="window.mmSupporterTap()" aria-label="応援者バッジ"></button>
         <div class="bp-cs-main">
           <span class="bp-cs-percentage" id="bp-cs-percentage">0%</span>
@@ -12326,6 +12672,105 @@ let watchId = null;
 let pendingCheckin = null; // { uid, stationName, stationPref, stationLat, stationLng, startTime, endTime }
 let checkinTimer = null;
 let todayCount = 0;
+
+// ═══════════════════════════════════════════════════════════════
+// ★index307: チェックイン体験ブラッシュアップ（効果音/バイブ/残数ピル）
+// ═══════════════════════════════════════════════════════════════
+window.mmSoundEnabled = (localStorage.getItem('mm_sound') === '1'); // デフォルトOFF
+
+// 効果音（WebAudio合成チャイム E5→A5。外部ファイル不要・数KBの実装）
+function mmGetAudioCtx() {
+  try {
+    if (!window._mmAudioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      window._mmAudioCtx = new AC();
+    }
+    if (window._mmAudioCtx.state === 'suspended') window._mmAudioCtx.resume();
+    return window._mmAudioCtx;
+  } catch (e) { return null; }
+}
+window.mmPlayCheckinSound = function() {
+  if (!window.mmSoundEnabled) return;
+  const ctx = mmGetAudioCtx();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime;
+    // [周波数, 開始オフセット, 長さ]
+    [[659.25, 0, 0.16], [880, 0.13, 0.26]].forEach(([f, dt, dur]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + dt);
+      g.gain.exponentialRampToValueAtTime(0.16, t0 + dt + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0 + dt); o.stop(t0 + dt + dur + 0.05);
+    });
+  } catch (e) { /* 音は演出。失敗しても本体に影響させない */ }
+};
+window.mmToggleSound = function() {
+  window.mmSoundEnabled = !window.mmSoundEnabled;
+  localStorage.setItem('mm_sound', window.mmSoundEnabled ? '1' : '0');
+  mmRefreshSoundToggle();
+  if (window.mmSoundEnabled) {
+    // ONにしたジェスチャでAudioContextをアンロックし、試聴を鳴らす
+    mmGetAudioCtx();
+    window.mmPlayCheckinSound();
+  }
+};
+function mmRefreshSoundToggle() {
+  const btn = document.getElementById('mm-sound-toggle');
+  if (!btn) return;
+  btn.textContent = window.mmSoundEnabled ? 'ON' : 'OFF';
+  btn.classList.toggle('on', window.mmSoundEnabled);
+}
+mmRefreshSoundToggle();
+
+// バイブ（端末のマナー設定に従う。対応外環境では無害にスキップ）
+window.mmVibrateCheckin = function() {
+  try { if (navigator.vibrate) navigator.vibrate([60, 40, 120]); } catch (e) {}
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ★index312: スコアのカウントアップ（ガチャの「ステータス開示」の快感）
+//   - 開始を300ms遅らせてカード回転のGPUレイヤー確立を優先（index199の教訓）
+//   - rAFループで1要素のtextContent更新のみ＝軽量
+// ═══════════════════════════════════════════════════════════════
+window.mmCountUpScore = function(el, target) {
+  if (!el) return;
+  const tgt = parseInt(target, 10) || 0;
+  el.textContent = '0';
+  const durMs = 900;
+  const startAt = performance.now() + 300;
+  const ease = function(t) { return 1 - Math.pow(1 - t, 3); };  // easeOutCubic
+  function tick(now) {
+    if (now < startAt) { requestAnimationFrame(tick); return; }
+    const p = Math.min(1, (now - startAt) / durMs);
+    el.textContent = String(Math.round(tgt * ease(p)));
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+};
+
+// マップ左下の本日残数ピル
+window.mmUpdateQuotaBadge = function() {
+  const el = document.getElementById('mm-quota-badge');
+  if (!el) return;
+  const user = (typeof auth !== 'undefined' && auth) ? auth.currentUser : null;
+  if (!user) { el.style.display = 'none'; return; }
+  const c = Math.min(todayCount || 0, DAILY_LIMIT);
+  if (c >= DAILY_LIMIT) {
+    const stars = window._userStarsCache || 0;
+    el.textContent = '本日 ' + c + '/' + DAILY_LIMIT + '駅' + (stars > 0 ? ' ⭐' + stars : '');
+    el.classList.add('limit');
+  } else {
+    el.textContent = '本日 ' + c + '/' + DAILY_LIMIT + '駅';
+    el.classList.remove('limit');
+  }
+  el.style.display = 'block';
+};
 let userProfileCache = null; // 今ログイン中のユーザー情報
 
 // ★バグ3修正：本日チェックイン済み駅のID集合（メモリキャッシュ）
@@ -12674,6 +13119,24 @@ function startWatchPosition() {
 let userLocationMarker = null;
 let userAccuracyCircle = null;
 function updateUserLocationMarker(lat, lng, accuracy) {
+  // ★index307: 圏内マーカー脈動。チェックイン可能圏(500m)×本日未チェックインの駅マーカーを金色に明滅させる。
+  //   表示マーカーは密度制御で数十個に限定されるため全走査でも軽量。失敗しても本体に影響させない。
+  try {
+    if (typeof markers !== 'undefined' && Array.isArray(markers)) {
+      markers.forEach((mk) => {
+        const st = mk && mk._st;
+        if (!st) return;
+        const el = mk.getElement && mk.getElement();
+        if (!el) return;
+        const inner = el.querySelector('.mk-inner');
+        if (!inner) return;
+        const d = getDistanceM(lat, lng, st.lat, st.lng);
+        const sid = st.name + '_' + st.pref;
+        const doneToday = (typeof todayCheckedInStationIds !== 'undefined') && todayCheckedInStationIds.has(sid);
+        inner.classList.toggle('mm-near-pulse', d <= CHECKIN_RADIUS_M && !doneToday);
+      });
+    }
+  } catch (e) { /* 演出のみ */ }
   if (!lmap) return;
   // 精度の円（半透明の薄い青）
   if (userAccuracyCircle) {
@@ -12879,8 +13342,9 @@ window.renderCheckinSection = async function(st, userOverride) {
         sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br><span style="font-size:11px;opacity:0.85">⭐ スター ${stars}個 所持中</span><br><span style="font-size:11px;opacity:0.85">駅まであと ${Math.round(distHere)}m</span></div>
           <button class="ip-ci-btn" style="background:linear-gradient(135deg,#ffb060,#ff9040);color:#1a1408;font-weight:900" onclick="consumeStarForExtraCheckin('${st.name.replace(/'/g,"\\'")}','${st.pref}',${st.lat},${st.lng})">⭐ スターを使ってもう1駅</button>`;
       } else {
-        // スターなし：従来通り
-        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br>明日また来てね<br><span style="font-size:11px;opacity:0.85">駅まであと ${Math.round(distHere)}m</span></div>`;
+        // ★index309: スターなし＝一番買いたい瞬間。ショップ導線を出す
+        sec.innerHTML = `<div class="ip-ci-status locked">本日の上限到達 (${todayCount}/${DAILY_LIMIT})<br>明日また来てね<br><span style="font-size:11px;opacity:0.85">駅まであと ${Math.round(distHere)}m</span></div>
+          <button class="ip-ci-btn" style="background:linear-gradient(135deg,#2E8B78,#14584A);color:#E8FBF6;font-weight:900;border:1px solid rgba(143,240,214,0.45)" onclick="mmGoShopForStars()">⭐ スターを入手する</button>`;
       }
       return;
     }
@@ -12965,6 +13429,12 @@ window.consumeStarForExtraCheckin = async (name, pref, lat, lng) => {
 };
 
 window.startCheckin = async (name, pref, lat, lng) => {
+  // ★index307: ユーザージェスチャ起点でAudioContextを起こしておく（成立時=非ジェスチャでも音が鳴るように）
+  if (window.mmSoundEnabled) mmGetAudioCtx();
+  // ★index310: 天気のプリフェッチ。5分の滞在時間で座標キャッシュ(10分有効)を温めておく。
+  //   成立時のmmGetWeatherが即キャッシュhit＝初回表示から天気エフェクト込みの完成カードになる。
+  //   awaitしない・失敗は無視（圏外でも既存の後追い取得がそのまま保険になる）。
+  try { if (typeof window.mmGetWeather === 'function') window.mmGetWeather(lat, lng); } catch (e) {}
   const user = auth.currentUser;
   if (!user) return;
 
@@ -13323,6 +13793,7 @@ async function tryCompleteCheckin(retryCount) {
             window._userStarsCache = newCount;
             const starEl = document.getElementById('mp-master-star-count');
             if (starEl) starEl.textContent = newCount.toLocaleString();
+            if (window.mmUpdateQuotaBadge) window.mmUpdateQuotaBadge();  // ★index307: ピルの⭐数を更新
             console.log('[Star] チェックイン成立 → スター消費完了 残り' + newCount + '個');
             return;
           } catch (e) {
@@ -13451,6 +13922,11 @@ async function tryCompleteCheckin(retryCount) {
 
 // 成功ミニ通知 → 閉じるとカードを開く（初訪問）or そのまま終了（再訪問）
 function showCheckinSuccess(data) {
+  // ★index307: 成立の瞬間の体感フィードバック（バイブ＋効果音）
+  window.mmVibrateCheckin();
+  window.mmPlayCheckinSound();
+  // ★index307: マップ残数ピルを即更新
+  if (window.mmUpdateQuotaBadge) window.mmUpdateQuotaBadge();
   // Analytics: チェックイン成功
   if (window.safeLogEvent) window.safeLogEvent('check_in_success', {
     station_name: data.name || '',
@@ -13463,10 +13939,41 @@ function showCheckinSuccess(data) {
   if (data.isFirstVisit) {
     badge.innerHTML = '🎉 初訪問！カードゲット';
   } else {
-    badge.innerHTML = `${data.visitCount}回目の訪問！`;
+    // ★index308: 再訪ミニ演出。数字を金色ポップ＋節目でリピートバッジ称号と整合したメッセージ
+    const vc = data.visitCount || 1;
+    const num = '<span class="csm-visit-num">' + vc + '</span>';
+    let suffix = '回目の訪問！';
+    if (vc === 5) suffix = '回目の訪問！🌟 この街と仲良し';
+    else if (vc === 10) suffix = '回目！この街の常連だ🏅';
+    else if (vc === 30) suffix = '回目！この街のマニアだ🎖';
+    else if (vc === 50) suffix = '回目！生き字引の域👑';
+    else if (vc === 100) suffix = '回目！もはや神🎊';
+    badge.innerHTML = num + suffix;
   }
   document.getElementById('csm-quota').textContent =
     `本日 ${todayCount}/${DAILY_LIMIT}駅`;
+  // ★index307: ストリーク表示（キャッシュ即時→なければ非同期取得。2.8秒の表示中に間に合う）
+  const streakEl = document.getElementById('csm-streak');
+  if (streakEl) {
+    const _renderStreak = (n) => {
+      if (typeof n === 'number' && n >= 2) streakEl.textContent = '🔥 ' + n + '日連続チェックイン中！';
+      else streakEl.textContent = '';
+    };
+    if (typeof window._mmStreakCache === 'number') {
+      _renderStreak(window._mmStreakCache);
+    } else {
+      streakEl.textContent = '';
+      const _u = auth.currentUser;
+      if (_u && typeof window.mmProcessLoginBonus === 'function') {
+        window.mmProcessLoginBonus(_u.uid).then(d => {
+          if (d && typeof d.streak === 'number') {
+            window._mmStreakCache = d.streak;
+            _renderStreak(d.streak);
+          }
+        }).catch(() => {});
+      }
+    }
+  }
   document.getElementById('checkin-success-bg').classList.add('open');
   
   // 2.8秒後にミニ通知を閉じて、カードを開く
@@ -13525,17 +14032,25 @@ async function openStationCard(data) {
       // ★index260: 「再訪問で新組合せ獲得（new_card）」も派手アニメ扱いにする
       //   isShortAnim=false → 派手（初訪問 or new_card）、isShortAnim=true → 控えめ（duplicate）
       const _isPretty = data.isFirstVisit || (data.isShortAnim === false);
-      if (_isPretty) {
+      // ★index322: 回転(cardEnter)は「モーダルを新規に開いた時」だけの演出、と経路で判定。
+      //   開きっぱなし(スワイプ送り・fetch後の再描画・バージョン切替)では回転再起動も
+      //   first-visitクラス付与(animationプロパティ変化=再走の原因)も一切しない。
+      //   旧・時間ガード方式はゆっくり閲覧→フリックでガードが切れ回転が復活する欠陥があった。
+      const _modalBg = document.getElementById('card-modal-bg');
+      const _alreadyOpen = !!(_modalBg && _modalBg.classList.contains('open'));
+      if (_isPretty && !_alreadyOpen) {
         wrap.classList.add('first-visit');
         if (card) card.classList.add('first-visit');
-      } else {
+      } else if (!_alreadyOpen) {
         wrap.classList.remove('first-visit');
         if (card) card.classList.remove('first-visit');
       }
-      // animationリセット → 再生
-      wrap.style.animation = 'none';
-      void wrap.offsetWidth;  // reflow強制（アニメリセットの定番テク）
-      wrap.style.animation = '';
+      // animationリセット → 再生（新規オープン時のみ）
+      if (!_alreadyOpen) {
+        wrap.style.animation = 'none';
+        void wrap.offsetWidth;  // reflow強制（アニメリセットの定番テク）
+        wrap.style.animation = '';
+      }
       // ★ハードウェアアクセラレーション促進（GPUレイヤー強制確立）
       wrap.style.willChange = 'transform, opacity';
       wrap.style.transform = 'translateZ(0)';  // GPUレイヤー化のヒント
@@ -13662,7 +14177,15 @@ async function openStationCard(data) {
   }
   
   // スコア（カード基準）
-  document.getElementById('sc-score-num').textContent = cardScore;
+  // ★index312: カード回転と併走するカウントアップ演出
+  // ★index314: 発動を「チェックイン成立の初回登場」のみに限定（FB反映）。
+  //   isShortAnim===false は成立フロー×派手アニメの時だけセットされる厳密な印。
+  //   図鑑・履歴から開いた時(未定義)やduplicate(true)は即値表示＝静かに閲覧できる。
+  if (typeof window.mmCountUpScore === 'function' && data && data.isShortAnim === false) {
+    window.mmCountUpScore(document.getElementById('sc-score-num'), cardScore);
+  } else {
+    document.getElementById('sc-score-num').textContent = cardScore;
+  }
   // ランクもカードではカード基準
   card.setAttribute('data-rank', cardRank);
   const rankBadge = document.getElementById('sc-rank-badge');
@@ -14129,6 +14652,241 @@ window.mmShareAxesSVG = function(axes){
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">${shapes}</svg>`;
 };
 
+// ═══════════════════════════════════════════════════════════════
+// ★index315: 駅カードシェアのSVG完結生成（html2canvas廃止・バッジ側と同パイプライン）
+//   - 背景: 実物#station-cardの--mm-bg定義文字列を自動パース→SVGグラデ化（16種辞書不要）
+//   - 天気: 既存mmShareWeatherSVGをネスト埋込 / 5軸: 既存mmShareAxesSVGをネスト埋込
+//   - シャイニー/ミシック: 静止画映え仕上げ（専用背景+金/銀縁+対角光帯+キラ粒子焼込）
+// ═══════════════════════════════════════════════════════════════
+// ★index322: シェア用「祝祭台紙」SVG（実物コピーcanvasの下に敷く。バッジの装飾体系を流用）
+window.mmCardShareFrameSVG = function(W, H, pad, cw, ch, tier) {
+  const CX = pad + cw / 2, CY = pad + ch / 2;
+  const sH = function(n) { const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
+  const isShiny = (tier === 'shiny');
+  const isMythic = (String(tier || '').indexOf('mythic') === 0);
+  // ★index323: tier別パレット。通常は上品に（光線を半分に間引き・細く、後光控えめ）
+  const P = isMythic
+    ? { bg: ['#241804', '#150f04', '#080502'], ray: '#ffd75e', rayN: 24, rayOp: [0.13, 0.07], halo: 'rgba(255,215,94,0.42)', halo2: 'rgba(255,215,94,0.16)', spark: ['#ffd75e', '#fff2c8'], sparkN: 18 }
+    : (isShiny
+      ? { bg: ['#141e34', '#0e1626', '#060b16'], ray: '#cfe2ff', rayN: 24, rayOp: [0.11, 0.06], halo: 'rgba(205,228,255,0.36)', halo2: 'rgba(205,228,255,0.13)', spark: ['#e8f2ff', '#ffffff'], sparkN: 16 }
+      : { bg: ['#1a2538', '#0d1827', '#050a14'], ray: '#fbd56a', rayN: 12, rayOp: [0.06, 0.035], halo: 'rgba(251,213,106,0.2)', halo2: 'rgba(251,213,106,0.07)', spark: ['#fbd56a', '#ffffff'], sparkN: 12 });
+  let rays = '';
+  for (let i = 0; i < P.rayN; i++) {
+    const ang = (i / P.rayN) * Math.PI * 2;
+    const hw = isMythic ? 0.03 : 0.02;
+    const r1 = Math.min(cw, ch) * 0.42, r2 = Math.max(W, H) * 0.75;
+    const p = function(a, r) { return (CX + Math.cos(a) * r).toFixed(1) + ',' + (CY + Math.sin(a) * r).toFixed(1); };
+    rays += '<polygon points="' + p(ang - hw, r1) + ' ' + p(ang + hw, r1) + ' ' + p(ang + hw * 1.8, r2) + ' ' + p(ang - hw * 1.8, r2) + '" fill="' + P.ray + '" opacity="' + ((i % 2 === 0) ? P.rayOp[0] : P.rayOp[1]) + '"/>';
+  }
+  let sparks = '';
+  let n = 0, t = 0;
+  while (n < P.sparkN && t < 90) {
+    t++;
+    const px = 20 + sH(t * 7.7 + 1.3) * (W - 40);
+    const py = 20 + sH(t * 13.1 + 2.9) * (H - 40);
+    if (px > pad - 14 && px < pad + cw + 14 && py > pad - 14 && py < pad + ch + 14) continue;
+    const sz = 3.5 + sH(t * 23.7 + 4.1) * 8;
+    const col = P.spark[t % 3 === 0 ? 0 : 1];
+    sparks += '<g transform="translate(' + px.toFixed(1) + ',' + py.toFixed(1) + ')" opacity="' + (0.35 + sH(t * 31.3 + 5.7) * 0.5).toFixed(2) + '">'
+      + '<line x1="0" y1="' + (-sz) + '" x2="0" y2="' + sz + '" stroke="' + col + '" stroke-width="1.6" stroke-linecap="round"/>'
+      + '<line x1="' + (-sz) + '" y1="0" x2="' + sz + '" y2="0" stroke="' + col + '" stroke-width="1.6" stroke-linecap="round"/>'
+      + '</g>';
+    n++;
+  }
+  // 後光：レアは強い二重、通常は控えめ単層
+  let halo = '<ellipse cx="' + CX + '" cy="' + CY + '" rx="' + (cw * 0.72) + '" ry="' + (ch * 0.62) + '" fill="url(#mmCfHalo)"/>';
+  if (isShiny || isMythic) {
+    halo = '<ellipse cx="' + CX + '" cy="' + CY + '" rx="' + (cw * 0.86) + '" ry="' + (ch * 0.74) + '" fill="url(#mmCfHalo2)"/>' + halo;
+  }
+  return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs>'
+    + '<linearGradient id="mmCfBg" x1="0" y1="0" x2="0.8" y2="1"><stop offset="0%" stop-color="' + P.bg[0] + '"/><stop offset="60%" stop-color="' + P.bg[1] + '"/><stop offset="100%" stop-color="' + P.bg[2] + '"/></linearGradient>'
+    + '<radialGradient id="mmCfHalo" cx="0.5" cy="0.5" r="0.5"><stop offset="0%" stop-color="' + P.halo + '"/><stop offset="60%" stop-color="' + P.halo2 + '"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></radialGradient>'
+    + '<radialGradient id="mmCfHalo2" cx="0.5" cy="0.5" r="0.5"><stop offset="0%" stop-color="' + P.halo2 + '"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></radialGradient>'
+    + '</defs>'
+    + '<rect width="' + W + '" height="' + H + '" fill="url(#mmCfBg)"/>'
+    + rays
+    + halo
+    + sparks
+    + '</svg>';
+};
+
+// ★index323: レア箔の前景（カードの上に焼き込む対角光帯＋キラ。角丸クリップ内に描画される）
+window.mmCardShareFoilSVG = function(cw, ch, tier) {
+  const isMythic = (String(tier || '').indexOf('mythic') === 0);
+  const sH = function(n) { const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
+  const c1 = isMythic ? 'rgba(255,225,120,' : 'rgba(215,235,255,';
+  const c2 = isMythic ? 'rgba(255,185,215,' : 'rgba(255,255,255,';
+  let beams = '<g transform="rotate(18 ' + (cw / 2) + ' ' + (ch / 2) + ')">'
+    + '<rect x="' + (cw * 0.16) + '" y="' + (-ch * 0.3) + '" width="' + (cw * 0.17) + '" height="' + (ch * 1.6) + '" fill="' + c1 + '0.20)"/>'
+    + '<rect x="' + (cw * 0.62) + '" y="' + (-ch * 0.3) + '" width="' + (cw * 0.07) + '" height="' + (ch * 1.6) + '" fill="' + c2 + '0.26)"/>'
+    + '</g>';
+  let ks = '';
+  for (let i = 0; i < 10; i++) {
+    const px = cw * 0.06 + sH(i * 7.9 + 2.7) * cw * 0.88;
+    const py = ch * 0.05 + sH(i * 13.9 + 3.1) * ch * 0.9;
+    const sz = 3 + sH(i * 23.3 + 4.9) * 6;
+    const col = isMythic ? '#ffe9a0' : '#e8f2ff';
+    ks += '<g transform="translate(' + px.toFixed(1) + ',' + py.toFixed(1) + ')" opacity="' + (0.35 + sH(i * 31.1 + 6.3) * 0.5).toFixed(2) + '">'
+      + '<line x1="0" y1="' + (-sz) + '" x2="0" y2="' + sz + '" stroke="' + col + '" stroke-width="1.4" stroke-linecap="round"/>'
+      + '<line x1="' + (-sz) + '" y1="0" x2="' + sz + '" y2="0" stroke="' + col + '" stroke-width="1.4" stroke-linecap="round"/>'
+      + '</g>';
+  }
+  return '<svg width="' + cw + '" height="' + ch + '" viewBox="0 0 ' + cw + ' ' + ch + '" xmlns="http://www.w3.org/2000/svg">' + beams + ks + '</svg>';
+};
+
+window.renderCardShareSVG = function(ctx, part) {
+  const W = 900, H = 1280;         // 台紙（濃紺）
+  const CX0 = 90, CY0 = 100;       // カード左上
+  const CW = 720, CH = 1080;       // カード
+  const FONT = "-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif";
+  const d = ctx.d || {};
+  const rank = d.rank || 'D';
+  const rankCols = { S:'#ff2244', A:'#ff8800', B:'#ffd700', C:'#44cc88', D:'#44aaff' };
+  const rankCol = rankCols[rank] || rankCols.D;
+  const tier = String(ctx.tier || '');
+  const isShiny = (tier === 'shiny');
+  const isMythic = (tier.indexOf('mythic') === 0);
+  const isRare = isShiny || isMythic;
+  const sHash = function(n) { const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
+
+  // ── 背景グラデ ──
+  let stops = [];
+  if (isShiny) {
+    stops = [['#16203a', 0], ['#1e3050', 45], ['#2a4268', 100]];
+  } else if (isMythic) {
+    stops = [['#1a1006', 0], ['#2e1e08', 50], ['#3c2a0e', 100]];
+  } else {
+    const re = /(#[0-9a-fA-F]{3,8}|rgba?\([^)]*\))\s*(\d+)%/g;
+    let m;
+    const src = String(ctx.bgGrad || '');
+    while ((m = re.exec(src))) stops.push([m[1], parseInt(m[2], 10)]);
+    if (stops.length < 2) stops = [['#1a2538', 0], ['#0d1827', 100]];
+  }
+  const stopsSVG = stops.map(function(s) { return '<stop offset="' + s[1] + '%" stop-color="' + s[0] + '"/>'; }).join('');
+  // CSS 165deg → SVGベクトル（dx=sin165=0.259, dy=-cos165=0.966）
+  const gx1 = (0.5 - 0.129).toFixed(3), gy1 = (0.5 - 0.483).toFixed(3);
+  const gx2 = (0.5 + 0.129).toFixed(3), gy2 = (0.5 + 0.483).toFixed(3);
+
+  // ── テキストパレット ──
+  const dark = isRare ? true : !!ctx.isDark;
+  const tMain = dark ? '#ffffff' : '#1a2030';
+  const tSub = dark ? '#b8c8e0' : '#5a6a7e';
+  const logoCol = dark ? '#fbd56a' : '#b0871e';
+
+  // ★index319: ネストSVG埋込を全廃（実機のSVG-in-imgがネストSVGを保守的に扱い
+  //   読み込み失敗/ハングする問題の構造的排除）。天気・5軸はshareCard側で
+  //   独立レイヤーとしてcanvasへ多層合成する。本関数はbg/fgの自作部分のみを返す。
+  const weatherSVG = '';
+  const axesSVG = '';
+
+  // ── 路線色帯（lineBarHTMLから色抽出→等分矩形） ──
+  const barCols = [];
+  const cre = /background(?:-color)?:\s*([^;"']+)/g;
+  let cm;
+  const lbSrc = String(d.lineBarHTML || '');
+  while ((cm = cre.exec(lbSrc))) barCols.push(cm[1].trim());
+  let lineBar = '';
+  if (barCols.length) {
+    const bw = (CW - 80) / barCols.length;
+    lineBar = barCols.map(function(c, i) {
+      return '<rect x="' + (CX0 + 40 + i * bw + 1).toFixed(1) + '" y="' + (CY0 + 246) + '" width="' + (bw - 2).toFixed(1) + '" height="14" rx="4" fill="' + c + '"/>';
+    }).join('');
+  }
+
+  // ── レア装飾（静止画映え：対角光帯＋キラ粒子） ──
+  let rareDeco = '';
+  if (isRare) {
+    const beamCol = isMythic ? 'rgba(255,235,160,' : 'rgba(215,235,255,';
+    rareDeco += '<g clip-path="url(#mmCsClip)">'
+      + '<rect x="' + (CX0 + 90) + '" y="' + (CY0 - 200) + '" width="130" height="1500" fill="' + beamCol + '0.16)" transform="rotate(18 ' + (CX0 + 155) + ' ' + (CY0 + 540) + ')"/>'
+      + '<rect x="' + (CX0 + 470) + '" y="' + (CY0 - 200) + '" width="52" height="1500" fill="' + beamCol + '0.22)" transform="rotate(18 ' + (CX0 + 496) + ' ' + (CY0 + 540) + ')"/>'
+      + '</g>';
+    const kCol = isMythic ? '#ffe9a0' : '#e8f2ff';
+    for (let i = 0; i < 12; i++) {
+      const px = CX0 + 40 + sHash(i * 7.3 + 1.1) * (CW - 80);
+      const py = CY0 + 60 + sHash(i * 13.7 + 2.2) * (CH - 160);
+      const sz = 3 + sHash(i * 23.1 + 3.3) * 7;
+      const op = (0.3 + sHash(i * 31.7 + 4.4) * 0.55).toFixed(2);
+      rareDeco += '<g transform="translate(' + px.toFixed(1) + ',' + py.toFixed(1) + ')" opacity="' + op + '">'
+        + '<line x1="0" y1="' + (-sz) + '" x2="0" y2="' + sz + '" stroke="' + kCol + '" stroke-width="1.5" stroke-linecap="round"/>'
+        + '<line x1="' + (-sz) + '" y1="0" x2="' + sz + '" y2="0" stroke="' + kCol + '" stroke-width="1.5" stroke-linecap="round"/>'
+        + '</g>';
+    }
+  }
+  const cardStroke = isMythic ? '<rect x="' + (CX0 + 3) + '" y="' + (CY0 + 3) + '" width="' + (CW - 6) + '" height="' + (CH - 6) + '" rx="33" fill="none" stroke="#e8c860" stroke-width="6"/>'
+    : (isShiny ? '<rect x="' + (CX0 + 2) + '" y="' + (CY0 + 2) + '" width="' + (CW - 4) + '" height="' + (CH - 4) + '" rx="34" fill="none" stroke="#9db8e0" stroke-width="4"/>' : '');
+  const tierTag = isRare
+    ? '<text x="' + (CX0 + CW - 40) + '" y="' + (CY0 + 214) + '" text-anchor="end" fill="' + (isMythic ? '#ffd75e' : '#cfe2ff') + '" font-size="24" font-weight="900" font-family="' + FONT + '" letter-spacing="3">' + (isMythic ? '✦ MYTHIC ✦' : '★ SHINY') + '</text>'
+    : '';
+
+  // ── テキスト類 ──
+  const name = d.name || '';
+  const nameSize = name.length >= 7 ? 46 : (name.length >= 5 ? 54 : 62);
+  const line = d.line || '';
+  const lineSize = line.length > 22 ? 18 : 22;
+  const visitLabel = d.isFirstVisit ? '初訪問' : ((d.visitCount || 1) + '回目');
+  let dateStr = d.checkinDate || '';
+  if (!dateStr) {
+    const now = new Date();
+    dateStr = now.getFullYear() + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + String(now.getDate()).padStart(2, '0');
+  }
+  const infoItems = [
+    [String(d.opened || '-'), '開業'],
+    [String(d.riders || '-'), '乗降客/日'],
+    [String(d.transfers || '-'), '接続'],
+    [String(d.location || d.pref || '-'), '所在地']
+  ];
+  let infoSVG = '';
+  infoItems.forEach(function(it, i) {
+    const ix = CX0 + 90 + i * 180;
+    infoSVG += '<text x="' + ix + '" y="' + (CY0 + 742) + '" text-anchor="middle" fill="' + tMain + '" font-size="25" font-weight="900" font-family="' + FONT + '">' + mmEscXml(it[0]) + '</text>'
+      + '<text x="' + ix + '" y="' + (CY0 + 774) + '" text-anchor="middle" fill="' + tSub + '" font-size="15" font-weight="700" font-family="' + FONT + '">' + mmEscXml(it[1]) + '</text>';
+  });
+  const feats = Array.isArray(d.features) ? d.features.slice(0, 3) : [];
+  let featsSVG = '';
+  feats.forEach(function(f, i) {
+    const fy = CY0 + 822 + i * 58;
+    const fw = Math.min(CW - 80, 24 * String(f).length + 84);
+    featsSVG += '<rect x="' + (CX0 + 40) + '" y="' + fy + '" width="' + fw + '" height="46" rx="23" fill="#ffffff" stroke="' + rankCol + '" stroke-width="1.5"/>'
+      + '<text x="' + (CX0 + 64) + '" y="' + (fy + 31) + '" fill="#d4a020" font-size="20" font-weight="900" font-family="' + FONT + '">★</text>'
+      + '<text x="' + (CX0 + 94) + '" y="' + (fy + 31) + '" fill="#1a2030" font-size="21" font-weight="700" font-family="' + FONT + '">' + mmEscXml(f) + '</text>';
+  });
+
+  const head = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs>'
+    + '<linearGradient id="mmCsBg" x1="' + gx1 + '" y1="' + gy1 + '" x2="' + gx2 + '" y2="' + gy2 + '">' + stopsSVG + '</linearGradient>'
+    + '<clipPath id="mmCsClip"><rect x="' + CX0 + '" y="' + CY0 + '" width="' + CW + '" height="' + CH + '" rx="36"/></clipPath>'
+    + '</defs>';
+  const bgBody = '<rect width="' + W + '" height="' + H + '" fill="#0d1420"/>'
+    + '<rect x="' + (CX0 + 6) + '" y="' + (CY0 + 14) + '" width="' + CW + '" height="' + CH + '" rx="36" fill="rgba(0,0,0,0.45)"/>'
+    + '<rect x="' + CX0 + '" y="' + CY0 + '" width="' + CW + '" height="' + CH + '" rx="36" fill="url(#mmCsBg)"/>';
+  if (part === 'bg') return head + bgBody + '</svg>';
+  void weatherSVG; void axesSVG;
+  const fgBody = rareDeco
+    + cardStroke
+    + '<circle cx="' + (CX0 + 84) + '" cy="' + (CY0 + 88) + '" r="46" fill="' + rankCol + '"/>'
+    + '<text x="' + (CX0 + 84) + '" y="' + (CY0 + 105) + '" text-anchor="middle" fill="#fff" font-size="46" font-weight="900" font-family="' + FONT + '">' + mmEscXml(rank) + '</text>'
+    + '<text x="' + (CX0 + CW / 2) + '" y="' + (CY0 + 58) + '" text-anchor="middle" fill="' + tSub + '" font-size="15" font-weight="900" font-family="' + FONT + '" letter-spacing="3">CHECK IN</text>'
+    + '<text x="' + (CX0 + CW / 2) + '" y="' + (CY0 + 92) + '" text-anchor="middle" fill="' + tMain + '" font-size="27" font-weight="900" font-family="' + FONT + '" letter-spacing="1">' + mmEscXml(dateStr) + '</text>'
+    + '<text x="' + (CX0 + CW / 2) + '" y="' + (CY0 + 122) + '" text-anchor="middle" fill="' + rankCol + '" font-size="21" font-weight="900" font-family="' + FONT + '">' + mmEscXml(visitLabel) + '</text>'
+    + '<text x="' + (CX0 + CW - 40) + '" y="' + (CY0 + 74) + '" text-anchor="end" fill="' + logoCol + '" font-size="24" font-weight="900" font-family="' + FONT + '">街巡-まちめぐ-</text>'
+    + '<text x="' + (CX0 + CW - 40) + '" y="' + (CY0 + 102) + '" text-anchor="end" fill="' + tSub + '" font-size="16" font-weight="700" font-family="' + FONT + '" letter-spacing="2">街にでよう</text>'
+    + '<text x="' + (CX0 + 40) + '" y="' + (CY0 + 216) + '" fill="' + tMain + '" font-size="' + nameSize + '" font-weight="900" font-family="' + FONT + '" letter-spacing="4">' + mmEscXml(name) + '</text>'
+    + tierTag
+    + lineBar
+    + '<text x="' + (CX0 + 40) + '" y="' + (CY0 + 296) + '" fill="' + tSub + '" font-size="' + lineSize + '" font-weight="700" font-family="' + FONT + '">' + mmEscXml(line) + '</text>'
+    + '<text x="' + (CX0 + 40) + '" y="' + (CY0 + 430) + '" fill="' + rankCol + '" font-size="104" font-weight="900" font-family="' + FONT + '" letter-spacing="-2">' + mmEscXml(String(d.score || 0)) + '</text>'
+    + '<text x="' + (CX0 + 330) + '" y="' + (CY0 + 398) + '" fill="' + tSub + '" font-size="19" font-weight="900" font-family="' + FONT + '" letter-spacing="2">MACHI</text>'
+    + '<text x="' + (CX0 + 330) + '" y="' + (CY0 + 424) + '" fill="' + tSub + '" font-size="19" font-weight="900" font-family="' + FONT + '" letter-spacing="2">SCORE</text>'
+    + axesSVG
+    + infoSVG
+    + featsSVG
+    + '<text x="' + (CX0 + CW / 2) + '" y="' + (CY0 + CH - 34) + '" text-anchor="middle" fill="' + tSub + '" font-size="21" font-weight="700" font-family="' + FONT + '" letter-spacing="2">街にでよう ー 街巡-まちめぐ-</text>';
+  if (part === 'fg') return head + fgBody + '</svg>';
+  return head + bgBody + fgBody + '</svg>';  // 従来互換（全部入り、検証用）
+};
+
 window.renderCardForShare = function(stationData){
   const d = stationData || {};
   const rank = d.rank || 'D';
@@ -14397,7 +15155,46 @@ window.shareCard = async function() {
     }
     await mmDelay(20);
 
-    const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1.0));
+    // ★index322: 祝祭台紙合成＝実物コピーcanvasを濃紺台紙(後光+光線+キラ)の上に載せる
+    let outCanvas = canvas;
+    try {
+      const pad = Math.round(canvas.width * 0.13);
+      const W2 = canvas.width + pad * 2, H2 = canvas.height + pad * 2;
+      const frame = await window.mmLoadSvgImage(window.mmCardShareFrameSVG(W2, H2, pad, canvas.width, canvas.height, cardTier));
+      const oc = document.createElement('canvas');
+      oc.width = W2; oc.height = H2;
+      const c2 = oc.getContext('2d');
+      c2.drawImage(frame.img, 0, 0, W2, H2);
+      frame.release();
+      // カードの影
+      c2.save();
+      c2.shadowColor = 'rgba(0,0,0,0.55)';
+      c2.shadowBlur = pad * 0.5;
+      c2.shadowOffsetY = pad * 0.18;
+      // 角丸クリップ用に一旦影付きの角丸矩形を敷いてからカードを描く
+      c2.beginPath();
+      if (c2.roundRect) c2.roundRect(pad, pad, canvas.width, canvas.height, 40); else c2.rect(pad, pad, canvas.width, canvas.height);
+      c2.fillStyle = '#0d1827';
+      c2.fill();
+      c2.restore();
+      c2.save();
+      c2.beginPath();
+      if (c2.roundRect) c2.roundRect(pad, pad, canvas.width, canvas.height, 40); else c2.rect(pad, pad, canvas.width, canvas.height);
+      c2.clip();
+      c2.drawImage(canvas, pad, pad);
+      // ★index323: レア箔の前景焼き込み（シャイニー/ミシックの「輝いてる」静止画）
+      if (cardTier) {
+        try {
+          const foil = await window.mmLoadSvgImage(window.mmCardShareFoilSVG(canvas.width, canvas.height, cardTier));
+          c2.drawImage(foil.img, pad, pad, canvas.width, canvas.height);
+          foil.release();
+        } catch (e) {}
+      }
+      c2.restore();
+      outCanvas = oc;
+    } catch (e) { outCanvas = canvas; /* 台紙失敗時は素のカードで続行 */ }
+
+    const blob = await new Promise(res => outCanvas.toBlob(res, 'image/png', 1.0));
     if (!blob) throw new Error('Blob生成失敗');
 
     const fileName = `machimegu-${(currentCardStation.name || 'card').replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/g, '')}.png`;
@@ -14419,6 +15216,8 @@ window.shareCard = async function() {
   } catch (e) {
     console.error('シェアエラー:', e);
     if (e.name !== 'AbortError') {
+      // ★index319 一時デバッグ: 実機での失敗原因を可視化（原因判明後に除去予定）
+      try { alert('【デバッグ】画像生成失敗\n[' + (e && e.name) + '] ' + ((e && e.message) || e)); } catch (_) {}
       const isTimeout = (e.message || '').includes('タイムアウト');
       if (isTimeout) alert('画像生成に時間がかかっています。\nテキストのみでシェアします。');
       if (navigator.share) {
@@ -14512,18 +15311,22 @@ window.openCardFromHistory = async function(stationName, stationPref) {
   // ★★ Step4: 複数枚あれば「カードバージョン選択モーダル」へ分岐 ★★
   // バージョンモーダルから特定カードを開く時は window._cv_forceSingle が立っているので
   // この分岐をスキップして従来通りカード表示に進む。
-  if (!window._cv_forceSingle &&
-      typeof window.mmCloudGetStation === 'function' &&
-      typeof window.mmStationKey === 'function') {
-    const stKey = window.mmStationKey({ name: stationName, pref: stationPref });
-    const stationEntry = window.mmCloudGetStation(stKey);
-    if (stationEntry && stationEntry.cards && stationEntry.cards.length >= 2) {
-      // 複数枚あり：バージョン選択モーダルへ
-      if (typeof window.openCardVersion === 'function') {
-        window.openCardVersion(stationName, stationPref);
-        return;
-      }
+  // ★index320: スワイプ遷移中(_swipeNavigating)は絶対に分岐しない構造ガード。
+  //   フラグ受け渡しのタイミング依存(レース)で分岐が発動し「複数枚駅で止まり
+  //   バージョンモーダル階層に落ちる」問題(318 FB)を根絶する。
+  // ★index323: 深い層(バージョンモーダル)への直行を廃止＝常に代表カードを直表示（FB反映）。
+  //   枚数だけ数えて「他のカード」ボタンの表示に使う。深い層へはカード画面の
+  //   専用ボタンからのみ遷移＝スワイプを邪魔しない＆回転の発生源も消える。
+  window._mmOtherCardsCount = 0;
+  try {
+    if (typeof window.mmCloudGetStation === 'function' && typeof window.mmStationKey === 'function') {
+      const stKey = window.mmStationKey({ name: stationName, pref: stationPref });
+      const stationEntry = window.mmCloudGetStation(stKey);
+      if (stationEntry && stationEntry.cards) window._mmOtherCardsCount = stationEntry.cards.length;
     }
+  } catch (e) {}
+  if (typeof window.mmUpdateOthersBtn === 'function') {
+    window.mmUpdateOthersBtn(window._mmOtherCardsCount, stationName, stationPref);
   }
   // フラグは1回限りで消費
   window._cv_forceSingle = false;
@@ -14844,6 +15647,12 @@ window.confirmCancelCheckin = function() {
 let cardListData = [];
 let cardSortKey = 'date';
 let cardSortDir = 'desc';
+// ★index308: 図鑑検索（駅名・都道府県の部分一致）
+let cardSearchQuery = '';
+window.mmCardSearchInput = function(v) {
+  cardSearchQuery = (v || '').trim().toLowerCase();
+  renderCardListSorted();
+};
 
 window.toggleCardSort = (key) => {
   if (cardSortKey === key) {
@@ -14865,6 +15674,14 @@ window.renderCardListSorted = () => {
   if (!grid) return;
   window.__mmCardListData = cardListData;  /* ★index282: dev用🎰tier見本ボタンから参照するため公開 */
   let cards = cardListData.slice();
+  
+  // ★index308: 検索フィルタ（駅名・都道府県の部分一致）
+  if (cardSearchQuery) {
+    cards = cards.filter(c =>
+      ((c.stationName || '').toLowerCase().indexOf(cardSearchQuery) >= 0) ||
+      ((c.stationPref || '').indexOf(cardSearchQuery) >= 0)
+    );
+  }
   
   const sign = (cardSortDir === 'desc') ? -1 : 1;
   // ★index260: 「日付」ソートは lastVisitAt（最終訪問日）を優先。
@@ -14937,6 +15754,28 @@ window.renderCardListSorted = () => {
 //  - 戻るボタンで閉じる
 window._cvCurrentStation = null;  // {name, pref}
 window._cvLastSortedIndices = []; // 表示順→実index のマッピング（カードタップ時に使う）
+
+// ★index323: カード画面の「他のカード」ボタン制御
+window.mmUpdateOthersBtn = function(count, name, pref) {
+  const btn = document.getElementById('sc-others-btn');
+  if (!btn) return;
+  if (count >= 2) {
+    btn.textContent = '🗂 他のカード(' + count + ')';
+    btn.style.display = '';
+    window._mmOthersTarget = { name: name, pref: pref };
+  } else {
+    btn.style.display = 'none';
+    window._mmOthersTarget = null;
+  }
+};
+window.mmOpenOthers = function() {
+  const t = window._mmOthersTarget;
+  if (!t) return;
+  try { if (typeof closeCardModal === 'function') closeCardModal(); } catch (e) {}
+  setTimeout(function() {
+    if (typeof window.openCardVersion === 'function') window.openCardVersion(t.name, t.pref);
+  }, 80);
+};
 
 window.openCardVersion = function(stationName, stationPref) {
   window._cvCurrentStation = { name: stationName, pref: stationPref };
@@ -15197,7 +16036,7 @@ window._initCardSwipe = function() {
       }
       if (dx < 0) window._navCard(1);
       else window._navCard(-1);
-    }, 160);
+    }, 185);  /* ★index317: 飛び去りtransition(0.18s)を完走させてから遷移（旧160msは20ms早く打ち切り=微カク） */
   }, { passive: true });
   
   // キーボード（PC用）：IME入力中はスキップ
@@ -15215,7 +16054,7 @@ window._initCardSwipe = function() {
   });
 };
 
-window._navCard = function(direction) {
+window._navCard = async function(direction) {
   const list = window._sortedCardList;
   if (!list || list.length === 0) return;
   const newIndex = window._currentCardIndex + direction;
@@ -15231,12 +16070,16 @@ window._navCard = function(direction) {
   }
   window._currentCardIndex = newIndex;
   const c = list[newIndex];
-  // スワイプアニメ
+  // ★index318: チカチカ根治=「入場→書き換え」を「書き換え→入場」に逆転。
+  //   中身が新カードになるまでwrapを透明で維持し、完了後にswipe-in(from opacity:0)で入場する。
   const wrap = document.getElementById('card-flip-wrap');
+  window._swipeNavigating = true;
+  // ★index320: 立てっぱなし事故防止（何かの例外で_startSwipeInに到達しなくても1.6秒で自動解除）
+  if (window._swipeNavTimer) clearTimeout(window._swipeNavTimer);
+  window._swipeNavTimer = setTimeout(function() { window._swipeNavigating = false; }, 1600);
   if (wrap) {
     wrap.classList.remove('swipe-in-left', 'swipe-in-right');
-    void wrap.offsetWidth;
-    wrap.classList.add(direction > 0 ? 'swipe-in-left' : 'swipe-in-right');
+    wrap.style.opacity = '0';
   }
   // ★Step5: 同一駅スワイプモード判定（要素にcardIndex があれば override セット）
   // ・通常モード（コレクション/マイページから）：c = {stationName, stationPref}、cardIndex なし
@@ -15256,8 +16099,21 @@ window._navCard = function(direction) {
     window._cv_forceSingle = true;
   }
   if (window.openCardFromHistory) {
-    window.openCardFromHistory(c.stationName, c.stationPref);
+    try { await window.openCardFromHistory(c.stationName, c.stationPref); } catch (e) {}
   }
+  // openStationCard内の重いDOM更新はrAF×2遅延で走る→rAF×3待てば新カードへの書き換え完了後
+  const _startSwipeIn = function() {
+    window._swipeNavigating = false;
+    if (!wrap) return;
+    void wrap.offsetWidth;
+    wrap.classList.add(direction > 0 ? 'swipe-in-left' : 'swipe-in-right');
+    wrap.style.opacity = '';
+  };
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      requestAnimationFrame(_startSwipeIn);
+    });
+  });
 };
 
 // shake CSS追加（既存shakeがなければ）
@@ -15523,6 +16379,17 @@ async function loadMypageData(uid) {
       
       if (lvEl) lvEl.textContent = info.level;
       if (tierEl) tierEl.textContent = info.tierName;
+      // ★index309: 次階級予告（LV.n0で『○○』に昇格。最上位/MAX時は非表示）
+      const nextTierEl = document.getElementById('mp-master-next-tier');
+      if (nextTierEl) {
+        if (!info.isMax && info.tier < 9) {
+          const nextLv = (info.tier + 1) * 10;
+          nextTierEl.textContent = '⬆ LV.' + nextLv + ' で「' + window.BP_TIER_NAMES[info.tier + 1] + '」に昇格';
+          nextTierEl.style.display = '';
+        } else {
+          nextTierEl.style.display = 'none';
+        }
+      }
       if (xpCurEl) xpCurEl.textContent = info.totalXP.toLocaleString();
       if (nextEl) {
         nextEl.textContent = info.isMax ? '☆ MAX LEVEL ☆' : 
@@ -15883,9 +16750,27 @@ window.buyProduct = async (sku) => {
 };
 
 // 購入成功後のUI更新
+// ★index309: Pro購入サンクス演出（alertの代わりにP1盾ポップイン。動的DOMで自己完結）
+window.mmShowProThanks = function() {
+  try {
+    const bg = document.createElement('div');
+    bg.id = 'mm-pro-thanks';
+    bg.style.cssText = 'position:fixed;inset:0;background:rgba(5,12,22,0.94);z-index:9200;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:30px;cursor:pointer;';
+    bg.innerHTML =
+      '<div style="width:150px;animation:csmNumPop 0.7s cubic-bezier(0.2,1.6,0.4,1)">' + mmProBadgeSVG() + '</div>'
+      + '<div style="font-size:22px;font-weight:900;color:#8FF0D6;margin-top:20px;letter-spacing:1px">Pro版へようこそ！</div>'
+      + '<div style="font-size:13px;color:#dce8f8;margin-top:14px;line-height:2;text-align:center">推し街 10枠に拡張 ／ 訪問記録CSV出力<br>広告非表示（対応後） ／ Proバッジ<br>すべて有効になりました</div>'
+      + '<div style="font-size:12px;color:#a8b8d0;margin-top:24px">タップで閉じる</div>';
+    bg.onclick = () => bg.remove();
+    document.body.appendChild(bg);
+  } catch (e) {
+    alert('Pro版へようこそ！特典が有効になりました。');
+  }
+};
+
 async function onPurchaseSuccess(sku) {
   if (sku === 'pro_lifetime') {
-    alert('Pro版へようこそ！広告非表示などの特典が有効になりました。');
+    window.mmShowProThanks();
     await refreshProStatusUI();
     // 広告の非表示を即反映（広告実装後に有効）
     if (typeof applyProAdState === 'function') applyProAdState();
@@ -15981,9 +16866,41 @@ function mmSupporterBadgeSVG() {
 window.mmSupporterBadgeSVG = mmSupporterBadgeSVG;
 
 // バッジページ統計パネルの応援者バッジ描画（userProfileはopenBadgePageで取得済みのものを渡す）
+// ★index309: バッジページ統計パネルのPro盾描画（応援者バッジと同パターン）
+function renderProShieldInStats(userProfile) {
+  const slot = document.getElementById('bp-cs-pro');
+  if (!slot) return;
+  const owned = !!(userProfile && userProfile.proStatus && userProfile.proStatus.type);
+  window._userIsPro = owned;
+  slot.classList.toggle('owned', owned);
+  slot.classList.toggle('locked', !owned);
+  slot.innerHTML = mmProBadgeSVG()
+    + (owned ? '' : '<span class="bp-cs-pro-lock">🔒</span>')
+    + '<span class="bp-cs-pro-label">' + (owned ? 'PRO' : '？？？') + '</span>';
+}
+window.renderProShieldInStats = renderProShieldInStats;
+
+// ★index309: Pro盾タップ時（所有=説明、未所有=ショップ誘導）
+window.mmProShieldTap = () => {
+  if (window._userIsPro) {
+    alert('🛡 街巡 Pro\n\nご利用ありがとうございます！\n推し街10枠・訪問記録CSV出力・広告非表示（対応後）が有効です。');
+    return;
+  }
+  const go = confirm('🛡 街巡 Pro（¥500 買い切り）\n\n推し街10枠・訪問記録CSV出力・広告非表示などの特典が使える買い切りプランです。\nショップを見に行きますか？');
+  if (!go) return;
+  if (typeof closeBadgePage === 'function') closeBadgePage();
+  setTimeout(async () => {
+    if (typeof window.openMypage === 'function') await window.openMypage();
+    const shop = document.querySelector('.mp-shop-section');
+    if (shop) shop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 250);
+};
+
 function renderSupporterInStats(userProfile) {
   const slot = document.getElementById('bp-cs-supporter');
   if (!slot) return;
+  // ★index309: Pro盾も同じデータで連動描画（呼び出し元の変更不要）
+  renderProShieldInStats(userProfile);
   // ★CF仕様: supporterBadgeは¥100チップでも作られる（tier=最高支援額）。バッジは tier>=1000 限定
   const owned = !!(userProfile && userProfile.supporterBadge && (userProfile.supporterBadge.tier || 0) >= 1000);
   window._userIsSupporter = owned;
@@ -16173,6 +17090,10 @@ window.toggleDataConsent = async () => {
 
 // ─── カード一覧専用ページ ───
 window.openCardListPage = async () => {
+  // ★index308: 開き直す度に検索をリセット
+  cardSearchQuery = '';
+  const _clSearch = document.getElementById('cl-search');
+  if (_clSearch) _clSearch.value = '';
   // Analytics: 画面表示
   if (window.safeLogEvent) window.safeLogEvent('screen_view', { screen_name: 'card_collection' });
   const user = auth.currentUser;
@@ -16657,9 +17578,23 @@ window.mmApplyTierToCard = function(cardEl, tier) {
   // 既存のtierタグを一旦除去
   var oldTag = cardEl.querySelector(':scope > .sc-tier-tag');
   if (oldTag) oldTag.remove();
+  // ★index314: 既存の光帯コンテナも除去（tier変更・解除に追従）
+  var oldKiran = cardEl.querySelector(':scope > .sc-kiran-wrap');
+  if (oldKiran) oldKiran.remove();
 
   if (tier) {
     cardEl.setAttribute('data-tier', tier);
+    // ★index314: キラン光帯（実DOM×純transform=GPU完結。background-positionアニメ廃止）
+    var kw = document.createElement('div');
+    kw.className = 'sc-kiran-wrap';
+    var isGoldTier = (String(tier).indexOf('mythic') === 0);
+    var ka = document.createElement('span');
+    ka.className = 'sc-kiran sc-kiran-a' + (isGoldTier ? ' gold' : '');
+    var kb = document.createElement('span');
+    kb.className = 'sc-kiran sc-kiran-b' + (isGoldTier ? ' gold' : '');
+    kw.appendChild(ka);
+    kw.appendChild(kb);
+    cardEl.appendChild(kw);
     // ラベル文言を決定
     var label = '';
     if (tier === 'shiny') label = '★ SHINY';
@@ -16843,6 +17778,8 @@ onAuthStateChanged(auth, async (user) => {
           console.warn('[Auth] getTodayCheckinCount失敗（処理続行、初期値0で）:', todayCountErr.message);
           todayCount = 0;
         }
+        // ★index307: マップ残数ピルを表示
+        if (window.mmUpdateQuotaBadge) window.mmUpdateQuotaBadge();
         // ★バグ3修正：本日チェックイン済み駅IDをメモリキャッシュに展開
         try {
           const todayList = await getTodayCheckinList(user.uid);
@@ -16931,6 +17868,8 @@ onAuthStateChanged(auth, async (user) => {
     pendingCheckin = null;
     todayCount = 0;
     todayCheckedInStationIds = new Set();  // ★バグ3修正：ログアウト時はリセット
+    // ★index307: マップ残数ピルを非表示（未ログイン扱い）
+    if (window.mmUpdateQuotaBadge) window.mmUpdateQuotaBadge();
     userProfileCache = null;
     stopWatchPosition();
     hideCheckinIndicator();
@@ -17983,14 +18922,36 @@ window.renderBadgeForShare = function(b){
   }
   
   if (b.type === 'repeat') {
-    // リピート：角丸正方形＋絵文字＋駅名＋称号
+    // ★index313: リピートを円形メダルに格上げ（rank系と同構造）。
+    //   絵文字を廃止し自前SVGパスアイコン＝SVG→PNG変換の端末依存リスクゼロ。
     const tierColors = {
-      jouren:    { c1:'#92733a', c2:'#6a5230', c3:'#4a3820', label:'常連',    emoji:'☕' },
-      mania:     { c1:'#e84d3c', c2:'#c0341e', c3:'#902614', label:'マニア',  emoji:'🔥' },
-      ikijibiki: { c1:'#4a90c8', c2:'#2e6ba0', c3:'#1e4a78', label:'生き字引', emoji:'📚' },
-      kami:      { c1:'#fbd56a', c2:'#e0b04a', c3:'#a8821e', label:'神',     emoji:'⛩' },
+      jouren:    { c1:'#c8a058', c2:'#92733a', c3:'#4a3820', label:'常連' },
+      mania:     { c1:'#ff7a5c', c2:'#e84d3c', c3:'#8a1e10', label:'マニア' },
+      ikijibiki: { c1:'#78b4e8', c2:'#3a78b0', c3:'#16375c', label:'生き字引' },
+      kami:      { c1:'#ffe9a0', c2:'#e8bc50', c3:'#96701a', label:'神' },
+    };
+    const icons = {
+      jouren: '<g stroke="#fff" fill="none" stroke-width="2.6" stroke-linecap="round">'
+        + '<path d="M10 16 h17 v8.5 a8.5 8.5 0 0 1 -17 0 z" fill="rgba(255,255,255,0.94)" stroke="none"/>'
+        + '<path d="M27 18.5 h3.2 a4 4 0 0 1 0 8 h-3.6"/>'
+        + '<path d="M14.5 12 q1.6 -2.6 0 -5.2" opacity="0.85"/>'
+        + '<path d="M20.5 12 q1.6 -2.6 0 -5.2" opacity="0.85"/>'
+        + '<path d="M9 32 h20" opacity="0.9"/></g>',
+      mania: '<path d="M20 5.5 C 24.5 11.5, 28.8 15, 28 22 C 27.4 28, 23 32, 20 32 C 17 32, 12.6 28, 12 22 C 11.5 16.8, 15.2 13.8, 16.8 9.6 C 18.2 12.6, 20 13.2, 20 5.5 Z" fill="#fff"/>'
+        + '<path d="M20 18.5 C 22 21.2, 23.4 22.6, 23 25.4 C 22.6 27.8, 21 29.3, 20 29.3 C 19 29.3, 17.4 27.8, 17 25.4 C 16.6 22.9, 18.4 21, 20 18.5 Z" fill="__C2__"/>',
+      ikijibiki: '<g fill="#fff">'
+        + '<path d="M20 12 C 16.2 9.6, 11.2 9.6, 8 11.2 V 29 C 11.2 27.4, 16.2 27.4, 20 29.8 Z"/>'
+        + '<path d="M20 12 C 23.8 9.6, 28.8 9.6, 32 11.2 V 29 C 28.8 27.4, 23.8 27.4, 20 29.8 Z" opacity="0.85"/>'
+        + '<rect x="19.1" y="11.2" width="1.8" height="18.6" fill="__C3__" opacity="0.7"/></g>',
+      kami: '<g fill="#fff">'
+        + '<path d="M6 10.5 Q 20 6.8 34 10.5 L 33.2 14 Q 20 10.8 6.8 14 Z"/>'
+        + '<rect x="9.5" y="17" width="21" height="2.8" rx="1"/>'
+        + '<rect x="11.2" y="13.5" width="3.4" height="20" rx="1"/>'
+        + '<rect x="25.4" y="13.5" width="3.4" height="20" rx="1"/>'
+        + '<rect x="18.6" y="14" width="2.8" height="5.2"/></g>'
     };
     const cc = tierColors[b.tier] || tierColors.jouren;
+    const iconSVG = (icons[b.tier] || icons.jouren).replace('__C2__', cc.c2).replace('__C3__', cc.c3);
     const id = 'shrp' + Math.random().toString(36).slice(2,7);
     const stationName = b.stationName || b.name || '';
     const nameLen = stationName.length;
@@ -17998,26 +18959,182 @@ window.renderBadgeForShare = function(b){
     const textColor = b.tier === 'kami' ? '#3a2810' : '#fff';
     return `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:${size}px;height:${size}px;display:block">
       <defs>
-        <linearGradient id="${id}-bg" x1="0" y1="0" x2="1" y2="1">
+        <radialGradient id="${id}-bg" cx="0.35" cy="0.30" r="0.85">
           <stop offset="0%" stop-color="${cc.c1}"/>
-          <stop offset="60%" stop-color="${cc.c2}"/>
+          <stop offset="55%" stop-color="${cc.c2}"/>
           <stop offset="100%" stop-color="${cc.c3}"/>
-        </linearGradient>
-        <linearGradient id="${id}-hi" x1="0.5" y1="0" x2="0.5" y2="1">
-          <stop offset="0%" stop-color="rgba(255,255,255,0.35)"/>
-          <stop offset="50%" stop-color="rgba(255,255,255,0)"/>
-          <stop offset="100%" stop-color="rgba(0,0,0,0.2)"/>
+        </radialGradient>
+        <radialGradient id="${id}-hi" cx="0.5" cy="0.18" r="0.45">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.55)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </radialGradient>
+        <linearGradient id="${id}-ring" x1="0" y1="0" x2="0.6" y2="1">
+          <stop offset="0%" stop-color="${cc.c1}"/>
+          <stop offset="45%" stop-color="${cc.c3}"/>
+          <stop offset="75%" stop-color="${cc.c2}"/>
+          <stop offset="100%" stop-color="${cc.c1}"/>
         </linearGradient>
       </defs>
-      <rect x="4" y="4" width="${size-8}" height="${size-8}" rx="20" fill="url(#${id}-bg)" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
-      <rect x="6" y="6" width="${size-12}" height="${size-12}" rx="18" fill="url(#${id}-hi)"/>
-      <text x="${size/2}" y="${size*0.42}" text-anchor="middle" font-size="44" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4))">${cc.emoji}</text>
-      <text x="${size/2}" y="${size*0.66}" text-anchor="middle" fill="${textColor}" font-size="${nameSize}" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">${escapeHtml(stationName)}</text>
-      <text x="${size/2}" y="${size*0.85}" text-anchor="middle" fill="${textColor}" font-size="18" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" letter-spacing="2" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">${cc.label}</text>
+      <circle cx="${size/2}" cy="${size/2}" r="${size/2-4}" fill="url(#${id}-ring)"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${size/2-12}" fill="url(#${id}-bg)"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${size/2-12}" fill="url(#${id}-hi)"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${size/2-20}" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
+      <g transform="translate(${size/2-40},${size*0.14}) scale(2)">${iconSVG}</g>
+      <text x="${size/2}" y="${size*0.67}" text-anchor="middle" fill="${textColor}" font-size="${nameSize}" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,0.55))">${escapeHtml(stationName)}</text>
+      <text x="${size/2}" y="${size*0.83}" text-anchor="middle" fill="${textColor}" font-size="17" font-weight="900" font-family="-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif" letter-spacing="3" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.45))">${cc.label}</text>
     </svg>`;
   }
   
   return '';
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ★index313: SVG完結のシェア画像生成（html2canvas廃止）
+// ═══════════════════════════════════════════════════════════════
+
+// ★index319: SVG文字列 → Image（単独SVGドキュメントとして読み込み。制御文字サニタイズ込み）
+window.mmLoadSvgImage = function(svgStr) {
+  return new Promise(function(resolve, reject) {
+    try {
+      const clean = String(svgStr || '').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+      const img = new Image();
+      const svgBlob = new Blob([clean], { type: 'image/svg+xml;charset=utf-8' });
+      const objUrl = URL.createObjectURL(svgBlob);
+      const timer = setTimeout(function() {
+        URL.revokeObjectURL(objUrl);
+        reject(new Error('SVG描画タイムアウト'));
+      }, 8000);
+      img.onload = function() {
+        clearTimeout(timer);
+        resolve({ img: img, release: function() { URL.revokeObjectURL(objUrl); } });
+      };
+      img.onerror = function() {
+        clearTimeout(timer);
+        URL.revokeObjectURL(objUrl);
+        reject(new Error('SVG読み込み失敗'));
+      };
+      img.src = objUrl;
+    } catch (e) { reject(e); }
+  });
+};
+
+// SVG文字列 → canvas（バッジシェア等の一枚岩SVG用。挙動は従来どおり）
+window.mmSvgToCanvas = function(svgStr, w, h) {
+  return window.mmLoadSvgImage(svgStr).then(function(r) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(r.img, 0, 0, w, h);
+    r.release();
+    return canvas;
+  });
+};
+
+// XMLエスケープ（SVG text用）
+function mmEscXml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// バッジシェア画像の全体SVG（1080×1440）。静止画として完成したデザイン。
+window.mmBadgeShareSVG = function(b) {
+  const W = 1080, H = 1440;
+  const CX = 540, CY = 600;  // バッジ中心
+  const FONT = "-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif";
+  const sHash = function(n) { const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
+  const seed = (function(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return Math.abs(h) || 7; })((b.name || '') + (b.type || ''));
+
+  // 放射光線（sunburst）24本：金色、交互の濃淡
+  let rays = '';
+  for (let i = 0; i < 24; i++) {
+    const ang = (i / 24) * Math.PI * 2;
+    const halfW = 0.028;  // 光線の半幅（ラジアン）
+    const r1 = 250, r2 = 540;
+    const x1 = CX + Math.cos(ang - halfW) * r1, y1 = CY + Math.sin(ang - halfW) * r1;
+    const x2 = CX + Math.cos(ang + halfW) * r1, y2 = CY + Math.sin(ang + halfW) * r1;
+    const x3 = CX + Math.cos(ang + halfW * 1.8) * r2, y3 = CY + Math.sin(ang + halfW * 1.8) * r2;
+    const x4 = CX + Math.cos(ang - halfW * 1.8) * r2, y4 = CY + Math.sin(ang - halfW * 1.8) * r2;
+    const op = (i % 2 === 0) ? 0.09 : 0.05;
+    rays += '<polygon points="' + x1.toFixed(1) + ',' + y1.toFixed(1) + ' ' + x2.toFixed(1) + ',' + y2.toFixed(1) + ' ' + x3.toFixed(1) + ',' + y3.toFixed(1) + ' ' + x4.toFixed(1) + ',' + y4.toFixed(1) + '" fill="#fbd56a" opacity="' + op + '"/>';
+  }
+
+  // キラ粒子18個（十字スパーク、バッジ領域を避けて配置）
+  let sparks = '';
+  let placed = 0, tryN = 0;
+  while (placed < 18 && tryN < 80) {
+    tryN++;
+    const px = 60 + sHash(seed * 0.31 + tryN * 7.7) * (W - 120);
+    const py = 100 + sHash(seed * 0.57 + tryN * 13.3) * (H - 420);
+    const dx = px - CX, dy = py - CY;
+    if (Math.sqrt(dx * dx + dy * dy) < 300) continue;  // バッジ周辺は避ける
+    const sz = 4 + sHash(seed * 0.73 + tryN * 23.1) * 9;
+    const op = (0.35 + sHash(seed * 0.91 + tryN * 31.7) * 0.55).toFixed(2);
+    const col = (tryN % 3 === 0) ? '#fbd56a' : '#ffffff';
+    sparks += '<g transform="translate(' + px.toFixed(1) + ',' + py.toFixed(1) + ')" opacity="' + op + '">'
+      + '<line x1="0" y1="' + (-sz) + '" x2="0" y2="' + sz + '" stroke="' + col + '" stroke-width="1.6" stroke-linecap="round"/>'
+      + '<line x1="' + (-sz) + '" y1="0" x2="' + sz + '" y2="0" stroke="' + col + '" stroke-width="1.6" stroke-linecap="round"/>'
+      + '<circle cx="0" cy="0" r="' + (sz * 0.22).toFixed(1) + '" fill="' + col + '"/>'
+      + '</g>';
+    placed++;
+  }
+
+  // 獲得日
+  let dateStr = '';
+  try {
+    if (b.earnedAt) {
+      const ms = b.earnedAt.toMillis ? b.earnedAt.toMillis() : (b.earnedAt.seconds || 0) * 1000;
+      if (ms) { const d = new Date(ms); dateStr = d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate() + ' 獲得'; }
+    }
+  } catch (e) {}
+
+  // 獲得日リボン（金帯＋両端ノッチ＋濃紺文字）
+  let ribbon = '';
+  if (dateStr) {
+    const rw = 440, rh = 66, ry = 962, notch = 26;
+    const lx = CX - rw / 2, rx = CX + rw / 2;
+    ribbon = '<path d="M ' + lx + ' ' + ry + ' L ' + rx + ' ' + ry + ' L ' + (rx - notch) + ' ' + (ry + rh / 2) + ' L ' + rx + ' ' + (ry + rh) + ' L ' + lx + ' ' + (ry + rh) + ' L ' + (lx + notch) + ' ' + (ry + rh / 2) + ' Z" fill="url(#mmBsRibbon)"/>'
+      + '<text x="' + CX + '" y="' + (ry + rh / 2 + 11) + '" text-anchor="middle" fill="#3a2810" font-size="30" font-weight="900" font-family="' + FONT + '" letter-spacing="2">' + mmEscXml(dateStr) + '</text>';
+  }
+
+  // バッジ本体（既存のrenderBadgeForShareを内包SVGとして埋め込み）
+  let badgeInner = '';
+  try {
+    badgeInner = (window.renderBadgeForShare(b) || '')
+      .replace(/style="width:[^"]*"/, '')
+      .replace('<svg ', '<svg x="' + (CX - 210) + '" y="' + (CY - 210) + '" width="420" height="420" ');
+  } catch (e) { badgeInner = ''; }
+
+  // バッジ名・説明文（長文はフォント縮小して1080幅に収める）
+  const bname = b.name || '';
+  const nameSize = bname.length > 16 ? 38 : (bname.length > 11 ? 46 : 54);
+  const desc = b.desc || '';
+  const descSize = desc.length > 26 ? 23 : 27;
+
+  return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs>'
+    + '<linearGradient id="mmBsBg" x1="0" y1="0" x2="0.8" y2="1">'
+    + '<stop offset="0%" stop-color="#1a2538"/><stop offset="60%" stop-color="#0d1827"/><stop offset="100%" stop-color="#050a14"/>'
+    + '</linearGradient>'
+    + '<radialGradient id="mmBsPink" cx="0.20" cy="0.10" r="0.5"><stop offset="0%" stop-color="rgba(255,144,200,0.13)"/><stop offset="100%" stop-color="rgba(255,144,200,0)"/></radialGradient>'
+    + '<radialGradient id="mmBsBlue" cx="0.85" cy="0.92" r="0.5"><stop offset="0%" stop-color="rgba(93,184,236,0.11)"/><stop offset="100%" stop-color="rgba(93,184,236,0)"/></radialGradient>'
+    + '<radialGradient id="mmBsHalo" cx="0.5" cy="0.5" r="0.5"><stop offset="0%" stop-color="rgba(251,213,106,0.30)"/><stop offset="55%" stop-color="rgba(251,213,106,0.10)"/><stop offset="100%" stop-color="rgba(251,213,106,0)"/></radialGradient>'
+    + '<linearGradient id="mmBsRibbon" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffe9a0"/><stop offset="50%" stop-color="#e8bc50"/><stop offset="100%" stop-color="#c89a30"/></linearGradient>'
+    + '</defs>'
+    + '<rect width="' + W + '" height="' + H + '" fill="url(#mmBsBg)"/>'
+    + '<rect width="' + W + '" height="' + H + '" fill="url(#mmBsPink)"/>'
+    + '<rect width="' + W + '" height="' + H + '" fill="url(#mmBsBlue)"/>'
+    + rays
+    + '<circle cx="' + CX + '" cy="' + CY + '" r="330" fill="url(#mmBsHalo)"/>'
+    + sparks
+    + '<text x="' + CX + '" y="118" text-anchor="middle" fill="#fbd56a" font-size="46" font-weight="900" font-family="' + FONT + '" letter-spacing="4">街巡 -まちめぐ-</text>'
+    + '<text x="' + CX + '" y="162" text-anchor="middle" fill="#a8b8d0" font-size="24" font-weight="700" font-family="' + FONT + '" letter-spacing="6">街 に で よ う</text>'
+    + badgeInner
+    + '<text x="' + CX + '" y="898" text-anchor="middle" fill="#ffffff" font-size="' + nameSize + '" font-weight="900" font-family="' + FONT + '" letter-spacing="2">' + mmEscXml(bname) + '</text>'
+    + '<text x="' + CX + '" y="944" text-anchor="middle" fill="#a8b8d0" font-size="' + descSize + '" font-weight="700" font-family="' + FONT + '">' + mmEscXml(desc) + '</text>'
+    + ribbon
+    + '<line x1="140" y1="1268" x2="940" y2="1268" stroke="rgba(168,184,208,0.22)" stroke-width="2"/>'
+    + '<text x="' + CX + '" y="1330" text-anchor="middle" fill="#fbd56a" font-size="38" font-weight="900" font-family="' + FONT + '" letter-spacing="3">バッジ獲得!</text>'
+    + '<text x="' + CX + '" y="1382" text-anchor="middle" fill="#cfdaee" font-size="26" font-weight="700" font-family="' + FONT + '" letter-spacing="4">machimegu.com</text>'
+    + '</svg>';
 };
 
 // ─── Phase 3: バッジのSNSシェア画像生成 ───
@@ -18053,58 +19170,12 @@ window.shareBadge = async function(){
   
   let shareContainer = null;
   try {
-    await mmTimeout(window.mmLoadHtml2Canvas(), 8000, 'ライブラリ読み込みタイムアウト');
-    await mmDelay(30);
-    
-    // シェア画像用カードを構築
-    const cardWidth = 560;
-    shareContainer = document.createElement('div');
-    shareContainer.style.cssText = `
-      position:fixed;left:-10000px;top:0;
-      width:${cardWidth}px;
-      z-index:-1;pointer-events:none;
-    `;
-    const card = document.createElement('div');
-    card.className = 'bp-share-card';
-    card.innerHTML = `
-      <div class="bp-share-header">
-        <div class="bp-share-logo">街巡-まちめぐ- / 街にでよう</div>
-      </div>
-      <div class="bp-share-badge-zone">${window.renderBadgeForShare(b)}</div>
-      <div class="bp-share-name">${escapeHtml(b.name || '')}</div>
-      <div class="bp-share-desc">${escapeHtml(b.desc || '')}</div>
-      <div class="bp-share-cta"><strong>バッジ獲得!</strong></div>
-    `;
-    shareContainer.appendChild(card);
-    document.body.appendChild(shareContainer);
-    
-    // ホロアニメをoffに（画像化用に動きを止める）
-    card.querySelectorAll('.bp-holo').forEach(el => {
-      el.style.animation = 'none';
-    });
-    
-    await mmDelay(80);
-    
+    // ★index313: SVG完結生成（html2canvas廃止）。再現性問題から解放＋高解像度1080×1440
     const canvas = await mmTimeout(
-      window.html2canvas(card, {
-        backgroundColor: null,
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        imageTimeout: 3000,
-        width: cardWidth,
-        height: card.offsetHeight,
-      }),
+      window.mmSvgToCanvas(window.mmBadgeShareSVG(b), 1080, 1440),
       15000,
       '画像生成タイムアウト'
     );
-    
-    if (shareContainer && shareContainer.parentNode) {
-      shareContainer.parentNode.removeChild(shareContainer);
-      shareContainer = null;
-    }
-    await mmDelay(20);
     
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1.0));
     if (!blob) throw new Error('Blob生成失敗');
@@ -18136,6 +19207,8 @@ window.shareBadge = async function(){
   } catch (e) {
     console.error('バッジシェアエラー:', e);
     if (e.name !== 'AbortError') {
+      // ★index319 一時デバッグ: 実機での失敗原因を可視化（原因判明後に除去予定）
+      try { alert('【デバッグ】バッジ画像生成失敗\n[' + (e && e.name) + '] ' + ((e && e.message) || e)); } catch (_) {}
       if (navigator.share) {
         try { await navigator.share({ title: '街巡-まちめぐ-', text, url }); } catch(_) {}
       } else {
@@ -19064,8 +20137,12 @@ window.updateNextGoal = function(rankResults, lineResults, totalCheckins){
   const el = document.getElementById('bp-next-goal');
   if (!el) return;
   el.style.display = '';
-  document.getElementById('bp-ng-title').textContent = top.title;
   const remain = Math.max(0, top.target - top.current);
+  // ★index309: 残り1=リーチ！金枠パルス。★FB反映: 🔔はラベル行へ(タイトルが見切れるため)
+  el.classList.toggle('bp-ng-reach', remain === 1);
+  const lbl1 = el.querySelector('.bp-ng-label');
+  if (lbl1) lbl1.textContent = (remain === 1) ? '🔔 リーチ！' : '次の目標';
+  document.getElementById('bp-ng-title').textContent = top.title;
   document.getElementById('bp-ng-progress').innerHTML = 
     `あと <strong>${remain}${top.unit}</strong>（${top.current}/${top.target}）`;
   
@@ -19075,8 +20152,12 @@ window.updateNextGoal = function(rankResults, lineResults, totalCheckins){
   if (el2) {
     if (second) {
       el2.style.display = '';
-      document.getElementById('bp-ng-title2').textContent = second.title;
       const remain2 = Math.max(0, second.target - second.current);
+      // ★index309: 2枠目もリーチ強調。★FB反映: 🔔はラベル行へ
+      el2.classList.toggle('bp-ng-reach', remain2 === 1);
+      const lbl2 = el2.querySelector('.bp-ng-label');
+      if (lbl2) lbl2.textContent = (remain2 === 1) ? '🔔 リーチ！' : 'その次';
+      document.getElementById('bp-ng-title2').textContent = second.title;
       document.getElementById('bp-ng-progress2').innerHTML = 
         `あと <strong>${remain2}${second.unit}</strong>（${second.current}/${second.target}）`;
     } else {
@@ -19442,6 +20523,16 @@ window.mmFavProUpsell = function() {
   if (!go) return;
   const shop = document.querySelector('.mp-shop-section');
   if (shop) shop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+// ★index309: マップ情報パネル(上限到達×スター0)からショップへの導線
+window.mmGoShopForStars = async function() {
+  try {
+    if (typeof window.openMypage === 'function') await window.openMypage();
+    setTimeout(() => {
+      const shop = document.querySelector('.mp-shop-section');
+      if (shop) shop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 400);
+  } catch (e) {}
 };
 
 // ─── 推し街取得 ───
@@ -20533,6 +21624,26 @@ if ('serviceWorker' in navigator) {
     const overlay = document.createElement('div');
     overlay.className = 'mm-weather-overlay ' + record.weather;
 
+    // ★index310: 晴れ＝きらめく光の粒3つ（配置固定・CSS明滅のみ＝軽量）
+    if(record.weather === 'sunny'){
+      const sparks = [
+        { top: '18%', left: '22%', size: '26px', delay: '0s',   dur: '4.2s' },
+        { top: '40%', left: '64%', size: '18px', delay: '1.4s', dur: '5.1s' },
+        { top: '12%', left: '74%', size: '14px', delay: '2.6s', dur: '3.6s' }
+      ];
+      sparks.forEach(function(s){
+        const sp = document.createElement('div');
+        sp.className = 'mm-sunspark';
+        sp.style.top = s.top;
+        sp.style.left = s.left;
+        sp.style.width = s.size;
+        sp.style.height = s.size;
+        sp.style.animationDelay = s.delay;
+        sp.style.animationDuration = s.dur;
+        overlay.appendChild(sp);
+      });
+    }
+
     if(record.weather === 'cloudy'){
       const positions = [
         { top: '6%',  left: '-15%', width: '60%', height: '30%' },
@@ -20580,21 +21691,26 @@ if ('serviceWorker' in navigator) {
       //   金の雨脚(gold)は6本に1本。CSS側で「夕方のときだけ金、他は白」に分岐。
       const seed = mmHash(stationKey);
       const N = 45;
+      // ★index312: 旧・等差数列mod方式は i に対する規則性で「横一線」「局所的な塊」が出た
+      //   （さらに長さと開始タイミングが同一乱数r1で相関）。雪(index223)と同じ
+      //   sin-fractハッシュに統一し、長さ/横位置/落下時間/開始を4系列の無相関乱数に分離。
+      //   負のanimation-delayを独立乱数×周期で与える＝最初のフレームから定常状態の降り方。
+      const sHash = function(n){ const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
       for(let i = 0; i < N; i++){
         const drop = document.createElement('div');
         const isGold = (i % 6 === 0);
         drop.className = 'mm-raindrop' + (isGold ? ' gold' : '');
-        // seed由来の擬似乱数（0〜1）
-        const r1 = ((seed * (i + 3) * 9301 + 49297) % 233280) / 233280;
-        const r2 = ((seed * (i + 7) * 4096 + 150889) % 714025) / 714025;
-        const r3 = ((seed * (i + 13) * 2531 + 99991) % 121500) / 121500;
+        const r1 = sHash(seed * 0.137 + i * 7.19);    // 長さ
+        const r2 = sHash(seed * 0.293 + i * 13.37);   // 横位置
+        const r3 = sHash(seed * 0.531 + i * 23.11);   // 落下時間
+        const r4 = sHash(seed * 0.719 + i * 31.41);   // 開始タイミング（独立系列）
         const len = 15 + r1 * 19;               // 雨脚の長さ 15〜34px
         const left = r2 * 100;                   // 横位置 0〜100%
-        const dur = 1.2 + r3 * 0.85;             // 落下時間 1.2〜2.05秒（距離増に比例。スピード感は従来「やや速め」を維持）
-        drop.style.height = len + 'px';
-        drop.style.left = left + '%';
-        drop.style.animationDuration = dur + 's';
-        drop.style.animationDelay = (-r1 * dur) + 's';  // 開始位置をバラす
+        const dur = 1.2 + r3 * 0.85;             // 落下時間 1.2〜2.05秒（スピード感は従来維持）
+        drop.style.height = len.toFixed(1) + 'px';
+        drop.style.left = left.toFixed(2) + '%';
+        drop.style.animationDuration = dur.toFixed(2) + 's';
+        drop.style.animationDelay = (-r4 * dur).toFixed(2) + 's';  // 独立乱数で開始を完全にバラす
         drop.style.opacity = isGold ? '0.85' : (0.45 + r3 * 0.4).toFixed(2);
         overlay.appendChild(drop);
       }
@@ -21940,6 +23056,8 @@ if ('serviceWorker' in navigator) {
     // 連続日数
     const streakNum = document.getElementById('mp-daily-streak-num');
     if (streakNum) streakNum.textContent = data.streak;
+    // ★index307: チェックイン完了画面のストリーク表示用にキャッシュ
+    if (typeof data.streak === 'number') window._mmStreakCache = data.streak;
     
     // ログインボーナス
     const bonusRow = document.getElementById('mp-daily-bonus-row');
@@ -22562,7 +23680,7 @@ if ('serviceWorker' in navigator) {
      ①フォント9pxで実機で潰れる ②色が地図など明背景で消える ③ナビバー裏に隠れる
      を全部潰す：font 9→11px、背景半透明黒で常時可読、safe-area-bottom 考慮。
      ★index217: iPhone 17で「v216」の下一桁が画面端で見切れる問題。right 6→12pxで余白確保。 -->
-<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v306</div>
+<div id="mm-app-version" style="position:fixed;bottom:max(6px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));font-size:11px;font-weight:700;color:#ffb070;background:rgba(0,0,0,0.55);padding:2px 6px;border-radius:6px;pointer-events:none;z-index:99999;font-family:monospace;text-shadow:0 0 2px rgba(0,0,0,0.8);letter-spacing:0.5px">v323</div>
 
 <!-- ★index266: 画面内デバッグログパネル（スマホ単体でconsole.logを閲覧可能に）
      PC接続不要、iOS/Android共通、開発用。本番ユーザーには小さな📋ボタンのみ表示。 -->
@@ -22600,7 +23718,7 @@ if ('serviceWorker' in navigator) {
       try {
         var mpVer = document.getElementById('mp-app-version');
         if (mpVer) {
-          mpVer.textContent = 'dev v306';
+          mpVer.textContent = 'dev v323';
           mpVer.style.color = 'rgba(255,180,120,0.6)';
         }
       } catch(e){}
@@ -22873,7 +23991,7 @@ if ('serviceWorker' in navigator) {
     clearBtn.addEventListener('click', function(){ content.innerHTML = ''; });
     
     // 起動完了マーカー
-    addLine('=== Debug Log Ready (v306) ===', '#88ccff');
+    addLine('=== Debug Log Ready (v323) ===', '#88ccff');
   })();
 </script>
 
