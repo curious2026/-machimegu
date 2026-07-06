@@ -281,6 +281,15 @@ function loadScoresCache() {
   }
 
   // ② 正規キャッシュが無い/空の場合のみ、GitHub同梱の seed を読む（dev用フォールバック）
+  // ★v11 恒久対策①: seed は ALLOW_SEED_CACHE=1 の環境（dev）でのみ使用。
+  //   本番で正規キャッシュの読込が一時的に失敗した場合に、古い seed が
+  //   正規キャッシュを乗っ取り「駅数不足の新データ」として配信される事故
+  //   （2026-07-06 のスコア0事故の最有力ルート）を根本遮断する。
+  //   本番はキャッシュ無し→自動フル再計算に任せる（配信ガード②が旧表示を守る）。
+  if (process.env.ALLOW_SEED_CACHE !== '1') {
+    console.log('[seed] ALLOW_SEED_CACHE≠1（本番想定）→ seed フォールバックはスキップ');
+    return;
+  }
   try {
     if (fs.existsSync(SCORES_SEED_FILE)) {
       const seed = JSON.parse(fs.readFileSync(SCORES_SEED_FILE, 'utf8'));
@@ -300,7 +309,31 @@ function loadScoresCache() {
   }
 }
 
+// ★v11 恒久対策②: キャッシュ完全性チェック
+//   「駅マスタの95%以上をカバーし、builtAt が入っている」ものだけを完全とみなす。
+//   不完全なキャッシュは (a)正規ファイルに保存しない (b)クライアントに新データとして配信しない。
+//   これにより、ビルド途中クラッシュ・ファイル破損・古いseed等、
+//   どのルートで不完全データが生まれても本番配信には到達できない。
+const CACHE_COMPLETE_RATIO = 0.95;
+function isCacheComplete(cache) {
+  if (!cache || !cache.builtAt || cache.builtAt <= 0) return false;
+  const cnt = Object.keys(cache.stations || {}).length;
+  if (STATIONS.length === 0) return cnt > 0;  // マスタ未読込時は駅数のみで判定
+  return cnt >= Math.floor(STATIONS.length * CACHE_COMPLETE_RATIO);
+}
+
 function saveScoresCache(data) {
+  // ★v11 恒久対策②-a: 保存ガード。不完全なデータは正規キャッシュに書き込まない。
+  //   （.partial は別ファイルなので従来どおり途中保存できる）
+  if (!isCacheComplete(data)) {
+    const cnt = Object.keys((data && data.stations) || {}).length;
+    console.error(`[saveScoresCache] 保存拒否: 不完全キャッシュ（${cnt}/${STATIONS.length}駅, builtAt=${data && data.builtAt}）`);
+    notifyOps('saveScoresCache 保存拒否（不完全キャッシュ）', `${cnt}/${STATIONS.length}駅`);
+    try {
+      fs.writeFileSync(SCORES_CACHE_FILE + '.rejected.json', JSON.stringify(data));
+    } catch(_) {}
+    return false;
+  }
   // atomic write: tmpに書いてrename
   try {
     fs.writeFileSync(SCORES_CACHE_TMP, JSON.stringify(data));
@@ -324,7 +357,42 @@ function initDB() {
   });
 }
 
-const S3 = "s3://overturemaps-us-west-2/release/2026-04-15.0/theme=places/type=place/*";
+// ★v11 恒久対策④: Overture リリースの自動追従
+//   Overture は公開データを最大60日（月次2リリース分）しか保持せず、
+//   古いリリースは S3 から自動削除される（2026-07-06 の全クエリ空振り事故の原因）。
+//   対策: 公式 STAC カタログ（常に最新リリースを指す）から起動時と rebuild 直前に
+//   最新リリース名を取得し、S3 パスを動的に組み立てる。
+//   取得失敗時は DEFAULT_OVERTURE_RELEASE にフォールバック（オフラインでも起動可能）。
+const DEFAULT_OVERTURE_RELEASE = '2026-06-17.0';  // フォールバック用（手動更新は原則不要になった）
+let OVERTURE_RELEASE = DEFAULT_OVERTURE_RELEASE;
+function s3PlacesPath() {
+  return `s3://overturemaps-us-west-2/release/${OVERTURE_RELEASE}/theme=places/type=place/*`;
+}
+
+async function resolveLatestOvertureRelease() {
+  try {
+    const res = await fetch('https://stac.overturemaps.org/catalog.json', { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const cat = await res.json();
+    // カタログの latest フィールド（例: "2026-06-17.0" または "2026-06-17.0/"）
+    let latest = cat && (cat.latest || (cat.properties && cat.properties.latest));
+    if (typeof latest === 'string' && /^\d{4}-\d{2}-\d{2}\.\d+\/?$/.test(latest.trim())) {
+      latest = latest.trim().replace(/\/$/, '');
+      if (latest !== OVERTURE_RELEASE) {
+        console.log(`[overture] リリース更新検出: ${OVERTURE_RELEASE} → ${latest}`);
+        OVERTURE_RELEASE = latest;
+      } else {
+        console.log(`[overture] 最新リリース確認: ${OVERTURE_RELEASE}（変更なし）`);
+      }
+      return true;
+    }
+    console.warn('[overture] STACカタログの形式が想定外、フォールバック値を使用:', String(latest).slice(0, 50));
+    return false;
+  } catch(e) {
+    console.warn('[overture] STACカタログ取得失敗、フォールバック値を使用:', e.message);
+    return false;
+  }
+}
 
 // ═══ カテゴリマッピング（既存と同じ） ═══
 const AXIS_MAP = {
@@ -448,7 +516,7 @@ function getRawCounts(lat, lng, radius) {
     const degLng = deg / Math.cos(lat * Math.PI / 180);
     const sql = `
       SELECT categories.primary AS cat, COUNT(*) AS cnt
-      FROM read_parquet('${S3}', hive_partitioning=false)
+      FROM read_parquet('${s3PlacesPath()}', hive_partitioning=false)
       WHERE bbox.xmin >= ${lng - degLng}
         AND bbox.xmax <= ${lng + degLng}
         AND bbox.ymin >= ${lat - deg}
@@ -626,6 +694,22 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
   buildState.errors = 0;
   
   try {
+    // ★v11 恒久対策④+⑤: リリース自動解決 → プリフライトチェック
+    //   ①STACカタログから最新リリース名を取得（削除済みリリースを掴み続ける事故を防止）
+    //   ②本計算前に東京駅で1クエリだけ試し、S3が読めなければ即中止＋Discord通知。
+    //     （2026-07-06 事故では5175回全て空振りして25分かけて0駅で「完走」した。
+    //      これを1クエリ・数秒で検知して止める）
+    await resolveLatestOvertureRelease();
+    try {
+      await getRawCounts(35.681236, 139.767125, 500);  // 東京駅
+      console.log(`[rebuild] プリフライトOK: ${OVERTURE_RELEASE}`);
+    } catch(e) {
+      console.error(`[rebuild] プリフライト失敗 → ビルド中止: ${e.message}`);
+      notifyOps('rebuild中止（Overture S3疎通失敗）',
+        `release=${OVERTURE_RELEASE}\n${e.message}\nSTACカタログ確認: https://stac.overturemaps.org/catalog.json`);
+      return;  // finallyでrunning解除される。既存キャッシュは無傷のまま
+    }
+    
     if (mode === 'full') {
       // ─── フル再計算 ─────────────────────────────
       console.log(`[rebuild] FULL モード開始: ${STATIONS.length}駅 × ${RADII.length}半径`);
@@ -755,6 +839,16 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
       // atomic swap
       scoresCache = mergedData;
       saveScoresCache(scoresCache);
+      
+      // ★v11: incremental 完了時も古い .partial を掃除
+      //   （残っていると次回 full が古い途中データから再開してしまう）
+      try {
+        const partialFile = SCORES_CACHE_FILE + '.partial';
+        if (fs.existsSync(partialFile)) {
+          fs.unlinkSync(partialFile);
+          console.log('[rebuild] .partialファイル削除完了(incremental)');
+        }
+      } catch(e) { console.warn('[rebuild] .partial削除失敗:', e.message); }
     }
     
     const elapsed = ((Date.now() - buildState.startedAt) / 1000).toFixed(0);
@@ -801,7 +895,17 @@ function checkRebuildMode() {
     return !cacheIds.has(sid);
   });
   
+  // ★v11 恒久対策③: 駅マスタ再編（県移動・駅名改称・削除）の検知。
+  //   「キャッシュにあるがマスタに無いID（孤児）」と「新規ID」が同時に存在する場合、
+  //   それは駅追加ではなくキーの付け替え（例: 京成小岩_千葉県→_東京都）。
+  //   incremental だと旧キーが残ったまま新キーだけ追加され、globalMax・駅数の整合が崩れるため、
+  //   フル再計算に切り替えて一から作り直す。
   if (newStations.length > 0) {
+    const masterIds = new Set(STATIONS.map(st => st.id || `${st.name}_${st.pref}`));
+    const orphanCount = [...cacheIds].filter(id => !masterIds.has(id)).length;
+    if (orphanCount > 0) {
+      return { mode: 'full', reason: `駅マスタ再編検知（新規${newStations.length}駅・孤児${orphanCount}駅）` };
+    }
     return { mode: 'incremental', stations: newStations, reason: `${newStations.length}駅追加検出` };
   }
   
@@ -826,8 +930,11 @@ app.get('/api/all-scores', (req, res) => {
   const cacheStations = scoresCache.stations || {};
   const stationCount = Object.keys(cacheStations).length;
   
-  // ─── 空キャッシュ → 503 でクライアントにフォールバック誘導 ───
-  if (stationCount === 0) {
+  // ─── 空 or 不完全キャッシュ → 503 でクライアントにフォールバック誘導 ───
+  // ★v11 恒久対策②-c: 不完全キャッシュ（駅マスタの95%未満）も 503 に含める。
+  //   フロントは 503 を受けると localStorage の旧データで継続表示する実装があるため、
+  //   ユーザーには「古いが正しいスコア」が見え続ける（0の羅列にはならない）。
+  if (stationCount === 0 || !isCacheComplete(scoresCache)) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(503).json({
       error: 'building',
@@ -941,10 +1048,16 @@ app.get('/api/status', (req, res) => {
 // 全ユーザーが次回アクセス時に自動で最新化される。
 app.get('/api/version', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
+  // ★v11 恒久対策②-b: 配信ガード。キャッシュが不完全な間は builtAt を 0 で返す。
+  //   フロントの checkAndUpdate は serverBuiltAt が falsy なら何もしない実装のため、
+  //   「新しいデータを取得しました」→不完全データへの切替、が構造的に起きなくなる。
+  //   （ユーザーは手元の localStorage キャッシュで旧スコア表示を継続できる）
+  const complete = isCacheComplete(scoresCache);
   res.json({
-    builtAt: scoresCache.builtAt || 0,
+    builtAt: complete ? (scoresCache.builtAt || 0) : 0,
     version: scoresCache.version || 'unknown',
     building: buildState.running,
+    cacheComplete: complete,
     serverTime: Date.now()
   });
 });
