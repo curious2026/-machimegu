@@ -1,4 +1,30 @@
 // ═══════════════════════════════════════════════════════════════
+// 街巡 server.js v12（Overture taxonomy移行：categories廃止対応）
+// ═══════════════════════════════════════════════════════════════
+// v11 → v12 の変更点（2026-07-08 taxonomy.hierarchy方式へ全面移行）：
+//   背景: Overture places の categories 列は 2026年9月リリースで削除される
+//         （公式発表。basic_category / taxonomy が後継）。放置すると
+//         v11 の最新リリース自動追従が9月以降のリリースを掴んだ時点で
+//         全クエリがエラー＝rebuild不能になる。
+//   ★-1: getRawCounts を taxonomy.hierarchy 方式へ書き換え。
+//         旧 categories.primary + AXIS_MAP（約50カテゴリの完全一致）は
+//         細分類（japanese_restaurant等）を大量に取りこぼしていた
+//         （東陽町800m圏: 全1418施設中302件=21%しか計上されず）。
+//         新方式は階層の最上位〜第3層で分類するため取りこぼしが構造的に解消。
+//   ★-2: axisForHierarchy() 新設＝新taxonomy→4軸の対応表。
+//         旧意味論を維持: コンビニ/スーパー/薬局/銀行/郵便局/コインランドリー/
+//         ガソスタ=生活、ホテル/映画館/美術館/エンタメ=商業。
+//         オフィス系B2B・学校・寺社史跡・公園は旧同様カウント外
+//         （大学/寺社/公園はボーナス施設で別評価のため二重計上を回避）。
+//   ★-3: getRawCountsLegacy() 温存＝旧方式そのまま（比較検証専用）。
+//         9月のcategories削除後はエラーになるが本計算では使わないため無害。
+//   ★-4: /api/admin/taxonomy-compare 新設（requireAdmin）＝
+//         ?ll=lat,lng&radius=800 で新旧両方式のカウントを並記返却。
+//   ★-5: /api/admin/diff に summary 追加＝新旧ランク分布(S/A/B/C/D件数)と
+//         ランク遷移マトリクス（S→A何駅…の5x5表）。rebuild後の全駅検証用。
+//   注意: スコア式(対数+動的globalMax)と配点(350/350/150/100/50)は不変。
+//         カウント増はrebuild Phase2のglobalMax再計算が自動吸収する。
+// ═══════════════════════════════════════════════════════════════
 // 街巡 server.js v10（Step 1 全部入り：レビュー 2026-06-05 反映）
 // ═══════════════════════════════════════════════════════════════
 // v9 → v10 の変更点（2026-06-05 総合レビュー対応）：
@@ -101,6 +127,14 @@ console.log('[起動] 管理者認証: jose方式 (軽量版)');
 console.log('[起動] Admin UIDs:', ADMIN_UIDS);
 
 const app = express();
+
+// ═══════════════════════════════════════════════════════════════
+// ★2026-07-05: Railwayはプロキシ経由でリクエストが届くため、1段だけ信用する
+// これがないとexpress-rate-limitがX-Forwarded-Forヘッダを不正とみなし
+// ERR_ERL_UNEXPECTED_X_FORWARDED_FORでリクエストが落ちる
+// （値を1にするのは重要：trueにすると偽装IPでレート制限を回避されうる）
+// ═══════════════════════════════════════════════════════════════
+app.set('trust proxy', 1);
 
 // ═══════════════════════════════════════════════════════════════
 // gzip圧縮（すべてのレスポンスを自動圧縮）
@@ -273,6 +307,15 @@ function loadScoresCache() {
   }
 
   // ② 正規キャッシュが無い/空の場合のみ、GitHub同梱の seed を読む（dev用フォールバック）
+  // ★v11 恒久対策①: seed は ALLOW_SEED_CACHE=1 の環境（dev）でのみ使用。
+  //   本番で正規キャッシュの読込が一時的に失敗した場合に、古い seed が
+  //   正規キャッシュを乗っ取り「駅数不足の新データ」として配信される事故
+  //   （2026-07-06 のスコア0事故の最有力ルート）を根本遮断する。
+  //   本番はキャッシュ無し→自動フル再計算に任せる（配信ガード②が旧表示を守る）。
+  if (process.env.ALLOW_SEED_CACHE !== '1') {
+    console.log('[seed] ALLOW_SEED_CACHE≠1（本番想定）→ seed フォールバックはスキップ');
+    return;
+  }
   try {
     if (fs.existsSync(SCORES_SEED_FILE)) {
       const seed = JSON.parse(fs.readFileSync(SCORES_SEED_FILE, 'utf8'));
@@ -292,7 +335,31 @@ function loadScoresCache() {
   }
 }
 
+// ★v11 恒久対策②: キャッシュ完全性チェック
+//   「駅マスタの95%以上をカバーし、builtAt が入っている」ものだけを完全とみなす。
+//   不完全なキャッシュは (a)正規ファイルに保存しない (b)クライアントに新データとして配信しない。
+//   これにより、ビルド途中クラッシュ・ファイル破損・古いseed等、
+//   どのルートで不完全データが生まれても本番配信には到達できない。
+const CACHE_COMPLETE_RATIO = 0.95;
+function isCacheComplete(cache) {
+  if (!cache || !cache.builtAt || cache.builtAt <= 0) return false;
+  const cnt = Object.keys(cache.stations || {}).length;
+  if (STATIONS.length === 0) return cnt > 0;  // マスタ未読込時は駅数のみで判定
+  return cnt >= Math.floor(STATIONS.length * CACHE_COMPLETE_RATIO);
+}
+
 function saveScoresCache(data) {
+  // ★v11 恒久対策②-a: 保存ガード。不完全なデータは正規キャッシュに書き込まない。
+  //   （.partial は別ファイルなので従来どおり途中保存できる）
+  if (!isCacheComplete(data)) {
+    const cnt = Object.keys((data && data.stations) || {}).length;
+    console.error(`[saveScoresCache] 保存拒否: 不完全キャッシュ（${cnt}/${STATIONS.length}駅, builtAt=${data && data.builtAt}）`);
+    notifyOps('saveScoresCache 保存拒否（不完全キャッシュ）', `${cnt}/${STATIONS.length}駅`);
+    try {
+      fs.writeFileSync(SCORES_CACHE_FILE + '.rejected.json', JSON.stringify(data));
+    } catch(_) {}
+    return false;
+  }
   // atomic write: tmpに書いてrename
   try {
     fs.writeFileSync(SCORES_CACHE_TMP, JSON.stringify(data));
@@ -316,9 +383,46 @@ function initDB() {
   });
 }
 
-const S3 = "s3://overturemaps-us-west-2/release/2026-04-15.0/theme=places/type=place/*";
+// ★v11 恒久対策④: Overture リリースの自動追従
+//   Overture は公開データを最大60日（月次2リリース分）しか保持せず、
+//   古いリリースは S3 から自動削除される（2026-07-06 の全クエリ空振り事故の原因）。
+//   対策: 公式 STAC カタログ（常に最新リリースを指す）から起動時と rebuild 直前に
+//   最新リリース名を取得し、S3 パスを動的に組み立てる。
+//   取得失敗時は DEFAULT_OVERTURE_RELEASE にフォールバック（オフラインでも起動可能）。
+const DEFAULT_OVERTURE_RELEASE = '2026-06-17.0';  // フォールバック用（手動更新は原則不要になった）
+let OVERTURE_RELEASE = DEFAULT_OVERTURE_RELEASE;
+function s3PlacesPath() {
+  return `s3://overturemaps-us-west-2/release/${OVERTURE_RELEASE}/theme=places/type=place/*`;
+}
 
-// ═══ カテゴリマッピング（既存と同じ） ═══
+async function resolveLatestOvertureRelease() {
+  try {
+    const res = await fetch('https://stac.overturemaps.org/catalog.json', { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const cat = await res.json();
+    // カタログの latest フィールド（例: "2026-06-17.0" または "2026-06-17.0/"）
+    let latest = cat && (cat.latest || (cat.properties && cat.properties.latest));
+    if (typeof latest === 'string' && /^\d{4}-\d{2}-\d{2}\.\d+\/?$/.test(latest.trim())) {
+      latest = latest.trim().replace(/\/$/, '');
+      if (latest !== OVERTURE_RELEASE) {
+        console.log(`[overture] リリース更新検出: ${OVERTURE_RELEASE} → ${latest}`);
+        OVERTURE_RELEASE = latest;
+      } else {
+        console.log(`[overture] 最新リリース確認: ${OVERTURE_RELEASE}（変更なし）`);
+      }
+      return true;
+    }
+    console.warn('[overture] STACカタログの形式が想定外、フォールバック値を使用:', String(latest).slice(0, 50));
+    return false;
+  } catch(e) {
+    console.warn('[overture] STACカタログ取得失敗、フォールバック値を使用:', e.message);
+    return false;
+  }
+}
+
+// ═══ 旧カテゴリマッピング（★v12でレガシー化：比較検証専用） ═══
+// categories.primary の値→4軸。2026年9月のcategories削除後は参照不能になるが、
+// 本計算では使用しない（getRawCountsLegacy＝taxonomy-compare検証のみが使う）。
 const AXIS_MAP = {
   eat_and_drink:'飲食', restaurant:'飲食', cafe:'飲食', bar:'飲食',
   fast_food:'飲食', coffee:'飲食', bakery:'飲食', food_and_drink:'飲食',
@@ -334,6 +438,60 @@ const AXIS_MAP = {
   health_and_medicine:'医療', hospital:'医療', clinic:'医療',
   dentist:'医療', doctors:'医療', nursing_home:'医療'
 };
+
+// ═══ ★v12: 新taxonomy階層→4軸マッピング ═══
+// taxonomy.hierarchy = ['最上位', '第2層', '第3層', ...] を受け取り4軸へ分類。
+// 設計原則: 旧AXIS_MAPの意味論を維持しつつ、階層分類で取りこぼしを解消する。
+//   - 最上位13分類のうち、旧方式でカウント対象だった領域だけを拾う
+//   - education / community_and_government / cultural_and_historic /
+//     sports_and_recreation / geographic_entities は旧同様カウント外
+//     （大学・寺社・公園はボーナス施設マスターで別評価＝二重計上回避）
+//   - 実データ検証済みの配置（2026-06-17.0リリース、都心bboxで確認）:
+//       薬局 = shopping > specialty_store > pharmacy_and_drug_store
+//       スーパー・食料品 = shopping > food_and_beverage_store
+//       コンビニ = shopping > convenience_store
+//       銀行/ATM = services_and_business > financial_service
+//       郵便局 = services_and_business > shipping_or_delivery_service > post_office
+//       コインランドリー = services_and_business > laundry_service
+//       ガソスタ = travel_and_transportation > fueling_station
+//       ホテル = lodging、美術館/映画館 = arts_and_entertainment
+function axisForHierarchy(l0, l1, l2) {
+  switch (l0) {
+    case 'food_and_drink':
+      return '飲食';
+    case 'health_care':
+      return '医療';
+    case 'lifestyle_services':
+      // 美容・理容・ネイル・ウェルネス等＝旧「生活」の中核
+      return '生活';
+    case 'shopping':
+      // 日常購買は生活へ振替（旧意味論: コンビニ/スーパー/薬局=生活）
+      if (l1 === 'convenience_store' || l1 === 'food_and_beverage_store') return '生活';
+      if (l1 === 'specialty_store' && l2 === 'pharmacy_and_drug_store') return '生活';
+      return '商業';
+    case 'arts_and_entertainment':
+      // 映画館・美術館・劇場・遊園地等（旧: entertainment系=商業）
+      return '商業';
+    case 'lodging':
+      // ホテル・旅館（旧: hotel=商業）
+      return '商業';
+    case 'services_and_business':
+      // オフィス系B2Bは旧同様カウント外。生活インフラ3種だけ拾う。
+      if (l1 === 'financial_service') return '生活';           // 銀行・ATM・信金
+      if (l1 === 'laundry_service') return '生活';             // クリーニング・コインランドリー
+      if (l1 === 'shipping_or_delivery_service' && l2 === 'post_office') return '生活';  // 郵便局
+      return null;
+    case 'travel_and_transportation':
+      // 駐車場・駅施設等はカウント外。ガソスタのみ（旧: gas_station=生活）。
+      if (l1 === 'fueling_station') return '生活';
+      return null;
+    default:
+      // education / community_and_government / cultural_and_historic /
+      // sports_and_recreation / geographic_entities / その他新設分類
+      return null;
+  }
+}
+
 const AXES    = ['飲食','商業','生活','医療'];
 const MAX_PTS = {'飲食':350, '商業':350, '生活':150, '医療':100};
 const BONUS_MAX_PTS = 50;
@@ -432,15 +590,52 @@ function calcScore(counts, radius, bonusObj) {
   return { score, details, rank: calcRank(score) };
 }
 
-// ═══ 生カウント取得（DuckDBクエリ） ═══
+// ═══ 生カウント取得（DuckDBクエリ）★v12: taxonomy.hierarchy方式 ═══
+// 階層の上位3層（l0/l1/l2）で集計し、axisForHierarchy()で4軸に分類する。
+// DuckDBのリスト添字は1始まり・範囲外はNULL（短い階層でも安全）。
 function getRawCounts(lat, lng, radius) {
   return new Promise((resolve, reject) => {
     const con = db.connect();
     const deg    = radius / 111000;
     const degLng = deg / Math.cos(lat * Math.PI / 180);
     const sql = `
+      SELECT taxonomy.hierarchy[1] AS l0,
+             taxonomy.hierarchy[2] AS l1,
+             taxonomy.hierarchy[3] AS l2,
+             COUNT(*) AS cnt
+      FROM read_parquet('${s3PlacesPath()}', hive_partitioning=false)
+      WHERE bbox.xmin >= ${lng - degLng}
+        AND bbox.xmax <= ${lng + degLng}
+        AND bbox.ymin >= ${lat - deg}
+        AND bbox.ymax <= ${lat + deg}
+        AND taxonomy.hierarchy IS NOT NULL
+      GROUP BY l0, l1, l2
+    `;
+    con.all(sql, (err, rows) => {
+      con.close();
+      if (err) return reject(err);
+      const counts = {'飲食':0, '商業':0, '生活':0, '医療':0};
+      (rows||[]).forEach(row => {
+        const axis = axisForHierarchy(row.l0 || '', row.l1 || '', row.l2 || '');
+        if (axis) counts[axis] += (parseInt(row.cnt)||0);
+      });
+      resolve(counts);
+    });
+  });
+}
+
+// ═══ ★v12: 旧方式の生カウント（比較検証専用・本計算では未使用） ═══
+// categories.primary + AXIS_MAP＝v11までの実装をそのまま温存。
+// /api/admin/taxonomy-compare だけが呼ぶ。2026年9月のcategories削除後は
+// エラーになるが、エンドポイント側でcatchして無害化する。
+function getRawCountsLegacy(lat, lng, radius) {
+  return new Promise((resolve, reject) => {
+    const con = db.connect();
+    const deg    = radius / 111000;
+    const degLng = deg / Math.cos(lat * Math.PI / 180);
+    const sql = `
       SELECT categories.primary AS cat, COUNT(*) AS cnt
-      FROM read_parquet('${S3}', hive_partitioning=false)
+      FROM read_parquet('${s3PlacesPath()}', hive_partitioning=false)
       WHERE bbox.xmin >= ${lng - degLng}
         AND bbox.xmax <= ${lng + degLng}
         AND bbox.ymin >= ${lat - deg}
@@ -618,6 +813,22 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
   buildState.errors = 0;
   
   try {
+    // ★v11 恒久対策④+⑤: リリース自動解決 → プリフライトチェック
+    //   ①STACカタログから最新リリース名を取得（削除済みリリースを掴み続ける事故を防止）
+    //   ②本計算前に東京駅で1クエリだけ試し、S3が読めなければ即中止＋Discord通知。
+    //     （2026-07-06 事故では5175回全て空振りして25分かけて0駅で「完走」した。
+    //      これを1クエリ・数秒で検知して止める）
+    await resolveLatestOvertureRelease();
+    try {
+      await getRawCounts(35.681236, 139.767125, 500);  // 東京駅
+      console.log(`[rebuild] プリフライトOK: ${OVERTURE_RELEASE}`);
+    } catch(e) {
+      console.error(`[rebuild] プリフライト失敗 → ビルド中止: ${e.message}`);
+      notifyOps('rebuild中止（Overture S3疎通失敗）',
+        `release=${OVERTURE_RELEASE}\n${e.message}\nSTACカタログ確認: https://stac.overturemaps.org/catalog.json`);
+      return;  // finallyでrunning解除される。既存キャッシュは無傷のまま
+    }
+    
     if (mode === 'full') {
       // ─── フル再計算 ─────────────────────────────
       console.log(`[rebuild] FULL モード開始: ${STATIONS.length}駅 × ${RADII.length}半径`);
@@ -747,6 +958,16 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
       // atomic swap
       scoresCache = mergedData;
       saveScoresCache(scoresCache);
+      
+      // ★v11: incremental 完了時も古い .partial を掃除
+      //   （残っていると次回 full が古い途中データから再開してしまう）
+      try {
+        const partialFile = SCORES_CACHE_FILE + '.partial';
+        if (fs.existsSync(partialFile)) {
+          fs.unlinkSync(partialFile);
+          console.log('[rebuild] .partialファイル削除完了(incremental)');
+        }
+      } catch(e) { console.warn('[rebuild] .partial削除失敗:', e.message); }
     }
     
     const elapsed = ((Date.now() - buildState.startedAt) / 1000).toFixed(0);
@@ -793,7 +1014,17 @@ function checkRebuildMode() {
     return !cacheIds.has(sid);
   });
   
+  // ★v11 恒久対策③: 駅マスタ再編（県移動・駅名改称・削除）の検知。
+  //   「キャッシュにあるがマスタに無いID（孤児）」と「新規ID」が同時に存在する場合、
+  //   それは駅追加ではなくキーの付け替え（例: 京成小岩_千葉県→_東京都）。
+  //   incremental だと旧キーが残ったまま新キーだけ追加され、globalMax・駅数の整合が崩れるため、
+  //   フル再計算に切り替えて一から作り直す。
   if (newStations.length > 0) {
+    const masterIds = new Set(STATIONS.map(st => st.id || `${st.name}_${st.pref}`));
+    const orphanCount = [...cacheIds].filter(id => !masterIds.has(id)).length;
+    if (orphanCount > 0) {
+      return { mode: 'full', reason: `駅マスタ再編検知（新規${newStations.length}駅・孤児${orphanCount}駅）` };
+    }
     return { mode: 'incremental', stations: newStations, reason: `${newStations.length}駅追加検出` };
   }
   
@@ -818,8 +1049,11 @@ app.get('/api/all-scores', (req, res) => {
   const cacheStations = scoresCache.stations || {};
   const stationCount = Object.keys(cacheStations).length;
   
-  // ─── 空キャッシュ → 503 でクライアントにフォールバック誘導 ───
-  if (stationCount === 0) {
+  // ─── 空 or 不完全キャッシュ → 503 でクライアントにフォールバック誘導 ───
+  // ★v11 恒久対策②-c: 不完全キャッシュ（駅マスタの95%未満）も 503 に含める。
+  //   フロントは 503 を受けると localStorage の旧データで継続表示する実装があるため、
+  //   ユーザーには「古いが正しいスコア」が見え続ける（0の羅列にはならない）。
+  if (stationCount === 0 || !isCacheComplete(scoresCache)) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(503).json({
       error: 'building',
@@ -933,10 +1167,16 @@ app.get('/api/status', (req, res) => {
 // 全ユーザーが次回アクセス時に自動で最新化される。
 app.get('/api/version', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
+  // ★v11 恒久対策②-b: 配信ガード。キャッシュが不完全な間は builtAt を 0 で返す。
+  //   フロントの checkAndUpdate は serverBuiltAt が falsy なら何もしない実装のため、
+  //   「新しいデータを取得しました」→不完全データへの切替、が構造的に起きなくなる。
+  //   （ユーザーは手元の localStorage キャッシュで旧スコア表示を継続できる）
+  const complete = isCacheComplete(scoresCache);
   res.json({
-    builtAt: scoresCache.builtAt || 0,
+    builtAt: complete ? (scoresCache.builtAt || 0) : 0,
     version: scoresCache.version || 'unknown',
     building: buildState.running,
+    cacheComplete: complete,
     serverTime: Date.now()
   });
 });
@@ -1027,10 +1267,26 @@ app.get('/api/admin/diff', requireAdmin, (req, res) => {
   const scoreDown = [];
   const rankOrder = { S:0, A:1, B:2, C:3, D:4 };
   
+  // ★v12: 全駅サマリー＝新旧ランク分布と遷移マトリクス（taxonomy移行の検証用）
+  const RANKS = ['S','A','B','C','D'];
+  const distOld = {S:0, A:0, B:0, C:0, D:0};
+  const distNew = {S:0, A:0, B:0, C:0, D:0};
+  const transition = {};  // transition['S']['A'] = 旧S→新Aの駅数
+  RANKS.forEach(r1 => { transition[r1] = {S:0, A:0, B:0, C:0, D:0}; });
+  let comparedCount = 0;
+  
   Object.keys(scoresCache.stations || {}).forEach(sid => {
     const cur = scoresCache.stations[sid][rKey];
     const prev = previousCache.stations[sid] && previousCache.stations[sid][rKey];
     if (!cur || !prev) return;
+    
+    // ★v12: サマリー集計（全駅）
+    if (distOld[prev.rank] !== undefined && distNew[cur.rank] !== undefined) {
+      distOld[prev.rank]++;
+      distNew[cur.rank]++;
+      transition[prev.rank][cur.rank]++;
+      comparedCount++;
+    }
     
     const stMeta = stationsMap[sid] || { name: sid.split('_')[0], pref: sid.split('_')[1] };
     const scoreDiff = cur.score - prev.score;
@@ -1076,6 +1332,14 @@ app.get('/api/admin/diff', requireAdmin, (req, res) => {
       scoreUp: scoreUp.length,
       scoreDown: scoreDown.length
     },
+    // ★v12: 全駅サマリー（taxonomy移行検証用）
+    //   summary.distribution = 新旧のS/A/B/C/D駅数
+    //   summary.transition   = 遷移マトリクス（transition.S.A = 旧S→新Aの駅数）
+    summary: {
+      comparedStations: comparedCount,
+      distribution: { old: distOld, new: distNew },
+      transition: transition
+    },
     stations: {
       rankUp: rankUp.slice(0, 50),     // 最大50件まで
       rankDown: rankDown.slice(0, 30),
@@ -1083,6 +1347,49 @@ app.get('/api/admin/diff', requireAdmin, (req, res) => {
       scoreDown: scoreDown.slice(0, 30)
     }
   });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ★v12: 新旧カウント方式の比較（管理者専用・taxonomy移行の検証用）
+//   /api/admin/taxonomy-compare?ll=35.6699,139.8175&radius=800
+//   新方式(taxonomy.hierarchy)と旧方式(categories.primary)の生カウントを
+//   同一座標で両方実行して並記返却する。
+//   2026年9月のcategories削除後は旧方式がエラーになるため、
+//   その場合は legacy: null + legacyError を返す（新方式は生き続ける）。
+// ═══════════════════════════════════════════════════════════════
+app.get('/api/admin/taxonomy-compare', requireAdmin, async (req, res) => {
+  try {
+    const ll = String(req.query.ll || '').split(',');
+    const lat = parseFloat(ll[0]);
+    const lng = parseFloat(ll[1]);
+    const radius = parseInt(req.query.radius) || 800;
+    if (!isFinite(lat) || !isFinite(lng) || lat < 20 || lat > 46 || lng < 122 || lng > 154) {
+      return res.status(400).json({ error: 'll=lat,lng（日本国内の座標）を指定してください' });
+    }
+    if (![500, 800, 1200].includes(radius)) {
+      return res.status(400).json({ error: 'radiusは500/800/1200のいずれか' });
+    }
+    const newCounts = await getRawCounts(lat, lng, radius);
+    let legacyCounts = null;
+    let legacyError = null;
+    try {
+      legacyCounts = await getRawCountsLegacy(lat, lng, radius);
+    } catch (e) {
+      // categories列削除後（2026年9月〜）はここに来る＝想定内
+      legacyError = e.message;
+    }
+    res.json({
+      ok: true,
+      release: OVERTURE_RELEASE,
+      ll: `${lat},${lng}`,
+      radius,
+      taxonomy: newCounts,       // 新方式（v12本計算と同一ロジック）
+      legacy: legacyCounts,      // 旧方式（v11まで）
+      legacyError
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════
