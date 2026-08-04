@@ -394,26 +394,60 @@ async function resolveLatestOvertureRelease() {
   }
 }
 
-// ═══ カテゴリマッピング（既存と同じ） ═══
+// ═══ カテゴリマッピング v2（basic_category ベース）═══
+// Overture の basic_category（255語）を4軸へ割り当て。
+// 旧版は categories.primary の47語を見ており、japanese_restaurant 等を
+// 取りこぼして全国のPOIの71〜81%が未集計だった。
 const AXIS_MAP = {
-  eat_and_drink:'飲食', restaurant:'飲食', cafe:'飲食', bar:'飲食',
-  fast_food:'飲食', coffee:'飲食', bakery:'飲食', food_and_drink:'飲食',
-  izakaya:'飲食', ramen:'飲食', sushi:'飲食', food:'飲食',
-  retail:'商業', shopping:'商業', clothing:'商業', department_store:'商業',
-  electronics:'商業', bookstore:'商業', sports_store:'商業', toy_store:'商業',
-  hotel:'商業', entertainment:'商業', cinema:'商業', museum:'商業',
-  amusement:'商業', art:'商業', theater:'商業', night_club:'商業',
-  convenience_store:'生活', supermarket:'生活', grocery:'生活',
-  beauty_salon:'生活', laundry:'生活', hair_salon:'生活', nail_salon:'生活',
-  bank:'生活', atm:'生活', post_office:'生活', drugstore:'生活',
-  pharmacy:'生活', gas_station:'生活',
-  health_and_medicine:'医療', hospital:'医療', clinic:'医療',
-  dentist:'医療', doctors:'医療', nursing_home:'医療'
+  // ── 飲食 ──
+  alcoholic_beverage_venue:'飲食', bar:'飲食', cafe:'飲食', casual_eatery:'飲食',
+  coffee_shop:'飲食', fast_food_restaurant:'飲食', food_court:'飲食', food_service:'飲食',
+  food_truck_stand:'飲食', lounge:'飲食', non_alcoholic_beverage_venue:'飲食', restaurant:'飲食',
+  smoothie_juice_bar:'飲食',
+  // ── 商業 ──
+  amusement_park:'商業', animal_and_pet_store:'商業', aquarium:'商業', arcade:'商業',
+  art_gallery:'商業', arts_crafts_and_hobby_store:'商業', bed_and_breakfast:'商業', books_music_and_video_store:'商業',
+  brewery:'商業', casino:'商業', comedy_club:'商業', cultural_center:'商業',
+  dance_club:'商業', department_store:'商業', discount_store:'商業', distillery:'商業',
+  electronics_store:'商業', event_venue:'商業', farmers_market:'商業', fashion_and_apparel_store:'商業',
+  flowers_and_gifts_store:'商業', gaming_venue:'商業', hardware_home_and_garden_store:'商業', hotel:'商業',
+  inn:'商業', lodging:'商業', market:'商業', movie_theater:'商業',
+  museum:'商業', music_venue:'商業', musical_instrument_and_pro_audio_store:'商業', office_supply_store:'商業',
+  performing_arts_venue:'商業', personal_care_and_beauty_store:'商業', planetarium:'商業', resort:'商業',
+  science_attraction:'商業', second_hand_store:'商業', shopping_mall:'商業', specialty_store:'商業',
+  sporting_goods_store:'商業', stadium_arena:'商業', superstore:'商業', theatre_venue:'商業',
+  toys_and_games_store:'商業', warehouse_club_store:'商業', winery:'商業', zoo:'商業',
+  // ── 生活 ──
+  atm:'生活', bank_or_credit_union:'生活', convenience_store:'生活', food_and_beverage_store:'生活',
+  gas_station:'生活', laundry_service:'生活', personal_or_beauty_service:'生活', pharmacy_and_drug_store:'生活',
+  shipping_or_delivery_service:'生活',
+  // ── 医療 ──
+  behavioral_or_mental_health_clinic:'医療', complementary_and_alternative_medicine:'医療', dental_clinic:'医療', diagnostics_imaging_or_lab_service:'医療',
+  emergency_department:'医療', emergency_or_urgent_care_facility:'医療', hospital:'医療', medical_service:'医療',
+  outpatient_care_facility:'医療', pediatric_clinic:'医療', physical_medicine_and_rehabilitation:'医療', primary_care_or_general_clinic:'医療',
+  reproductive_perinatal_and_womens_care:'医療', senior_living_facility:'医療', specialized_health_care:'医療', specialized_medical_facility:'医療',
+  specialty_hospital:'医療', surgery:'医療', urgent_care_center:'医療', vision_or_eye_care_clinic:'医療',
+  walk_in_clinic:'医療',
 };
 const AXES    = ['飲食','商業','生活','医療'];
 const MAX_PTS = {'飲食':350, '商業':350, '生活':150, '医療':100};
 const BONUS_MAX_PTS = 50;
 const BONUS_RADIUS_M = 800;
+
+// ═══ ★マッピング指紋（新旧の集計が混ざる事故を構造的に防ぐ）═══
+//   .partial から再開する仕組みは便利だが、AXIS_MAP を変更した直後に
+//   古い .partial が残っていると「旧マッピングで数えた駅」と
+//   「新マッピングで数えた駅」が1つのキャッシュに同居してしまう。
+//   AXIS_MAP の内容から指紋を作り、.partial に埋め込む。
+//   指紋が一致しない .partial は再開に使わず破棄する。
+//   （人間が削除を忘れても事故が起きない構造にする）
+const AXIS_MAP_SIGNATURE = (() => {
+  const src = Object.keys(AXIS_MAP).sort().map(k => k + '=' + AXIS_MAP[k]).join('|');
+  let h = 5381;
+  for (let i = 0; i < src.length; i++) h = ((h * 33) ^ src.charCodeAt(i)) >>> 0;
+  return 'bc-' + Object.keys(AXIS_MAP).length + '-' + h.toString(36);
+})();
+console.log('[overture] AXIS_MAP署名:', AXIS_MAP_SIGNATURE, `(${Object.keys(AXIS_MAP).length}語 / basic_category)`);
 
 // ═══ ボーナス対象施設マスター（手動キュレーション、332件）═══
 // 配点：大学(本部)15、サテライト5、大学病院15、大規模病院8、
@@ -515,14 +549,14 @@ function getRawCounts(lat, lng, radius) {
     const deg    = radius / 111000;
     const degLng = deg / Math.cos(lat * Math.PI / 180);
     const sql = `
-      SELECT categories.primary AS cat, COUNT(*) AS cnt
+      SELECT basic_category AS cat, COUNT(*) AS cnt
       FROM read_parquet('${s3PlacesPath()}', hive_partitioning=false)
       WHERE bbox.xmin >= ${lng - degLng}
         AND bbox.xmax <= ${lng + degLng}
         AND bbox.ymin >= ${lat - deg}
         AND bbox.ymax <= ${lat + deg}
-        AND categories.primary IS NOT NULL
-      GROUP BY categories.primary
+        AND basic_category IS NOT NULL
+      GROUP BY basic_category
     `;
     con.all(sql, (err, rows) => {
       con.close();
@@ -622,6 +656,7 @@ async function computeRawCountsForStations(stations, intoData) {
             version: getCurrentQuarterVersion(),
             builtAt: 0,  // 0 = まだ完成してない印
             partial: true,
+            axisSig: AXIS_MAP_SIGNATURE,   // ★どのマッピングで数えたかを刻む
             stations: intoData
           };
           fs.writeFileSync(SCORES_CACHE_FILE + '.partial', JSON.stringify(partialData));
@@ -725,7 +760,14 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
         const partialFile = SCORES_CACHE_FILE + '.partial';
         if (fs.existsSync(partialFile)) {
           const partial = JSON.parse(fs.readFileSync(partialFile, 'utf8'));
-          if (partial.stations && Object.keys(partial.stations).length > 0) {
+          // ★指紋が違う = 別のマッピングで数えたデータ → 混ぜずに破棄する
+          if (partial.axisSig && partial.axisSig !== AXIS_MAP_SIGNATURE) {
+            console.warn(`[rebuild] ★.partialのマッピング署名が不一致（${partial.axisSig} ≠ ${AXIS_MAP_SIGNATURE}）→ 破棄してフル再計算`);
+            try { fs.unlinkSync(partialFile); } catch(_) {}
+          } else if (!partial.axisSig) {
+            console.warn('[rebuild] ★.partialに署名が無い（旧形式）→ 破棄してフル再計算');
+            try { fs.unlinkSync(partialFile); } catch(_) {}
+          } else if (partial.stations && Object.keys(partial.stations).length > 0) {
             newData.stations = partial.stations;
             const resumedCount = Object.keys(partial.stations).length;
             console.log(`[rebuild] 前回の途中保存から再開: ${resumedCount}駅分すでに計算済み`);
@@ -750,6 +792,7 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
       
       // Phase 4: atomic swap
       newData.builtAt = Date.now();
+      newData.axisSig = AXIS_MAP_SIGNATURE;   // ★どのマッピングで作ったキャッシュかを刻む
       
       // 前期版保存
       if (scoresCache.builtAt > 0 && Object.keys(scoresCache.stations || {}).length > 0) {
@@ -835,6 +878,7 @@ async function rebuildScores({ mode = 'full', stations = null } = {}) {
       
       mergedData.builtAt = Date.now();
       mergedData.version = getCurrentQuarterVersion();
+      mergedData.axisSig = AXIS_MAP_SIGNATURE;
       
       // atomic swap
       scoresCache = mergedData;
@@ -882,6 +926,13 @@ function checkRebuildMode() {
   // 空キャッシュ → フル
   if (cacheIds.size === 0) {
     return { mode: 'full', reason: 'empty cache' };
+  }
+  
+  // ★カテゴリマッピングが変わっている → 必ずフル
+  //   差分にすると「旧マッピングで数えた駅」と「新マッピングで数えた駅」が
+  //   1つのキャッシュに同居し、globalMax も駅間の比較も壊れる。
+  if (scoresCache.axisSig !== AXIS_MAP_SIGNATURE) {
+    return { mode: 'full', reason: `カテゴリマッピング変更検知（${scoresCache.axisSig || '署名なし'} → ${AXIS_MAP_SIGNATURE}）` };
   }
   
   // 四半期超過 → フル
@@ -1034,6 +1085,8 @@ app.get('/api/status', (req, res) => {
   res.json({
     ...getBuildStatus(),
     quarterVersion: getCurrentQuarterVersion(),
+    axisSignature: AXIS_MAP_SIGNATURE,
+    cacheAxisSignature: scoresCache.axisSig || null,
     needsRebuild: needsRebuild(),
     stationsLoaded: STATIONS.length,
     radii: RADII,
@@ -1110,6 +1163,46 @@ app.post('/api/admin/rebuild', requireAdmin, (req, res) => {
     notifyOps('rebuild failed (full, admin)', e && e.stack ? e.stack : String(e));
   });
   return res.json({ ok: true, message: '強制フル再計算開始（全駅再計算）', status: getBuildStatus() });
+});
+
+// ★巻き戻し（前期版キャッシュを現行へ復帰）
+//   スコア計算の方針を変える大改修では、7時間かけた結果が期待と違う場合に
+//   戻す手段が要る。rebuild完了時に保存される前期版を現行へ戻す。
+//   ・実行中は拒否（書き換え競合の防止）
+//   ・戻す前に現在のキャッシュを .rollback_backup として退避（二重の保険）
+app.post('/api/admin/rollback', requireAdmin, (req, res) => {
+  if (buildState.running) {
+    return res.status(409).json({ error: 'rebuild実行中は巻き戻せない', status: getBuildStatus() });
+  }
+  try {
+    if (!fs.existsSync(SCORES_CACHE_PREV_FILE)) {
+      return res.status(404).json({ error: '前期版キャッシュが存在しない' });
+    }
+    const prev = JSON.parse(fs.readFileSync(SCORES_CACHE_PREV_FILE, 'utf8'));
+    const prevCount = Object.keys(prev.stations || {}).length;
+    if (prevCount === 0) {
+      return res.status(400).json({ error: '前期版キャッシュが空' });
+    }
+    // 現行を退避（巻き戻しの巻き戻し用）
+    try {
+      fs.writeFileSync(SCORES_CACHE_FILE + '.rollback_backup', JSON.stringify(scoresCache));
+    } catch(e) {
+      console.warn('[rollback] 現行の退避に失敗:', e.message);
+    }
+    scoresCache = prev;
+    fs.writeFileSync(SCORES_CACHE_FILE, JSON.stringify(prev));
+    console.log(`[rollback] 前期版へ巻き戻した: ${prevCount}駅 / builtAt=${new Date(prev.builtAt||0).toLocaleString('ja-JP')} / axisSig=${prev.axisSig||'なし'}`);
+    return res.json({
+      ok: true,
+      message: `前期版へ巻き戻した（${prevCount}駅）`,
+      builtAt: prev.builtAt,
+      builtAtStr: prev.builtAt ? new Date(prev.builtAt).toLocaleString('ja-JP') : '不明',
+      axisSig: prev.axisSig || null
+    });
+  } catch(e) {
+    console.error('[rollback] 失敗:', e);
+    return res.status(500).json({ error: e.message });
+  }
 });
 
 // 差分レポート（前期版 vs 今期版）
