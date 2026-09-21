@@ -1,6 +1,20 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v12（2026-09-20 JST：/api/version にアプリ向けの4項目）
+// 街巡 server.js v13（2026-09-22 JST：更新のお知らせを App Store から自動で）
 // ═══════════════════════════════════════════════════════════════
+// v12 → v13 の変更点（2026-09-22 スレ44）：
+//   ★latestVersion / latestNote を、App Store から自動で取るようにした。
+//     1時間に1回、Apple の公開窓口（iTunes Lookup）に今のストアの版を聞く。
+//       https://itunes.apple.com/lookup?id=6804345019&country=jp
+//     ・latestVersion ← ストアの版（例 1.10.0）
+//     ・latestNote    ← ストアの「新機能」（リリースノート）の最初の一文
+//     ★ともきはストアで公開するだけ。Railway は触らない。
+//     ★Android はストアの版を別に取れないので、App Store の版を両OSに使う。
+//       （ともき談：同時に出すと Android の方が必ず先に公開される＝問題なし）
+//   ★手入力が優先：Railway の LATEST_VERSION が入っていれば、そちらを使う。
+//     LATEST_NOTE が入っていれば、お知らせの文もそちらを使う。
+//   ★非常口：Railway に STORE_CHECK=off を入れると自動確認を止める。
+//   ★ストアの窓口が失敗しても、前回うまく取れた値を使い続ける（空にしない）。
+// ───────────────────────────────────────────────────────────────
 // v11 → v12 の変更点（2026-09-20 スレ44）：
 //   ★1行目の版数が v10 のまま止まっていた（中身は v11 の恒久対策入り）。
 //     今回から v12 と書く。
@@ -1136,8 +1150,10 @@ app.get('/api/version', (req, res) => {
 function appConfigFromEnv() {
   const pick = (name) => (process.env[name] || '').trim();
   const out = {};
-  const latestVersion = pick('LATEST_VERSION');
-  const latestNote = pick('LATEST_NOTE');
+  // ★v13：手入力（Railway）が優先。無ければ App Store から自動で取った値。
+  const manualVersion = pick('LATEST_VERSION');
+  const latestVersion = manualVersion || storeInfo.version;
+  const latestNote = pick('LATEST_NOTE') || (manualVersion ? '' : storeInfo.note);
   const tileUrl = pick('TILE_URL');
   const tileAttribution = pick('TILE_ATTRIBUTION');
   if (latestVersion) out.latestVersion = latestVersion;
@@ -1146,6 +1162,49 @@ function appConfigFromEnv() {
   if (tileAttribution) out.tileAttribution = tileAttribution;
   return out;
 }
+
+// ★v13：App Store の今の版を覚えておく箱（取れるまでは空＝お知らせは出ない）
+const storeInfo = { version: '', note: '', checkedAt: 0 };
+const APP_STORE_LOOKUP = 'https://itunes.apple.com/lookup?id=6804345019&country=jp';
+
+// リリースノートから、お知らせ用の一文を作る
+//   1行目の先頭の「・」を取り、最初の「。」までを使う。長ければ60字で切る。
+function noteFromReleaseNotes(text) {
+  if (typeof text !== 'string') return '';
+  const first = text.split(/\r?\n/).map((l) => l.trim()).find((l) => l.length > 0) || '';
+  let line = first.replace(/^[・\-\*●■◆]\s*/, '');
+  const i = line.indexOf('。');
+  if (i >= 0) line = line.slice(0, i + 1);
+  if (line.length > 60) line = line.slice(0, 59) + '…';
+  return line;
+}
+
+async function refreshStoreVersion() {
+  if ((process.env.STORE_CHECK || '').trim().toLowerCase() === 'off') return;
+  try {
+    const res = await fetch(APP_STORE_LOOKUP, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const r = data && Array.isArray(data.results) ? data.results[0] : null;
+    const v = r && typeof r.version === 'string' ? r.version.trim() : '';
+    // ★形が正しい版だけ受け取る（例 1.9.0）。おかしな値で上書きしない。
+    if (!/^\d+\.\d+(\.\d+)?$/.test(v)) throw new Error('版の形が不正: ' + v);
+    const note = noteFromReleaseNotes(r.releaseNotes);
+    if (v !== storeInfo.version) {
+      console.log(`[v13] App Store の版: ${storeInfo.version || '(未取得)'} → ${v}／お知らせ「${note}」`);
+    }
+    storeInfo.version = v;
+    storeInfo.note = note;
+    storeInfo.checkedAt = Date.now();
+  } catch (e) {
+    // ★失敗しても前回の値を使い続ける
+    console.warn('[v13] App Store の版の確認に失敗（前回の値を使う）:', e.message);
+  }
+}
+
+// 起動10秒後に1回、以後1時間ごと
+setTimeout(() => { refreshStoreVersion(); }, 10 * 1000).unref();
+setInterval(() => { refreshStoreVersion(); }, 60 * 60 * 1000).unref();
 
 // ★v12：起動時に、壊れた TILE_URL を見つけたらログに出す。
 //   （アプリ側でも https と {z}{x}{y} を確かめて、壊れた値は捨てる）
