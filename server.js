@@ -1,6 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v13（2026-09-22 JST：更新のお知らせを App Store から自動で）
+// 街巡 server.js v14（2026-09-22 JST：駅コメントをサーバから配る）
 // ═══════════════════════════════════════════════════════════════
+// v13 → v14 の変更点（2026-09-22 スレ44）：
+//   ★駅コメント（station_text.json）をサーバから配れるようにした。
+//     ・リポジトリの一番上に station_text.json を置くと、起動時に読み込む
+//     ・GET /api/station-text …… そのファイルをそのまま返す（gzip で約1/3）
+//     ・/api/version に textVersion（ファイルの version 欄）を足す
+//   ★アプリ（1.9.1 以降）は textVersion が手元より新しいときだけ取りに来る。
+//     ＝コメントの直しは、GitHub に station_text.json を上げるだけで審査なしで届く。
+//   ★ファイルが無い・壊れている → 何も配らない（アプリは同梱のまま）。
+//     古いアプリ（1.9.0 以前）は textVersion を読まないので影響なし。
+// ───────────────────────────────────────────────────────────────
 // v12 → v13 の変更点（2026-09-22 スレ44）：
 //   ★latestVersion / latestNote を、App Store から自動で取るようにした。
 //     1時間に1回、Apple の公開窓口（iTunes Lookup）に今のストアの版を聞く。
@@ -207,6 +217,8 @@ app.use('/api/admin', adminLimiter);
 // ★v10 🟡-6: /api/version はクライアントが定期ポーリングする想定。
 //   no-storeでCDNキャッシュ効かないため、Origin側で攻撃を弾く必要あり。
 app.use('/api/version', generalLimiter);
+// ★v14：駅コメントの配信（1.5MB。重いAPIと同じ制限）
+app.use('/api/station-text', heavyLimiter);
 // ★v10 🟡-5: body size limit（POSTエンドポイントはbody不要 or 極小JSONのみ）
 app.use(express.json({ limit: '10kb' }));
 
@@ -1160,8 +1172,45 @@ function appConfigFromEnv() {
   if (latestNote) out.latestNote = latestNote;
   if (tileUrl) out.tileUrl = tileUrl;
   if (tileAttribution) out.tileAttribution = tileAttribution;
+  // ★v14：駅コメントの版（配れるときだけ）
+  if (stationText.version) out.textVersion = stationText.version;
   return out;
 }
+
+// ★v14：駅コメント（station_text.json）を読み込んでおく
+//   ★検査を通ったものだけ配る。通らなければ何も配らない（アプリは同梱のまま）。
+const STATION_TEXT_FILE = path.join(__dirname, 'station_text.json');
+const stationText = { raw: '', version: '', count: 0 };
+function loadStationText() {
+  try {
+    if (!fs.existsSync(STATION_TEXT_FILE)) {
+      console.log('[v14] station_text.json なし（コメントは配らない）');
+      return;
+    }
+    const raw = fs.readFileSync(STATION_TEXT_FILE, 'utf8');
+    const d = JSON.parse(raw);
+    const info = d && d.info;
+    const count = info && typeof info === 'object' ? Object.keys(info).length : 0;
+    const version = typeof d.version === 'string' ? d.version.trim() : '';
+    if (d.schema !== 1) throw new Error('schema が 1 ではない');
+    if (!version) throw new Error('version が空');
+    if (count < 8000) throw new Error('駅が少なすぎる: ' + count);
+    stationText.raw = raw;
+    stationText.version = version;
+    stationText.count = count;
+    console.log(`[v14] 駅コメントを配信: version=${version}／${count}駅／${Math.round(Buffer.byteLength(raw) / 1024)}KB`);
+  } catch (e) {
+    console.warn('[v14] station_text.json を配れない（アプリは同梱のまま）:', e.message);
+  }
+}
+loadStationText();
+
+app.get('/api/station-text', (req, res) => {
+  if (!stationText.raw) return res.status(404).json({ error: 'no station text' });
+  res.set('Content-Type', 'application/json; charset=utf-8');
+  res.set('Cache-Control', 'public, max-age=300');
+  res.send(stationText.raw);
+});
 
 // ★v13：App Store の今の版を覚えておく箱（取れるまでは空＝お知らせは出ない）
 const storeInfo = { version: '', note: '', checkedAt: 0 };
