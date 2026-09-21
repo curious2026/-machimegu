@@ -1,5 +1,19 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v10（Step 1 全部入り：レビュー 2026-06-05 反映）
+// 街巡 server.js v12（2026-09-20 JST：/api/version にアプリ向けの4項目）
+// ═══════════════════════════════════════════════════════════════
+// v11 → v12 の変更点（2026-09-20 スレ44）：
+//   ★1行目の版数が v10 のまま止まっていた（中身は v11 の恒久対策入り）。
+//     今回から v12 と書く。
+//   ★/api/version に次の4項目を足した。★値は Railway の環境変数から読む。
+//     GitHub を触らずに、Railway の画面で値を書き換えるだけで切り替えられる。
+//       LATEST_VERSION    → latestVersion   ストアで公開中の最新版（例 1.9.0）
+//                           ★ストアに新版が並んでから入れる
+//       LATEST_NOTE       → latestNote      更新のお知らせの1行（任意）
+//       TILE_URL          → tileUrl         地図タイルの差し替え先（普段は空）
+//       TILE_ATTRIBUTION  → tileAttribution 差し替え先の出典（普段は空）
+//     ★環境変数が空・未設定なら、その項目は応答に入れない
+//       （＝アプリは既定のまま：お知らせなし／OpenStreetMap）。
+//     ★アプリ側の対応は 1.8.0 以上。1.7.1 以下は4項目を読まない。
 // ═══════════════════════════════════════════════════════════════
 // v9 → v10 の変更点（2026-06-05 総合レビュー対応）：
 //   🔴-1: /api/test を本番から削除（レート制限・認証なしでDuckDB→S3クエリ発生
@@ -1111,9 +1125,37 @@ app.get('/api/version', (req, res) => {
     version: scoresCache.version || 'unknown',
     building: buildState.running,
     cacheComplete: complete,
-    serverTime: Date.now()
+    serverTime: Date.now(),
+    // ★v12：アプリ向けの4項目（環境変数が空なら入れない）
+    ...appConfigFromEnv()
   });
 });
+
+// ★v12：アプリ向けの設定を Railway の環境変数から作る
+//   空・未設定の項目は返さない。値の前後の空白は落とす。
+function appConfigFromEnv() {
+  const pick = (name) => (process.env[name] || '').trim();
+  const out = {};
+  const latestVersion = pick('LATEST_VERSION');
+  const latestNote = pick('LATEST_NOTE');
+  const tileUrl = pick('TILE_URL');
+  const tileAttribution = pick('TILE_ATTRIBUTION');
+  if (latestVersion) out.latestVersion = latestVersion;
+  if (latestNote) out.latestNote = latestNote;
+  if (tileUrl) out.tileUrl = tileUrl;
+  if (tileAttribution) out.tileAttribution = tileAttribution;
+  return out;
+}
+
+// ★v12：起動時に、壊れた TILE_URL を見つけたらログに出す。
+//   （アプリ側でも https と {z}{x}{y} を確かめて、壊れた値は捨てる）
+{
+  const t = (process.env.TILE_URL || '').trim();
+  if (t && !(t.startsWith('https://') && t.includes('{z}') && t.includes('{x}') && t.includes('{y}'))) {
+    console.warn('[v12] TILE_URL の形が正しくない（https と {z}{x}{y} が必要）。アプリは既定の地図を使う:', t);
+  }
+  console.log('[v12] /api/version のアプリ向け設定:', JSON.stringify(appConfigFromEnv()));
+}
 
 // ═══════════════════════════════════════════════════════════════
 // 管理者専用エンドポイント（Firebase認証必須）
