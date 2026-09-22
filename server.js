@@ -1384,7 +1384,11 @@ function renderStationPage(st, ua) {
 :root{--bg:#0E1626;--sf:#16233A;--sh:#1B2C46;--ln:#2A3B57;--tx:#fff;--sub:#9AB4D0;--act:#FF9D4D}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.6}
 main{max-width:720px;margin:0 auto;padding:16px}a{color:#7EC8F0}
-header .brand{font-weight:800;color:var(--sub);font-size:13px;text-decoration:none}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(135deg,#1B2C46,#16233A);border:1px solid var(--ln);border-radius:14px;padding:10px 14px}
+header .brand{text-decoration:none;color:var(--tx)}header .brand b{display:block;font-size:20px;font-weight:900;letter-spacing:.02em}header .brand span{display:block;font-size:11px;color:var(--sub)}
+header .dl{flex:none;background:var(--act);color:#fff;font-weight:900;font-size:13px;text-decoration:none;padding:8px 12px;border-radius:10px}
+h2 .me{float:right;font-size:13px;color:var(--tx);font-weight:800}
+.cta h3{margin:0 0 4px;font-size:20px}.cta .pitch{color:var(--sub);font-size:13px;margin:0 0 12px}.cta .pts{text-align:left;margin:0 auto 12px;max-width:420px}.cta .pts li{border:0;padding:3px 0;font-size:14px}.cta .pts li:before{content:"✓ ";color:var(--act);font-weight:900}
 .hero{background:var(--sf);border:2px solid ${rc};border-radius:18px;padding:18px;margin:12px 0}
 .yomi{color:var(--sub);font-size:13px;letter-spacing:.1em}h1{margin:0;font-size:30px;line-height:1.2}
 .pref{color:var(--sub);font-size:13px}.score{display:flex;align-items:baseline;gap:10px;margin-top:8px}
@@ -1404,7 +1408,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td{padding:7px 4px;bord
 .cta p{margin:0 0 10px;font-weight:800}.st{display:inline-block;margin:4px;padding:12px 18px;border-radius:12px;background:var(--act);color:#fff;font-weight:900;text-decoration:none}
 footer{color:var(--sub);font-size:12px;text-align:center;padding:20px}
 </style></head><body><main>
-<header><a class="brand" href="${SITE}/">街巡-まちめぐ- 全国8,993駅のまちあるき</a></header>
+<header><a class="brand" href="${SITE}/"><b>街巡-まちめぐ-</b><span>駅に5分立ち止まるとカードがもらえる街歩きアプリ</span></a><a class="dl" href="#app">無料で入手</a></header>
 <div class="hero">
 ${yomi ? `<div class="yomi">${esc(yomi)}</div>` : ''}<h1>${esc(st.name)}駅はどんな街？</h1>
 <div class="pref">${esc(st.pref)}${t.location ? `・${esc(t.location)}` : ''}</div>
@@ -1427,11 +1431,13 @@ ${rOld ? `<li>${esc(st.pref)}で古い駅<b>${rOld}番目</b></li>` : ''}
 <div><small>所在地</small>${esc(st.pref)}${esc(t.location || '')}</div>
 </div></section>
 ${bonusHtml}
-<section><h2>近くの駅と比べる</h2><table>${nearHtml}</table></section>
+<section><h2>近くの駅と比べる<span class="me">${esc(st.name)} ${score}点 <span class="rk" style="background:${rc}">${esc(rank)}</span></span></h2><table>${nearHtml}</table></section>
 ${sameHtml}
 <section><h2>地図</h2><iframe class="map" loading="lazy" src="${osm}" title="${esc(st.name)}駅の地図"></iframe></section>
-<section class="cta"><p>${esc(st.name)}駅から500m以内、5分立ち止まるとカードが1枚。</p>
-<ul class="rks" style="text-align:left;margin-bottom:10px"><li style="color:var(--sub)">この駅で進むバッジ</li>${badges}</ul>
+<section class="cta" id="app"><h3>街巡-まちめぐ-（無料）</h3>
+<p class="pitch">全国8,993駅のチェックイン型・街歩きアプリ</p>
+<ul class="pts"><li>${esc(st.name)}駅から500m以内で5分立ち止まると、この駅のカードが1枚</li><li>季節と時間帯でカードの色が変わる。同じ駅でも別の1枚に</li><li>路線やランクを制覇してバッジを集める</li></ul>
+<ul class="rks" style="text-align:left;margin:0 auto 12px;max-width:420px"><li style="color:var(--sub)">この駅で進むバッジ</li>${badges}</ul>
 ${storeBtns}</section>
 <footer>街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。<br>© 街巡-まちめぐ-</footer>
 </main></body></html>`;
