@@ -1,6 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v14（2026-09-22 JST：駅コメントをサーバから配る）
+// 街巡 server.js v15（2026-09-22 JST：駅ページ・サイトマップ）
 // ═══════════════════════════════════════════════════════════════
+// v14 → v15 の変更点（2026-09-22 スレ44）：
+//   ★全8,993駅の「この駅はどんな街？」ページ： /station/東京都/東陽町
+//     街力の内訳（店の実数つき）・順位（全国/県/路線/利用者/古さ）・名所・
+//     近くの駅との比較（最大8）・同名駅・地図・この駅で進むバッジ・ストアへの入口
+//   ★/sitemap.xml（全駅のURL）
+//   ★station_yomi.json（ふりがな・8,916駅）をリポジトリに同梱すると読みが出る
+//   ★ここで何が起きても /api/* には影響しない（try/catch で閉じる）
+// ───────────────────────────────────────────────────────────────
 // v13 → v14 の変更点（2026-09-22 スレ44）：
 //   ★駅コメント（station_text.json）をサーバから配れるようにした。
 //     ・リポジトリの一番上に station_text.json を置くと、起動時に読み込む
@@ -1210,6 +1218,259 @@ app.get('/api/station-text', (req, res) => {
   res.set('Content-Type', 'application/json; charset=utf-8');
   res.set('Cache-Control', 'public, max-age=300');
   res.send(stationText.raw);
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ★v15：駅ページ（SEO）  /station/:pref/:name  と  /sitemap.xml
+//   ・全8,993駅の「この駅はどんな街？」を、アクセスが来たときに組み立てる
+//   ・★作ったページは1日（点数の再計算があれば即）捨てる
+//   ・★ここで何が起きても /api/* には影響しない（try/catch で閉じる）
+// ═══════════════════════════════════════════════════════════════
+const STATION_YOMI = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'station_yomi.json'), 'utf8')); }
+  catch (e) { console.warn('[v15] station_yomi.json なし（ふりがな無しで出す）'); return {}; }
+})();
+const SITE = 'https://machimegu.com';
+const APP_STORE_URL = 'https://apps.apple.com/jp/app/id6804345019';
+const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.machimegu.app';
+const RANK_COLOR = { S: '#E8455A', A: '#F28C28', B: '#D9B21F', C: '#3CB371', D: '#5B8DEF' };
+const AXIS_COLOR = { '飲食': '#F0506E', '商業': '#8B6CF0', '生活': '#3B9BF0', '医療': '#F08A30', 'ボーナス': '#D4A020' };
+const AXIS_UNIT = { '飲食': '店', '商業': '店', '生活': '件', '医療': '件' };
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function stationUrl(st) { return `${SITE}/station/${encodeURIComponent(st.pref)}/${encodeURIComponent(st.name)}`; }
+function scoreOf(id) {
+  const c = scoresCache.stations && scoresCache.stations[id];
+  return c && c.r500 ? c.r500 : null;
+}
+function textOf(id) {
+  if (!stationText.raw) return null;
+  if (!stationText._parsed) { try { stationText._parsed = JSON.parse(stationText.raw).info || {}; } catch (_) { stationText._parsed = {}; } }
+  return stationText._parsed[id] || null;
+}
+function ridersNum(s) {
+  if (!s) return 0;
+  const m = String(s).match(/([\d.]+)\s*(万)?/);
+  if (!m) return 0;
+  return parseFloat(m[1]) * (m[2] ? 10000 : 1);
+}
+function yearNum(s) { const m = String(s || '').match(/(\d{4})/); return m ? +m[1] : 0; }
+function distM(a, b, c, d) {
+  const R = 6371000, p1 = a * Math.PI / 180, p2 = c * Math.PI / 180;
+  const dl = (c - a) * Math.PI / 180, dg = (d - b) * Math.PI / 180;
+  const x = Math.sin(dl / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dg / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+// ── 順位表（点数の再計算ごとに作り直す）──────────────
+let _rankIdx = { builtAt: -1 };
+function rankIndex() {
+  if (_rankIdx.builtAt === scoresCache.builtAt && stationText._parsedAt === stationText.version) return _rankIdx;
+  const all = [], byPref = {}, byLine = {}, riders = [], oldByPref = {};
+  for (const st of STATIONS) {
+    const sc = scoreOf(st.id); const s = sc ? sc.score : 0;
+    all.push([st.id, s]);
+    (byPref[st.pref] = byPref[st.pref] || []).push([st.id, s]);
+    for (const l of st.lines || []) (byLine[l] = byLine[l] || []).push([st.id, s]);
+    const t = textOf(st.id);
+    riders.push([st.id, ridersNum(t && t.riders)]);
+    const y = yearNum(t && t.opened);
+    if (y) (oldByPref[st.pref] = oldByPref[st.pref] || []).push([st.id, y]);
+  }
+  const toRank = (arr, asc) => {
+    arr.sort((a, b) => asc ? a[1] - b[1] : b[1] - a[1]);
+    const m = new Map(); arr.forEach(([id], i) => m.set(id, i + 1)); return { m, n: arr.length };
+  };
+  const idx = { builtAt: scoresCache.builtAt, all: toRank(all), pref: {}, line: {}, riders: toRank(riders), old: {} };
+  for (const p in byPref) idx.pref[p] = toRank(byPref[p]);
+  for (const l in byLine) idx.line[l] = toRank(byLine[l]);
+  for (const p in oldByPref) idx.old[p] = toRank(oldByPref[p], true);
+  stationText._parsedAt = stationText.version;
+  _rankIdx = idx; return idx;
+}
+
+// ── 近くの駅（同じ路線で近い2つ×路線 ＋ 距離で近い順、最大8）──
+function nearbyOf(st) {
+  const cand = [];
+  for (const o of STATIONS) {
+    if (o.id === st.id) continue;
+    if (Math.abs(o.lat - st.lat) > 0.1 || Math.abs(o.lng - st.lng) > 0.12) continue;
+    cand.push([o, distM(st.lat, st.lng, o.lat, o.lng)]);
+  }
+  cand.sort((a, b) => a[1] - b[1]);
+  const out = [], seen = new Set();
+  for (const l of st.lines || []) {
+    let k = 0;
+    for (const [o, d] of cand) {
+      if (k >= 2) break;
+      if ((o.lines || []).includes(l) && !seen.has(o.id)) { out.push([o, d, l]); seen.add(o.id); k++; }
+    }
+  }
+  for (const [o, d] of cand) {
+    if (out.length >= 8) break;
+    if (!seen.has(o.id)) { out.push([o, d, null]); seen.add(o.id); }
+  }
+  return out.slice(0, 8).sort((a, b) => a[1] - b[1]);
+}
+
+const _pageCache = new Map();
+const PAGE_TTL = 24 * 60 * 60 * 1000;
+
+function renderStationPage(st, ua) {
+  const sc = scoreOf(st.id);
+  const t = textOf(st.id) || {};
+  const yomi = STATION_YOMI[st.id] || '';
+  const score = sc ? sc.score : 0;
+  const rank = sc ? sc.rank : 'D';
+  const rc = RANK_COLOR[rank] || '#888';
+  const d = (sc && sc.details) || {};
+  const idx = rankIndex();
+  const feats = Array.isArray(t.features) ? t.features : [];
+  const first = feats[0] || '';
+  const rest = feats.slice(1);
+  const lines = st.lines || [];
+  const year = yearNum(t.opened);
+  const age = year ? (2026 - year) : 0;
+
+  const bars = ['飲食', '商業', '生活', '医療', 'ボーナス'].map((ax) => {
+    const v = d[ax] || {}; const max = v.max || (ax === 'ボーナス' ? 50 : 100);
+    const pts = v.pts || 0; const w = Math.max(2, Math.round(pts / max * 100));
+    const cnt = (ax !== 'ボーナス' && v.count != null) ? `<span class="cnt">${v.count}${AXIS_UNIT[ax]}</span>` : '';
+    return `<div class="bar"><div class="bl">${ax}</div><div class="bt"><div class="bf" style="width:${w}%;background:${AXIS_COLOR[ax]}"></div></div><div class="bv">${pts}<small>/${max}</small>${cnt}</div></div>`;
+  }).join('');
+
+  const bonusItems = ((d['ボーナス'] || {}).items || []).slice(0, 12);
+  const bonusHtml = bonusItems.length ? `<section><h2>近くの名所・施設</h2><ul class="bonus">${bonusItems.map((b) => `<li>${esc(b.name)}<span>駅から${b.dist}m</span></li>`).join('')}</ul></section>` : '';
+
+  const rAll = idx.all.m.get(st.id), rPref = idx.pref[st.pref] && idx.pref[st.pref].m.get(st.id);
+  const lineRanks = lines.map((l) => idx.line[l] ? `<li>${esc(l)}<b>${idx.line[l].n}駅中 ${idx.line[l].m.get(st.id)}位</b></li>` : '').join('');
+  const rRid = ridersNum(t.riders) ? idx.riders.m.get(st.id) : null;
+  const rOld = year && idx.old[st.pref] ? idx.old[st.pref].m.get(st.id) : null;
+
+  const same = STATIONS.filter((o) => o.name === st.name && o.id !== st.id);
+  const sameHtml = same.length ? `<section><h2>全国の同じ名前の駅</h2><ul class="same">${same.map((o) => `<li><a href="${stationUrl(o)}">${esc(o.name)}（${esc(o.pref)}）</a></li>`).join('')}</ul></section>` : '';
+
+  const near = nearbyOf(st);
+  const nearHtml = near.map(([o, dm, l]) => {
+    const s2 = scoreOf(o.id) || { score: 0, rank: 'D', details: {} };
+    let win = '';
+    for (const ax of ['飲食', '商業', '生活', '医療']) {
+      const a = ((d[ax] || {}).pts || 0), b = (((s2.details || {})[ax] || {}).pts || 0);
+      if (b > a * 1.15 && b - a >= 10) { win = `${ax}が多い`; break; }
+    }
+    return `<tr><td><a href="${stationUrl(o)}">${esc(o.name)}</a>${l ? `<small>${esc(l)}</small>` : ''}</td><td>${(dm / 1000).toFixed(1)}km</td><td><span class="rk" style="background:${RANK_COLOR[s2.rank] || '#888'}">${esc(s2.rank)}</span> ${s2.score}</td><td>${win}</td></tr>`;
+  }).join('');
+
+  const badges = [...lines.map((l) => `${esc(l)}の路線制覇`), `${rank}ランクの制覇`].map((b) => `<li>${b}</li>`).join('');
+  const isIOS = /iPhone|iPad|iPod/i.test(ua || ''), isAnd = /Android/i.test(ua || '');
+  const storeBtns = isIOS ? `<a class="st" href="${APP_STORE_URL}">App Storeで入手</a>`
+    : isAnd ? `<a class="st" href="${PLAY_URL}">Google Playで入手</a>`
+    : `<a class="st" href="${APP_STORE_URL}">App Store</a><a class="st" href="${PLAY_URL}">Google Play</a>`;
+
+  const title = `${st.name}駅（${st.pref}）はどんな街？ 街力${score}点・${rank}ランク｜街巡-まちめぐ-`;
+  const desc = `${st.name}駅${yomi ? `（${yomi}）` : ''}の街力は${score}点・${rank}ランク。${first}${first ? '。' : ''}飲食${(d['飲食'] || {}).count || 0}店・全国${rAll}位。近くの駅との比較や名所も。`;
+  const osm = `https://www.openstreetmap.org/export/embed.html?bbox=${st.lng - 0.012},${st.lat - 0.008},${st.lng + 0.012},${st.lat + 0.008}&layer=mapnik&marker=${st.lat},${st.lng}`;
+  const ld = { '@context': 'https://schema.org', '@type': 'TrainStation', name: `${st.name}駅`, address: { '@type': 'PostalAddress', addressRegion: st.pref, addressLocality: t.location || '' }, geo: { '@type': 'GeoCoordinates', latitude: st.lat, longitude: st.lng } };
+
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
+<link rel="canonical" href="${stationUrl(st)}">
+<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:type" content="article"><meta property="og:url" content="${stationUrl(st)}">
+<script type="application/ld+json">${JSON.stringify(ld)}</script>
+<style>
+:root{--bg:#0E1626;--sf:#16233A;--sh:#1B2C46;--ln:#2A3B57;--tx:#fff;--sub:#9AB4D0;--act:#FF9D4D}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.6}
+main{max-width:720px;margin:0 auto;padding:16px}a{color:#7EC8F0}
+header .brand{font-weight:800;color:var(--sub);font-size:13px;text-decoration:none}
+.hero{background:var(--sf);border:2px solid ${rc};border-radius:18px;padding:18px;margin:12px 0}
+.yomi{color:var(--sub);font-size:13px;letter-spacing:.1em}h1{margin:0;font-size:30px;line-height:1.2}
+.pref{color:var(--sub);font-size:13px}.score{display:flex;align-items:baseline;gap:10px;margin-top:8px}
+.score b{font-size:48px;color:${rc};line-height:1}.rank{font-size:20px;font-weight:900;color:#fff;background:${rc};border-radius:8px;padding:2px 10px}
+.lead{margin-top:12px;font-size:18px;font-weight:800}
+section{background:var(--sf);border-radius:14px;padding:14px 16px;margin:12px 0}h2{font-size:16px;margin:0 0 10px;color:var(--sub)}
+.bar{display:grid;grid-template-columns:64px 1fr 110px;align-items:center;gap:8px;margin:6px 0;font-size:14px}
+.bt{background:var(--sh);border-radius:6px;height:12px;overflow:hidden}.bf{height:100%}
+.bv{text-align:right;font-weight:800}.bv small{color:var(--sub);font-weight:400}.cnt{display:block;color:var(--sub);font-size:11px;font-weight:400}
+ul{margin:0;padding-left:0;list-style:none}li{padding:6px 0;border-bottom:1px solid var(--ln)}li:last-child{border:0}
+.feats li:before{content:"★ ";color:#D4A020}.bonus li span,.rks li b{float:right;color:var(--sub);font-weight:400}.rks li b{color:#fff;font-weight:800}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:8px}.info div{background:var(--sh);border-radius:10px;padding:8px 10px}.info small{display:block;color:var(--sub);font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:14px}td{padding:7px 4px;border-bottom:1px solid var(--ln);vertical-align:top}td small{display:block;color:var(--sub);font-size:11px}
+.rk{display:inline-block;min-width:22px;text-align:center;border-radius:6px;font-weight:900;color:#fff;font-size:12px}
+.map{width:100%;height:240px;border:0;border-radius:12px}
+.cta{text-align:center;background:linear-gradient(135deg,#2A3B57,#16233A);border:2px solid var(--act)}
+.cta p{margin:0 0 10px;font-weight:800}.st{display:inline-block;margin:4px;padding:12px 18px;border-radius:12px;background:var(--act);color:#fff;font-weight:900;text-decoration:none}
+footer{color:var(--sub);font-size:12px;text-align:center;padding:20px}
+</style></head><body><main>
+<header><a class="brand" href="${SITE}/">街巡-まちめぐ- 全国8,993駅のまちあるき</a></header>
+<div class="hero">
+${yomi ? `<div class="yomi">${esc(yomi)}</div>` : ''}<h1>${esc(st.name)}駅はどんな街？</h1>
+<div class="pref">${esc(st.pref)}${t.location ? `・${esc(t.location)}` : ''}</div>
+<div class="score"><b>${score}</b><span>点</span><span class="rank">${esc(rank)}</span></div>
+${first ? `<div class="lead">${esc(first)}</div>` : ''}
+</div>
+<section><h2>街力の内訳（駅から500m）</h2>${bars}</section>
+${rest.length ? `<section><h2>この街のこと</h2><ul class="feats">${rest.map((f) => `<li>${esc(f)}</li>`).join('')}</ul></section>` : ''}
+<section><h2>順位</h2><ul class="rks">
+<li>全国<b>${idx.all.n.toLocaleString()}駅中 ${rAll ? rAll.toLocaleString() : '-'}位</b></li>
+<li>${esc(st.pref)}<b>${idx.pref[st.pref] ? idx.pref[st.pref].n : '-'}駅中 ${rPref || '-'}位</b></li>
+${lineRanks}
+${rRid ? `<li>利用者数<b>全国 ${rRid.toLocaleString()}位</b></li>` : ''}
+${rOld ? `<li>${esc(st.pref)}で古い駅<b>${rOld}番目</b></li>` : ''}
+</ul></section>
+<section><h2>基本情報</h2><div class="info">
+<div><small>開業</small>${esc(t.opened || '-')}${age >= 100 ? '（開業100年以上）' : age ? `（${age}年）` : ''}</div>
+<div><small>1日の利用者</small>${esc(t.riders || '-')}</div>
+<div><small>路線</small>${lines.map(esc).join('、') || '-'}</div>
+<div><small>所在地</small>${esc(st.pref)}${esc(t.location || '')}</div>
+</div></section>
+${bonusHtml}
+<section><h2>近くの駅と比べる</h2><table>${nearHtml}</table></section>
+${sameHtml}
+<section><h2>地図</h2><iframe class="map" loading="lazy" src="${osm}" title="${esc(st.name)}駅の地図"></iframe></section>
+<section class="cta"><p>${esc(st.name)}駅から500m以内、5分立ち止まるとカードが1枚。</p>
+<ul class="rks" style="text-align:left;margin-bottom:10px"><li style="color:var(--sub)">この駅で進むバッジ</li>${badges}</ul>
+${storeBtns}</section>
+<footer>街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。<br>© 街巡-まちめぐ-</footer>
+</main></body></html>`;
+}
+
+app.use('/station', generalLimiter);
+app.get('/station/:pref/:name', (req, res) => {
+  try {
+    const id = `${req.params.name}_${req.params.pref}`;
+    const st = STATIONS_BY_ID.get(id);
+    if (!st) return res.status(404).send('<!doctype html><meta charset="utf-8"><p>駅が見つかりませんでした。<a href="/">街巡-まちめぐ-</a></p>');
+    const ua = req.get('user-agent') || '';
+    const dev = /iPhone|iPad|iPod/i.test(ua) ? 'i' : /Android/i.test(ua) ? 'a' : 'p';
+    const key = `${id}|${dev}`;
+    const hit = _pageCache.get(key);
+    if (hit && hit.builtAt === scoresCache.builtAt && hit.tv === stationText.version && Date.now() - hit.t < PAGE_TTL) {
+      res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
+      return res.send(hit.html);
+    }
+    const html = renderStationPage(st, ua);
+    if (_pageCache.size > 3000) _pageCache.clear();
+    _pageCache.set(key, { html, t: Date.now(), builtAt: scoresCache.builtAt, tv: stationText.version });
+    res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
+    res.send(html);
+  } catch (e) {
+    console.error('[v15] 駅ページ失敗:', e.message);
+    res.status(500).send('<!doctype html><meta charset="utf-8"><p>ただいま表示できません。</p>');
+  }
+});
+
+let _sitemap = { t: 0, xml: '' };
+app.get('/sitemap.xml', (req, res) => {
+  try {
+    if (!_sitemap.xml || Date.now() - _sitemap.t > PAGE_TTL) {
+      const urls = STATIONS.map((st) => `<url><loc>${stationUrl(st)}</loc></url>`).join('');
+      _sitemap = { t: Date.now(), xml: `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>` };
+    }
+    res.set('Content-Type', 'application/xml; charset=utf-8'); res.send(_sitemap.xml);
+  } catch (e) { res.status(500).end(); }
 });
 
 // ★v13：App Store の今の版を覚えておく箱（取れるまでは空＝お知らせは出ない）
