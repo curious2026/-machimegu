@@ -1,6 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v18（2026-09-23 JST：ランキングページ）
+// 街巡 server.js v19（2026-09-23 JST：駅ページのシェア画像）
 // ═══════════════════════════════════════════════════════════════
+// v18 → v19：/og/station/県/駅名.png（1200×630・駅名/ふりがな/街力/ランク/内訳/コメント）
+//   駅ページに og:image と twitter:card=summary_large_image。
+//   ★必要：package.json に "@resvg/resvg-js" ／ リポジトリ直下に MPLUSRounded1c-ExtraBold.ttf
+//   ★どちらか無ければ画像を出さないだけで、ページとAPIは今までどおり動く
+// ───────────────────────────────────────────────────────────────
 // v17 → v18：/ranking と /ranking/{machiryoku,food,shop,life,medical,sights,riders,oldest}（全国TOP100）
 //   トップから入口。サイトマップに追加。
 // ───────────────────────────────────────────────────────────────
@@ -1415,6 +1420,8 @@ function renderStationPage(st, ua) {
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${stationUrl(st)}">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:type" content="article"><meta property="og:url" content="${stationUrl(st)}">
+${Resvg ? `<meta property="og:image" content="${ogUrl(st)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${ogUrl(st)}">` : '<meta name="twitter:card" content="summary">'}
+<meta property="og:site_name" content="街巡-まちめぐ-">
 <script type="application/ld+json">${JSON.stringify(ld)}</script>
 <style>
 :root{--bg:#0E1626;--sf:#16233A;--sh:#1B2C46;--ln:#2A3B57;--tx:#fff;--sub:#9AB4D0;--act:#FF9D4D}
@@ -1479,6 +1486,72 @@ ${storeBtns}</section>
 <footer>街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。<br>© 街巡-まちめぐ-</footer>
 </main></body></html>`;
 }
+
+
+// ═══════════════════════════════════════════════════════════════
+// ★v19：駅ページのシェア画像（OGP） /og/station/県/駅名.png（1200×630）
+//   ・XやLINEに駅ページのURLを貼ったとき、この画像が大きく出る
+//   ・描画は @resvg/resvg-js、字は M PLUS Rounded 1c ExtraBold（リポジトリ直下に置く）
+//   ・★ライブラリかフォントが無ければ画像を出さないだけ（ページは今までどおり）
+// ═══════════════════════════════════════════════════════════════
+const OG_FONT = path.join(__dirname, 'MPLUSRounded1c-ExtraBold.ttf');
+let Resvg = null;
+try {
+  if (fs.existsSync(OG_FONT)) { Resvg = require('@resvg/resvg-js').Resvg; console.log('[v19] シェア画像：有効'); }
+  else console.warn('[v19] フォントが無いのでシェア画像は出さない');
+} catch (e) { console.warn('[v19] @resvg/resvg-js が無いのでシェア画像は出さない:', e.message); }
+const AX = [['飲食','#F0506E',350],['商業','#8B6CF0',350],['生活','#3B9BF0',150],['医療','#F08A30',100],['ボーナス','#D4A020',50]];
+function ogSvg({ name, pref, yomi, score, rank, lead, details }) {
+  const rc = RANK_COLOR[rank] || '#888';
+  const nameSize = Math.max(34, Math.min(128, Math.floor(640 / (name.length + 0.5))));
+  const bars = AX.map(([ax, col, max], i) => {
+    const v = (details[ax] || {}).pts || 0; const w = Math.max(4, Math.round(v / max * 300));
+    const y = 250 + i * 50;
+    return `<text x="780" y="${y + 18}" font-size="24" fill="#9AB4D0">${ax}</text>
+<rect x="890" y="${y}" width="250" height="20" rx="10" fill="#1B2C46"/><rect x="890" y="${y}" width="${Math.min(250, w * 250 / 300)}" height="20" rx="10" fill="${col}"/>`;
+  }).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B2C46"/><stop offset="1" stop-color="#0E1626"/></linearGradient></defs>
+<rect width="1200" height="630" fill="url(#g)"/>
+<rect x="24" y="24" width="1152" height="582" rx="36" fill="none" stroke="${rc}" stroke-width="8"/>
+<text x="80" y="110" font-size="30" fill="#9AB4D0" letter-spacing="4">${esc(yomi)}</text>
+<text x="76" y="${110 + nameSize + 4}" font-size="${nameSize}" fill="#FFFFFF">${esc(name)}<tspan font-size="${Math.round(nameSize * 0.45)}" fill="#9AB4D0">駅</tspan></text>
+<text x="80" y="${Math.max(150 + nameSize + 20, 250)}" font-size="28" fill="#9AB4D0">${esc(pref)}</text>
+<text x="76" y="${380 + 60}" font-size="150" fill="${rc}">${score}</text>
+<text x="${84 + String(score).length * 96}" y="440" font-size="34" fill="#FFFFFF">点</text>
+<rect x="${134 + String(score).length * 96}" y="372" width="76" height="76" rx="16" fill="${rc}"/>
+<text x="${172 + String(score).length * 96}" y="432" font-size="54" fill="#FFFFFF" text-anchor="middle">${esc(rank)}</text>
+<text x="80" y="520" font-size="34" fill="#FFFFFF">${esc(lead)}</text>
+<text x="780" y="220" font-size="26" fill="#FFFFFF">街力の内訳</text>
+${bars}
+<text x="80" y="580" font-size="30" fill="#FF9D4D">街巡-まちめぐ-</text>
+<text x="310" y="580" font-size="24" fill="#9AB4D0">駅で5分、カードを集める散歩。全国8,993駅</text>
+</svg>`;
+}
+
+function ogUrl(st) { return `${SITE}/og/station/${encodeURIComponent(st.pref)}/${encodeURIComponent(st.name)}.png`; }
+const _ogCache = new Map();
+app.get('/og/station/:pref/:file', generalLimiter, (req, res) => {
+  try {
+    if (!Resvg) return res.status(404).end();
+    const name = String(req.params.file || '').replace(/\.png$/, '');
+    const st = STATIONS_BY_ID.get(`${name}_${req.params.pref}`);
+    if (!st) return res.status(404).end();
+    const key = `${st.id}|${scoresCache.builtAt}|${stationText.version}`;
+    let png = _ogCache.get(key);
+    if (!png) {
+      const sc = scoreOf(st.id) || { score: 0, rank: 'D', details: {} };
+      const t = textOf(st.id) || {};
+      const svg = ogSvg({ name: st.name, pref: `${st.pref}${t.location ? '・' + t.location : ''}`, yomi: STATION_YOMI[st.id] || '',
+        score: sc.score, rank: sc.rank, lead: (Array.isArray(t.features) && t.features[0]) || '', details: sc.details || {} });
+      png = new Resvg(svg, { font: { fontFiles: [OG_FONT], loadSystemFonts: false, defaultFontFamily: 'M PLUS Rounded 1c' }, fitTo: { mode: 'width', value: 1200 } }).render().asPng();
+      if (_ogCache.size > 300) _ogCache.clear();
+      _ogCache.set(key, png);
+    }
+    res.set('Content-Type', 'image/png'); res.set('Cache-Control', 'public, max-age=604800');
+    res.send(png);
+  } catch (e) { console.error('[v19] シェア画像失敗:', e.message); res.status(500).end(); }
+});
 
 app.use('/station', generalLimiter);
 app.get('/station/:pref/:name', (req, res) => {
