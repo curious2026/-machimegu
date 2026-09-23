@@ -1,6 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v17（2026-09-23 JST：路線ページ・市区町村ページ）
+// 街巡 server.js v18（2026-09-23 JST：ランキングページ）
 // ═══════════════════════════════════════════════════════════════
+// v17 → v18：/ranking と /ranking/{machiryoku,food,shop,life,medical,sights,riders,oldest}（全国TOP100）
+//   トップから入口。サイトマップに追加。
+// ───────────────────────────────────────────────────────────────
 // v16 → v17：/line/路線名 ・ /area/県/市区町村（街力ランキング＋要約＋制覇バッジ）
 //   駅ページの順位欄から路線・県・市区町村へリンク。県の一覧に市区町村のリンク。サイトマップに追加。
 // ───────────────────────────────────────────────────────────────
@@ -1506,7 +1509,7 @@ let _sitemap = { t: 0, xml: '' };
 app.get('/sitemap.xml', (req, res) => {
   try {
     if (!_sitemap.xml || Date.now() - _sitemap.t > PAGE_TTL) {
-      const urls = `<url><loc>${SITE}/</loc></url>` + PREFS.map((p) => `<url><loc>${SITE}/search?pref=${encodeURIComponent(p)}</loc></url>`).join('')
+      const urls = `<url><loc>${SITE}/</loc></url><url><loc>${SITE}/ranking</loc></url>` + Object.keys(RANKINGS).map((k) => `<url><loc>${rankingUrl(k)}</loc></url>`).join('') + PREFS.map((p) => `<url><loc>${SITE}/search?pref=${encodeURIComponent(p)}</loc></url>`).join('')
         + [...new Set(STATIONS.flatMap((st) => st.lines || []))].map((l) => `<url><loc>${lineUrl(l)}</loc></url>`).join('')
         + [...new Set(STATIONS.map((st) => { const c = (textOf(st.id) || {}).location; return c ? `${st.pref}	${c}` : ''; }).filter(Boolean))].map((k) => { const [p, c] = k.split('	'); return `<url><loc>${areaUrl(p, c)}</loc></url>`; }).join('')
         + STATIONS.map((st) => `<url><loc>${stationUrl(st)}</loc></url>`).join('');
@@ -1587,7 +1590,8 @@ ${storeBadges(ua, 48)}</section>
 <section><h2>駅を調べる</h2>
 <form action="/search" method="get"><input type="search" name="q" placeholder="駅名（例：東陽町）" aria-label="駅名"><button type="submit">調べる</button></form>
 <p class="chips" style="margin:10px 0 0">${picks}</p></section>
-<section><h2>街力の高い駅 TOP12</h2><ul class="list">${topHtml}</ul></section>
+<section><h2>街力の高い駅 TOP12</h2><ul class="list">${topHtml}</ul>
+<p class="chips" style="margin:10px 0 0"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">暮らしやすい駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a><a href="/ranking">ランキング一覧 ›</a></p></section>
 <section><h2>都道府県から探す</h2><p class="chips">${PREFS.map((p) => `<a href="/search?pref=${encodeURIComponent(p)}">${p}</a>`).join('')}</p></section>
 <section><h2>使い方</h2><ol><li>アプリを開くと、地図に近くの駅が並びます</li><li>行きたい駅をタップしてチェックイン開始</li><li>駅の近くを5分歩く（画面は消していてOK）</li><li>その街のカードが手に入ります</li></ol>
 <p style="color:var(--sub);font-size:13px;margin:10px 0 0">1日に記録できるのは3駅まで。急がず、ひとつの街をゆっくり歩いてほしいからです。</p></section>
@@ -1668,6 +1672,72 @@ app.get('/area/:pref/:city', generalLimiter, (req, res) => {
       badge: sts.length >= 5 ? `アプリで${esc(city)}の${sts.length}駅にチェックインすると「${esc(city)}のエリア制覇」バッジ（3割で銅・6割で銀・全駅で金）。` : '',
     });
   } catch (e) { console.error('[v17] 市区町村ページ失敗:', e.message); res.status(500).send('ただいま表示できません'); }
+});
+
+
+// ═══════════════════════════════════════════════════════════════
+// ★v18：ランキングページ /ranking と /ranking/種類
+//   「飲食店が多い駅」「古い駅」など、紹介されやすい切り口で全国TOP100
+// ═══════════════════════════════════════════════════════════════
+const RANKINGS = {
+  machiryoku: { t: '街力が高い駅', d: '駅から500m以内のお店や施設から計算した街力（1,000点満点）', v: (st, s) => s.score, f: (v) => `${v}点` },
+  food:       { t: '飲食店が多い駅', d: '駅から500m以内の飲食店の数', v: (st, s) => ((s.details || {})['飲食'] || {}).count || 0, f: (v) => `${v.toLocaleString()}店` },
+  shop:       { t: 'お店（商業）が多い駅', d: '駅から500m以内の商業施設の数', v: (st, s) => ((s.details || {})['商業'] || {}).count || 0, f: (v) => `${v.toLocaleString()}店` },
+  life:       { t: '暮らしやすい駅（生活施設が多い駅）', d: '駅から500m以内のスーパー・銀行・公共施設など生活施設の数', v: (st, s) => ((s.details || {})['生活'] || {}).count || 0, f: (v) => `${v.toLocaleString()}件` },
+  medical:    { t: '病院・クリニックが多い駅', d: '駅から500m以内の医療施設の数', v: (st, s) => ((s.details || {})['医療'] || {}).count || 0, f: (v) => `${v.toLocaleString()}件` },
+  sights:     { t: '名所・名施設が近い駅', d: '駅から800m以内にある大学・大きな公園・名刹・美術館・ランドマーク', v: (st, s) => { const b = (s.details || {})['ボーナス'] || {}; return (b.raw || b.pts || 0) * 1000 + (b.count || 0); }, f: (v, st) => `${((((scoreOf(st.id) || {}).details || {})['ボーナス'] || {}).count || 0)}か所` },
+  riders:     { t: '利用者が多い駅', d: '1日の利用者数', v: (st) => ridersNum((textOf(st.id) || {}).riders), f: (v, st) => esc((textOf(st.id) || {}).riders || '') },
+  oldest:     { t: '開業が古い駅', d: '開業した年', v: (st) => { const y = yearNum((textOf(st.id) || {}).opened); return y ? -y : -99999; }, f: (v) => `${-v}年開業` },
+};
+const _rankCache = new Map();
+function rankingRows(kind) {
+  const c = _rankCache.get(kind);
+  if (c && c.builtAt === scoresCache.builtAt && c.tv === stationText.version) return c.rows;
+  const R = RANKINGS[kind];
+  const rows = STATIONS.map((st) => [st, scoreOf(st.id)]).filter(([, s]) => s)
+    .map(([st, s]) => [st, s, R.v(st, s)]).filter(([, , v]) => v > -99999 && v !== 0)
+    .sort((a, b) => b[2] - a[2]).slice(0, 100);
+  _rankCache.set(kind, { rows, builtAt: scoresCache.builtAt, tv: stationText.version });
+  return rows;
+}
+function rankingUrl(kind) { return `${SITE}/ranking/${kind}`; }
+
+app.get('/ranking', generalLimiter, (req, res) => {
+  try {
+    const ua = req.get('user-agent') || '';
+    const body = `<p style="font-size:13px"><a href="/">街巡-まちめぐ-</a> › ランキング</p>
+<section><h1 style="font-size:24px;margin:0 0 6px">全国8,993駅 ランキング</h1><p style="color:var(--sub);margin:0">駅のまわりのお店や施設、利用者数、開業年から、全国の駅を並べました。</p></section>
+${Object.entries(RANKINGS).map(([k, R]) => {
+  const top = rankingRows(k).slice(0, 3).map(([st]) => esc(st.name)).join('・');
+  return `<section><h2><a href="${rankingUrl(k)}">${esc(R.t)} TOP100</a></h2><p style="color:var(--sub);margin:0">${esc(R.d)}／1位〜3位：${top}</p></section>`;
+}).join('')}
+<section style="text-align:center"><h2>街巡-まちめぐ-（無料）</h2><p style="color:var(--sub);margin:0 0 10px">ランキングの駅にも、5分立ち止まればカードが1枚。</p>${storeBadges(ua, 48)}</section>`;
+    res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
+    res.send(pageShell('全国8,993駅 ランキング（街力・飲食店・利用者数・開業年）｜街巡-まちめぐ-', '飲食店が多い駅、暮らしやすい駅、名所が近い駅、開業が古い駅など、全国8,993駅のランキング。', body, `${SITE}/ranking`));
+  } catch (e) { console.error('[v18] ランキング一覧失敗:', e.message); res.status(500).send('ただいま表示できません'); }
+});
+
+app.get('/ranking/:kind', generalLimiter, (req, res) => {
+  try {
+    const R = RANKINGS[req.params.kind];
+    if (!R) return res.status(404).send(pageShell('見つかりません｜街巡-まちめぐ-', '', '<p>見つかりませんでした。<a href="/ranking">ランキング一覧へ</a></p>'));
+    const ua = req.get('user-agent') || '';
+    const rows = rankingRows(req.params.kind);
+    const list = rows.map(([st, s, v], i) => {
+      const t = textOf(st.id) || {};
+      const f = Array.isArray(t.features) && t.features[0] ? `<br><small style="margin:0">${esc(t.features[0])}</small>` : '';
+      return `<li><b style="display:inline-block;width:2.4em;color:var(--sub)">${i + 1}</b><span class="rk" style="background:${RANK_COLOR[s.rank] || '#888'}">${esc(s.rank)}</span><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}</small><small style="float:right;color:#fff;font-weight:800">${R.f(v, st)}</small>${f}</li>`;
+    }).join('');
+    const others = Object.entries(RANKINGS).filter(([k]) => k !== req.params.kind).map(([k, r]) => `<a href="${rankingUrl(k)}">${esc(r.t)}</a>`).join('');
+    const body = `<p style="font-size:13px"><a href="/">街巡-まちめぐ-</a> › <a href="/ranking">ランキング</a> › ${esc(R.t)}</p>
+<section><h1 style="font-size:24px;margin:0 0 6px">${esc(R.t)} 全国TOP100</h1><p style="color:var(--sub);margin:0">${esc(R.d)}で、全国8,993駅を並べました。</p></section>
+<section><ul class="list">${list}</ul></section>
+<section><h2>ほかのランキング</h2><p class="chips" style="margin:0">${others}</p></section>
+<section style="text-align:center"><h2>街巡-まちめぐ-（無料）</h2><p style="color:var(--sub);margin:0 0 10px">ランキングの駅にも、5分立ち止まればカードが1枚。</p>${storeBadges(ua, 48)}</section>`;
+    const top3 = rows.slice(0, 3).map(([st]) => st.name).join('・');
+    res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
+    res.send(pageShell(`${R.t} 全国ランキングTOP100｜街巡-まちめぐ-`, `${R.d}で全国8,993駅を比べたランキング。1位〜3位は${top3}。`, body, rankingUrl(req.params.kind)));
+  } catch (e) { console.error('[v18] ランキング失敗:', e.message); res.status(500).send('ただいま表示できません'); }
 });
 
 // 駅名の検索／県の一覧（同名駅が複数なら一覧、1駅ならその駅のページへ）
