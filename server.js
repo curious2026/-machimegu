@@ -1,5 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v26（2026-09-23 JST：特集ページ・季節の入口）
+// 街巡 server.js v27（2026-09-23 JST：HPの仕上げ）
+// v26 → v27：
+//   ・駅名標の ← 前の駅／次の駅 → を、アプリ（2.0.0）と同じ「路線の並び順」に。
+//     リポジトリ直下の station_neighbors.json を読む（無ければ従来どおり「近い2駅」）。
+//   ・駅ページのスマホ下部に「◯◯駅のカードを、アプリで」の帯（×で閉じられる・
+//     ページ下のアプリ紹介が見えている間は引っ込む）。
+//   ・全ページに「↑ ページの先頭へ」「← 戻る」の丸いボタン（アプリと同じ使い勝手）。
+//     「戻る」はサイト内から来たときだけ出す（検索から来た人を外へ戻さない）。
+//   ・トップの「都道府県から探す」を地方ごとに畳む（押すと開く）。
+//   ・トップの X・インスタのボタンが2回出ていたのを1回に（締めの箱の中だけ）。
+// （v26）特集ページ・季節の入口
 // v25 → v26：/feature/{momiji,onsen,sakura,umi,castle,shotengai}（駅コメントに書いてある駅だけ）。
 //   トップに季節の特集（9〜11月は紅葉…）。フッター・サイトマップに追加。インスタのボタンの色を調整。
 // （v25）
@@ -1273,6 +1283,13 @@ const STATION_YOMI = (() => {
   try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'station_yomi.json'), 'utf8')); }
   catch (e) { console.warn('[v15] station_yomi.json なし（ふりがな無しで出す）'); return {}; }
 })();
+// ★v27：駅名標の ← 前の駅／次の駅 →（アプリ 2.0.0 の station_neighbors.dart と同じ中身）
+//   形：駅ID → { 路線名: '前の駅|次の駅' }。無ければ従来の「近い2駅」で出す。
+//   ★データの出どころ：HeartRails Express（無料で使う条件＝クレジット表記。フッターに載せる）
+const STATION_NEIGHBORS = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'station_neighbors.json'), 'utf8')); }
+  catch (e) { console.warn('[v27] station_neighbors.json なし（駅名標の左右は近い2駅で出す）'); return {}; }
+})();
 const SITE = 'https://machimegu.com';
 const APP_STORE_URL = 'https://apps.apple.com/jp/app/id6804345019';
 const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.machimegu.app';
@@ -1343,6 +1360,37 @@ function rankIndex() {
 }
 
 // ── 近くの駅（同じ路線で近い2つ×路線 ＋ 距離で近い順、最大8）──
+// ★v27：駅名標の前後の駅を、駅の路線の並び（メジャー順）の先頭から探す
+//   名前→駅の引き当ては、同じ路線に乗っている同名駅を優先し、無ければ一番近い同名駅。
+let _byName = null;
+function stationsNamed(name) {
+  if (!_byName) {
+    _byName = new Map();
+    for (const o of STATIONS) { if (!_byName.has(o.name)) _byName.set(o.name, []); _byName.get(o.name).push(o); }
+  }
+  return _byName.get(name) || [];
+}
+function findNeighbor(name, line, st) {
+  if (!name) return null;
+  const c = stationsNamed(name).filter((o) => o.id !== st.id);
+  if (!c.length) return null;
+  const on = c.filter((o) => (o.lines || []).includes(line));
+  const pool = on.length ? on : c;
+  return pool.slice().sort((a, b) => distM(st.lat, st.lng, a.lat, a.lng) - distM(st.lat, st.lng, b.lat, b.lng))[0];
+}
+function signNeighbors(st) {
+  const nb = STATION_NEIGHBORS[st.id];
+  if (!nb) return null;
+  for (const l of st.lines || []) {
+    const v = nb[l];
+    if (typeof v !== 'string' || !v.includes('|')) continue;
+    const [p, n] = v.split('|');
+    const prev = findNeighbor(p, l, st), next = findNeighbor(n, l, st);
+    if (prev || next) return { line: l, prev, next };
+  }
+  return null;
+}
+
 function nearbyOf(st) {
   const cand = [];
   for (const o of STATIONS) {
@@ -1585,9 +1633,11 @@ function renderStationPage(st, ua) {
   const osm = `https://www.openstreetmap.org/export/embed.html?bbox=${st.lng - 0.012},${st.lat - 0.008},${st.lng + 0.012},${st.lat + 0.008}&layer=mapnik&marker=${st.lat},${st.lng}`;
   const ld = { '@context': 'https://schema.org', '@type': 'TrainStation', name: `${st.name}駅`, address: { '@type': 'PostalAddress', addressRegion: st.pref, addressLocality: t.location || '' }, geo: { '@type': 'GeoCoordinates', latitude: st.lat, longitude: st.lng } };
 
-  // ★v20：駅名標の左右＝同じ路線で近い駅（並び順のデータは無いので「近い2駅」）
+  // ★v27：駅名標の左右＝アプリと同じ「路線の並び順」の前後の駅。データが無い駅だけ従来の「近い2駅」
+  const sn = signNeighbors(st);
   const sameLine = near.filter(([, , l]) => l);
-  const lr = sameLine.length ? `<div class="lr">${sameLine[0] ? `<a href="${stationUrl(sameLine[0][0])}">← ${esc(sameLine[0][0].name)}<small>${(sameLine[0][1] / 1000).toFixed(1)}km</small></a>` : '<span></span>'}${sameLine[1] ? `<a class="r" href="${stationUrl(sameLine[1][0])}">${esc(sameLine[1][0].name)} →<small>${(sameLine[1][1] / 1000).toFixed(1)}km</small></a>` : '<span></span>'}</div>` : '';
+  const lrLink = (o, right) => o ? `<a${right ? ' class="r"' : ''} href="${stationUrl(o)}">${right ? '' : '← '}${esc(o.name)}${right ? ' →' : ''}<small>${(distM(st.lat, st.lng, o.lat, o.lng) / 1000).toFixed(1)}km</small></a>` : '<span></span>';
+  const lr = sn ? `<div class="lr">${lrLink(sn.prev, false)}${lrLink(sn.next, true)}</div>` : sameLine.length ? `<div class="lr">${sameLine[0] ? `<a href="${stationUrl(sameLine[0][0])}">← ${esc(sameLine[0][0].name)}<small>${(sameLine[0][1] / 1000).toFixed(1)}km</small></a>` : '<span></span>'}${sameLine[1] ? `<a class="r" href="${stationUrl(sameLine[1][0])}">${esc(sameLine[1][0].name)} →<small>${(sameLine[1][1] / 1000).toFixed(1)}km</small></a>` : '<span></span>'}</div>` : '';
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
@@ -1622,6 +1672,7 @@ h1.q{font-size:18px;font-weight:700;margin:0 0 10px;color:var(--sub)}
 table{width:100%;border-collapse:collapse;font-size:15px}td{padding:10px 4px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border:0}td small{display:block;color:var(--sub);font-size:12px}
 h2 .me{float:right;font-size:13px;font-weight:700;color:var(--ink);font-family:"Noto Sans JP",sans-serif;margin-top:4px}
 .map{width:100%;height:260px;border:0;border-radius:14px;display:block}
+${FLOAT_CSS}
 </style></head><body>
 <header class="skyhead"><div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩</span></span></a><span class="tb">${topBtns}</span></div>
 <div style="max-width:760px;margin:0 auto;padding:10px 18px 0">
@@ -1657,8 +1708,8 @@ ${sameHtml}
 <p class="pitch">全国8,993駅のチェックイン型・街歩きアプリ（無料）</p>
 <ul><li>${esc(st.name)}駅から500m以内で5分立ち止まると、この駅のカードが1枚</li><li>季節と時間帯でカードの色が変わる。同じ駅でも別の1枚に</li><li>路線や街を制覇して、バッジを集める</li></ul>
 ${storeBtns}${EVENING_SVG}</div>
-<footer>${SNS_HTML}街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。<br><a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><br>© 街巡-まちめぐ-</footer>
-</main></body></html>`;
+<footer>${SNS_HTML}街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。駅名標のとなりの駅は HeartRails Express のデータを加工して作成。<br><a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><br>© 街巡-まちめぐ-</footer>
+</main>${floatUi((isIOS || isAnd) ? `<div class="appbar" id="appbar" role="complementary" aria-label="アプリの案内"><div class="t"><b>${esc(st.name)}駅のカードを、アプリで</b><span>5分立ち止まると1枚・無料</span></div>${storeBadges(ua, 40)}<button type="button" class="x" aria-label="閉じる">×</button></div>` : '')}</body></html>`;
 }
 
 
@@ -1772,7 +1823,9 @@ app.get('/sitemap.xml', (req, res) => {
 // ═══════════════════════════════════════════════════════════════
 const PREFS = ['北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県','茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県','新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県','静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県','徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'];
 
-function pageShell(title, desc, body, canonical, hero, ua, extraHead) {
+function pageShell(title, desc, body, canonical, hero, ua, extraHead, opts) {
+  // ★v27：opts.noFooterSns … 本文に X・インスタのボタンがあるページ（トップ）はフッターに出さない
+  const o = opts || {};
   const top = `<div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩</span></span></a><span class="tb">${ua != null ? storeBadges(ua, 30) : ''}</span></div>`;
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1825,11 +1878,65 @@ main>section{margin:30px 0}
 .steps li{counter-increment:s;position:relative;padding:10px 0 10px 50px;font-size:16px}
 .steps li:before{content:counter(s);position:absolute;left:0;top:8px;width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;font-family:"Zen Maru Gothic",sans-serif;font-weight:900;display:grid;place-items:center}
 .rankrow{display:flex;justify-content:space-between;gap:8px}
+.regions details{background:#fff;border-radius:14px;padding:0 12px}
+.regions summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:12px 26px 12px 2px;font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:16px;position:relative}
+.regions summary::-webkit-details-marker{display:none}
+.regions summary small{color:var(--sub);font-weight:400;font-size:13px}
+.regions summary:after{content:"+";position:absolute;right:4px;top:8px;font-size:22px;color:var(--blue)}
+.regions details[open] summary:after{content:"−"}
+.regions details .chips{margin:0 0 12px}
+${FLOAT_CSS}
 </style></head><body>
 <header class="skyhead">${top}${hero || ''}${hero ? SKYLINE_SVG : ''}</header>
 <main>${body}
-<footer>${SNS_HTML}<a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><br>© 街巡-まちめぐ-</footer>
-</main></body></html>`;
+<footer>${o.noFooterSns ? '' : SNS_HTML}<a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><br>© 街巡-まちめぐ-</footer>
+</main>${floatUi('')}</body></html>`;
+}
+
+// ★v27：全ページ共通の丸いボタン（↑ ページの先頭へ／← 戻る）と、駅ページのアプリの帯
+//   ・「↑」は少しスクロールしてから出る。
+//   ・「← 戻る」はサイト内のページから来たときだけ出す（検索や外から来た人を外へ戻さない）。
+//   ・下の帯（駅ページ・スマホだけ）は ×で閉じると、そのタブを閉じるまで出ない。
+//     ページ下のアプリ紹介（#app）が画面に見えている間は引っ込む（同じ案内を二重に出さない）。
+//   ・帯が出ている間は、丸いボタンを帯の上に持ち上げる。
+const FLOAT_CSS = `
+.fab{position:fixed;z-index:40;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:50%;border:0;background:#fff;color:var(--ink);box-shadow:0 6px 18px rgba(31,42,68,.22);display:grid;place-items:center;cursor:pointer;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s,bottom .2s}
+.fab.on{opacity:1;pointer-events:auto;transform:none}
+.fab svg{width:22px;height:22px}
+#fabTop{right:16px}
+#fabBack{left:16px;width:auto;padding:0 16px 0 12px;border-radius:999px;gap:4px;grid-auto-flow:column;font:700 15px/1 "Zen Maru Gothic",sans-serif}
+body.has-appbar .fab{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+.appbar{position:fixed;z-index:39;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;background:#fff;box-shadow:0 -6px 20px rgba(31,42,68,.14);padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px)) 14px;transform:translateY(110%);transition:transform .25s}
+body.has-appbar .appbar{transform:none}
+.appbar .t{flex:1;min-width:0;line-height:1.35}
+.appbar .t b{display:block;font-family:"Zen Maru Gothic",sans-serif;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar .t span{font-size:12px;color:var(--sub)}
+.appbar .badge{flex:none;margin:0}
+.appbar .x{flex:none;border:0;background:none;color:var(--sub);font-size:22px;line-height:1;padding:6px;cursor:pointer}
+body.appbar-room{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:reduce){.fab,.appbar{transition:none}}
+`;
+function floatUi(appBarHtml) {
+  return `${appBarHtml || ''}<button type="button" class="fab" id="fabBack" aria-label="前のページに戻る"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>戻る</button><button type="button" class="fab" id="fabTop" aria-label="ページの先頭へ"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg></button>
+<script>(function(){
+var t=document.getElementById('fabTop'),b=document.getElementById('fabBack'),bar=document.getElementById('appbar'),body=document.body;
+var sameSite=false;try{sameSite=!!document.referrer&&new URL(document.referrer).origin===location.origin&&history.length>1}catch(e){}
+if(sameSite)b.classList.add('on');
+b.addEventListener('click',function(){history.back()});
+t.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
+function onScroll(){t.classList.toggle('on',window.scrollY>600)}
+window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+if(bar){
+ var closed=false;try{closed=sessionStorage.getItem('mm_appbar_closed')==='1'}catch(e){}
+ if(!closed){
+  body.classList.add('appbar-room');
+  var show=function(v){body.classList.toggle('has-appbar',v)};show(true);
+  bar.querySelector('.x').addEventListener('click',function(){show(false);body.classList.remove('appbar-room');try{sessionStorage.setItem('mm_appbar_closed','1')}catch(e){}bar.remove()});
+  var inv=document.getElementById('app');
+  if(inv&&'IntersectionObserver' in window){new IntersectionObserver(function(es){if(document.body.contains(bar))show(!es[0].isIntersecting)}).observe(inv)}
+ }
+}
+})();</script>`;
 }
 
 function storeBadges(ua, h) {
@@ -1952,12 +2059,12 @@ ${NEAR_BUTTON}
 <p class="chips" style="margin-top:12px">${picks}</p></section>
 <section><h2>街力の高い駅</h2><ul class="list">${topHtml}</ul>
 <p class="chips" style="margin-top:12px"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">生活施設が多い駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a><a href="/ranking">ランキングをすべて見る</a></p></section>
-<section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<div><b>${name}</b><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="${prefUrl(p)}">${p}</a>`).join('')}</p></div>`).join('')}</div></section>
+<section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<details><summary>${name}<small>${b - a}都道府県</small></summary><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="${prefUrl(p)}">${p}</a>`).join('')}</p></details>`).join('')}</div></section>
 ${newsBlock()}
 <section><h2>よくある質問</h2><div class="faq">${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>さあ、街にでよう。</h2><p class="pitch">街巡-まちめぐ-（無料）</p>${storeBadges(ua, 46)}<p class="note" style="margin:12px 0 0">街で見つけた1枚は X とインスタでも</p>${SNS_HTML}${EVENING_SVG}</section>`;
       _topCache = { key, html: pageShell('街巡-まちめぐ- 駅で5分、カードを集める散歩｜全国8,993駅のスタンプラリー',
-        '全国8,993駅の駅から500m以内で5分立ち止まると、その街のカードが1枚。街力（1,000点満点）で駅を比べて、路線や街を制覇する街歩きアプリ。無料。', body, `${SITE}/`, hero, ua, siteJsonLd()) };
+        '全国8,993駅の駅から500m以内で5分立ち止まると、その街のカードが1枚。街力（1,000点満点）で駅を比べて、路線や街を制覇する街歩きアプリ。無料。', body, `${SITE}/`, hero, ua, siteJsonLd(), { noFooterSns: true }) };
     }
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=600');
     res.send(_topCache.html);
