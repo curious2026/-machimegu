@@ -1,5 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v20（2026-09-23 JST：サイトを明るいデザインに）
+// 街巡 server.js v21（2026-09-23 JST：街の絵を作り込み・バッジの大きさをそろえた）
+// v20 → v21：昼の街並み（ホーム・駅名標・架線・電車・時計台・家）と夕方の街並み（誘いの枠）を生成。
+//   使い方＝路線図、できること＝切符、順位＝駅ナンバリング風、区切り＝線路。Google Play のバッジを Apple と同じ高さに。
+//   駅を調べるの候補を10都市に。
 // v19 → v20：全ページを昼の空＋駅名標のデザインに（Zen Maru Gothic／明るい空色／ピンのオレンジ）。
 //   トップ：駅名標の「街巡」→ 見出し → 見本の3駅 → できること → 使い方 → 駅を調べる → ランキング → 都道府県
 //   駅ページ：駅名標（左右は同じ路線で近い駅）→ 街力 → 内訳 → …。「生活施設が多い駅」に改名。
@@ -1390,26 +1393,109 @@ footer{color:var(--sub);font-size:12px;text-align:center;padding:34px 0 10px;lin
 .sign .lr a{color:var(--ink);text-decoration:none}.sign .lr .r{text-align:right}.sign .lr small{display:block;color:var(--sub);font-size:11px}
 /* 空と街並み */
 .skyhead{background:linear-gradient(180deg,#BFE2F5 0%,#DDF0FA 55%,var(--sky) 100%);position:relative}
-.skyline{display:block;width:100%;height:clamp(110px,13vw,160px)}
+.scene{display:block;width:100%;height:clamp(150px,19vw,230px)}
+.track{display:block;width:100%;height:14px;margin:6px 0}
+/* 路線図（使い方） */
+.route{list-style:none;margin:0;padding:6px 0 6px 6px;position:relative}
+.route:before{content:"";position:absolute;left:23px;top:30px;bottom:44px;width:6px;border-radius:3px;background:var(--blue)}
+.route li{position:relative;padding:10px 0 10px 58px;min-height:52px}
+.route li .st{position:absolute;left:4px;top:8px;width:44px;height:44px;border-radius:50%;background:#fff;border:5px solid var(--blue);display:grid;place-items:center;font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:17px;color:var(--ink)}
+.route li.goal .st{border-color:var(--pin);background:var(--pin);color:#fff}
+.route li b{display:block;font-family:"Zen Maru Gothic",sans-serif;font-size:18px;line-height:1.4}
+.route li span{color:var(--sub);font-size:14px;line-height:1.6}
+/* 切符（できること） */
+.tickets{display:grid;gap:14px}
+.ticket{display:grid;grid-template-columns:78px 1fr;background:#FFFDF7;border-radius:12px;position:relative;box-shadow:0 1px 0 #EADFCB,0 8px 22px rgba(120,90,40,.08);
+  -webkit-mask:radial-gradient(circle 9px at 78px 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 9px at 78px 100%,#0000 98%,#000) bottom/100% 51% no-repeat;
+  mask:radial-gradient(circle 9px at 78px 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 9px at 78px 100%,#0000 98%,#000) bottom/100% 51% no-repeat}
+.ticket .stub{display:grid;place-items:center;font-size:30px;border-right:2px dashed #E6D6BC;border-radius:12px 0 0 12px}
+.ticket .body{padding:14px 16px}
+.ticket b{display:block;font-family:"Zen Maru Gothic",sans-serif;font-size:18px;line-height:1.4;margin-bottom:2px}
+.ticket span{color:#4A566A;font-size:15px;line-height:1.7}
+.ticket small{display:block;color:#B49468;font-size:11px;letter-spacing:.08em;margin-top:6px}
+/* 駅ナンバリング風の順位 */
+.no{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;border:3px solid var(--blue);font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:13px;margin-right:8px;background:#fff;vertical-align:middle;line-height:1}
+.no.top{border-color:var(--pin)}
+@media (max-width:520px){.top .tb .badge:nth-child(2){display:none}}
+.regions{display:grid;gap:12px}.regions div{background:#fff;border-radius:14px;padding:10px 12px}.regions b{display:block;font-family:"Zen Maru Gothic",sans-serif;font-size:14px;color:var(--sub);margin:0 0 2px}
+.regions .chips a{background:var(--tile);border-color:transparent}
 /* アプリの誘い */
-.invite{background:linear-gradient(180deg,#FFFFFF 0%,#FFF4E8 100%);border-radius:22px;padding:26px 20px 10px;text-align:center;border:1px solid #F7DEC8;overflow:hidden}
+.invite{background:linear-gradient(180deg,#FFF7EE 0%,#FFE1C7 55%,#FFC9A8 100%);border-radius:22px;padding:26px 20px 0;text-align:center;overflow:hidden}
+.invite .scene{margin:14px -20px 0;width:calc(100% + 40px);height:clamp(120px,17vw,190px)}
 .invite img.icon{width:72px;height:72px;border-radius:18px;box-shadow:0 4px 14px rgba(242,107,58,.25)}
 .invite h2{margin:10px 0 4px;font-size:24px}.invite .pitch{margin:0 0 12px;color:var(--sub)}
 .invite ul{list-style:none;padding:0;margin:0 auto 14px;max-width:440px;text-align:left}
 .invite li{padding:6px 0 6px 30px;position:relative;font-size:15px}
-.invite li:before{content:"";position:absolute;left:4px;top:13px;width:14px;height:14px;border-radius:50%;background:var(--pin);box-shadow:0 0 0 4px #FFE0D2}
+.invite li:before{content:"";position:absolute;left:4px;top:13px;width:14px;height:14px;border-radius:50%;background:var(--pin);box-shadow:0 0 0 4px #FFF1E6}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 `;
-// 街並みのイラスト（太陽・雲・ビル・木・電車）
-const SKYLINE_SVG = `<svg class="skyline" viewBox="0 0 1200 160" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-<circle cx="1010" cy="46" r="30" fill="#FFD66B"/><circle cx="1010" cy="46" r="44" fill="#FFD66B" opacity=".25"/>
-<g fill="#fff" opacity=".9"><ellipse cx="190" cy="40" rx="46" ry="14"/><ellipse cx="226" cy="32" rx="30" ry="14"/><ellipse cx="760" cy="30" rx="40" ry="12"/><ellipse cx="790" cy="24" rx="24" ry="11"/></g>
-<g fill="#A9D5EE"><rect x="0" y="86" width="70" height="74"/><rect x="80" y="62" width="54" height="98"/><rect x="146" y="96" width="80" height="64"/><rect x="238" y="54" width="46" height="106"/><rect x="296" y="80" width="90" height="80"/><rect x="398" y="66" width="60" height="94"/><rect x="620" y="72" width="64" height="88"/><rect x="696" y="50" width="42" height="110"/><rect x="750" y="88" width="96" height="72"/><rect x="858" y="64" width="58" height="96"/><rect x="928" y="94" width="84" height="66"/><rect x="1024" y="70" width="52" height="90"/><rect x="1088" y="84" width="112" height="76"/></g>
-<g fill="#7FBEE3"><rect x="40" y="108" width="60" height="52"/><rect x="200" y="100" width="54" height="60"/><rect x="340" y="112" width="70" height="48"/><rect x="470" y="96" width="120" height="64"/><rect x="560" y="80" width="34" height="80"/><rect x="800" y="110" width="66" height="50"/><rect x="980" y="104" width="60" height="56"/><rect x="1130" y="112" width="70" height="48"/></g>
-<g fill="#6FC39A"><circle cx="30" cy="140" r="16"/><circle cx="130" cy="144" r="14"/><circle cx="440" cy="140" r="18"/><circle cx="610" cy="144" r="14"/><circle cx="905" cy="142" r="16"/><circle cx="1075" cy="144" r="14"/></g>
-<rect x="0" y="150" width="1200" height="10" fill="#8FA7B8"/><rect x="0" y="146" width="1200" height="3" fill="#6B8396"/>
-<g transform="translate(470 118)"><rect width="250" height="30" rx="12" fill="#F26B3A"/><rect x="10" y="7" width="26" height="11" rx="3" fill="#fff"/><rect x="44" y="7" width="26" height="11" rx="3" fill="#fff"/><rect x="78" y="7" width="26" height="11" rx="3" fill="#fff"/><rect x="112" y="7" width="26" height="11" rx="3" fill="#fff"/><rect x="146" y="7" width="26" height="11" rx="3" fill="#fff"/><rect x="180" y="7" width="26" height="11" rx="3" fill="#fff"/><rect x="214" y="7" width="26" height="11" rx="3" fill="#fff"/><rect y="22" width="250" height="4" fill="#C9512A"/></g>
-</svg>`;
+// ═══ ★v21：街の絵（生成は起動時に1回）═══════════════════════════
+function _rnd(seed) { let x = seed; return () => { x = (x * 16807) % 2147483647; return (x - 1) / 2147483646; }; }
+function _bld(r, x, base, w, h, fill, win, lit) {
+  let s = `<rect x="${x}" y="${base - h}" width="${w}" height="${h}" fill="${fill}"/>`;
+  for (let yy = base - h + 8; yy < base - 10; yy += 12) {
+    for (let xx = x + 6; xx < x + w - 8; xx += 11) {
+      const on = r() < (lit ? 0.55 : 0.8);
+      if (on) s += `<rect x="${xx}" y="${yy}" width="5" height="6" rx="1" fill="${lit && r() < 0.7 ? lit : win}"/>`;
+    }
+  }
+  return s;
+}
+function makeScene({ w = 1200, h = 230, evening = false } = {}) {
+  const r = _rnd(evening ? 97 : 42);
+  const base = h - 34;             // 地面（線路の上）
+  const C = evening
+    ? { far: '#B58BA0', mid: '#7E6A8E', near: '#5E5173', win: '#8D7AA0', lit: '#FFE08A', mount: '#E9B7A7', tree: '#4E6B5E', roof: '#A0616E', wall: '#EAD6D8', plat: '#8C7C95', pole: '#5E5173', rail: '#4B4059' }
+    : { far: '#CDE7F5', mid: '#A9D5EE', near: '#7FBEE3', win: '#E6F4FB', lit: null, mount: '#D7EAF4', tree: '#6FC39A', roof: '#F2A58A', wall: '#FFFFFF', plat: '#C3D2DC', pole: '#8FA7B8', rail: '#6B8396' };
+  let s = `<svg class="scene" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMax slice" aria-hidden="true">`;
+  // 太陽 or 月、雲、鳥
+  if (evening) s += `<circle cx="930" cy="70" r="34" fill="#FFD27A" opacity=".95"/><circle cx="930" cy="70" r="54" fill="#FFD27A" opacity=".25"/>`;
+  else s += `<circle cx="1010" cy="52" r="30" fill="#FFD66B"/><circle cx="1010" cy="52" r="46" fill="#FFD66B" opacity=".25"/>
+<g fill="#fff" opacity=".92"><ellipse cx="180" cy="46" rx="48" ry="14"/><ellipse cx="214" cy="37" rx="30" ry="14"/><ellipse cx="760" cy="34" rx="42" ry="12"/><ellipse cx="792" cy="27" rx="24" ry="11"/><ellipse cx="520" cy="60" rx="30" ry="9"/></g>
+<g fill="none" stroke="#5B7A93" stroke-width="2" stroke-linecap="round"><path d="M600 40 q6 -6 12 0 q6 -6 12 0"/><path d="M640 52 q5 -5 10 0 q5 -5 10 0"/></g>`;
+  // 遠くの山
+  s += `<path d="M0 ${base - 60} C 150 ${base - 120}, 260 ${base - 110}, 380 ${base - 70} S 620 ${base - 130}, 760 ${base - 80} S 1020 ${base - 120}, 1200 ${base - 70} L 1200 ${base} L 0 ${base} Z" fill="${C.mount}"/>`;
+  // 遠いビル・中くらいのビル
+  for (let x = 0; x < w; ) { const bw = 40 + Math.floor(r() * 50), bh = 60 + Math.floor(r() * 80); s += _bld(r, x, base, bw, bh, C.far, C.win, evening ? C.lit : null); x += bw + 6 + Math.floor(r() * 18); }
+  // 時計台（どこかの駅前にありそうな塔）
+  s += `<rect x="1110" y="${base - 150}" width="26" height="150" fill="${C.mid}"/><polygon points="1104,${base - 150} 1123,${base - 178} 1142,${base - 150}" fill="${C.roof}"/><circle cx="1123" cy="${base - 128}" r="8" fill="${C.wall}"/><path d="M1123 ${base - 128} v-5 M1123 ${base - 128} h4" stroke="${C.near}" stroke-width="1.5"/>`;
+  for (let x = 20; x < w; ) { const bw = 36 + Math.floor(r() * 44), bh = 40 + Math.floor(r() * 60); s += _bld(r, x, base, bw, bh, C.mid, C.win, evening ? C.lit : null); x += bw + 30 + Math.floor(r() * 60); }
+  // 家と木
+  for (let x = 30; x < w; x += 170 + Math.floor(r() * 80)) {
+    const hw = 34 + Math.floor(r() * 12);
+    s += `<rect x="${x}" y="${base - 26}" width="${hw}" height="26" fill="${C.wall}"/><polygon points="${x - 4},${base - 26} ${x + hw / 2},${base - 44} ${x + hw + 4},${base - 26}" fill="${C.roof}"/><rect x="${x + hw / 2 - 5}" y="${base - 16}" width="10" height="16" fill="${C.near}" opacity=".6"/>`;
+    s += `<circle cx="${x + hw + 18}" cy="${base - 14}" r="14" fill="${C.tree}"/><circle cx="${x + hw + 30}" cy="${base - 10}" r="10" fill="${C.tree}" opacity=".85"/>`;
+  }
+  // ホーム（屋根・柱・駅名標）
+  s += `<rect x="90" y="${base - 12}" width="470" height="12" fill="${C.plat}"/>`;
+  s += `<rect x="110" y="${base - 58}" width="430" height="8" rx="3" fill="${C.near}"/>`;
+  for (let x = 130; x <= 520; x += 130) s += `<rect x="${x}" y="${base - 50}" width="5" height="38" fill="${C.pole}"/>`;
+  s += `<g transform="translate(250 ${base - 44})"><rect width="64" height="24" rx="3" fill="#fff" stroke="${C.pole}"/><rect y="15" width="64" height="4" fill="#F26B3A"/><rect x="18" y="5" width="28" height="6" rx="2" fill="#1F2A44" opacity=".75"/><rect x="30" y="24" width="4" height="8" fill="${C.pole}"/></g>`;
+  // 架線柱と架線
+  for (let x = 40; x < w; x += 190) s += `<rect x="${x}" y="${base - 66}" width="4" height="66" fill="${C.pole}"/><rect x="${x - 10}" y="${base - 66}" width="24" height="3" fill="${C.pole}"/>`;
+  s += `<path d="M0 ${base - 60} H${w}" stroke="${C.pole}" stroke-width="1.2"/>`;
+  // 電車（2両）
+  const tx = evening ? 640 : 600, ty = base - 36;
+  const car = (x) => {
+    let c = `<rect x="${x}" y="${ty}" width="200" height="32" rx="10" fill="#F26B3A"/><rect x="${x}" y="${ty + 22}" width="200" height="4" fill="#C9512A"/>`;
+    for (let i = 0; i < 6; i++) c += `<rect x="${x + 12 + i * 31}" y="${ty + 7}" width="22" height="11" rx="3" fill="${evening ? '#FFE9A8' : '#fff'}"/>`;
+    c += `<path d="M${x + 70} ${ty} l10 -12 h20 l10 12" fill="none" stroke="${C.pole}" stroke-width="2"/>`;
+    for (const wx of [24, 46, 154, 176]) c += `<circle cx="${x + wx}" cy="${ty + 32}" r="4" fill="${C.rail}"/>`;
+    return c;
+  };
+  s += car(tx) + car(tx + 206);
+  // 線路（まくらぎ）
+  s += `<rect x="0" y="${base}" width="${w}" height="${h - base}" fill="${evening ? '#6E5F7E' : '#B6C7D3'}"/>`;
+  for (let x = 0; x < w; x += 22) s += `<rect x="${x}" y="${base + 6}" width="12" height="6" fill="${evening ? '#58496A' : '#94A9B8'}"/>`;
+  s += `<rect x="0" y="${base + 3}" width="${w}" height="3" fill="${C.rail}"/><rect x="0" y="${base + 13}" width="${w}" height="3" fill="${C.rail}"/>`;
+  s += `</svg>`;
+  return s;
+}
+const SKYLINE_SVG = makeScene();
+const EVENING_SVG = makeScene({ evening: true, h: 200 });
+// 区切りの線路
+const TRACK_SVG = `<svg class="track" viewBox="0 0 1200 18" preserveAspectRatio="none" aria-hidden="true"><rect y="3" width="1200" height="2.5" fill="#9BB2C2"/><rect y="12.5" width="1200" height="2.5" fill="#9BB2C2"/>${Array.from({ length: 60 }, (_, i) => `<rect x="${i * 20 + 4}" y="1" width="8" height="16" rx="1" fill="#C9D8E2"/>`).join('')}</svg>`;
+
 
 const _pageCache = new Map();
 const PAGE_TTL = 24 * 60 * 60 * 1000;
@@ -1471,13 +1557,8 @@ function renderStationPage(st, ua) {
   ];
   const badges = badgeRows.map(([a, b]) => `<li>${a}${b ? `<b>${b}</b>` : ''}</li>`).join('');
   const isIOS = /iPhone|iPad|iPod/i.test(ua || ''), isAnd = /Android/i.test(ua || '');
-  // ★ストアの公式バッジ（Apple／Google 配布の画像）。「無料で入手」だけの自作ボタンは怪しく見える
-  const APPLE_BADGE = 'https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/ja-jp';
-  const GOOGLE_BADGE = 'https://play.google.com/intl/ja/badges/static/images/badges/ja_badge_web_generic.png';
-  const aB = (h) => `<a class="badge" href="${APP_STORE_URL}"><img src="${APPLE_BADGE}" alt="App Storeからダウンロード" style="height:${h}px"></a>`;
-  const gB = (h) => `<a class="badge" href="${PLAY_URL}"><img src="${GOOGLE_BADGE}" alt="Google Play で手に入れよう" style="height:${Math.round(h * 1.45)}px;margin:${-Math.round(h * 0.22)}px 0"></a>`;
-  const storeBtns = isIOS ? aB(48) : isAnd ? gB(48) : aB(44) + gB(44);
-  const topBtns = isIOS ? aB(34) : isAnd ? gB(34) : aB(30) + gB(30);
+  const storeBtns = storeBadges(ua, 46);
+  const topBtns = storeBadges(ua, 30);
 
   const title = `${st.name}駅（${st.pref}）はどんな街？ 街力${score}点・${rank}ランク｜街巡-まちめぐ-`;
   const desc = `${st.name}駅${yomi ? `（${yomi}）` : ''}の街力は${score}点・${rank}ランク。${first}${first ? '。' : ''}飲食${(d['飲食'] || {}).count || 0}店・全国${rAll}位。近くの駅との比較や名所も。`;
@@ -1549,7 +1630,7 @@ ${sameHtml}
 <div class="block invite" id="app"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2>
 <p class="pitch">全国8,993駅のチェックイン型・街歩きアプリ（無料）</p>
 <ul><li>${esc(st.name)}駅から500m以内で5分立ち止まると、この駅のカードが1枚</li><li>季節と時間帯でカードの色が変わる。同じ駅でも別の1枚に</li><li>路線や街を制覇して、バッジを集める</li></ul>
-${storeBtns}</div>
+${storeBtns}${EVENING_SVG}</div>
 <footer>街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。<br><a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><br>© 街巡-まちめぐ-</footer>
 </main></body></html>`;
 }
@@ -1706,8 +1787,10 @@ main>section{margin:30px 0}
 function storeBadges(ua, h) {
   const APPLE_BADGE = 'https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/ja-jp';
   const GOOGLE_BADGE = 'https://play.google.com/intl/ja/badges/static/images/badges/ja_badge_web_generic.png';
+  // ★v21：Google の画像は上下に透明の余白（250pxのうち上29・下29）がある。見えている高さを Apple とそろえる
+  const gh = Math.round(h * 250 / 192), gm = Math.round(h * 29 / 192);
   const a = `<a class="badge" href="${APP_STORE_URL}"><img src="${APPLE_BADGE}" alt="App Storeからダウンロード" style="height:${h}px"></a>`;
-  const g = `<a class="badge" href="${PLAY_URL}"><img src="${GOOGLE_BADGE}" alt="Google Play で手に入れよう" style="height:${Math.round(h * 1.45)}px;margin:${-Math.round(h * 0.22)}px 0"></a>`;
+  const g = `<a class="badge" href="${PLAY_URL}"><img src="${GOOGLE_BADGE}" alt="Google Play で手に入れよう" style="height:${gh}px;margin:${-gm}px 0"></a>`;
   return /iPhone|iPad|iPod/i.test(ua) ? a : /Android/i.test(ua) ? g : a + g;
 }
 
@@ -1720,8 +1803,8 @@ app.get('/', (req, res) => {
     if (_topCache.key !== key) {
       const top = STATIONS.map((st) => [st, scoreOf(st.id)]).filter(([, s]) => s)
         .sort((a, b) => b[1].score - a[1].score).slice(0, 12);
-      const topHtml = top.map(([st, s]) => `<li><span class="rk" style="background:${RANK_COLOR[s.rank] || '#888'}">${esc(s.rank)}</span><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}・${s.score}点</small></li>`).join('');
-      const picks = ['東陽町_東京都', '吉祥寺_東京都', '鎌倉_神奈川県', '梅田_大阪府', '京都_京都府', '博多_福岡県', '札幌_北海道', '名古屋_愛知県']
+      const topHtml = top.map(([st, s], i) => `<li><span class="no${i < 3 ? ' top' : ''}">${i + 1}</span><span class="rk" style="background:${RANK_COLOR[s.rank] || '#888'}">${esc(s.rank)}</span><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}・${s.score}点</small></li>`).join('');
+      const picks = ['札幌_北海道', '仙台_宮城県', '横浜_神奈川県', '金沢_石川県', '名古屋_愛知県', '京都_京都府', '梅田_大阪府', '三ノ宮_兵庫県', '広島_広島県', '博多_福岡県']
         .map((id) => STATIONS_BY_ID.get(id)).filter(Boolean)
         .map((st) => `<a href="${stationUrl(st)}">${esc(st.name)}</a>`).join('');
       const sample = (id) => {
@@ -1736,20 +1819,26 @@ app.get('/', (req, res) => {
       const body = `
 <section><h2>こんな街が、1枚のカードに</h2><p class="note">全国8,993駅すべてに、街力の点数と、その街ならではのひとことがあります。</p>
 <div class="samples">${sample('東陽町_東京都')}${sample('鎌倉_神奈川県')}${sample('吉祥寺_東京都')}</div></section>
-<section><h2>できること</h2><div class="card"><ul class="does">
-<li><span class="ic" style="background:#FFE6DA">🎴</span><div><b>街のカードを集める</b><span>駅の近くに5分いるだけ。季節・時間帯・天気でカードの色が変わり、同じ駅でも別の1枚になります。カードの裏には、その日に撮った写真も貼れます。</span></div></li>
-<li><span class="ic" style="background:#DDF0FB">📊</span><div><b>街の力を数字で見る</b><span>駅から500m以内の飲食・お店・暮らし・医療の施設を数えて、全駅を1,000点満点で採点。知らない駅も、降りる前に少しだけわかります。</span></div></li>
-<li><span class="ic" style="background:#E3F4EA">🏅</span><div><b>路線や街を制覇する</b><span>路線・市区町村・都道府県ごとに制覇バッジ。いつもの沿線から、少しずつ地図が埋まっていきます。</span></div></li>
-</ul></div></section>
-<section><h2>使い方</h2><div class="card"><ol class="steps"><li>アプリを開くと、地図に近くの駅が並びます</li><li>行きたい駅をタップして、チェックインを始めます</li><li>駅のまわりを5分歩きます（画面は消していて大丈夫）</li><li>その街のカードが手に入ります</li></ol>
-<p class="note" style="margin:8px 0 0">記録できるのは1日3駅まで。急がず、ひとつの街をゆっくり歩いてほしいからです。</p></div></section>
+${TRACK_SVG}
+<section><h2>できること</h2><div class="tickets">
+<div class="ticket"><div class="stub">🎴</div><div class="body"><b>街のカードを集める</b><span>駅の近くに5分いるだけ。季節・時間帯・天気でカードの色が変わり、同じ駅でも別の1枚になります。カードの裏には、その日に撮った写真も貼れます。</span><small>全国8,993駅 有効</small></div></div>
+<div class="ticket"><div class="stub">📊</div><div class="body"><b>街の力を数字で見る</b><span>駅から500m以内の飲食・お店・暮らし・医療の施設を数えて、全駅を1,000点満点で採点。知らない駅も、降りる前に少しだけわかります。</span><small>S・A・B・C・D の5ランク</small></div></div>
+<div class="ticket"><div class="stub">🏅</div><div class="body"><b>路線や街を制覇する</b><span>路線・市区町村・都道府県ごとに制覇バッジ。いつもの沿線から、少しずつ地図が埋まっていきます。</span><small>銅・銀・金の3段階</small></div></div>
+</div></section>
+<section><h2>使い方</h2><div class="card"><ol class="route">
+<li><span class="st">1</span><b>アプリを開く</b><span>地図に、近くの駅が並びます</span></li>
+<li><span class="st">2</span><b>行きたい駅をタップ</b><span>チェックインが始まります</span></li>
+<li><span class="st">3</span><b>駅のまわりを5分歩く</b><span>画面は消していて大丈夫。ポケットのままで</span></li>
+<li class="goal"><span class="st">★</span><b>その街のカードが手に入る</b><span>記録できるのは1日3駅まで。ひとつの街を、ゆっくり</span></li>
+</ol></div></section>
+${TRACK_SVG}
 <section><h2>駅を調べる</h2>
 <form class="find" action="/search" method="get"><input type="search" name="q" placeholder="駅名（例：東陽町）" aria-label="駅名"><button type="submit">調べる</button></form>
 <p class="chips" style="margin-top:12px">${picks}</p></section>
 <section><h2>街力の高い駅</h2><ul class="list">${topHtml}</ul>
 <p class="chips" style="margin-top:12px"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">生活施設が多い駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a><a href="/ranking">ランキングをすべて見る</a></p></section>
-<section><h2>都道府県から探す</h2><p class="chips">${PREFS.map((p) => `<a href="/search?pref=${encodeURIComponent(p)}">${p}</a>`).join('')}</p></section>
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>さあ、街にでよう。</h2><p class="pitch">街巡-まちめぐ-（無料）</p>${storeBadges(ua, 46)}</section>`;
+<section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<div><b>${name}</b><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="/search?pref=${encodeURIComponent(p)}">${p}</a>`).join('')}</p></div>`).join('')}</div></section>
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>さあ、街にでよう。</h2><p class="pitch">街巡-まちめぐ-（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
       _topCache = { key, html: pageShell('街巡-まちめぐ- 駅で5分、カードを集める散歩｜全国8,993駅のスタンプラリー',
         '全国8,993駅の駅から500m以内で5分立ち止まると、その街のカードが1枚。街力（1,000点満点）で駅を比べて、路線や街を制覇する街歩きアプリ。無料。', body, `${SITE}/`, hero, ua) };
     }
@@ -1777,7 +1866,7 @@ function listPage(req, res, { title, h1, lead, stations, canonical, crumbs, badg
   const list = rows.map(([st, s], i) => {
     const t = textOf(st.id) || {};
     const f = Array.isArray(t.features) && t.features[0] ? `<br><small style="margin:0">${esc(t.features[0])}</small>` : '';
-    return `<li><b style="display:inline-block;width:2.2em;color:var(--sub);font-family:'Zen Maru Gothic',sans-serif">${i + 1}</b><span class="rk" style="background:${RANK_COLOR[s.rank] || '#888'}">${esc(s.rank)}</span><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}・${s.score}点</small>${f}</li>`;
+    return `<li><span class="no${i < 3 ? ' top' : ''}">${i + 1}</span><span class="rk" style="background:${RANK_COLOR[s.rank] || '#888'}">${esc(s.rank)}</span><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}・${s.score}点</small>${f}</li>`;
   }).join('');
   const ua = req.get('user-agent') || '';
   const body = `<p class="crumbs">${crumbs}</p>
@@ -1790,7 +1879,7 @@ ${food ? `<li>飲食店がいちばん多い駅<b style="float:right">${esc(food
 </ul></section>
 <section><h2>街力ランキング（全${n}駅）</h2><ul class="list">${list}</ul></section>
 ${badge ? `<section><h2>制覇バッジ</h2><div class="card">${badge}</div></section>` : ''}
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">駅から500m以内で5分立ち止まると、その街のカードが1枚（無料）</p>${storeBadges(ua, 46)}</section>`;
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">駅から500m以内で5分立ち止まると、その街のカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
   res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
   res.send(pageShell(title, `${h1}。${lead.replace(/<[^>]+>/g, '')}`, body, canonical, '', ua));
 }
@@ -1865,7 +1954,7 @@ app.get('/ranking', generalLimiter, (req, res) => {
   const top = rankingRows(k).slice(0, 3).map(([st]) => esc(st.name)).join('、');
   return `<li><a href="${rankingUrl(k)}" style="font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:17px">${esc(R.t)} TOP100</a><br><small style="margin:0">${esc(R.d)}。1位〜3位は${top}</small></li>`;
 }).join('')}</ul></section>
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}</section>`;
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
     res.send(pageShell('全国8,993駅 ランキング（街力・飲食店・利用者数・開業年）｜街巡-まちめぐ-', '飲食店が多い駅、生活施設が多い駅、名所が近い駅、開業が古い駅など、全国8,993駅のランキング。', body, `${SITE}/ranking`, '', ua));
   } catch (e) { console.error('[v18] ランキング一覧失敗:', e.message); res.status(500).send('ただいま表示できません'); }
@@ -1880,14 +1969,14 @@ app.get('/ranking/:kind', generalLimiter, (req, res) => {
     const list = rows.map(([st, s, v], i) => {
       const t = textOf(st.id) || {};
       const f = Array.isArray(t.features) && t.features[0] ? `<br><small style="margin:0">${esc(t.features[0])}</small>` : '';
-      return `<li><b style="display:inline-block;width:2.4em;color:var(--sub);font-family:'Zen Maru Gothic',sans-serif">${i + 1}</b><span class="rk" style="background:${RANK_COLOR[s.rank] || '#888'}">${esc(s.rank)}</span><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}</small><b style="float:right">${R.f(v, st)}</b>${f}</li>`;
+      return `<li><span class="no${i < 3 ? ' top' : ''}">${i + 1}</span><span class="rk" style="background:${RANK_COLOR[s.rank] || '#888'}">${esc(s.rank)}</span><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}</small><b style="float:right">${R.f(v, st)}</b>${f}</li>`;
     }).join('');
     const others = Object.entries(RANKINGS).filter(([k]) => k !== req.params.kind).map(([k, r]) => `<a href="${rankingUrl(k)}">${esc(r.t)}</a>`).join('');
     const body = `<p class="crumbs"><a href="/">街巡-まちめぐ-</a> › <a href="/ranking">ランキング</a> › ${esc(R.t)}</p>
 <section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">${esc(R.t)} 全国TOP100</h1><p class="note">${esc(R.d)}で、全国8,993駅を並べました。</p>
 <ul class="list">${list}</ul></section>
 <section><h2>ほかのランキング</h2><p class="chips">${others}</p></section>
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}</section>`;
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
     const top3 = rows.slice(0, 3).map(([st]) => st.name).join('・');
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
     res.send(pageShell(`${R.t} 全国ランキングTOP100｜街巡-まちめぐ-`, `${R.d}で全国8,993駅を比べたランキング。1位〜3位は${top3}。`, body, rankingUrl(req.params.kind), '', ua));
