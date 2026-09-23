@@ -1268,7 +1268,7 @@ function distM(a, b, c, d) {
 let _rankIdx = { builtAt: -1 };
 function rankIndex() {
   if (_rankIdx.builtAt === scoresCache.builtAt && stationText._parsedAt === stationText.version) return _rankIdx;
-  const all = [], byPref = {}, byLine = {}, riders = [], oldByPref = {};
+  const all = [], byPref = {}, byLine = {}, riders = [], oldByPref = {}, areaCount = {};
   for (const st of STATIONS) {
     const sc = scoreOf(st.id); const s = sc ? sc.score : 0;
     all.push([st.id, s]);
@@ -1278,12 +1278,13 @@ function rankIndex() {
     riders.push([st.id, ridersNum(t && t.riders)]);
     const y = yearNum(t && t.opened);
     if (y) (oldByPref[st.pref] = oldByPref[st.pref] || []).push([st.id, y]);
+    if (t && t.location) { const ak = `${t.location}_${st.pref}`; areaCount[ak] = (areaCount[ak] || 0) + 1; }
   }
   const toRank = (arr, asc) => {
     arr.sort((a, b) => asc ? a[1] - b[1] : b[1] - a[1]);
     const m = new Map(); arr.forEach(([id], i) => m.set(id, i + 1)); return { m, n: arr.length };
   };
-  const idx = { builtAt: scoresCache.builtAt, all: toRank(all), pref: {}, line: {}, riders: toRank(riders), old: {} };
+  const idx = { builtAt: scoresCache.builtAt, all: toRank(all), pref: {}, line: {}, riders: toRank(riders), old: {}, areaCount };
   for (const p in byPref) idx.pref[p] = toRank(byPref[p]);
   for (const l in byLine) idx.line[l] = toRank(byLine[l]);
   for (const p in oldByPref) idx.old[p] = toRank(oldByPref[p], true);
@@ -1363,11 +1364,24 @@ function renderStationPage(st, ua) {
     return `<tr><td><a href="${stationUrl(o)}">${esc(o.name)}</a>${l ? `<small>${esc(l)}</small>` : ''}</td><td>${(dm / 1000).toFixed(1)}km</td><td><span class="rk" style="background:${RANK_COLOR[s2.rank] || '#888'}">${esc(s2.rank)}</span> ${s2.score}</td><td>${win}</td></tr>`;
   }).join('');
 
-  const badges = [...lines.map((l) => `${esc(l)}の路線制覇`), `${rank}ランクの制覇`].map((b) => `<li>${b}</li>`).join('');
+  // ★アプリのバッジ判定（badge_engine.dart）と同じ基準：
+  //   路線制覇／エリア制覇（駅が5つ以上ある市区町村）／都道府県制覇／ランク制覇
+  const areaN = t.location ? (idx.areaCount[`${t.location}_${st.pref}`] || 0) : 0;
+  const badgeRows = [
+    ...lines.map((l) => [`${esc(l)}の路線制覇`, idx.line[l] ? `全${idx.line[l].n}駅` : '']),
+    ...(areaN >= 5 ? [[`${esc(t.location)}のエリア制覇`, `全${areaN}駅`]] : []),
+    [`${esc(st.pref)}の制覇`, idx.pref[st.pref] ? `全${idx.pref[st.pref].n}駅` : ''],
+    [`${esc(rank)}ランクの制覇`, ''],
+  ];
+  const badges = badgeRows.map(([a, b]) => `<li>${a}${b ? `<b>${b}</b>` : ''}</li>`).join('');
   const isIOS = /iPhone|iPad|iPod/i.test(ua || ''), isAnd = /Android/i.test(ua || '');
-  const storeBtns = isIOS ? `<a class="st" href="${APP_STORE_URL}">App Storeで入手</a>`
-    : isAnd ? `<a class="st" href="${PLAY_URL}">Google Playで入手</a>`
-    : `<a class="st" href="${APP_STORE_URL}">App Store</a><a class="st" href="${PLAY_URL}">Google Play</a>`;
+  // ★ストアの公式バッジ（Apple／Google 配布の画像）。「無料で入手」だけの自作ボタンは怪しく見える
+  const APPLE_BADGE = 'https://tools.applemarketingtools.com/api/badges/download-on-the-app-store/black/ja-jp';
+  const GOOGLE_BADGE = 'https://play.google.com/intl/ja/badges/static/images/badges/ja_badge_web_generic.png';
+  const aB = (h) => `<a class="badge" href="${APP_STORE_URL}"><img src="${APPLE_BADGE}" alt="App Storeからダウンロード" style="height:${h}px"></a>`;
+  const gB = (h) => `<a class="badge" href="${PLAY_URL}"><img src="${GOOGLE_BADGE}" alt="Google Play で手に入れよう" style="height:${Math.round(h * 1.45)}px;margin:${-Math.round(h * 0.22)}px 0"></a>`;
+  const storeBtns = isIOS ? aB(48) : isAnd ? gB(48) : aB(44) + gB(44);
+  const topBtns = isIOS ? aB(34) : isAnd ? gB(34) : aB(30) + gB(30);
 
   const title = `${st.name}駅（${st.pref}）はどんな街？ 街力${score}点・${rank}ランク｜街巡-まちめぐ-`;
   const desc = `${st.name}駅${yomi ? `（${yomi}）` : ''}の街力は${score}点・${rank}ランク。${first}${first ? '。' : ''}飲食${(d['飲食'] || {}).count || 0}店・全国${rAll}位。近くの駅との比較や名所も。`;
@@ -1386,7 +1400,7 @@ function renderStationPage(st, ua) {
 main{max-width:720px;margin:0 auto;padding:16px}a{color:#7EC8F0}
 header{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(135deg,#1B2C46,#16233A);border:1px solid var(--ln);border-radius:14px;padding:10px 14px}
 header .brand{text-decoration:none;color:var(--tx)}header .brand b{display:block;font-size:20px;font-weight:900;letter-spacing:.02em}header .brand span{display:block;font-size:11px;color:var(--sub)}
-header .dl{flex:none;background:var(--act);color:#fff;font-weight:900;font-size:13px;text-decoration:none;padding:8px 12px;border-radius:10px}
+header .tb{flex:none;display:flex;align-items:center;gap:6px}.badge{display:inline-flex;align-items:center;margin:4px;vertical-align:middle}.badge img{display:block}
 h2 .me{float:right;font-size:13px;color:var(--tx);font-weight:800}
 .cta h3{margin:0 0 4px;font-size:20px}.cta .pitch{color:var(--sub);font-size:13px;margin:0 0 12px}.cta .pts{text-align:left;margin:0 auto 12px;max-width:420px}.cta .pts li{border:0;padding:3px 0;font-size:14px}.cta .pts li:before{content:"✓ ";color:var(--act);font-weight:900}
 .hero{background:var(--sf);border:2px solid ${rc};border-radius:18px;padding:18px;margin:12px 0}
@@ -1408,7 +1422,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td{padding:7px 4px;bord
 .cta p{margin:0 0 10px;font-weight:800}.st{display:inline-block;margin:4px;padding:12px 18px;border-radius:12px;background:var(--act);color:#fff;font-weight:900;text-decoration:none}
 footer{color:var(--sub);font-size:12px;text-align:center;padding:20px}
 </style></head><body><main>
-<header><a class="brand" href="${SITE}/"><b>街巡-まちめぐ-</b><span>駅に5分立ち止まるとカードがもらえる街歩きアプリ</span></a><a class="dl" href="#app">無料で入手</a></header>
+<header><a class="brand" href="${SITE}/"><b>街巡-まちめぐ-</b><span>駅に5分立ち止まるとカードがもらえる街歩きアプリ</span></a><span class="tb">${topBtns}</span></header>
 <div class="hero">
 ${yomi ? `<div class="yomi">${esc(yomi)}</div>` : ''}<h1>${esc(st.name)}駅はどんな街？</h1>
 <div class="pref">${esc(st.pref)}${t.location ? `・${esc(t.location)}` : ''}</div>
@@ -1433,11 +1447,11 @@ ${rOld ? `<li>${esc(st.pref)}で古い駅<b>${rOld}番目</b></li>` : ''}
 ${bonusHtml}
 <section><h2>近くの駅と比べる<span class="me">${esc(st.name)} ${score}点 <span class="rk" style="background:${rc}">${esc(rank)}</span></span></h2><table>${nearHtml}</table></section>
 ${sameHtml}
+<section><h2>この駅で進むバッジ</h2><ul class="rks">${badges}</ul></section>
 <section><h2>地図</h2><iframe class="map" loading="lazy" src="${osm}" title="${esc(st.name)}駅の地図"></iframe></section>
 <section class="cta" id="app"><h3>街巡-まちめぐ-（無料）</h3>
 <p class="pitch">全国8,993駅のチェックイン型・街歩きアプリ</p>
 <ul class="pts"><li>${esc(st.name)}駅から500m以内で5分立ち止まると、この駅のカードが1枚</li><li>季節と時間帯でカードの色が変わる。同じ駅でも別の1枚に</li><li>路線やランクを制覇してバッジを集める</li></ul>
-<ul class="rks" style="text-align:left;margin:0 auto 12px;max-width:420px"><li style="color:var(--sub)">この駅で進むバッジ</li>${badges}</ul>
 ${storeBtns}</section>
 <footer>街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。<br>© 街巡-まちめぐ-</footer>
 </main></body></html>`;
