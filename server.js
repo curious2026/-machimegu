@@ -1,5 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v28（2026-09-24 JST：トップを「調べる・比べる」から始める）
+// 街巡 server.js v29（2026-09-24 JST：トップの並びを元に戻す）
+// v28 → v29：トップの並びは v27 までの順（アプリの画面 → … → 使い方 → 駅を調べる → 街力の高い駅 → 都道府県）に戻した。
+//   トップに来るのは「これ何のアプリ？」を知りたい人。回遊は駅ページ（8,993の入口）が担う（ともき判断）。
+//   v28 の「ランキングをすべて見る →」ボタン・4つの太字・SNSのひとことは残す。
+// （v28）トップを「調べる・比べる」から始める（並びは v29 で撤回）
 // v27 → v28：
 //   ・トップの並び：ヒーローの次に「駅を調べる」「街力の高い駅」「都道府県から探す」、
 //     そのあとに「アプリの画面」以下（サイトの中を回ってもらうのを優先・ともき案）。
@@ -2048,14 +2052,6 @@ app.get('/', (req, res) => {
       const hero = `<div style="max-width:560px;margin:0 auto;padding:10px 18px 0"><div class="sign"><div class="y">まちめぐ</div><div class="n">街巡</div><div class="p">全国8,993駅</div><div class="band" style="background:var(--pin)"></div><div class="lr"><span>← いつもの駅</span><span class="r">知らない街 →</span></div></div></div>
 <div class="hero-copy"><h1>駅で5分、<br>カードを集める散歩。</h1><p>駅から500m以内で5分立ち止まると、その街のカードが1枚。季節と時間で色が変わるカードを集めながら、まだ降りたことのない駅へ。</p>${storeBadges(ua, 46)}</div>`;
       const body = `
-<section><h2>駅を調べる</h2>
-${NEAR_BUTTON}
-<form class="find" action="/search" method="get" style="margin-top:14px"><input type="search" name="q" placeholder="駅名（例：東陽町）" aria-label="駅名"><button type="submit">調べる</button></form>
-<p class="chips" style="margin-top:12px">${picks}</p></section>
-<section><div class="h2row"><h2>街力の高い駅</h2><a class="more" href="/ranking">ランキングをすべて見る →</a></div><ul class="list">${topHtml}</ul>
-<p class="chips strong" style="margin-top:12px"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">生活施設が多い駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a></p></section>
-<section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<details><summary>${name}<small>${b - a}都道府県</small></summary><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="${prefUrl(p)}">${p}</a>`).join('')}</p></details>`).join('')}</div></section>
-${TRACK_SVG}
 ${storeInfo.shots.length ? `<section><h2>アプリの画面</h2><div class="shots" tabindex="0" aria-label="アプリの画面（横にスクロール）">${storeInfo.shots.map((u, i) => `<img src="${esc(u)}" alt="街巡-まちめぐ- のアプリ画面 ${i + 1}" loading="lazy" width="230" height="498">`).join('')}</div></section>` : ''}
 ${todayPick()}
 ${seasonBlock()}
@@ -2074,6 +2070,13 @@ ${TRACK_SVG}
 <li class="goal"><span class="st">★</span><b>その街のカードが手に入る</b><span>記録できるのは1日3駅まで。ひとつの街を、ゆっくり</span></li>
 </ol></div></section>
 ${TRACK_SVG}
+<section><h2>駅を調べる</h2>
+${NEAR_BUTTON}
+<form class="find" action="/search" method="get" style="margin-top:14px"><input type="search" name="q" placeholder="駅名（例：東陽町）" aria-label="駅名"><button type="submit">調べる</button></form>
+<p class="chips" style="margin-top:12px">${picks}</p></section>
+<section><div class="h2row"><h2>街力の高い駅</h2><a class="more" href="/ranking">ランキングをすべて見る →</a></div><ul class="list">${topHtml}</ul>
+<p class="chips strong" style="margin-top:12px"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">生活施設が多い駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a></p></section>
+<section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<details><summary>${name}<small>${b - a}都道府県</small></summary><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="${prefUrl(p)}">${p}</a>`).join('')}</p></details>`).join('')}</div></section>
 ${newsBlock()}
 <section><h2>よくある質問</h2><div class="faq">${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>さあ、街にでよう。</h2><p class="pitch">街巡-まちめぐ-（無料）</p>${storeBadges(ua, 46)}<p class="note" style="margin:12px 0 0">街で見つけた1枚は X とインスタでも</p>${SNS_HTML}${EVENING_SVG}</section>`;
