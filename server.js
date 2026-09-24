@@ -1,5 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v27（2026-09-23 JST：HPの仕上げ）
+// 街巡 server.js v28（2026-09-24 JST：トップを「調べる・比べる」から始める）
+// v27 → v28：
+//   ・トップの並び：ヒーローの次に「駅を調べる」「街力の高い駅」「都道府県から探す」、
+//     そのあとに「アプリの画面」以下（サイトの中を回ってもらうのを優先・ともき案）。
+//   ・「街力の高い駅」の見出しの右に「ランキングをすべて見る →」を目立つボタンで。
+//     下の4つ（飲食店が多い駅など）は太字。
+//   ・X・インスタのボタンに、アプリと同じひとこと（最新情報をGET！／街の風景をシェア中）。
+// （v27）HPの仕上げ
 // v26 → v27：
 //   ・駅名標の ← 前の駅／次の駅 → を、アプリ（2.0.0）と同じ「路線の並び順」に。
 //     リポジトリ直下の station_neighbors.json を読む（無ければ従来どおり「近い2駅」）。
@@ -1900,6 +1907,12 @@ ${FLOAT_CSS}
 //     ページ下のアプリ紹介（#app）が画面に見えている間は引っ込む（同じ案内を二重に出さない）。
 //   ・帯が出ている間は、丸いボタンを帯の上に持ち上げる。
 const FLOAT_CSS = `
+.sns a .h{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
+.sns a .h small{font-size:11px;font-weight:500;opacity:.92;letter-spacing:.02em}
+.h2row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.h2row h2{margin:0}
+.h2row .more{flex:none;background:var(--pin);color:#fff;font-weight:700;font-size:14px;line-height:1;padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 4px 12px rgba(242,107,58,.3);white-space:nowrap}
+.chips.strong a{font-weight:700}
 .fab{position:fixed;z-index:40;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:50%;border:0;background:#fff;color:var(--ink);box-shadow:0 6px 18px rgba(31,42,68,.22);display:grid;place-items:center;cursor:pointer;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s,bottom .2s}
 .fab.on{opacity:1;pointer-events:auto;transform:none}
 .fab svg{width:22px;height:22px}
@@ -1954,7 +1967,7 @@ function storeBadges(ua, h) {
 // ★v23：SNS（アプリの設定にあるものと同じ）
 const SNS_X = 'https://x.com/machimegux';
 const SNS_IG = 'https://www.instagram.com/machimegu2026/';
-const SNS_HTML = `<p class="sns"><a class="x" href="${SNS_X}" rel="me noopener" target="_blank" aria-label="X（旧Twitter）@machimegux"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.8-6.3L6.4 22H3.3l7.3-8.3L1 2h6.3l4.4 5.8L18.9 2Zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20Z"/></svg>@machimegux</a><a class="ig" href="${SNS_IG}" rel="me noopener" target="_blank" aria-label="Instagram @machimegu2026"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 7.3A4.7 4.7 0 1 0 12 16.7 4.7 4.7 0 0 0 12 7.3Zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm6-7.9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0ZM21.9 8c-.1-1.6-.4-3-1.6-4.2S17.6 2.2 16 2.1C14.3 2 9.7 2 8 2.1 6.4 2.2 5 2.5 3.8 3.7S2.2 6.4 2.1 8C2 9.7 2 14.3 2.1 16c.1 1.6.4 3 1.6 4.2s2.6 1.5 4.2 1.6c1.7.1 6.3.1 8 0 1.6-.1 3-.4 4.2-1.6s1.5-2.6 1.6-4.2c.1-1.7.1-6.3 0-8Zm-2.1 9.8a3.3 3.3 0 0 1-1.8 1.8c-1.3.5-4.3.4-5.7.4s-4.4.1-5.7-.4a3.3 3.3 0 0 1-1.8-1.8c-.5-1.3-.4-4.3-.4-5.7s-.1-4.4.4-5.7a3.3 3.3 0 0 1 1.8-1.8C7.9 4.1 11 4.2 12 4.2s4.4-.1 5.7.4a3.3 3.3 0 0 1 1.8 1.8c.5 1.3.4 4.3.4 5.7s.1 4.4-.4 5.7Z"/></svg>@machimegu2026</a></p>`;
+const SNS_HTML = `<p class="sns"><a class="x" href="${SNS_X}" rel="me noopener" target="_blank" aria-label="X（旧Twitter）@machimegux"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.8-6.3L6.4 22H3.3l7.3-8.3L1 2h6.3l4.4 5.8L18.9 2Zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20Z"/></svg><span class="h">@machimegux<small>最新情報をGET！</small></span></a><a class="ig" href="${SNS_IG}" rel="me noopener" target="_blank" aria-label="Instagram @machimegu2026"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 7.3A4.7 4.7 0 1 0 12 16.7 4.7 4.7 0 0 0 12 7.3Zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm6-7.9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0ZM21.9 8c-.1-1.6-.4-3-1.6-4.2S17.6 2.2 16 2.1C14.3 2 9.7 2 8 2.1 6.4 2.2 5 2.5 3.8 3.7S2.2 6.4 2.1 8C2 9.7 2 14.3 2.1 16c.1 1.6.4 3 1.6 4.2s2.6 1.5 4.2 1.6c1.7.1 6.3.1 8 0 1.6-.1 3-.4 4.2-1.6s1.5-2.6 1.6-4.2c.1-1.7.1-6.3 0-8Zm-2.1 9.8a3.3 3.3 0 0 1-1.8 1.8c-1.3.5-4.3.4-5.7.4s-4.4.1-5.7-.4a3.3 3.3 0 0 1-1.8-1.8c-.5-1.3-.4-4.3-.4-5.7s-.1-4.4.4-5.7a3.3 3.3 0 0 1 1.8-1.8C7.9 4.1 11 4.2 12 4.2s4.4-.1 5.7.4a3.3 3.3 0 0 1 1.8 1.8c.5 1.3.4 4.3.4 5.7s.1 4.4-.4 5.7Z"/></svg><span class="h">@machimegu2026<small>街の風景をシェア中</small></span></a></p>`;
 // ★v23：サイトのアクセス解析（Railway の GA4_MEASUREMENT_ID を入れたときだけ動く）
 //   ストアのボタンを押したら store_click（ios / android）を送る
 function gaHead() {
@@ -2035,6 +2048,14 @@ app.get('/', (req, res) => {
       const hero = `<div style="max-width:560px;margin:0 auto;padding:10px 18px 0"><div class="sign"><div class="y">まちめぐ</div><div class="n">街巡</div><div class="p">全国8,993駅</div><div class="band" style="background:var(--pin)"></div><div class="lr"><span>← いつもの駅</span><span class="r">知らない街 →</span></div></div></div>
 <div class="hero-copy"><h1>駅で5分、<br>カードを集める散歩。</h1><p>駅から500m以内で5分立ち止まると、その街のカードが1枚。季節と時間で色が変わるカードを集めながら、まだ降りたことのない駅へ。</p>${storeBadges(ua, 46)}</div>`;
       const body = `
+<section><h2>駅を調べる</h2>
+${NEAR_BUTTON}
+<form class="find" action="/search" method="get" style="margin-top:14px"><input type="search" name="q" placeholder="駅名（例：東陽町）" aria-label="駅名"><button type="submit">調べる</button></form>
+<p class="chips" style="margin-top:12px">${picks}</p></section>
+<section><div class="h2row"><h2>街力の高い駅</h2><a class="more" href="/ranking">ランキングをすべて見る →</a></div><ul class="list">${topHtml}</ul>
+<p class="chips strong" style="margin-top:12px"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">生活施設が多い駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a></p></section>
+<section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<details><summary>${name}<small>${b - a}都道府県</small></summary><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="${prefUrl(p)}">${p}</a>`).join('')}</p></details>`).join('')}</div></section>
+${TRACK_SVG}
 ${storeInfo.shots.length ? `<section><h2>アプリの画面</h2><div class="shots" tabindex="0" aria-label="アプリの画面（横にスクロール）">${storeInfo.shots.map((u, i) => `<img src="${esc(u)}" alt="街巡-まちめぐ- のアプリ画面 ${i + 1}" loading="lazy" width="230" height="498">`).join('')}</div></section>` : ''}
 ${todayPick()}
 ${seasonBlock()}
@@ -2053,13 +2074,6 @@ ${TRACK_SVG}
 <li class="goal"><span class="st">★</span><b>その街のカードが手に入る</b><span>記録できるのは1日3駅まで。ひとつの街を、ゆっくり</span></li>
 </ol></div></section>
 ${TRACK_SVG}
-<section><h2>駅を調べる</h2>
-${NEAR_BUTTON}
-<form class="find" action="/search" method="get" style="margin-top:14px"><input type="search" name="q" placeholder="駅名（例：東陽町）" aria-label="駅名"><button type="submit">調べる</button></form>
-<p class="chips" style="margin-top:12px">${picks}</p></section>
-<section><h2>街力の高い駅</h2><ul class="list">${topHtml}</ul>
-<p class="chips" style="margin-top:12px"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">生活施設が多い駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a><a href="/ranking">ランキングをすべて見る</a></p></section>
-<section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<details><summary>${name}<small>${b - a}都道府県</small></summary><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="${prefUrl(p)}">${p}</a>`).join('')}</p></details>`).join('')}</div></section>
 ${newsBlock()}
 <section><h2>よくある質問</h2><div class="faq">${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>さあ、街にでよう。</h2><p class="pitch">街巡-まちめぐ-（無料）</p>${storeBadges(ua, 46)}<p class="note" style="margin:12px 0 0">街で見つけた1枚は X とインスタでも</p>${SNS_HTML}${EVENING_SVG}</section>`;
