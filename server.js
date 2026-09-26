@@ -1,5 +1,20 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v36（2026-09-26 JST：トップの見本3駅と街力TOP12も地方別に）
+// 街巡 server.js v38（2026-09-26 JST：体裁の見直し）
+// v37 → v38（ともき指摘）：
+//   ・トップの見本3駅：カードの高さをそろえる。長い駅名（5文字以上）は字を小さくして1行に。
+//   ・特集の見出し：「駅から歩ける」の札は1行目に単独、題名は「関東の／紅葉・イチョウ／30選」の
+//     まとまりでしか改行しない（「イチョ」で切れない）。
+//   ・特集の一覧：名所名 → 最寄り駅・都府県 → ひとこと → 見頃と2つのボタン（駅のページ／地図）の4段に整理。
+// （v37）計測・相互リンク・地図・年つき題名・迷子救済
+// v36 → v37（ともき採用）：
+//   ①ストアボタンの計測を細かく：store_click に「どこで押したか（place）」「どのページか（page_type）」。
+//     Google Play へのリンクに参照元（utm_source=machimegu.com）を付け、Play Console の獲得レポートで HP 経由が見える。
+//     App Store は Railway の APPSTORE_PT（App Store Connect のキャンペーンリンクの pt）を入れたときだけ ct=hp を付ける。
+//   ②駅ページに「季節の楽しみ」：その駅が特集（紅葉・桜など）に入っていれば、名所と地方別特集へのリンク。
+//   ③特集の名所に「地図で見る」（Googleマップの検索リンク）。
+//   ④特集の題名に年（【2026年】）を自動で。初詣は10月以降なら翌年。特集にも ItemList の構造化データ。
+//   ⑤駅が見つからないとき、似た名前の駅の候補と検索欄を出す（「東陽町駅」のような「駅」付きは自動で転送）。
+// （v36）トップの見本3駅と街力TOP12も地方別に
 // v35 → v36（ともき案）：
 //   ・「こんな街が、1枚のカードに」の3駅を地方ごとに（意外な一面のBランク・歴史の街・おしゃれな街）。
 //   ・「街力の高い駅」TOP12 も見に来た人の地方で。見出しのすぐ下に地方タブ。
@@ -1664,6 +1679,9 @@ function renderStationPage(st, ua) {
   }).join('');
 
   const bonusItems = ((d['ボーナス'] || {}).items || []).slice(0, 12);
+  // ★v37：季節の楽しみ（特集に入っている名所）
+  const seasonFeats = stationFeats(st.id);
+  const featHtml = seasonFeats.length ? `<div class="block"><h2>季節の楽しみ</h2><div class="panel"><ul class="bonus">${seasonFeats.map(({ k, r, e }) => `<li><a href="${featureUrl(k, r)}">${FEATURES[k].e} ${esc(FEATURES[k].t)}</a>：${esc(e.spot)}${e.best ? `<span>${k === 'hanabi' ? '開催' : '見頃'} ${esc(e.best)}</span>` : ''}</li>`).join('')}</ul></div></div>` : '';
   const bonusHtml = bonusItems.length ? `<div class="block"><h2>近くの名所・施設</h2><div class="panel"><ul class="bonus">${bonusItems.map((b) => `<li>${esc(b.name)}<span>駅から${b.dist}m</span></li>`).join('')}</ul></div></div>` : '';
 
   const rAll = idx.all.m.get(st.id), rPref = idx.pref[st.pref] && idx.pref[st.pref].m.get(st.id);
@@ -1776,7 +1794,7 @@ ${rOld ? `<li>${esc(st.pref)}で古い駅<b>${rOld}番目</b></li>` : ''}
 <div><small>路線</small>${lines.map(esc).join('、') || '-'}</div>
 <div><small>所在地</small>${esc(st.pref)}${esc(t.location || '')}</div>
 </div></div>
-${bonusHtml}
+${bonusHtml}${featHtml}
 <div class="block"><h2>近くの駅と比べる<span class="me">${esc(st.name)} ${score}点 <span class="rk" style="background:${rc}">${esc(rank)}</span></span></h2><div class="panel"><table>${nearHtml}</table></div></div>
 ${sameHtml}
 <div class="block"><h2>この駅で進むバッジ</h2><div class="panel"><ul class="rks">${badges}</ul></div></div>
@@ -1860,7 +1878,13 @@ app.get('/station/:pref/:name', (req, res) => {
   try {
     const id = `${req.params.name}_${req.params.pref}`;
     const st = STATIONS_BY_ID.get(id);
-    if (!st) return res.status(404).send('<!doctype html><meta charset="utf-8"><p>駅が見つかりませんでした。<a href="/">街巡-まちめぐ-</a></p>');
+    if (!st) {
+      // ★v37：「◯◯駅」のような駅付きは、あれば本当の駅へ転送
+      const nm = String(req.params.name || '').replace(/駅$/, '');
+      const alt = STATIONS_BY_ID.get(`${nm}_${req.params.pref}`);
+      if (alt) return res.redirect(301, stationUrl(alt));
+      return res.status(404).send(stationNotFound(nm, req.params.pref, req.get('user-agent') || ''));
+    }
     const ua = req.get('user-agent') || '';
     const dev = /iPhone|iPad|iPod/i.test(ua) ? 'i' : /Android/i.test(ua) ? 'a' : 'p';
     const key = `${id}|${dev}`;
@@ -1879,6 +1903,22 @@ app.get('/station/:pref/:name', (req, res) => {
     res.status(500).send('<!doctype html><meta charset="utf-8"><p>ただいま表示できません。</p>');
   }
 });
+
+// ★v37：駅が見つからないときの案内（似た名前の駅の候補＋検索欄）
+function stationNotFound(name, pref, ua) {
+  const q = String(name || '').trim();
+  let cand = [];
+  if (q) {
+    const head = q.slice(0, 2);
+    cand = STATIONS.filter((o) => o.name.includes(q) || q.includes(o.name) || (head.length === 2 && o.name.startsWith(head)))
+      .sort((a, b) => (b.pref === pref) - (a.pref === pref) || a.name.length - b.name.length).slice(0, 12);
+  }
+  const list = cand.length ? `<p>もしかして：</p><p class="chips">${cand.map((o) => `<a href="${stationUrl(o)}">${esc(o.name)}（${esc(o.pref)}）</a>`).join('')}</p>` : '';
+  const body = `<section style="margin-top:18px"><h1 style="font-size:24px">「${esc(q)}」駅は見つかりませんでした</h1>${list}
+<form action="/search" method="get" style="display:flex;gap:8px;margin-top:14px"><input type="search" name="q" value="${esc(q)}" aria-label="駅名"><button type="submit">調べる</button></form>
+<p style="margin-top:14px"><a href="/">トップへ戻る</a></p></section>`;
+  return pageShell('駅が見つかりませんでした｜街巡-まちめぐ-', '', body, '', '', ua, '<meta name="robots" content="noindex">');
+}
 
 let _sitemap = { t: 0, xml: '' };
 // ★v30：サイトマップは「索引」＋「共通ページ」＋「県ごとの駅ページ（47枚）」に分けた。
@@ -1974,7 +2014,10 @@ main>section{margin:30px 0}
 .hero-copy p{margin:0 0 14px;color:#3E4B60}
 .samples{display:grid;grid-template-columns:1fr;gap:16px}
 @media(min-width:640px){.samples{grid-template-columns:1fr 1fr 1fr}}
-.samples a{text-decoration:none;color:var(--ink)}
+.samples a{text-decoration:none;color:var(--ink);display:flex;flex-direction:column}
+.samples a .sign{flex:1;display:flex;flex-direction:column}
+.samples a .sign .c{margin-top:auto}
+.samples .sign .n.long{font-size:clamp(26px,7vw,32px);white-space:nowrap}
 .samples .sign .n{font-size:40px}.samples .sign .y{padding-top:12px;font-size:12px}
 .samples .meta{display:flex;align-items:baseline;justify-content:center;gap:6px;padding:8px 10px 0}
 .samples .meta b{font-family:"Zen Maru Gothic",sans-serif;font-size:30px;font-weight:900;line-height:1}
@@ -2011,7 +2054,22 @@ ${FLOAT_CSS}
 //   ・帯が出ている間は、丸いボタンを帯の上に持ち上げる。
 const FLOAT_CSS = `
 .rtabs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}.rtabs a{font-size:13px;padding:5px 11px;border-radius:999px;background:var(--tile);color:var(--ink);text-decoration:none;border:1px solid var(--line)}.rtabs a.on{background:var(--pin);color:#fff;border-color:var(--pin);font-weight:700}
-.stag{display:inline-block;margin:0 0 6px 4px;font-size:12px;font-weight:700;color:#fff;background:var(--pin);border-radius:999px;padding:2px 10px}
+.nb{display:inline-block}
+.fh1{font-size:clamp(22px,6vw,32px);font-weight:900;line-height:1.35;margin:0 0 10px}
+.fh1 .walkpill{display:table;font-size:14px;margin:0 0 12px}
+.fh1 .ft{display:block}
+.list .fi{display:block;padding:16px 0}
+.fi .fh{display:flex;align-items:flex-start;gap:12px}
+.fi .fn{flex:1;min-width:0}
+.fi .fn>a,.fi .fn>b{font-size:18px;font-weight:900;line-height:1.4}
+.fi .fn>a b{font-weight:900}
+.fi .fn small{display:flex;align-items:center;gap:6px;margin:4px 0 0;font-size:13px;color:var(--sub)}
+.fi .fn small .rk{margin:0;transform:scale(.85)}
+.fi .fnote{margin:8px 0 0 48px;font-size:15px;line-height:1.7;color:var(--ink)}
+.fi .fmeta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 0 48px}
+.fi .fmeta .best{margin:0}
+.fbtn{display:inline-block;font-size:13px;font-weight:700;color:var(--blue);background:#EEF5FB;border-radius:999px;padding:5px 12px;text-decoration:none}
+.stag{display:inline-block;align-self:flex-start;margin:0 0 6px 4px;font-size:12px;font-weight:700;color:#fff;background:var(--pin);border-radius:999px;padding:2px 10px}
 .walkpill{display:inline-block;vertical-align:middle;font-size:.5em;font-weight:900;color:#fff;background:var(--pin);border-radius:10px;padding:4px 10px 5px;margin:0 8px 6px 0;position:relative;box-shadow:0 3px 8px rgba(242,107,58,.3)}
 .walkpill:after{content:"";position:absolute;left:14px;bottom:-6px;border:6px solid transparent;border-top-color:var(--pin);border-bottom:0}
 .acc{display:inline-block;font-size:12px;color:#1d5f8a;background:#E3F1FA;border-radius:999px;padding:1px 8px;margin-left:6px}
@@ -2070,8 +2128,12 @@ function storeBadges(ua, h) {
   const GOOGLE_BADGE = 'https://play.google.com/intl/ja/badges/static/images/badges/ja_badge_web_generic.png';
   // ★v21：Google の画像は上下に透明の余白（250pxのうち上29・下29）がある。見えている高さを Apple とそろえる
   const gh = Math.round(h * 250 / 192), gm = Math.round(h * 29 / 192);
-  const a = `<a class="badge" href="${APP_STORE_URL}"><img src="${APPLE_BADGE}" alt="App Storeからダウンロード" style="height:${h}px"></a>`;
-  const g = `<a class="badge" href="${PLAY_URL}"><img src="${GOOGLE_BADGE}" alt="Google Play で手に入れよう" style="height:${gh}px;margin:${-gm}px 0"></a>`;
+  // ★v37：どこから来たかをストアに渡す（Play＝参照元、App Store＝pt があるときだけキャンペーン）
+  const pt = (process.env.APPSTORE_PT || '').trim();
+  const aHref = /^\d+$/.test(pt) ? `${APP_STORE_URL}${APP_STORE_URL.includes('?') ? '&' : '?'}pt=${pt}&ct=hp&mt=8` : APP_STORE_URL;
+  const gHref = `${PLAY_URL}${PLAY_URL.includes('?') ? '&' : '?'}referrer=${encodeURIComponent('utm_source=machimegu.com&utm_medium=hp')}`;
+  const a = `<a class="badge" href="${esc(aHref)}"><img src="${APPLE_BADGE}" alt="App Storeからダウンロード" style="height:${h}px"></a>`;
+  const g = `<a class="badge" href="${esc(gHref)}"><img src="${GOOGLE_BADGE}" alt="Google Play で手に入れよう" style="height:${gh}px;margin:${-gm}px 0"></a>`;
   return /iPhone|iPad|iPod/i.test(ua) ? a : /Android/i.test(ua) ? g : a + g;
 }
 
@@ -2088,8 +2150,10 @@ function gaHead() {
   if (!/^G-[A-Z0-9]+$/.test(id)) return '';
   return `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${id}');
+function mmPlace(a){return a.closest('.appbar')?'appbar':a.closest('.invite')?'invite':a.closest('.hero-copy')?'hero':a.closest('header,.tb')?'header':'other';}
+function mmPage(){var p=location.pathname.split('/')[1]||'top';return p;}
 document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a');if(!a)return;var h=a.href||'';
-if(h.indexOf('apps.apple.com')>=0)gtag('event','store_click',{store:'ios'});else if(h.indexOf('play.google.com')>=0)gtag('event','store_click',{store:'android'});
+if(h.indexOf('apps.apple.com')>=0)gtag('event','store_click',{store:'ios',place:mmPlace(a),page_type:mmPage()});else if(h.indexOf('play.google.com')>=0)gtag('event','store_click',{store:'android',place:mmPlace(a),page_type:mmPage()});
 else if(h.indexOf('x.com/machimegux')>=0||h.indexOf('instagram.com/machimegu2026')>=0)gtag('event','sns_click',{sns:h.indexOf('x.com')>=0?'x':'instagram'});});</script>`;
 }
 
@@ -2163,7 +2227,7 @@ app.get('/', (req, res) => {
         const st = STATIONS_BY_ID.get(id); if (!st) return '';
         const sc = scoreOf(st.id) || { score: 0, rank: 'D' }; const t = textOf(st.id) || {};
         const c = RANK_COLOR[sc.rank] || '#888';
-        return `<a href="${stationUrl(st)}">${label ? `<span class="stag">${esc(label)}</span>` : ''}<div class="sign"><div class="y">${esc(STATION_YOMI[st.id] || '')}</div><div class="n">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? '　' + esc(t.location) : ''}</div><div class="band" style="background:${c}"></div>
+        return `<a href="${stationUrl(st)}">${label ? `<span class="stag">${esc(label)}</span>` : ''}<div class="sign"><div class="y">${esc(STATION_YOMI[st.id] || '')}</div><div class="n${st.name.length >= 5 ? ' long' : ''}">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? '　' + esc(t.location) : ''}</div><div class="band" style="background:${c}"></div>
 <div class="meta"><b style="color:${c}">${sc.score}</b><span>点</span><span class="rk" style="background:${c}">${esc(sc.rank)}</span></div><div class="c">${esc(comment || (t.features || [])[0] || '')}</div></div></a>`;
       };
       const hero = `<div style="max-width:560px;margin:0 auto;padding:10px 18px 0"><div class="sign"><div class="y">まちめぐ</div><div class="n">街巡</div><div class="p">全国8,993駅</div><div class="band" style="background:var(--pin)"></div><div class="lr"><span>← いつもの駅</span><span class="r">知らない街 →</span></div></div></div>
@@ -2539,6 +2603,25 @@ function featureRows(k, region) {
   _featCache.set(ck, { rows: all, tv: stationText.version, b: scoresCache.builtAt });
   return all;
 }
+// ★v37：駅ID → その駅が入っている特集（厳選）の一覧
+let _stFeat = null;
+function stationFeats(id) {
+  if (!_stFeat) {
+    _stFeat = new Map();
+    for (const [k, byR] of Object.entries(CURATED)) {
+      if (!FEATURES[k] || typeof byR !== 'object') continue;
+      for (const [r, list] of Object.entries(byR)) {
+        for (const e of list || []) {
+          if (!_stFeat.has(e.station)) _stFeat.set(e.station, []);
+          _stFeat.get(e.station).push({ k, r, e });
+        }
+      }
+    }
+  }
+  return _stFeat.get(id) || [];
+}
+function mapUrl(spot, pref) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${spot} ${pref}`)}`; }
+
 function featureUrl(k, region) { return `${SITE}/feature/${k}${region ? `/${region}` : ''}`; }
 function seasonKey() {
   const d = new Date(Date.now() + 9 * 3600 * 1000), m = d.getUTCMonth() + 1, day = d.getUTCDate();
@@ -2573,7 +2656,13 @@ function featurePage(req, res, k, region) {
     const spotName = e && e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener nofollow"><b>${esc(e.spot)}</b></a>` : e ? `<b>${esc(e.spot)}</b>` : '';
     const title = e ? `${spotName}（${esc(st.name)}駅）${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}` : `<a href="${stationUrl(st)}">${esc(st.name)}</a>`;
     const sub = e ? `${esc(e.note)}${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}` : esc(hit);
-    return `<li><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><span class="rk" style="background:${c}">${esc(s.rank)}</span>${title}${e ? '' : `<small>${esc(st.pref)}・${s.score}点</small>`}<br><small style="margin:0">${e ? `${esc(st.pref)}・` : ''}${sub}</small>${e ? `<br><a href="${stationUrl(st)}" style="font-size:13px">${esc(st.name)}駅のページ（街力 ${s.score}点）→</a>` : ''}</li>`;
+    if (e) {
+      // ★v38：名所名 → 最寄り駅 → ひとこと → 見頃とボタン の4段
+      return `<li class="fi"><div class="fh"><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><div class="fn">${spotName}${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}<small><span class="rk" style="background:${c}">${esc(s.rank)}</span>${esc(st.name)}駅・${esc(st.pref)}</small></div></div>
+<p class="fnote">${esc(e.note)}</p>
+<p class="fmeta">${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}<a class="fbtn" href="${stationUrl(st)}">${esc(st.name)}駅（街力 ${s.score}点）</a><a class="fbtn" href="${mapUrl(e.spot, st.pref)}" target="_blank" rel="noopener nofollow">📍 地図</a></p></li>`;
+    }
+    return `<li><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><span class="rk" style="background:${c}">${esc(s.rank)}</span>${title}<small>${esc(st.pref)}・${s.score}点</small><br><small style="margin:0">${sub}</small></li>`;
   }).join('');
   const tabs = `<p class="rtabs"><a href="${featureUrl(k)}"${!R ? ' class="on"' : ''}>全国</a>${REGIONS.map((x) => `<a href="${featureUrl(k, x.k)}"${R && R.k === x.k ? ' class="on"' : ''}>${esc(x.n)}</a>`).join('')}</p>`;
   const others = Object.entries(FEATURES).filter(([kk]) => kk !== k).map(([kk, f]) => `<a href="${featureUrl(kk, region)}">${f.e} ${esc(f.t)}</a>`).join('');
@@ -2586,22 +2675,28 @@ function featurePage(req, res, k, region) {
     ? `<p class="note" style="font-weight:700">※並びは、厳選${R ? `${rows.length}選` : 'した名所'}を最寄り駅の街力順（お店や施設の充実度）で並べたものです。</p>`
     : '<p class="note" style="font-weight:700">※並びは、駅の街力順（お店や施設の充実度）です。</p>';
   // ★v34：厳選のあるページは「駅から歩ける」の札
+  // ★v38：まとまりでしか改行しない（.nb）。札は1行目に単独。
+  const nb = (x) => `<span class="nb">${x}</span>`;
   const h1 = hasCur && R
-    ? `<span class="walkpill">駅から歩ける</span>${F.e} ${esc(where)}の${esc(F.w)}${rows.length}選`
-    : `${F.e} ${esc(where)}の${esc(F.t)}${R ? `${rows.length}選` : ''}`;
+    ? `<span class="walkpill">駅から歩ける</span><span class="ft">${nb(`${F.e} ${esc(where)}の`)}${nb(esc(F.w))}${nb(`${rows.length}選`)}</span>`
+    : `<span class="ft">${nb(`${F.e} ${esc(where)}の`)}${nb(esc(F.t))}${R ? nb(`${rows.length}選`) : ''}</span>`;
   const body = `<p class="crumbs"><a href="/">街巡-まちめぐ-</a> › <a href="${featureUrl(k)}">${esc(F.t)}</a>${R ? ` › ${esc(R.n)}` : ''}</p>
-<section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">${h1}</h1>${hasCur ? '' : DATA_SRC_HTML}
+<section style="margin-top:14px"><h1 class="fh1">${h1}</h1>${hasCur ? '' : DATA_SRC_HTML}
 <p class="note">${lead}</p>${orderNote}
 <ul class="list">${list || '<li>この地方はまだ準備中です。</li>'}</ul>
 <h2 style="margin-top:22px">ほかの地方を見る</h2>${tabs}</section>
 <section><h2>ほかの特集</h2><p class="chips">${others}</p></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">行ってみたい駅に、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
   const top3 = rows.slice(0, 3).map(([st, , , e]) => e ? e.spot : st.name).join('・');
+  // ★v37：題名に年（初詣は10月以降なら翌年）
+  const jst = new Date(Date.now() + 9 * 3600 * 1000);
+  const yr = jst.getUTCFullYear() + (k === 'hatsumode' && jst.getUTCMonth() >= 9 ? 1 : 0);
   const title = R
-    ? (hasCur ? `駅から歩ける${R.n}の${F.w}${rows.length}選｜最寄り駅${rows.some((r) => r[3] && r[3].best) ? `と${BL}` : 'つき'}｜街巡-まちめぐ-` : `${R.n}の${F.t}${rows.length}選｜街巡-まちめぐ-`)
+    ? (hasCur ? `【${yr}年】駅から歩ける${R.n}の${F.w}${rows.length}選｜最寄り駅${rows.some((r) => r[3] && r[3].best) ? `と${BL}` : 'つき'}｜街巡-まちめぐ-` : `${R.n}の${F.t}${rows.length}選｜街巡-まちめぐ-`)
     : `${F.t}（全国${rows.length}駅）｜街巡-まちめぐ-`;
   res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
-  res.send(pageShell(title, `${where}の${F.t}。${top3}など${rows.length}か所を最寄り駅つきで。`, body, featureUrl(k, region), '', ua));
+  const itemLd = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name: title.split('｜')[0], itemListElement: rows.slice(0, 30).map(([st, , , e], i) => ({ '@type': 'ListItem', position: i + 1, name: e ? e.spot : `${st.name}駅`, url: stationUrl(st) })) }).replace(/</g, '\\u003c')}</script>`;
+  res.send(pageShell(title, `${where}の${F.t}。${top3}など${rows.length}か所を最寄り駅つきで。`, body, featureUrl(k, region), '', ua, itemLd));
 }
 app.get('/feature/:k', generalLimiter, (req, res) => {
   try { featurePage(req, res, req.params.k, null); } catch (e) { console.error('[v32] 特集失敗:', e.message); res.status(500).send('ただいま表示できません'); }
