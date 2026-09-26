@@ -1,30 +1,34 @@
 {
- "version": "2026-09-26",
+ "version": "2026-09-26g",
  "momiji": {
   "kanto": [
    {
     "station": "高尾山口_東京都",
     "spot": "高尾山",
     "note": "ケーブルカーで山の紅葉へ",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.takaotozan.co.jp/"
    },
    {
     "station": "青山一丁目_東京都",
     "spot": "神宮外苑いちょう並木",
     "note": "黄金色のいちょう並木",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.meijijingugaien.jp/"
    },
    {
     "station": "駒込_東京都",
     "spot": "六義園",
     "note": "池と紅葉の大名庭園・夜の灯り",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.tokyo-park.or.jp/park/rikugien/"
    },
    {
     "station": "飯田橋_東京都",
     "spot": "小石川後楽園",
     "note": "江戸の庭園を染める紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.tokyo-park.or.jp/park/koishikawakorakuen/"
    },
    {
     "station": "等々力_東京都",
@@ -36,25 +40,29 @@
     "station": "吉祥寺_東京都",
     "spot": "井の頭恩賜公園",
     "note": "池を囲む紅葉とボート",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.tokyo-park.or.jp/park/inokashira/"
    },
    {
     "station": "新宿御苑前_東京都",
     "spot": "新宿御苑",
     "note": "広い芝生と紅葉・イチョウ",
-    "best": "11月中旬〜12月上旬"
+    "best": "11月中旬〜12月上旬",
+    "url": "https://policies.env.go.jp/national-garden/shinjukugyoen/index.html"
    },
    {
     "station": "西立川_東京都",
     "spot": "国営昭和記念公園",
     "note": "かたらいのイチョウ並木",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "https://www.showakinen-koen.jp/"
    },
    {
     "station": "御嶽_東京都",
     "spot": "御岳渓谷",
     "note": "多摩川の渓谷と遊歩道",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.omekanko.gr.jp/"
    },
    {
     "station": "鳩ノ巣_東京都",
@@ -66,7 +74,8 @@
     "station": "国分寺_東京都",
     "spot": "殿ヶ谷戸庭園",
     "note": "崖線の湧水と紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.tokyo-park.or.jp/park/tonogayato/"
    },
    {
     "station": "本郷三丁目_東京都",
@@ -78,31 +87,36 @@
     "station": "白山_東京都",
     "spot": "小石川植物園",
     "note": "古い木々の紅葉とイチョウ",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://koishikawa-bg.jp/"
    },
    {
     "station": "清澄白河_東京都",
     "spot": "清澄庭園",
     "note": "池の磯渡りと紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.tokyo-park.or.jp/park/kiyosumi/"
    },
    {
     "station": "汐留_東京都",
     "spot": "浜離宮恩賜庭園",
     "note": "ビルを背にした庭園の紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.tokyo-park.or.jp/park/hama-rikyu/"
    },
    {
     "station": "上中里_東京都",
     "spot": "旧古河庭園",
     "note": "洋館と日本庭園の紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.tokyo-park.or.jp/park/kyu-furukawa/"
    },
    {
     "station": "日比谷_東京都",
     "spot": "日比谷公園",
     "note": "都心の大イチョウ",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.tokyo-park.or.jp/park/hibiya/"
    },
    {
     "station": "荻窪_東京都",
@@ -114,19 +128,22 @@
     "station": "九段下_東京都",
     "spot": "北の丸公園",
     "note": "お堀と北の丸の紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.env.go.jp/garden/kokyogaien/"
    },
    {
     "station": "北鎌倉_神奈川県",
     "spot": "円覚寺・明月院",
     "note": "古都の寺をめぐる紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.engakuji.or.jp/"
    },
    {
     "station": "長谷_神奈川県",
     "spot": "長谷寺",
     "note": "観音の寺の紅葉と海の眺め",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.hasedera.jp/"
    },
    {
     "station": "強羅_神奈川県",
@@ -144,7 +161,8 @@
     "station": "長瀞_埼玉県",
     "spot": "長瀞・月の石もみじ公園",
     "note": "岩畳と川沿いのもみじ",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.nagatoro.gr.jp/"
    },
    {
     "station": "武蔵嵐山_埼玉県",
@@ -156,13 +174,15 @@
     "station": "大宮公園_埼玉県",
     "spot": "大宮公園・氷川神社",
     "note": "参道と公園の紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.musashiichinomiya-hikawa.or.jp/"
    },
    {
     "station": "東武日光_栃木県",
     "spot": "日光山内（二社一寺）",
     "note": "世界遺産の社寺と紅葉",
-    "best": "10月下旬〜11月上旬"
+    "best": "10月下旬〜11月上旬",
+    "url": "https://www.nikko-kankou.org/"
    },
    {
     "station": "足利_栃木県",
@@ -174,7 +194,8 @@
     "station": "成田_千葉県",
     "spot": "成田山公園",
     "note": "池と滝の紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.naritasan.or.jp/"
    },
    {
     "station": "養老渓谷_千葉県",
@@ -188,67 +209,78 @@
     "station": "東福寺_京都府",
     "spot": "東福寺",
     "note": "通天橋から見下ろす紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://tofukuji.jp/"
    },
    {
     "station": "嵐山（嵐電）_京都府",
     "spot": "嵐山・天龍寺",
     "note": "渡月橋と山の紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.tenryuji.com/"
    },
    {
     "station": "蹴上_京都府",
     "spot": "南禅寺・永観堂",
     "note": "水路閣と紅葉の名刹",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://nanzenji.or.jp/"
    },
    {
     "station": "出町柳_京都府",
     "spot": "下鴨神社・糺の森",
     "note": "京都でいちばん遅い紅葉",
-    "best": "12月上旬"
+    "best": "12月上旬",
+    "url": "https://www.shimogamo-jinja.or.jp/"
    },
    {
     "station": "鞍馬_京都府",
     "spot": "鞍馬寺",
     "note": "山の寺と参道の紅葉",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "https://www.kuramadera.or.jp/"
    },
    {
     "station": "貴船口_京都府",
     "spot": "貴船",
     "note": "川沿いの料理旅館と紅葉",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "https://kifunejinja.jp/"
    },
    {
     "station": "市原_京都府",
     "spot": "叡山電車もみじのトンネル",
     "note": "車窓いっぱいの紅葉",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "https://eizandensha.co.jp/"
    },
    {
     "station": "八瀬比叡山口_京都府",
     "spot": "瑠璃光院",
     "note": "床もみじの寺",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "http://rurikoin.komyoji.com/"
    },
    {
     "station": "祇園四条_京都府",
     "spot": "清水寺・高台寺",
     "note": "東山の寺をめぐる紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.kiyomizudera.or.jp/"
    },
    {
     "station": "醍醐_京都府",
     "spot": "醍醐寺",
     "note": "五重塔と紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.daigoji.or.jp/"
    },
    {
     "station": "北野白梅町_京都府",
     "spot": "北野天満宮もみじ苑",
     "note": "御土居のもみじ",
-    "best": "11月中旬〜12月上旬"
+    "best": "11月中旬〜12月上旬",
+    "url": "https://kitanotenmangu.or.jp/"
    },
    {
     "station": "保津峡_京都府",
@@ -260,13 +292,15 @@
     "station": "宇治（京阪）_京都府",
     "spot": "平等院・宇治川",
     "note": "宇治川沿いの紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.byodoin.or.jp/"
    },
    {
     "station": "二条城前_京都府",
     "spot": "二条城",
     "note": "城の庭園と紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://nijo-jocastle.city.kyoto.lg.jp/"
    },
    {
     "station": "今出川_京都府",
@@ -278,31 +312,36 @@
     "station": "山科_京都府",
     "spot": "毘沙門堂",
     "note": "勅使門の散りもみじ",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.bishamon.or.jp/"
    },
    {
     "station": "石山寺_滋賀県",
     "spot": "石山寺",
     "note": "岩山の寺と紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.ishiyamadera.or.jp/"
    },
    {
     "station": "坂本比叡山口_滋賀県",
     "spot": "日吉大社",
     "note": "石垣の門前町と紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://hiyoshitaisha.jp/"
    },
    {
     "station": "箕面_大阪府",
     "spot": "箕面大滝",
     "note": "滝までの紅葉の道",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.mino-park.jp/"
    },
    {
     "station": "大阪城公園_大阪府",
     "spot": "大阪城公園",
     "note": "天守とイチョウ",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.osakacastlepark.jp/"
    },
    {
     "station": "本町_大阪府",
@@ -314,7 +353,8 @@
     "station": "万博記念公園_大阪府",
     "spot": "万博記念公園",
     "note": "太陽の塔と紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.expo70-park.jp/"
    },
    {
     "station": "緑地公園_大阪府",
@@ -338,19 +378,22 @@
     "station": "県庁前_兵庫県",
     "spot": "相楽園",
     "note": "神戸の日本庭園の紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://sorakuen.com/"
    },
    {
     "station": "近鉄奈良_奈良県",
     "spot": "奈良公園・東大寺",
     "note": "鹿と大仏と紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.todaiji.or.jp/"
    },
    {
     "station": "長谷寺_奈良県",
     "spot": "長谷寺",
     "note": "登廊と山の紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.hasedera.or.jp/"
    },
    {
     "station": "吉野_奈良県",
@@ -362,7 +405,9 @@
     "station": "極楽橋_和歌山県",
     "spot": "高野山",
     "note": "ケーブルカーで天空の寺町へ",
-    "best": "10月下旬〜11月上旬"
+    "best": "10月下旬〜11月上旬",
+    "access": "駅からケーブルカー5分",
+    "url": "https://www.koyasan.or.jp/"
    }
   ],
   "chubu": [
@@ -370,13 +415,15 @@
     "station": "軽井沢_長野県",
     "spot": "雲場池",
     "note": "水面に映る紅葉",
-    "best": "10月下旬〜11月上旬"
+    "best": "10月下旬〜11月上旬",
+    "url": "https://karuizawa-kankokyokai.jp/"
    },
    {
     "station": "長野_長野県",
     "spot": "善光寺",
     "note": "参道と境内の紅葉",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "https://www.zenkoji.jp/"
    },
    {
     "station": "小諸_長野県",
@@ -400,25 +447,29 @@
     "station": "養老_岐阜県",
     "spot": "養老公園・養老の滝",
     "note": "滝へ続く紅葉の道",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.yoro-park.com/"
    },
    {
     "station": "東山公園_愛知県",
     "spot": "東山動植物園",
     "note": "植物園の紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.higashiyama.city.nagoya.jp/"
    },
    {
     "station": "熱田神宮西_愛知県",
     "spot": "白鳥庭園",
     "note": "名古屋の日本庭園",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.shirotori-garden.jp/"
    },
    {
     "station": "大曽根_愛知県",
     "spot": "徳川園",
     "note": "大名庭園の紅葉",
-    "best": "11月下旬〜12月上旬"
+    "best": "11月下旬〜12月上旬",
+    "url": "https://www.tokugawaen.aichi.jp/"
    },
    {
     "station": "定光寺_愛知県",
@@ -430,7 +481,8 @@
     "station": "犬山遊園_愛知県",
     "spot": "寂光院",
     "note": "もみじ寺と木曽川",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://jakkoin.com/"
    },
    {
     "station": "東岡崎_愛知県",
@@ -454,19 +506,22 @@
     "station": "奥大井湖上_静岡県",
     "spot": "奥大井湖上駅",
     "note": "湖に浮かぶ駅と紅葉",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "https://daitetsu.jp/"
    },
    {
     "station": "弥彦_新潟県",
     "spot": "弥彦公園もみじ谷",
     "note": "朱の橋ともみじ谷",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "https://www.e-yahiko.com/"
    },
    {
     "station": "宇奈月温泉_富山県",
     "spot": "黒部峡谷",
     "note": "トロッコの出発点の紅葉",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "https://www.kurotetu.co.jp/"
    },
    {
     "station": "高岡_富山県",
@@ -478,7 +533,8 @@
     "station": "金沢_石川県",
     "spot": "兼六園",
     "note": "雪吊りと紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://shiro-niwa.pref.ishikawa.lg.jp/kenrokuen-garden/"
    },
    {
     "station": "福井_福井県",
@@ -504,7 +560,8 @@
     "station": "大沼公園_北海道",
     "spot": "大沼公園",
     "note": "湖と駒ヶ岳と紅葉",
-    "best": "10月中旬〜下旬"
+    "best": "10月中旬〜下旬",
+    "url": "https://www.onuma-guide.com/"
    },
    {
     "station": "北12条_北海道",
@@ -516,7 +573,8 @@
     "station": "中島公園_北海道",
     "spot": "中島公園",
     "note": "札幌の街なかの紅葉",
-    "best": "10月下旬"
+    "best": "10月下旬",
+    "url": "https://www.sapporo-park.or.jp/nakajima/"
    },
    {
     "station": "湯の川温泉_北海道",
@@ -528,7 +586,8 @@
     "station": "中央弘前_青森県",
     "spot": "弘前公園",
     "note": "城と堀の紅葉",
-    "best": "10月下旬〜11月上旬"
+    "best": "10月下旬〜11月上旬",
+    "url": "https://www.hirosakipark.jp/"
    },
    {
     "station": "盛岡_岩手県",
@@ -540,13 +599,15 @@
     "station": "平泉_岩手県",
     "spot": "中尊寺・毛越寺",
     "note": "世界遺産の寺の紅葉",
-    "best": "10月下旬〜11月上旬"
+    "best": "10月下旬〜11月上旬",
+    "url": "https://www.chusonji.or.jp/"
    },
    {
     "station": "猊鼻渓_岩手県",
     "spot": "猊鼻渓",
     "note": "舟下りで見る断崖の紅葉",
-    "best": "10月下旬〜11月上旬"
+    "best": "10月下旬〜11月上旬",
+    "url": "https://www.geibikei.co.jp/"
    },
    {
     "station": "中山平温泉_宮城県",
@@ -570,7 +631,8 @@
     "station": "山寺_山形県",
     "spot": "山寺（立石寺）",
     "note": "岩山の寺と紅葉",
-    "best": "10月下旬〜11月上旬"
+    "best": "10月下旬〜11月上旬",
+    "url": "https://rissyakuji.jp/"
    },
    {
     "station": "山形_山形県",
@@ -582,7 +644,8 @@
     "station": "西若松_福島県",
     "spot": "鶴ヶ城",
     "note": "天守と紅葉",
-    "best": "11月上旬〜中旬"
+    "best": "11月上旬〜中旬",
+    "url": "https://www.tsurugajo.com/"
    }
   ],
   "chugoku": [
@@ -590,13 +653,16 @@
     "station": "宮島口_広島県",
     "spot": "宮島・紅葉谷公園",
     "note": "フェリーで渡る紅葉の谷",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "access": "駅からフェリー10分",
+    "url": "https://www.miyajima.or.jp/"
    },
    {
     "station": "縮景園前_広島県",
     "spot": "縮景園",
     "note": "広島の大名庭園",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://shukkeien.jp/"
    },
    {
     "station": "尾道_広島県",
@@ -608,13 +674,15 @@
     "station": "城下_岡山県",
     "spot": "岡山後楽園",
     "note": "日本三名園の紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://okayama-korakuen.jp/"
    },
    {
     "station": "吉備津_岡山県",
     "spot": "吉備津神社",
     "note": "回廊ともみじ",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://kibitujinja.com/"
    },
    {
     "station": "山口_山口県",
@@ -632,7 +700,8 @@
     "station": "松江_島根県",
     "spot": "松江城",
     "note": "城と堀の紅葉",
-    "best": "11月中旬"
+    "best": "11月中旬",
+    "url": "https://www.matsue-castle.jp/"
    },
    {
     "station": "鳥取_鳥取県",
@@ -652,7 +721,8 @@
     "station": "琴電琴平_香川県",
     "spot": "金刀比羅宮",
     "note": "石段と紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.konpira.or.jp/"
    },
    {
     "station": "大歩危_徳島県",
@@ -670,7 +740,8 @@
     "station": "大街道_愛媛県",
     "spot": "松山城",
     "note": "天守の丘の紅葉",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.matsuyamajo.jp/"
    },
    {
     "station": "道後公園_愛媛県",
@@ -682,7 +753,8 @@
     "station": "高知城前_高知県",
     "spot": "高知城",
     "note": "城と追手筋",
-    "best": "11月下旬"
+    "best": "11月下旬",
+    "url": "https://kochipark.jp/kochijyo/"
    }
   ],
   "kyushu": [
@@ -690,7 +762,8 @@
     "station": "太宰府_福岡県",
     "spot": "太宰府天満宮・光明禅寺",
     "note": "苔と紅葉の枯山水",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.dazaifutenmangu.or.jp/"
    },
    {
     "station": "大濠公園_福岡県",
@@ -702,13 +775,15 @@
     "station": "西小倉_福岡県",
     "spot": "小倉城",
     "note": "城と庭園の紅葉",
-    "best": "11月下旬"
+    "best": "11月下旬",
+    "url": "https://kokura-castle.jp/"
    },
    {
     "station": "武雄温泉_佐賀県",
     "spot": "御船山楽園",
     "note": "夜の灯りと紅葉の庭",
-    "best": "11月中旬〜下旬"
+    "best": "11月中旬〜下旬",
+    "url": "https://www.mifuneyamarakuen.jp/"
    },
    {
     "station": "由布院_大分県",
@@ -720,7 +795,1969 @@
     "station": "熊本城・市役所前_熊本県",
     "spot": "熊本城",
     "note": "城と紅葉",
-    "best": "11月下旬"
+    "best": "11月下旬",
+    "url": "https://castle.kumamoto-guide.jp/"
+   }
+  ]
+ },
+ "onsen": {
+  "hokkaido-tohoku": [
+   {
+    "station": "湯の川温泉_北海道",
+    "spot": "湯の川温泉",
+    "note": "市電で行ける函館の温泉街"
+   },
+   {
+    "station": "浅虫温泉_青森県",
+    "spot": "浅虫温泉",
+    "note": "陸奥湾に面した駅前の温泉",
+    "url": "https://www.asamushi.com/"
+   },
+   {
+    "station": "大鰐温泉_青森県",
+    "spot": "大鰐温泉",
+    "note": "津軽の奥座敷・駅前に共同浴場"
+   },
+   {
+    "station": "鳴子温泉_宮城県",
+    "spot": "鳴子温泉",
+    "note": "こけしの町の湯けむり",
+    "url": "https://www.naruko.gr.jp/"
+   },
+   {
+    "station": "中山平温泉_宮城県",
+    "spot": "中山平温泉",
+    "note": "ぬるぬるの美肌の湯"
+   },
+   {
+    "station": "飯坂温泉_福島県",
+    "spot": "飯坂温泉",
+    "note": "鯖湖湯と温泉街の坂道"
+   },
+   {
+    "station": "湯野上温泉_福島県",
+    "spot": "湯野上温泉",
+    "note": "かやぶき駅舎と足湯"
+   },
+   {
+    "station": "かみのやま温泉_山形県",
+    "spot": "かみのやま温泉",
+    "note": "城下町の温泉と足湯",
+    "url": "https://kaminoyama-spa.com/"
+   },
+   {
+    "station": "赤湯_山形県",
+    "spot": "赤湯温泉",
+    "note": "ぶどう畑に囲まれた温泉"
+   },
+   {
+    "station": "天童_山形県",
+    "spot": "天童温泉",
+    "note": "将棋の駒の町の温泉"
+   },
+   {
+    "station": "湯瀬温泉_秋田県",
+    "spot": "湯瀬温泉",
+    "note": "米代川の渓流沿いの宿"
+   },
+   {
+    "station": "大滝温泉_秋田県",
+    "spot": "大滝温泉",
+    "note": "駅から歩ける静かな湯"
+   },
+   {
+    "station": "瀬見温泉_山形県",
+    "spot": "瀬見温泉",
+    "note": "義経伝説の古い湯治場"
+   }
+  ],
+  "kanto": [
+   {
+    "station": "箱根湯本_神奈川県",
+    "spot": "箱根湯本温泉",
+    "note": "箱根の玄関の温泉街",
+    "url": "https://www.hakonenavi.jp/"
+   },
+   {
+    "station": "塔ノ沢_神奈川県",
+    "spot": "塔之沢温泉",
+    "note": "早川の渓谷の老舗宿",
+    "url": "https://www.hakonenavi.jp/"
+   },
+   {
+    "station": "宮ノ下_神奈川県",
+    "spot": "宮ノ下温泉",
+    "note": "クラシックホテルの温泉",
+    "url": "https://www.hakonenavi.jp/"
+   },
+   {
+    "station": "小涌谷_神奈川県",
+    "spot": "小涌谷温泉",
+    "note": "山あいの温泉と遊べる湯",
+    "url": "https://www.hakonenavi.jp/"
+   },
+   {
+    "station": "強羅_神奈川県",
+    "spot": "強羅温泉",
+    "note": "ケーブルカーの町の温泉",
+    "url": "https://www.hakonenavi.jp/"
+   },
+   {
+    "station": "鬼怒川温泉_栃木県",
+    "spot": "鬼怒川温泉",
+    "note": "渓谷沿いの大温泉地",
+    "url": "https://www.nikko-kankou.org/"
+   },
+   {
+    "station": "川治温泉_栃木県",
+    "spot": "川治温泉",
+    "note": "川辺の露天と静かな宿",
+    "url": "https://www.nikko-kankou.org/"
+   },
+   {
+    "station": "水上_群馬県",
+    "spot": "水上温泉",
+    "note": "谷川岳のふもとの温泉街"
+   },
+   {
+    "station": "湯檜曽_群馬県",
+    "spot": "湯檜曽温泉",
+    "note": "利根川の源流近くの湯"
+   },
+   {
+    "station": "上牧_群馬県",
+    "spot": "上牧温泉",
+    "note": "駅から歩ける川沿いの宿"
+   },
+   {
+    "station": "西武秩父_埼玉県",
+    "spot": "西武秩父駅前温泉 祭の湯",
+    "note": "駅に直結の温泉"
+   },
+   {
+    "station": "奥多摩_東京都",
+    "spot": "もえぎの湯",
+    "note": "都内の山あいの日帰り湯"
+   },
+   {
+    "station": "高尾山口_東京都",
+    "spot": "京王高尾山温泉 極楽湯",
+    "note": "登山の帰りに駅の隣の湯",
+    "url": "https://www.takaosan-onsen.jp/"
+   },
+   {
+    "station": "平和島_東京都",
+    "spot": "天然温泉 平和島",
+    "note": "都心の天然温泉",
+    "url": "https://www.heiwajima-onsen.jp/"
+   },
+   {
+    "station": "養老渓谷_千葉県",
+    "spot": "養老渓谷温泉",
+    "note": "房総の山あいの黒湯"
+   },
+   {
+    "station": "犬吠_千葉県",
+    "spot": "犬吠埼温泉",
+    "note": "灯台と太平洋の温泉"
+   }
+  ],
+  "chubu": [
+   {
+    "station": "熱海_静岡県",
+    "spot": "熱海温泉",
+    "note": "海と坂の大温泉街",
+    "url": "https://www.ataminews.gr.jp/"
+   },
+   {
+    "station": "伊東_静岡県",
+    "spot": "伊東温泉",
+    "note": "共同湯めぐりと川沿いの宿",
+    "url": "https://itospa.com/"
+   },
+   {
+    "station": "伊豆熱川_静岡県",
+    "spot": "熱川温泉",
+    "note": "駅前から湯けむりが立つ町"
+   },
+   {
+    "station": "伊豆稲取_静岡県",
+    "spot": "稲取温泉",
+    "note": "金目鯛と港の温泉"
+   },
+   {
+    "station": "湯田中_長野県",
+    "spot": "湯田中温泉",
+    "note": "駅前の足湯と古い温泉街"
+   },
+   {
+    "station": "別所温泉_長野県",
+    "spot": "別所温泉",
+    "note": "信州最古級の温泉と寺",
+    "url": "https://www.bessho-spa.jp/"
+   },
+   {
+    "station": "上諏訪_長野県",
+    "spot": "上諏訪温泉",
+    "note": "諏訪湖畔の温泉と駅の足湯"
+   },
+   {
+    "station": "下諏訪_長野県",
+    "spot": "下諏訪温泉",
+    "note": "宿場町の共同湯"
+   },
+   {
+    "station": "戸倉_長野県",
+    "spot": "戸倉上山田温泉",
+    "note": "千曲川沿いの温泉街"
+   },
+   {
+    "station": "下呂_岐阜県",
+    "spot": "下呂温泉",
+    "note": "日本三名泉の湯の町",
+    "url": "https://www.gero-spa.com/"
+   },
+   {
+    "station": "越後湯沢_新潟県",
+    "spot": "越後湯沢温泉",
+    "note": "駅なかで利き酒と温泉",
+    "url": "https://www.e-yuzawa.gr.jp/"
+   },
+   {
+    "station": "宇奈月温泉_富山県",
+    "spot": "宇奈月温泉",
+    "note": "トロッコの町の温泉",
+    "url": "https://www.unazuki-onsen.com/"
+   },
+   {
+    "station": "和倉温泉_石川県",
+    "spot": "和倉温泉",
+    "note": "七尾湾に面した海の温泉",
+    "url": "https://www.wakura.or.jp/"
+   },
+   {
+    "station": "あわら湯のまち_福井県",
+    "spot": "あわら温泉",
+    "note": "駅前に大きな足湯",
+    "url": "https://awara.info/"
+   },
+   {
+    "station": "石和温泉_山梨県",
+    "spot": "石和温泉",
+    "note": "ぶどうの里の温泉街"
+   },
+   {
+    "station": "下部温泉_山梨県",
+    "spot": "下部温泉",
+    "note": "信玄の隠し湯"
+   }
+  ],
+  "kinki": [
+   {
+    "station": "有馬温泉_兵庫県",
+    "spot": "有馬温泉",
+    "note": "金泉・銀泉の名湯",
+    "url": "https://www.arima-onsen.com/"
+   },
+   {
+    "station": "城崎温泉_兵庫県",
+    "spot": "城崎温泉",
+    "note": "外湯めぐりの柳の町",
+    "url": "https://kinosaki-spa.gr.jp/"
+   },
+   {
+    "station": "宝塚_兵庫県",
+    "spot": "宝塚温泉",
+    "note": "歌劇の町の温泉"
+   },
+   {
+    "station": "紀伊勝浦_和歌山県",
+    "spot": "南紀勝浦温泉",
+    "note": "駅前の足湯と港",
+    "url": "https://nachikan.jp/"
+   },
+   {
+    "station": "おごと温泉_滋賀県",
+    "spot": "おごと温泉",
+    "note": "琵琶湖を望む温泉",
+    "url": "https://www.ogotoonsen.com/"
+   },
+   {
+    "station": "鞍馬_京都府",
+    "spot": "くらま温泉",
+    "note": "鞍馬の山の露天風呂"
+   },
+   {
+    "station": "新今宮_大阪府",
+    "spot": "スパワールド",
+    "note": "通天閣の足もとの温泉",
+    "url": "https://www.spaworld.co.jp/"
+   },
+   {
+    "station": "鳥羽_三重県",
+    "spot": "鳥羽温泉郷",
+    "note": "海の幸と湾の温泉",
+    "url": "https://www.toba.gr.jp/"
+   }
+  ],
+  "chugoku": [
+   {
+    "station": "玉造温泉_島根県",
+    "spot": "玉造温泉",
+    "note": "神の湯と呼ばれた美肌の湯"
+   },
+   {
+    "station": "温泉津_島根県",
+    "spot": "温泉津温泉",
+    "note": "石見銀山の港の外湯"
+   },
+   {
+    "station": "湯田温泉_山口県",
+    "spot": "湯田温泉",
+    "note": "白狐伝説の街なかの温泉",
+    "url": "https://yudaonsen.com/"
+   },
+   {
+    "station": "長門湯本_山口県",
+    "spot": "長門湯本温泉",
+    "note": "音信川の川床と外湯"
+   },
+   {
+    "station": "鳥取_鳥取県",
+    "spot": "鳥取温泉",
+    "note": "県庁所在地の街なかの温泉"
+   }
+  ],
+  "shikoku": [
+   {
+    "station": "道後温泉_愛媛県",
+    "spot": "道後温泉",
+    "note": "本館のある日本最古級の温泉",
+    "url": "https://dogo.jp/"
+   },
+   {
+    "station": "琴電琴平_香川県",
+    "spot": "こんぴら温泉郷",
+    "note": "石段の町の温泉"
+   }
+  ],
+  "kyushu": [
+   {
+    "station": "由布院_大分県",
+    "spot": "由布院温泉",
+    "note": "由布岳のふもとの湯の里",
+    "url": "https://yufuin.gr.jp/"
+   },
+   {
+    "station": "別府_大分県",
+    "spot": "別府温泉",
+    "note": "駅から歩ける竹瓦温泉"
+   },
+   {
+    "station": "武雄温泉_佐賀県",
+    "spot": "武雄温泉",
+    "note": "朱の楼門と共同湯",
+    "url": "https://www.takeo-kk.net/"
+   },
+   {
+    "station": "指宿_鹿児島県",
+    "spot": "指宿温泉",
+    "note": "砂むし風呂の温泉",
+    "url": "https://ibusuki.or.jp/"
+   },
+   {
+    "station": "日奈久温泉_熊本県",
+    "spot": "日奈久温泉",
+    "note": "600年続く湯の町"
+   },
+   {
+    "station": "二日市_福岡県",
+    "spot": "二日市温泉",
+    "note": "太宰府の隣の古い温泉"
+   }
+  ]
+ },
+ "shotengai": {
+  "kanto": [
+   {
+    "station": "戸越銀座_東京都",
+    "spot": "戸越銀座商店街",
+    "note": "1.3kmの長い商店街と食べ歩き",
+    "url": "https://www.togoshiginza.jp/"
+   },
+   {
+    "station": "南砂町_東京都",
+    "spot": "砂町銀座商店街",
+    "note": "下町のおかず横丁"
+   },
+   {
+    "station": "日暮里_東京都",
+    "spot": "谷中銀座商店街",
+    "note": "夕やけだんだんと猫の町",
+    "url": "https://www.yanakaginza.com/"
+   },
+   {
+    "station": "十条_東京都",
+    "spot": "十条銀座商店街",
+    "note": "安くてにぎやかな庶民の街"
+   },
+   {
+    "station": "武蔵小山_東京都",
+    "spot": "武蔵小山商店街パルム",
+    "note": "都内有数のアーケード"
+   },
+   {
+    "station": "中野_東京都",
+    "spot": "中野サンモール・中野ブロードウェイ",
+    "note": "サブカルの聖地へ続く道"
+   },
+   {
+    "station": "高円寺_東京都",
+    "spot": "高円寺純情商店街",
+    "note": "古着と小説の舞台の町"
+   },
+   {
+    "station": "阿佐ヶ谷_東京都",
+    "spot": "阿佐谷パールセンター",
+    "note": "七夕まつりのアーケード"
+   },
+   {
+    "station": "巣鴨_東京都",
+    "spot": "巣鴨地蔵通り商店街",
+    "note": "おばあちゃんの原宿",
+    "url": "https://sugamo.or.jp/"
+   },
+   {
+    "station": "御徒町_東京都",
+    "spot": "アメ横商店街",
+    "note": "年末の買い出しの名所",
+    "url": "https://www.ameyoko.net/"
+   },
+   {
+    "station": "吉祥寺_東京都",
+    "spot": "吉祥寺サンロード",
+    "note": "住みたい街の中心の通り"
+   },
+   {
+    "station": "三軒茶屋_東京都",
+    "spot": "三軒茶屋エコー仲見世",
+    "note": "三角地帯の路地の飲み屋"
+   },
+   {
+    "station": "浅草_東京都",
+    "spot": "浅草仲見世",
+    "note": "雷門から続く日本最古級の商店街",
+    "url": "https://www.asakusa-nakamise.jp/"
+   },
+   {
+    "station": "人形町_東京都",
+    "spot": "甘酒横丁",
+    "note": "老舗の和菓子と下町情緒"
+   },
+   {
+    "station": "月島_東京都",
+    "spot": "月島もんじゃストリート",
+    "note": "もんじゃ焼きの店が並ぶ",
+    "url": "https://monja.gr.jp/"
+   },
+   {
+    "station": "柴又_東京都",
+    "spot": "柴又帝釈天参道",
+    "note": "寅さんの町の草だんご"
+   },
+   {
+    "station": "麻布十番_東京都",
+    "spot": "麻布十番商店街",
+    "note": "老舗とたい焼きの坂の町",
+    "url": "https://azabujuban.or.jp/"
+   },
+   {
+    "station": "中延_東京都",
+    "spot": "中延スキップロード",
+    "note": "昔ながらのアーケード"
+   },
+   {
+    "station": "大山_東京都",
+    "spot": "ハッピーロード大山",
+    "note": "板橋の長いアーケード"
+   },
+   {
+    "station": "三ノ輪橋_東京都",
+    "spot": "ジョイフル三の輪",
+    "note": "都電の終点のアーケード"
+   },
+   {
+    "station": "赤羽_東京都",
+    "spot": "赤羽一番街",
+    "note": "昼から飲めるせんべろの街"
+   },
+   {
+    "station": "元町・中華街_神奈川県",
+    "spot": "横浜中華街",
+    "note": "中華料理と食べ歩き",
+    "url": "https://www.chinatown.or.jp/"
+   },
+   {
+    "station": "白楽_神奈川県",
+    "spot": "六角橋商店街",
+    "note": "昭和の路地とふれあい通り"
+   },
+   {
+    "station": "天王町_神奈川県",
+    "spot": "洪福寺松原商店街",
+    "note": "ハマのアメ横"
+   },
+   {
+    "station": "桜木町_神奈川県",
+    "spot": "野毛の飲み屋街",
+    "note": "横浜の老舗と屋台の路地"
+   },
+   {
+    "station": "鎌倉_神奈川県",
+    "spot": "小町通り",
+    "note": "鶴岡八幡宮への食べ歩き道"
+   },
+   {
+    "station": "本川越_埼玉県",
+    "spot": "川越一番街",
+    "note": "蔵造りの町並み",
+    "url": "https://koedo.or.jp/"
+   },
+   {
+    "station": "成田_千葉県",
+    "spot": "成田山表参道",
+    "note": "うなぎと門前町の坂道"
+   },
+   {
+    "station": "佐原_千葉県",
+    "spot": "佐原の町並み",
+    "note": "小野川沿いの商家の町"
+   },
+   {
+    "station": "東武宇都宮_栃木県",
+    "spot": "オリオン通り",
+    "note": "宇都宮の餃子とアーケード"
+   }
+  ],
+  "kinki": [
+   {
+    "station": "天神橋筋六丁目_大阪府",
+    "spot": "天神橋筋商店街",
+    "note": "日本一長い商店街",
+    "url": "https://www.tenjin123.com/"
+   },
+   {
+    "station": "日本橋_大阪府",
+    "spot": "黒門市場",
+    "note": "大阪の台所"
+   },
+   {
+    "station": "心斎橋_大阪府",
+    "spot": "心斎橋筋商店街",
+    "note": "道頓堀へ続くアーケード",
+    "url": "https://www.shinsaibashi.or.jp/"
+   },
+   {
+    "station": "松屋町_大阪府",
+    "spot": "空堀商店街",
+    "note": "長屋と坂道の商店街"
+   },
+   {
+    "station": "恵美須町_大阪府",
+    "spot": "新世界",
+    "note": "通天閣と串カツの街"
+   },
+   {
+    "station": "鶴橋_大阪府",
+    "spot": "鶴橋の市場",
+    "note": "焼肉とコリアンタウン"
+   },
+   {
+    "station": "千林_大阪府",
+    "spot": "千林商店街",
+    "note": "安さで知られる下町の商店街"
+   },
+   {
+    "station": "針中野_大阪府",
+    "spot": "駒川商店街",
+    "note": "地元に愛される長いアーケード"
+   },
+   {
+    "station": "十三_大阪府",
+    "spot": "十三の飲み屋街",
+    "note": "淀川そばの昭和の横丁"
+   },
+   {
+    "station": "京橋_大阪府",
+    "spot": "京橋の商店街",
+    "note": "立ち飲みの街"
+   },
+   {
+    "station": "四条_京都府",
+    "spot": "錦市場",
+    "note": "京の台所",
+    "url": "https://www.kyoto-nishiki.or.jp/"
+   },
+   {
+    "station": "京都河原町_京都府",
+    "spot": "新京極・寺町",
+    "note": "修学旅行生の定番の通り",
+    "url": "https://www.shinkyogoku.or.jp/"
+   },
+   {
+    "station": "出町柳_京都府",
+    "spot": "出町桝形商店街",
+    "note": "鴨川デルタそばの商店街"
+   },
+   {
+    "station": "大宮_京都府",
+    "spot": "三条会商店街",
+    "note": "京都の長いアーケード"
+   },
+   {
+    "station": "伏見桃山_京都府",
+    "spot": "伏見大手筋商店街",
+    "note": "酒蔵の町のアーケード"
+   },
+   {
+    "station": "稲荷_京都府",
+    "spot": "伏見稲荷の参道",
+    "note": "いなり寿司と門前の店"
+   },
+   {
+    "station": "元町_兵庫県",
+    "spot": "元町商店街・南京町",
+    "note": "神戸の老舗と中華街",
+    "url": "https://www.kobe-motomachi.or.jp/"
+   },
+   {
+    "station": "三宮_兵庫県",
+    "spot": "三宮センター街",
+    "note": "神戸の中心のアーケード",
+    "url": "https://www.kobe-sc.jp/"
+   },
+   {
+    "station": "王子公園_兵庫県",
+    "spot": "水道筋商店街",
+    "note": "市場が集まる下町"
+   },
+   {
+    "station": "湊川公園_兵庫県",
+    "spot": "湊川の商店街",
+    "note": "新開地へ続く庶民の街"
+   },
+   {
+    "station": "尼崎（阪神）_兵庫県",
+    "spot": "三和本通商店街",
+    "note": "尼崎の市場とアーケード"
+   },
+   {
+    "station": "明石_兵庫県",
+    "spot": "魚の棚商店街",
+    "note": "明石だこと鯛の市場",
+    "url": "https://www.uonotana.or.jp/"
+   },
+   {
+    "station": "姫路_兵庫県",
+    "spot": "みゆき通り",
+    "note": "姫路城へ続くアーケード"
+   },
+   {
+    "station": "近鉄奈良_奈良県",
+    "spot": "東向商店街・もちいどの",
+    "note": "奈良公園の手前の商店街"
+   },
+   {
+    "station": "長浜_滋賀県",
+    "spot": "黒壁スクエア",
+    "note": "ガラスと古い町並み",
+    "url": "https://www.kurokabe.co.jp/"
+   }
+  ],
+  "chubu": [
+   {
+    "station": "上前津_愛知県",
+    "spot": "大須商店街",
+    "note": "大須観音と食べ歩き",
+    "url": "https://osu.nagoya/ja/"
+   },
+   {
+    "station": "国際センター_愛知県",
+    "spot": "円頓寺商店街",
+    "note": "名古屋の古いアーケード"
+   },
+   {
+    "station": "覚王山_愛知県",
+    "spot": "覚王山日泰寺参道",
+    "note": "縁日と参道の店"
+   },
+   {
+    "station": "名鉄岐阜_岐阜県",
+    "spot": "柳ケ瀬商店街",
+    "note": "歌にもなった岐阜の繁華街"
+   },
+   {
+    "station": "高山_岐阜県",
+    "spot": "飛騨高山の古い町並み",
+    "note": "朝市と酒蔵の町"
+   },
+   {
+    "station": "金沢_石川県",
+    "spot": "近江町市場",
+    "note": "金沢の台所",
+    "url": "https://ohmicho-ichiba.com/"
+   },
+   {
+    "station": "静岡_静岡県",
+    "spot": "呉服町通り",
+    "note": "駿府の城下町の商店街"
+   },
+   {
+    "station": "熱海_静岡県",
+    "spot": "熱海仲見世・平和通り",
+    "note": "温泉まんじゅうと干物"
+   },
+   {
+    "station": "松本_長野県",
+    "spot": "縄手通り・中町通り",
+    "note": "蔵とカエルの町"
+   },
+   {
+    "station": "善光寺下_長野県",
+    "spot": "善光寺の門前町",
+    "note": "仲見世と宿坊の町"
+   },
+   {
+    "station": "犬山_愛知県",
+    "spot": "犬山城下町",
+    "note": "城下町の食べ歩き"
+   }
+  ],
+  "hokkaido-tohoku": [
+   {
+    "station": "大通_北海道",
+    "spot": "狸小路商店街",
+    "note": "札幌の長いアーケード",
+    "url": "https://tanukikoji.or.jp/"
+   },
+   {
+    "station": "バスセンター前_北海道",
+    "spot": "二条市場",
+    "note": "札幌の海鮮市場",
+    "url": "https://nijomarket.com/"
+   },
+   {
+    "station": "函館_北海道",
+    "spot": "函館朝市",
+    "note": "駅前の朝市と海鮮丼",
+    "url": "https://www.hakodate-asaichi.com/"
+   },
+   {
+    "station": "南小樽_北海道",
+    "spot": "小樽堺町通り",
+    "note": "ガラスとオルゴールの通り"
+   },
+   {
+    "station": "青葉通一番町_宮城県",
+    "spot": "仙台一番町のアーケード",
+    "note": "杜の都の中心の商店街"
+   },
+   {
+    "station": "本八戸_青森県",
+    "spot": "みろく横丁",
+    "note": "屋台村と八戸の夜",
+    "url": "https://36yokocho.com/"
+   },
+   {
+    "station": "青森_青森県",
+    "spot": "青森魚菜センター",
+    "note": "のっけ丼の市場"
+   },
+   {
+    "station": "秋田_秋田県",
+    "spot": "秋田市民市場",
+    "note": "駅前の市場"
+   },
+   {
+    "station": "七日町_福島県",
+    "spot": "七日町通り",
+    "note": "会津の大正ロマンの町並み"
+   }
+  ],
+  "chugoku": [
+   {
+    "station": "城下_岡山県",
+    "spot": "表町商店街",
+    "note": "岡山の城下のアーケード"
+   },
+   {
+    "station": "倉敷_岡山県",
+    "spot": "倉敷美観地区・えびす通り",
+    "note": "白壁の町と商店街"
+   },
+   {
+    "station": "本通_広島県",
+    "spot": "広島本通商店街",
+    "note": "平和公園そばのアーケード",
+    "url": "https://www.hondori.or.jp/"
+   },
+   {
+    "station": "尾道_広島県",
+    "spot": "尾道本通り商店街",
+    "note": "坂の町の長い商店街"
+   },
+   {
+    "station": "呉_広島県",
+    "spot": "呉の中通・屋台",
+    "note": "海軍の町の商店街"
+   },
+   {
+    "station": "境港_鳥取県",
+    "spot": "水木しげるロード",
+    "note": "妖怪ブロンズ像の通り"
+   },
+   {
+    "station": "宮島口_広島県",
+    "spot": "宮島表参道商店街",
+    "note": "もみじ饅頭と牡蠣"
+   }
+  ],
+  "shikoku": [
+   {
+    "station": "瓦町_香川県",
+    "spot": "高松丸亀町商店街",
+    "note": "全国有数の長いアーケード",
+    "url": "https://kame3.jp/"
+   },
+   {
+    "station": "大街道_愛媛県",
+    "spot": "大街道・銀天街",
+    "note": "松山の中心の商店街"
+   },
+   {
+    "station": "はりまや橋_高知県",
+    "spot": "帯屋町商店街・ひろめ市場",
+    "note": "カツオのたたきの屋台村",
+    "url": "https://hirome.co.jp/"
+   },
+   {
+    "station": "道後温泉_愛媛県",
+    "spot": "道後ハイカラ通り",
+    "note": "温泉街の土産物の通り"
+   },
+   {
+    "station": "琴電琴平_香川県",
+    "spot": "こんぴら参道",
+    "note": "石段の両側の土産物店"
+   }
+  ],
+  "kyushu": [
+   {
+    "station": "中洲川端_福岡県",
+    "spot": "川端通商店街",
+    "note": "博多の古いアーケード"
+   },
+   {
+    "station": "旦過_福岡県",
+    "spot": "旦過市場",
+    "note": "北九州の台所"
+   },
+   {
+    "station": "観光通_長崎県",
+    "spot": "浜んまちアーケード",
+    "note": "長崎の中心の商店街"
+   },
+   {
+    "station": "通町筋_熊本県",
+    "spot": "上通・下通",
+    "note": "熊本の二大アーケード",
+    "url": "https://www.kamitori.com/"
+   },
+   {
+    "station": "天文館通_鹿児島県",
+    "spot": "天文館",
+    "note": "白熊と鹿児島の繁華街"
+   },
+   {
+    "station": "牧志_沖縄県",
+    "spot": "国際通り・牧志公設市場",
+    "note": "沖縄の市場と土産物"
+   },
+   {
+    "station": "太宰府_福岡県",
+    "spot": "太宰府天満宮表参道",
+    "note": "梅ヶ枝餅の参道"
+   }
+  ]
+ },
+ "castle": {
+  "hokkaido-tohoku": [
+   {
+    "station": "五稜郭公園前_北海道",
+    "spot": "五稜郭",
+    "note": "星形の城郭と五稜郭タワー",
+    "url": "https://www.goryokaku-tower.co.jp/"
+   },
+   {
+    "station": "中央弘前_青森県",
+    "spot": "弘前城",
+    "note": "現存天守と堀と桜",
+    "url": "https://www.hirosakipark.jp/"
+   },
+   {
+    "station": "盛岡_岩手県",
+    "spot": "盛岡城跡",
+    "note": "見事な石垣の城跡公園"
+   },
+   {
+    "station": "国際センター_宮城県",
+    "spot": "仙台城跡（青葉城）",
+    "note": "伊達政宗の騎馬像と街の眺め"
+   },
+   {
+    "station": "秋田_秋田県",
+    "spot": "久保田城跡（千秋公園）",
+    "note": "駅から歩ける佐竹氏の城跡"
+   },
+   {
+    "station": "山形_山形県",
+    "spot": "山形城跡（霞城公園）",
+    "note": "堀と復元された門"
+   },
+   {
+    "station": "西若松_福島県",
+    "spot": "鶴ヶ城",
+    "note": "赤瓦の天守",
+    "url": "https://www.tsurugajo.com/"
+   },
+   {
+    "station": "白石_宮城県",
+    "spot": "白石城",
+    "note": "木造で復元した三階櫓",
+    "url": "https://shiroishi-navi.jp/"
+   },
+   {
+    "station": "二本松_福島県",
+    "spot": "二本松城跡（霞ヶ城）",
+    "note": "石垣と菊人形の城"
+   },
+   {
+    "station": "白河_福島県",
+    "spot": "小峰城",
+    "note": "駅の目の前の三重櫓"
+   }
+  ],
+  "kanto": [
+   {
+    "station": "竹橋_東京都",
+    "spot": "江戸城跡（皇居東御苑）",
+    "note": "本丸跡と天守台",
+    "url": "https://www.kunaicho.go.jp/visit/higashigyoen/index.html"
+   },
+   {
+    "station": "小田原_神奈川県",
+    "spot": "小田原城",
+    "note": "駅から見える天守",
+    "url": "https://odawaracastle.com/"
+   },
+   {
+    "station": "本川越_埼玉県",
+    "spot": "川越城本丸御殿",
+    "note": "本丸御殿が残る城"
+   },
+   {
+    "station": "行田市_埼玉県",
+    "spot": "忍城",
+    "note": "浮き城と呼ばれた城の櫓"
+   },
+   {
+    "station": "水戸_茨城県",
+    "spot": "水戸城跡・弘道館",
+    "note": "藩校と大手門"
+   },
+   {
+    "station": "京成佐倉_千葉県",
+    "spot": "佐倉城址公園",
+    "note": "空堀と歴史博物館"
+   },
+   {
+    "station": "東武宇都宮_栃木県",
+    "spot": "宇都宮城址公園",
+    "note": "土塁と櫓の復元"
+   },
+   {
+    "station": "寄居_埼玉県",
+    "spot": "鉢形城跡",
+    "note": "戦国の山城跡"
+   },
+   {
+    "station": "大多喜_千葉県",
+    "spot": "大多喜城",
+    "note": "房総の小さな城下町"
+   }
+  ],
+  "chubu": [
+   {
+    "station": "名古屋城_愛知県",
+    "spot": "名古屋城",
+    "note": "金のしゃちほこと本丸御殿",
+    "url": "https://www.nagoyajo.city.nagoya.jp/"
+   },
+   {
+    "station": "犬山_愛知県",
+    "spot": "犬山城",
+    "note": "国宝の現存天守",
+    "url": "https://inuyama-castle.jp/"
+   },
+   {
+    "station": "東岡崎_愛知県",
+    "spot": "岡崎城",
+    "note": "家康の生まれた城",
+    "url": "https://okazaki-kanko.jp/okazaki-park/"
+   },
+   {
+    "station": "清洲_愛知県",
+    "spot": "清洲城",
+    "note": "信長ゆかりの城"
+   },
+   {
+    "station": "大垣_岐阜県",
+    "spot": "大垣城",
+    "note": "水の都の城"
+   },
+   {
+    "station": "松本_長野県",
+    "spot": "松本城",
+    "note": "黒い国宝天守",
+    "url": "https://www.matsumoto-castle.jp/"
+   },
+   {
+    "station": "上田_長野県",
+    "spot": "上田城跡",
+    "note": "真田の城と櫓"
+   },
+   {
+    "station": "小諸_長野県",
+    "spot": "小諸城址（懐古園）",
+    "note": "駅より低い穴城"
+   },
+   {
+    "station": "上諏訪_長野県",
+    "spot": "高島城",
+    "note": "湖に浮かんだ城"
+   },
+   {
+    "station": "金沢_石川県",
+    "spot": "金沢城公園",
+    "note": "兼六園の隣の城"
+   },
+   {
+    "station": "福井_福井県",
+    "spot": "福井城址",
+    "note": "県庁の立つ城跡"
+   },
+   {
+    "station": "一乗谷_福井県",
+    "spot": "一乗谷朝倉氏遺跡",
+    "note": "戦国の城下町の遺跡",
+    "url": "https://asakura-museum.pref.fukui.lg.jp/"
+   },
+   {
+    "station": "富山_富山県",
+    "spot": "富山城",
+    "note": "駅から歩ける城址公園"
+   },
+   {
+    "station": "高岡_富山県",
+    "spot": "高岡古城公園",
+    "note": "水堀に囲まれた城跡"
+   },
+   {
+    "station": "新発田_新潟県",
+    "spot": "新発田城",
+    "note": "三匹の鯱の櫓"
+   },
+   {
+    "station": "高田_新潟県",
+    "spot": "高田城址公園",
+    "note": "三重櫓と大きな堀"
+   },
+   {
+    "station": "甲府_山梨県",
+    "spot": "甲府城跡（舞鶴城公園）",
+    "note": "駅前の石垣"
+   },
+   {
+    "station": "静岡_静岡県",
+    "spot": "駿府城公園",
+    "note": "家康の城の巽櫓",
+    "url": "https://sumpu-castlepark.com/"
+   },
+   {
+    "station": "浜松_静岡県",
+    "spot": "浜松城",
+    "note": "出世城と呼ばれた城"
+   },
+   {
+    "station": "掛川_静岡県",
+    "spot": "掛川城",
+    "note": "木造で復元した天守"
+   }
+  ],
+  "kinki": [
+   {
+    "station": "大阪城公園_大阪府",
+    "spot": "大阪城",
+    "note": "天守と大きな石垣",
+    "url": "https://www.osakacastle.net/"
+   },
+   {
+    "station": "姫路_兵庫県",
+    "spot": "姫路城",
+    "note": "白鷺城と呼ばれる世界遺産",
+    "url": "https://www.city.himeji.lg.jp/castle/"
+   },
+   {
+    "station": "彦根_滋賀県",
+    "spot": "彦根城",
+    "note": "国宝天守とひこにゃん",
+    "url": "https://hikonecastle.com/"
+   },
+   {
+    "station": "二条城前_京都府",
+    "spot": "二条城",
+    "note": "二の丸御殿の世界遺産",
+    "url": "https://nijo-jocastle.city.kyoto.lg.jp/"
+   },
+   {
+    "station": "明石_兵庫県",
+    "spot": "明石城",
+    "note": "駅の目の前の二つの櫓"
+   },
+   {
+    "station": "蛸地蔵_大阪府",
+    "spot": "岸和田城",
+    "note": "だんじりの町の城"
+   },
+   {
+    "station": "和歌山市_和歌山県",
+    "spot": "和歌山城",
+    "note": "虎伏山の天守",
+    "url": "https://wakayamajo.jp/"
+   },
+   {
+    "station": "近鉄郡山_奈良県",
+    "spot": "大和郡山城",
+    "note": "金魚の町の城跡"
+   },
+   {
+    "station": "上野市_三重県",
+    "spot": "伊賀上野城",
+    "note": "高石垣と忍者の町"
+   },
+   {
+    "station": "松阪_三重県",
+    "spot": "松坂城跡",
+    "note": "石垣と城下の町並み"
+   },
+   {
+    "station": "長浜_滋賀県",
+    "spot": "長浜城",
+    "note": "秀吉の最初の城"
+   },
+   {
+    "station": "安土_滋賀県",
+    "spot": "安土城跡",
+    "note": "信長の城の石段"
+   },
+   {
+    "station": "尼崎（阪神）_兵庫県",
+    "spot": "尼崎城",
+    "note": "駅から歩ける再建天守"
+   },
+   {
+    "station": "播州赤穂_兵庫県",
+    "spot": "赤穂城跡",
+    "note": "忠臣蔵の城"
+   },
+   {
+    "station": "福知山_京都府",
+    "spot": "福知山城",
+    "note": "光秀の城"
+   },
+   {
+    "station": "新宮_和歌山県",
+    "spot": "新宮城跡",
+    "note": "熊野川を見下ろす石垣"
+   }
+  ],
+  "chugoku": [
+   {
+    "station": "城下_岡山県",
+    "spot": "岡山城",
+    "note": "黒い烏城"
+   },
+   {
+    "station": "津山_岡山県",
+    "spot": "津山城跡",
+    "note": "壮大な石垣"
+   },
+   {
+    "station": "福山_広島県",
+    "spot": "福山城",
+    "note": "駅の目の前の天守",
+    "url": "https://fukuyamajo.jp/"
+   },
+   {
+    "station": "紙屋町東_広島県",
+    "spot": "広島城",
+    "note": "鯉城と呼ばれる天守",
+    "url": "https://hiroshimacastle.jp/"
+   },
+   {
+    "station": "三原_広島県",
+    "spot": "三原城跡",
+    "note": "駅に直結の天主台"
+   },
+   {
+    "station": "松江_島根県",
+    "spot": "松江城",
+    "note": "国宝の現存天守",
+    "url": "https://www.matsue-castle.jp/"
+   },
+   {
+    "station": "鳥取_鳥取県",
+    "spot": "鳥取城跡",
+    "note": "久松山の石垣"
+   },
+   {
+    "station": "米子_鳥取県",
+    "spot": "米子城跡",
+    "note": "山頂から大山の眺め"
+   },
+   {
+    "station": "津和野_島根県",
+    "spot": "津和野城跡",
+    "note": "リフトで登る山城"
+   }
+  ],
+  "shikoku": [
+   {
+    "station": "高松築港_香川県",
+    "spot": "高松城（玉藻公園）",
+    "note": "海水の堀の水城"
+   },
+   {
+    "station": "丸亀_香川県",
+    "spot": "丸亀城",
+    "note": "日本一の高石垣"
+   },
+   {
+    "station": "大街道_愛媛県",
+    "spot": "松山城",
+    "note": "ロープウェイで登る天守",
+    "url": "https://www.matsuyamajo.jp/"
+   },
+   {
+    "station": "今治_愛媛県",
+    "spot": "今治城",
+    "note": "海水を引いた堀"
+   },
+   {
+    "station": "宇和島_愛媛県",
+    "spot": "宇和島城",
+    "note": "現存天守の小さな城"
+   },
+   {
+    "station": "伊予大洲_愛媛県",
+    "spot": "大洲城",
+    "note": "木造で復元した天守"
+   },
+   {
+    "station": "高知城前_高知県",
+    "spot": "高知城",
+    "note": "現存天守と追手門",
+    "url": "https://kochipark.jp/kochijyo/"
+   },
+   {
+    "station": "徳島_徳島県",
+    "spot": "徳島城跡",
+    "note": "駅の裏の城山"
+   }
+  ],
+  "kyushu": [
+   {
+    "station": "熊本城・市役所前_熊本県",
+    "spot": "熊本城",
+    "note": "復興が進む大天守",
+    "url": "https://castle.kumamoto-guide.jp/"
+   },
+   {
+    "station": "赤坂_福岡県",
+    "spot": "福岡城跡",
+    "note": "舞鶴公園の石垣"
+   },
+   {
+    "station": "西小倉_福岡県",
+    "spot": "小倉城",
+    "note": "駅から歩ける天守",
+    "url": "https://kokura-castle.jp/"
+   },
+   {
+    "station": "唐津_佐賀県",
+    "spot": "唐津城",
+    "note": "海に臨む舞鶴城"
+   },
+   {
+    "station": "島原_長崎県",
+    "spot": "島原城",
+    "note": "駅前の五層の天守"
+   },
+   {
+    "station": "大分_大分県",
+    "spot": "府内城跡",
+    "note": "堀と櫓の城跡"
+   },
+   {
+    "station": "中津_大分県",
+    "spot": "中津城",
+    "note": "黒田官兵衛の城"
+   },
+   {
+    "station": "市役所前_鹿児島県",
+    "spot": "鶴丸城跡",
+    "note": "御楼門と石垣"
+   },
+   {
+    "station": "首里_沖縄県",
+    "spot": "首里城",
+    "note": "琉球王国の城",
+    "url": "https://oki-park.jp/shurijo/"
+   },
+   {
+    "station": "飫肥_宮崎県",
+    "spot": "飫肥城",
+    "note": "九州の小京都の城"
+   },
+   {
+    "station": "佐賀_佐賀県",
+    "spot": "佐賀城本丸歴史館",
+    "note": "木造で復元した本丸御殿"
+   }
+  ]
+ },
+ "hatsumode": {
+  "kanto": [
+   {
+    "station": "原宿_東京都",
+    "spot": "明治神宮",
+    "note": "初詣の参拝者数で全国屈指",
+    "url": "https://www.meijijingu.or.jp/"
+   },
+   {
+    "station": "浅草_東京都",
+    "spot": "浅草寺",
+    "note": "雷門と仲見世の初詣",
+    "url": "https://www.senso-ji.jp/"
+   },
+   {
+    "station": "成田_千葉県",
+    "spot": "成田山新勝寺",
+    "note": "表参道を歩いて参る不動尊",
+    "url": "https://www.naritasan.or.jp/"
+   },
+   {
+    "station": "川崎大師_神奈川県",
+    "spot": "川崎大師",
+    "note": "厄除けの大師さま",
+    "url": "https://www.kawasakidaishi.com/"
+   },
+   {
+    "station": "鎌倉_神奈川県",
+    "spot": "鶴岡八幡宮",
+    "note": "段葛から大石段へ"
+   },
+   {
+    "station": "大宮公園_埼玉県",
+    "spot": "武蔵一宮 氷川神社",
+    "note": "長い参道の一の宮",
+    "url": "https://www.musashiichinomiya-hikawa.or.jp/"
+   },
+   {
+    "station": "高幡不動_東京都",
+    "spot": "高幡不動尊",
+    "note": "五重塔のある関東三大不動",
+    "url": "https://www.takahatafudoson.or.jp/"
+   },
+   {
+    "station": "大師前_東京都",
+    "spot": "西新井大師",
+    "note": "駅前すぐの厄除け大師"
+   },
+   {
+    "station": "柴又_東京都",
+    "spot": "柴又帝釈天",
+    "note": "参道の草だんごと初詣"
+   },
+   {
+    "station": "御茶ノ水_東京都",
+    "spot": "神田明神",
+    "note": "江戸の総鎮守",
+    "url": "https://www.kandamyoujin.or.jp/"
+   },
+   {
+    "station": "湯島_東京都",
+    "spot": "湯島天満宮",
+    "note": "合格祈願の天神さま",
+    "url": "https://www.yushimatenjin.or.jp/"
+   },
+   {
+    "station": "九段下_東京都",
+    "spot": "靖國神社",
+    "note": "大鳥居と長い参道",
+    "url": "https://www.yasukuni.or.jp/"
+   },
+   {
+    "station": "飯田橋_東京都",
+    "spot": "東京大神宮",
+    "note": "縁むすびの東京のお伊勢さま",
+    "url": "https://www.tokyodaijingu.or.jp/"
+   },
+   {
+    "station": "門前仲町_東京都",
+    "spot": "富岡八幡宮・深川不動堂",
+    "note": "下町の二つの社寺"
+   },
+   {
+    "station": "御成門_東京都",
+    "spot": "増上寺",
+    "note": "東京タワーを背にした大寺",
+    "url": "https://www.zojoji.or.jp/"
+   },
+   {
+    "station": "神谷町_東京都",
+    "spot": "愛宕神社",
+    "note": "出世の石段",
+    "url": "https://www.atago-jinja.com/"
+   },
+   {
+    "station": "溜池山王_東京都",
+    "spot": "日枝神社",
+    "note": "エスカレーターのある山王さん",
+    "url": "https://www.hiejinja.net/"
+   },
+   {
+    "station": "根津_東京都",
+    "spot": "根津神社",
+    "note": "朱の千本鳥居",
+    "url": "https://www.nedujinja.or.jp/"
+   },
+   {
+    "station": "亀戸_東京都",
+    "spot": "亀戸天神社",
+    "note": "太鼓橋と学問の神"
+   },
+   {
+    "station": "府中_東京都",
+    "spot": "大國魂神社",
+    "note": "けやき並木の参道",
+    "url": "https://www.ookunitamajinja.or.jp/"
+   },
+   {
+    "station": "宮山_神奈川県",
+    "spot": "寒川神社",
+    "note": "八方除けの相模一宮",
+    "url": "https://samukawajinjya.jp/"
+   },
+   {
+    "station": "片瀬江ノ島_神奈川県",
+    "spot": "江島神社",
+    "note": "弁天橋を渡って島の社へ"
+   },
+   {
+    "station": "秩父_埼玉県",
+    "spot": "秩父神社",
+    "note": "夜祭の社",
+    "url": "https://www.chichibu-jinja.or.jp/"
+   },
+   {
+    "station": "鷲宮_埼玉県",
+    "spot": "鷲宮神社",
+    "note": "関東最古級の大社"
+   },
+   {
+    "station": "鹿島神宮_茨城県",
+    "spot": "鹿島神宮",
+    "note": "駅から歩ける東国三社",
+    "url": "https://kashimajingu.jp/"
+   },
+   {
+    "station": "笠間_茨城県",
+    "spot": "笠間稲荷神社",
+    "note": "日本三大稲荷の一つ",
+    "url": "https://www.kasama.or.jp/"
+   },
+   {
+    "station": "東武日光_栃木県",
+    "spot": "日光東照宮",
+    "note": "世界遺産で迎える新年",
+    "url": "https://www.toshogu.jp/"
+   },
+   {
+    "station": "東武宇都宮_栃木県",
+    "spot": "宇都宮二荒山神社",
+    "note": "街の真ん中の大鳥居"
+   },
+   {
+    "station": "佐野_栃木県",
+    "spot": "佐野厄除け大師",
+    "note": "厄除けで知られる大師",
+    "url": "https://sanoyakuyokedaishi.or.jp/"
+   },
+   {
+    "station": "千葉_千葉県",
+    "spot": "千葉神社",
+    "note": "妙見さまの重層社殿",
+    "url": "https://www.chibajinja.com/"
+   }
+  ],
+  "kinki": [
+   {
+    "station": "稲荷_京都府",
+    "spot": "伏見稲荷大社",
+    "note": "千本鳥居の初詣",
+    "url": "https://inari.jp/"
+   },
+   {
+    "station": "祇園四条_京都府",
+    "spot": "八坂神社",
+    "note": "おけら詣りと祇園の社",
+    "url": "https://www.yasaka-jinja.or.jp/"
+   },
+   {
+    "station": "東山_京都府",
+    "spot": "平安神宮",
+    "note": "大鳥居と朱の社殿",
+    "url": "https://www.heianjingu.or.jp/"
+   },
+   {
+    "station": "北野白梅町_京都府",
+    "spot": "北野天満宮",
+    "note": "合格祈願の天神さま",
+    "url": "https://kitanotenmangu.or.jp/"
+   },
+   {
+    "station": "出町柳_京都府",
+    "spot": "下鴨神社",
+    "note": "糺の森の世界遺産",
+    "url": "https://www.shimogamo-jinja.or.jp/"
+   },
+   {
+    "station": "石清水八幡宮_京都府",
+    "spot": "石清水八幡宮",
+    "note": "ケーブルで登る厄除け",
+    "url": "https://iwashimizu.or.jp/"
+   },
+   {
+    "station": "住吉大社_大阪府",
+    "spot": "住吉大社",
+    "note": "太鼓橋の住吉っさん",
+    "url": "https://www.sumiyoshitaisha.net/"
+   },
+   {
+    "station": "大阪天満宮_大阪府",
+    "spot": "大阪天満宮",
+    "note": "天満の天神さん",
+    "url": "https://osakatemmangu.or.jp/"
+   },
+   {
+    "station": "今宮戎_大阪府",
+    "spot": "今宮戎神社",
+    "note": "商売繁盛のえべっさん",
+    "url": "https://www.imamiya-ebisu.jp/"
+   },
+   {
+    "station": "四天王寺前夕陽ヶ丘_大阪府",
+    "spot": "四天王寺",
+    "note": "聖徳太子の古刹",
+    "url": "https://www.shitennoji.or.jp/"
+   },
+   {
+    "station": "谷町九丁目_大阪府",
+    "spot": "生國魂神社",
+    "note": "大阪最古の社の一つ"
+   },
+   {
+    "station": "枚岡_大阪府",
+    "spot": "枚岡神社",
+    "note": "駅の目の前の河内一宮"
+   },
+   {
+    "station": "門戸厄神_兵庫県",
+    "spot": "門戸厄神東光寺",
+    "note": "厄除けの石段"
+   },
+   {
+    "station": "西宮（阪神）_兵庫県",
+    "spot": "西宮神社",
+    "note": "えびす宮の総本社",
+    "url": "https://nishinomiya-ebisu.com/"
+   },
+   {
+    "station": "三宮_兵庫県",
+    "spot": "生田神社",
+    "note": "神戸の中心の社",
+    "url": "https://ikutajinja.or.jp/"
+   },
+   {
+    "station": "高速神戸_兵庫県",
+    "spot": "湊川神社",
+    "note": "楠公さん",
+    "url": "https://www.minatogawajinja.or.jp/"
+   },
+   {
+    "station": "中山観音_兵庫県",
+    "spot": "中山寺",
+    "note": "安産祈願の観音さま",
+    "url": "https://www.nakayamadera.or.jp/"
+   },
+   {
+    "station": "清荒神_兵庫県",
+    "spot": "清荒神清澄寺",
+    "note": "参道の店が続く荒神さん",
+    "url": "https://www.kiyoshikojin.or.jp/"
+   },
+   {
+    "station": "近鉄奈良_奈良県",
+    "spot": "春日大社",
+    "note": "鹿と灯籠の社",
+    "url": "https://www.kasugataisha.or.jp/"
+   },
+   {
+    "station": "橿原神宮前_奈良県",
+    "spot": "橿原神宮",
+    "note": "広い境内の神宮",
+    "url": "https://kashiharajingu.or.jp/"
+   },
+   {
+    "station": "三輪_奈良県",
+    "spot": "大神神社",
+    "note": "三輪山をまつる古社",
+    "url": "https://oomiwa.or.jp/"
+   },
+   {
+    "station": "天理_奈良県",
+    "spot": "石上神宮",
+    "note": "鶏の遊ぶ古社"
+   },
+   {
+    "station": "多賀大社前_滋賀県",
+    "spot": "多賀大社",
+    "note": "お多賀さん",
+    "url": "https://www.tagataisya.or.jp/"
+   },
+   {
+    "station": "坂本比叡山口_滋賀県",
+    "spot": "日吉大社",
+    "note": "山王さんの総本宮",
+    "url": "https://hiyoshitaisha.jp/"
+   },
+   {
+    "station": "近江神宮前_滋賀県",
+    "spot": "近江神宮",
+    "note": "かるたの聖地",
+    "url": "https://oumijingu.org/"
+   },
+   {
+    "station": "伊勢市_三重県",
+    "spot": "伊勢神宮 外宮",
+    "note": "駅から歩ける豊受大神宮",
+    "url": "https://www.isejingu.or.jp/"
+   },
+   {
+    "station": "新宮_和歌山県",
+    "spot": "熊野速玉大社",
+    "note": "熊野三山の一つ",
+    "url": "https://kumanohayatama.jp/"
+   },
+   {
+    "station": "伊太祈曽_和歌山県",
+    "spot": "伊太祁曽神社",
+    "note": "木の神さま"
+   },
+   {
+    "station": "日前宮_和歌山県",
+    "spot": "日前神宮・國懸神宮",
+    "note": "駅前の紀伊一宮"
+   }
+  ],
+  "chubu": [
+   {
+    "station": "神宮前_愛知県",
+    "spot": "熱田神宮",
+    "note": "三種の神器の草薙剣の社",
+    "url": "https://www.atsutajingu.or.jp/"
+   },
+   {
+    "station": "豊川_愛知県",
+    "spot": "豊川稲荷",
+    "note": "日本三大稲荷の一つ",
+    "url": "https://www.toyokawainari.jp/"
+   },
+   {
+    "station": "大須観音_愛知県",
+    "spot": "大須観音",
+    "note": "商店街の観音さま",
+    "url": "https://www.osu-kannon.jp/"
+   },
+   {
+    "station": "尾張一宮_愛知県",
+    "spot": "真清田神社",
+    "note": "尾張一宮"
+   },
+   {
+    "station": "津島_愛知県",
+    "spot": "津島神社",
+    "note": "天王さん"
+   },
+   {
+    "station": "知立_愛知県",
+    "spot": "知立神社",
+    "note": "東海道の古社"
+   },
+   {
+    "station": "三河一宮_愛知県",
+    "spot": "砥鹿神社",
+    "note": "三河一宮"
+   },
+   {
+    "station": "善光寺下_長野県",
+    "spot": "善光寺",
+    "note": "一生に一度は善光寺参り",
+    "url": "https://www.zenkoji.jp/"
+   },
+   {
+    "station": "下諏訪_長野県",
+    "spot": "諏訪大社下社秋宮",
+    "note": "御柱の立つ社",
+    "url": "https://suwataisha.or.jp/"
+   },
+   {
+    "station": "穂高_長野県",
+    "spot": "穂高神社",
+    "note": "安曇野の社",
+    "url": "https://www.hotakajinja.com/"
+   },
+   {
+    "station": "弥彦_新潟県",
+    "spot": "彌彦神社",
+    "note": "おやひこさま"
+   },
+   {
+    "station": "白山_新潟県",
+    "spot": "新潟総鎮守 白山神社",
+    "note": "新潟の総鎮守"
+   },
+   {
+    "station": "金沢_石川県",
+    "spot": "尾山神社",
+    "note": "ステンドグラスの神門",
+    "url": "https://oyama-jinja.or.jp/"
+   },
+   {
+    "station": "敦賀_福井県",
+    "spot": "氣比神宮",
+    "note": "大鳥居の越前一宮"
+   },
+   {
+    "station": "富士宮_静岡県",
+    "spot": "富士山本宮浅間大社",
+    "note": "富士山の総本宮",
+    "url": "http://fuji-hongu.or.jp/"
+   },
+   {
+    "station": "三島田町_静岡県",
+    "spot": "三嶋大社",
+    "note": "伊豆一宮",
+    "url": "https://mishimataisha.or.jp/"
+   },
+   {
+    "station": "新静岡_静岡県",
+    "spot": "静岡浅間神社",
+    "note": "駿府の総社"
+   },
+   {
+    "station": "来宮_静岡県",
+    "spot": "来宮神社",
+    "note": "大楠の社",
+    "url": "https://kinomiya.or.jp/"
+   }
+  ],
+  "hokkaido-tohoku": [
+   {
+    "station": "円山公園_北海道",
+    "spot": "北海道神宮",
+    "note": "円山の森の社"
+   },
+   {
+    "station": "谷地頭_北海道",
+    "spot": "函館八幡宮",
+    "note": "石段の上の社"
+   },
+   {
+    "station": "盛岡_岩手県",
+    "spot": "盛岡八幡宮",
+    "note": "盛岡の総鎮守"
+   },
+   {
+    "station": "本塩釜_宮城県",
+    "spot": "鹽竈神社",
+    "note": "陸奥一宮",
+    "url": "https://www.shiogamajinja.jp/"
+   },
+   {
+    "station": "岩沼_宮城県",
+    "spot": "竹駒神社",
+    "note": "日本三大稲荷の一つ"
+   },
+   {
+    "station": "平泉_岩手県",
+    "spot": "中尊寺",
+    "note": "金色堂の寺",
+    "url": "https://www.chusonji.or.jp/"
+   },
+   {
+    "station": "福島_福島県",
+    "spot": "福島稲荷神社",
+    "note": "福島の総鎮守"
+   },
+   {
+    "station": "山形_山形県",
+    "spot": "鳥海月山両所宮",
+    "note": "山形の総鎮守"
+   }
+  ],
+  "chugoku": [
+   {
+    "station": "出雲大社前_島根県",
+    "spot": "出雲大社",
+    "note": "縁結びの大社",
+    "url": "https://izumooyashiro.or.jp/"
+   },
+   {
+    "station": "宮島口_広島県",
+    "spot": "嚴島神社",
+    "note": "海に立つ大鳥居",
+    "url": "https://www.itsukushimajinja.jp/"
+   },
+   {
+    "station": "吉備津_岡山県",
+    "spot": "吉備津神社",
+    "note": "長い回廊の社",
+    "url": "https://kibitujinja.com/"
+   },
+   {
+    "station": "備前一宮_岡山県",
+    "spot": "吉備津彦神社",
+    "note": "備前一宮"
+   },
+   {
+    "station": "防府_山口県",
+    "spot": "防府天満宮",
+    "note": "日本最初の天満宮"
+   },
+   {
+    "station": "紙屋町東_広島県",
+    "spot": "広島護国神社",
+    "note": "広島城の中の社"
+   },
+   {
+    "station": "津和野_島根県",
+    "spot": "太皷谷稲成神社",
+    "note": "千本鳥居の稲成"
+   }
+  ],
+  "shikoku": [
+   {
+    "station": "琴電琴平_香川県",
+    "spot": "金刀比羅宮",
+    "note": "こんぴらさんの石段",
+    "url": "https://www.konpira.or.jp/"
+   },
+   {
+    "station": "一宮_香川県",
+    "spot": "田村神社",
+    "note": "讃岐一宮"
+   },
+   {
+    "station": "道後温泉_愛媛県",
+    "spot": "石手寺",
+    "note": "道後の札所"
+   },
+   {
+    "station": "板東_徳島県",
+    "spot": "大麻比古神社・霊山寺",
+    "note": "阿波一宮と一番札所"
+   }
+  ],
+  "kyushu": [
+   {
+    "station": "太宰府_福岡県",
+    "spot": "太宰府天満宮",
+    "note": "合格祈願の総本宮",
+    "url": "https://www.dazaifutenmangu.or.jp/"
+   },
+   {
+    "station": "箱崎宮前_福岡県",
+    "spot": "筥崎宮",
+    "note": "筑前一宮",
+    "url": "https://www.hakozakigu.or.jp/"
+   },
+   {
+    "station": "祇園_福岡県",
+    "spot": "櫛田神社",
+    "note": "博多の総鎮守"
+   },
+   {
+    "station": "隼人_鹿児島県",
+    "spot": "鹿児島神宮",
+    "note": "大隅一宮"
+   },
+   {
+    "station": "天文館通_鹿児島県",
+    "spot": "照國神社",
+    "note": "鹿児島の街なかの社"
+   },
+   {
+    "station": "宮崎神宮_宮崎県",
+    "spot": "宮崎神宮",
+    "note": "神武天皇をまつる社"
+   },
+   {
+    "station": "青島_宮崎県",
+    "spot": "青島神社",
+    "note": "鬼の洗濯板の島の社"
+   },
+   {
+    "station": "藤崎宮前_熊本県",
+    "spot": "藤崎八旛宮",
+    "note": "熊本の総鎮守"
+   },
+   {
+    "station": "宮地_熊本県",
+    "spot": "阿蘇神社",
+    "note": "阿蘇の古社"
+   },
+   {
+    "station": "諏訪神社_長崎県",
+    "spot": "諏訪神社",
+    "note": "長崎くんちの社",
+    "url": "https://www.osuwasan.jp/"
+   },
+   {
+    "station": "旭橋_沖縄県",
+    "spot": "波上宮",
+    "note": "崖の上の琉球八社"
    }
   ]
  }
