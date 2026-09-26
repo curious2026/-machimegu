@@ -1,5 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v35（2026-09-26 JST：特集ページの整理）
+// 街巡 server.js v36（2026-09-26 JST：トップの見本3駅と街力TOP12も地方別に）
+// v35 → v36（ともき案）：
+//   ・「こんな街が、1枚のカードに」の3駅を地方ごとに（意外な一面のBランク・歴史の街・おしゃれな街）。
+//   ・「街力の高い駅」TOP12 も見に来た人の地方で。見出しのすぐ下に地方タブ。
+//   ・トップの作り置きを地方ごとに持つ（Map）。
+// （v35）特集ページの整理
 // v34 → v35（ともき指示）：
 //   ・厳選の特集ページは「データ元」を出さない（並ぶのは名所。データ元は駅ページで出る）。
 //   ・地方のタブは一覧の下へ（来た人の地方の一覧を先に見せる）。
@@ -2006,6 +2011,7 @@ ${FLOAT_CSS}
 //   ・帯が出ている間は、丸いボタンを帯の上に持ち上げる。
 const FLOAT_CSS = `
 .rtabs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}.rtabs a{font-size:13px;padding:5px 11px;border-radius:999px;background:var(--tile);color:var(--ink);text-decoration:none;border:1px solid var(--line)}.rtabs a.on{background:var(--pin);color:#fff;border-color:var(--pin);font-weight:700}
+.stag{display:inline-block;margin:0 0 6px 4px;font-size:12px;font-weight:700;color:#fff;background:var(--pin);border-radius:999px;padding:2px 10px}
 .walkpill{display:inline-block;vertical-align:middle;font-size:.5em;font-weight:900;color:#fff;background:var(--pin);border-radius:10px;padding:4px 10px 5px;margin:0 8px 6px 0;position:relative;box-shadow:0 3px 8px rgba(242,107,58,.3)}
 .walkpill:after{content:"";position:absolute;left:14px;bottom:-6px;border:6px solid transparent;border-top-color:var(--pin);border-bottom:0}
 .acc{display:inline-block;font-size:12px;color:#1d5f8a;background:#E3F1FA;border-radius:999px;padding:1px 8px;margin-left:6px}
@@ -2133,6 +2139,8 @@ function siteJsonLd() {
   return `<script type="application/ld+json">${JSON.stringify(app)}</script><script type="application/ld+json">${JSON.stringify(faq)}</script><script type="application/ld+json">${JSON.stringify(org)}</script>`;
 }
 
+// ★v36：地方ごとに作り置く（7地方×端末の種類）
+const _topCacheMap = new Map();
 let _topCache = { key: '', html: '' };
 app.get('/', (req, res) => {
   try {
@@ -2142,19 +2150,21 @@ app.get('/', (req, res) => {
     // ★v32：見に来た人の地方で「今日の一駅」「季節の特集」が変わるので、地方ごとに作り置く
     const region = regionOfReq(req, res);
     const key = `${dev}|${region}|${scoresCache.builtAt}|${jd}|${storeInfo.ratingCount}|${storeInfo.shots.length}|${storeInfo.version}|${seasonKey()}`;
+    _topCache = _topCacheMap.get(key) || { key: '', html: '' };
     if (_topCache.key !== key) {
-      const top = STATIONS.map((st) => [st, scoreOf(st.id)]).filter(([, s]) => s)
+      // ★v36：街力TOP12 も見に来た人の地方で
+      const top = STATIONS.filter((st) => regionOfPref(st.pref) === region).map((st) => [st, scoreOf(st.id)]).filter(([, s]) => s)
         .sort((a, b) => b[1].score - a[1].score).slice(0, 12);
       const topHtml = top.map(([st, s], i) => `<li><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><span class="rk" style="background:${RANK_COLOR[s.rank] || '#888'}">${esc(s.rank)}</span><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}・${s.score}点</small></li>`).join('');
       const picks = ['札幌_北海道', '仙台_宮城県', '横浜_神奈川県', '金沢_石川県', '名古屋_愛知県', '京都_京都府', '梅田_大阪府', '三ノ宮_兵庫県', '広島_広島県', '博多_福岡県']
         .map((id) => STATIONS_BY_ID.get(id)).filter(Boolean)
         .map((st) => `<a href="${stationUrl(st)}">${esc(st.name)}</a>`).join('');
-      const sample = (id) => {
+      const sample = (id, label, comment) => {
         const st = STATIONS_BY_ID.get(id); if (!st) return '';
         const sc = scoreOf(st.id) || { score: 0, rank: 'D' }; const t = textOf(st.id) || {};
         const c = RANK_COLOR[sc.rank] || '#888';
-        return `<a href="${stationUrl(st)}"><div class="sign"><div class="y">${esc(STATION_YOMI[st.id] || '')}</div><div class="n">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? '　' + esc(t.location) : ''}</div><div class="band" style="background:${c}"></div>
-<div class="meta"><b style="color:${c}">${sc.score}</b><span>点</span><span class="rk" style="background:${c}">${esc(sc.rank)}</span></div><div class="c">${esc((t.features || [])[0] || '')}</div></div></a>`;
+        return `<a href="${stationUrl(st)}">${label ? `<span class="stag">${esc(label)}</span>` : ''}<div class="sign"><div class="y">${esc(STATION_YOMI[st.id] || '')}</div><div class="n">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? '　' + esc(t.location) : ''}</div><div class="band" style="background:${c}"></div>
+<div class="meta"><b style="color:${c}">${sc.score}</b><span>点</span><span class="rk" style="background:${c}">${esc(sc.rank)}</span></div><div class="c">${esc(comment || (t.features || [])[0] || '')}</div></div></a>`;
       };
       const hero = `<div style="max-width:560px;margin:0 auto;padding:10px 18px 0"><div class="sign"><div class="y">まちめぐ</div><div class="n">街巡</div><div class="p">全国8,993駅</div><div class="band" style="background:var(--pin)"></div><div class="lr"><span>← いつもの駅</span><span class="r">知らない街 →</span></div></div></div>
 <div class="hero-copy"><h1>駅で5分、<br>カードを集める散歩。</h1><p>駅から500m以内で5分立ち止まると、その街のカードが1枚。季節と時間で色が変わるカードを集めながら、まだ降りたことのない駅へ。</p>${storeBadges(ua, 46)}</div>`;
@@ -2162,8 +2172,8 @@ app.get('/', (req, res) => {
 ${storeInfo.shots.length ? `<section><h2>アプリの画面</h2><div class="shots" tabindex="0" aria-label="アプリの画面（横にスクロール）">${storeInfo.shots.map((u, i) => `<img src="${esc(u)}" alt="街巡-まちめぐ- のアプリ画面 ${i + 1}" loading="lazy" width="230" height="498">`).join('')}</div></section>` : ''}
 ${todayPick(region)}
 ${seasonBlock(region)}
-<section><h2>こんな街が、1枚のカードに</h2><p class="note">全国8,993駅すべてに、街力の点数と、その街ならではのひとことがあります。</p>
-<div class="samples">${sample('東陽町_東京都')}${sample('鎌倉_神奈川県')}${sample('吉祥寺_東京都')}</div></section>
+<section><h2>こんな街が、1枚のカードに<small style="font-size:14px;color:var(--sub);margin-left:8px">${esc(REGION_BY_KEY[region].n)}</small></h2><p class="note">全国8,993駅すべてに、街力の点数と、その街ならではのひとことがあります。</p>
+<div class="samples">${(SAMPLES[region] || SAMPLES.kanto).map(([id, lb, cm]) => sample(id, lb, cm)).join('')}</div></section>
 ${TRACK_SVG}
 <section><h2>できること</h2><div class="tickets">
 <div class="ticket"><div class="stub">🎴</div><div class="body"><b>街のカードを集める</b><span>駅の近くに5分いるだけ。季節・時間帯・天気でカードの色が変わり、同じ駅でも別の1枚になります。カードの裏には、その日に撮った写真も貼れます。</span><small>全国8,993駅 有効</small></div></div>
@@ -2181,7 +2191,7 @@ ${TRACK_SVG}
 ${NEAR_BUTTON}
 <form class="find" action="/search" method="get" style="margin-top:14px"><input type="search" name="q" placeholder="駅名（例：東陽町）" aria-label="駅名"><button type="submit">調べる</button></form>
 <p class="chips" style="margin-top:12px">${picks}</p></section>
-<section><div class="h2row"><h2>街力の高い駅</h2><a class="more" href="/ranking">ランキングをすべて見る →</a></div>${DATA_SRC_HTML}<ul class="list">${topHtml}</ul>
+<section><div class="h2row"><h2>街力の高い駅<small style="font-size:14px;color:var(--sub);margin-left:8px">${esc(REGION_BY_KEY[region].n)}</small></h2><a class="more" href="/ranking">全国ランキング →</a></div>${regionTabs(region, '/')}${DATA_SRC_HTML}<ul class="list">${topHtml}</ul>
 <p class="chips strong" style="margin-top:12px"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">生活施設が多い駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a></p></section>
 <section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<details><summary>${name}<small>${b - a}都道府県</small></summary><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="${prefUrl(p)}">${p}</a>`).join('')}</p></details>`).join('')}</div></section>
 ${newsBlock()}
@@ -2191,6 +2201,8 @@ ${newsBlock()}
         '全国8,993駅の駅から500m以内で5分立ち止まると、その街のカードが1枚。街力（1,000点満点）で駅を比べて、路線や街を制覇する街歩きアプリ。無料。', body, `${SITE}/`, hero, ua, siteJsonLd(), { noFooterSns: true }) };
     }
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'private, no-cache')  // ★v32：地方で中身が変わるので共有キャッシュさせない;
+    if (_topCacheMap.size > 40) _topCacheMap.clear();
+    _topCacheMap.set(key, _topCache);
     res.send(_topCache.html);
   } catch (e) {
     console.error('[v16] トップ失敗:', e.message);
@@ -2463,6 +2475,17 @@ function regionOfReq(req, res) {
   if (i >= 0) return regionOfPref(PREFS[i]);
   return 'kanto';
 }
+// ★v36：トップの見本3駅（地方ごと）。[駅ID, 札, 見せるひとこと（駅コメントそのまま）]
+const SAMPLES = {
+  'hokkaido-tohoku': [['南平岸_北海道', '意外な一面', '水曜どうでしょうの聖地'], ['平泉_岩手県', '歴史の街', '中尊寺金色堂、奥州藤原の栄華'], ['円山公園_北海道', 'おしゃれな街', '円山エリアのカフェ街']],
+  kanto: [['祖師ヶ谷大蔵_東京都', '意外な一面', '円谷プロ発祥・特撮の聖地'], ['鎌倉_神奈川県', '歴史の街', '源頼朝が開いた武家の都'], ['代官山_東京都', 'おしゃれな街', '大人の隠れ家カフェ＆セレクトショップ']],
+  chubu: [['中津川_岐阜県', '意外な一面', '栗きんとん発祥の地'], ['高山_岐阜県', '歴史の街', '高山陣屋は現存唯一の代官所'], ['覚王山_愛知県', 'おしゃれな街', '覚王山アパートの雑貨']],
+  kinki: [['千林_大阪府', '意外な一面', 'ダイエー1号店発祥の地'], ['祇園四条_京都府', '歴史の街', '南座の顔見世興行'], ['元町_兵庫県', 'おしゃれな街', '海岸通のレトロビル']],
+  chugoku: [['児島_岡山県', '意外な一面', '国産ジーンズ発祥の地'], ['倉敷_岡山県', '歴史の街', '美観地区の白壁なまこ壁'], ['本通_広島県', 'おしゃれな街', 'うらぶくろ商店街の個性派']],
+  shikoku: [['丸亀_香川県', '意外な一面', '丸亀城、日本一高い石垣'], ['道後温泉_愛媛県', '歴史の街', '坊っちゃんカラクリ時計'], ['瓦町_香川県', 'おしゃれな街', '常磐街の商店街']],
+  kyushu: [['門司港_福岡県', '意外な一面', '焼きカレーの香る港'], ['太宰府_福岡県', '歴史の街', '学問の神、門前駅'], ['薬院_福岡県', 'おしゃれな街', 'カフェ文化の発信地']],
+};
+
 function regionTabs(cur, basePath) {
   return `<p class="rtabs">${REGIONS.map((r) => `<a rel="nofollow" href="${basePath}?r=${r.k}"${r.k === cur ? ' class="on"' : ''}>${esc(r.n)}</a>`).join('')}</p>`;
 }
@@ -2521,6 +2544,8 @@ function seasonKey() {
   const d = new Date(Date.now() + 9 * 3600 * 1000), m = d.getUTCMonth() + 1, day = d.getUTCDate();
   // ★v35：年末年始（12/20〜1/15）は初詣の特集
   if ((m === 12 && day >= 20) || (m === 1 && day <= 15)) return 'hatsumode';
+  // ★v35：7/1〜8/20 は花火、それ以外の夏（6月・8月下旬）は海
+  if (m === 7 || (m === 8 && day <= 20)) return 'hanabi';
   return m >= 9 && m <= 11 ? 'momiji' : (m === 12 || m <= 2) ? 'onsen' : m <= 5 ? 'sakura' : 'umi';
 }
 function seasonBlock(region) {
@@ -2540,19 +2565,21 @@ function featurePage(req, res, k, region) {
   const rows = featureRows(k, region || null);
   const R = region ? REGION_BY_KEY[region] : null;
   const where = R ? R.n : '全国';
+  // ★v35：花火は「見頃」ではなく「開催」
+  const BL = k === 'hanabi' ? '開催' : '見頃';
   const list = rows.slice(0, 150).map(([st, s, hit, e], i) => {
     const c = RANK_COLOR[s.rank] || '#888';
     // ★v34：公式サイトがあれば名所の名前をリンクに（別タブ・nofollow）
     const spotName = e && e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener nofollow"><b>${esc(e.spot)}</b></a>` : e ? `<b>${esc(e.spot)}</b>` : '';
     const title = e ? `${spotName}（${esc(st.name)}駅）${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}` : `<a href="${stationUrl(st)}">${esc(st.name)}</a>`;
-    const sub = e ? `${esc(e.note)}${e.best ? `<span class="best">見頃 ${esc(e.best)}</span>` : ''}` : esc(hit);
+    const sub = e ? `${esc(e.note)}${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}` : esc(hit);
     return `<li><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><span class="rk" style="background:${c}">${esc(s.rank)}</span>${title}${e ? '' : `<small>${esc(st.pref)}・${s.score}点</small>`}<br><small style="margin:0">${e ? `${esc(st.pref)}・` : ''}${sub}</small>${e ? `<br><a href="${stationUrl(st)}" style="font-size:13px">${esc(st.name)}駅のページ（街力 ${s.score}点）→</a>` : ''}</li>`;
   }).join('');
   const tabs = `<p class="rtabs"><a href="${featureUrl(k)}"${!R ? ' class="on"' : ''}>全国</a>${REGIONS.map((x) => `<a href="${featureUrl(k, x.k)}"${R && R.k === x.k ? ' class="on"' : ''}>${esc(x.n)}</a>`).join('')}</p>`;
   const others = Object.entries(FEATURES).filter(([kk]) => kk !== k).map(([kk, f]) => `<a href="${featureUrl(kk, region)}">${f.e} ${esc(f.t)}</a>`).join('');
   const hasCur = rows.some((r) => r[3]);
   const lead = hasCur
-    ? `${esc(where)}の${esc(F.w)}の名所を、駅から歩いて行けるところを中心に選び、最寄り駅といっしょに並べました。${rows.some((r) => r[3] && r[3].best) ? '見頃は例年の目安です。' : ''}`
+    ? `${esc(where)}の${esc(F.w)}の名所を、駅から歩いて行けるところを中心に選び、最寄り駅といっしょに並べました。${rows.some((r) => r[3] && r[3].best) ? `${BL}は例年の目安です。${k === 'hanabi' ? '日程はその年の公式発表をご確認ください。' : ''}` : ''}`
     : `全国8,993駅の紹介コメントに${esc(F.w)}の話が出てくる駅を、${esc(where)}から選びました。`;
   // ★v33：並び順の断り（名所のおすすめ順ではない）
   const orderNote = hasCur
@@ -2571,7 +2598,7 @@ function featurePage(req, res, k, region) {
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">行ってみたい駅に、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
   const top3 = rows.slice(0, 3).map(([st, , , e]) => e ? e.spot : st.name).join('・');
   const title = R
-    ? (hasCur ? `駅から歩ける${R.n}の${F.w}${rows.length}選｜最寄り駅${rows.some((r) => r[3] && r[3].best) ? 'と見頃' : 'つき'}｜街巡-まちめぐ-` : `${R.n}の${F.t}${rows.length}選｜街巡-まちめぐ-`)
+    ? (hasCur ? `駅から歩ける${R.n}の${F.w}${rows.length}選｜最寄り駅${rows.some((r) => r[3] && r[3].best) ? `と${BL}` : 'つき'}｜街巡-まちめぐ-` : `${R.n}の${F.t}${rows.length}選｜街巡-まちめぐ-`)
     : `${F.t}（全国${rows.length}駅）｜街巡-まちめぐ-`;
   res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
   res.send(pageShell(title, `${where}の${F.t}。${top3}など${rows.length}か所を最寄り駅つきで。`, body, featureUrl(k, region), '', ua));
