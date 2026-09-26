@@ -1,5 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v30（2026-09-26 JST：検索対策の一式）
+// 街巡 server.js v31（2026-09-26 JST：「数字で見る◯◯駅」を外す）
+// v30 → v31：駅ページの「数字で見る◯◯駅」を外した（ともき指摘）。
+//   中身はすぐ下の「順位」「基本情報」と同じ数字の言い直しで、読む人には重複。
+//   検索の評価は「新しい情報があるか」で決まり、同じ数字の言い直しでは増えない。
+// （v30）検索対策の一式
 // v29 → v30：
 //   ・www付き（www.machimegu.com）は www無しへ301転送（503になっていた）
 //   ・駅ページの説明文（検索結果の2行）を「その駅だけの一言」から始める
@@ -1640,21 +1644,6 @@ function renderStationPage(st, ua) {
   const areaN0 = t.location ? (idx.areaCount[`${t.location}_${st.pref}`] || 0) : 0;
   const rRid = ridersNum(t.riders) ? idx.riders.m.get(st.id) : null;
   const rOld = year && idx.old[st.pref] ? idx.old[st.pref].m.get(st.id) : null;
-  // ★v30：数字で見る◯◯駅（順位・施設数・開業・利用者を文章にする＝駅ごとに違う中身）
-  const factsHtml = (() => {
-    const f = [];
-    const nAll = idx.all.n.toLocaleString();
-    const pN = idx.pref[st.pref] ? idx.pref[st.pref].n : 0;
-    if (rAll) f.push(`全国${nAll}駅の中で、街力は${rAll.toLocaleString()}位。${pN && rPref ? `${st.pref}の${pN}駅では${rPref}位です。` : ''}`);
-    if (areaN0 >= 2) { const ar = areaRankOf(st, t.location); if (ar) f.push(`${t.location}にある${areaN0}駅の中では${ar}番目。`); }
-    const l0 = (st.lines || []).find((l) => idx.line[l] && idx.line[l].m.get(st.id));
-    if (l0) f.push(`${l0}の${idx.line[l0].n}駅の中では${idx.line[l0].m.get(st.id)}位。`);
-    const c = (ax) => (d[ax] || {}).count || 0;
-    f.push(`駅から500m以内に、飲食店${c('飲食')}店・お店${c('商業')}店・生活施設${c('生活')}件・医療施設${c('医療')}件があります。`);
-    if (year && rOld) f.push(`開業は${year}年で、${st.pref}で${rOld}番目に古い駅です。`);
-    if (rRid && t.riders) f.push(`1日の利用者は${t.riders}で、全国${rRid.toLocaleString()}位。`);
-    return `<div class="block"><h2>数字で見る${esc(st.name)}駅</h2><div class="panel"><p class="facts">${f.map(esc).join('')}</p></div></div>`;
-  })();
 
   const same = STATIONS.filter((o) => o.name === st.name && o.id !== st.id);
   const sameHtml = same.length ? `<div class="block"><h2>全国の同じ名前の駅</h2><p class="chips">${same.map((o) => `<a href="${stationUrl(o)}">${esc(o.name)}（${esc(o.pref)}）</a>`).join('')}</p></div>` : '';
@@ -1746,7 +1735,6 @@ ${FLOAT_CSS}
 ${first ? `<p class="leadq">${esc(first)}</p>` : ''}</div>
 <div class="block"><h2>街力の内訳</h2><div class="panel">${bars}</div>${DATA_SRC_HTML}</div>
 ${rest.length ? `<div class="block"><h2>この街のこと</h2><div class="panel"><ul class="feats">${rest.map((f) => `<li>${esc(f)}</li>`).join('')}</ul></div></div>` : ''}
-${factsHtml}
 <div class="block"><h2>順位</h2><div class="panel"><ul class="rks">
 <li>全国<b>${idx.all.n.toLocaleString()}駅中 ${rAll ? rAll.toLocaleString() : '-'}位</b></li>
 <li><a href="${prefUrl(st.pref)}">${esc(st.pref)}</a><b>${idx.pref[st.pref] ? idx.pref[st.pref].n : '-'}駅中 ${rPref || '-'}位</b></li>
@@ -1996,7 +1984,6 @@ ${FLOAT_CSS}
 //   ・帯が出ている間は、丸いボタンを帯の上に持ち上げる。
 const FLOAT_CSS = `
 .src{font-size:12px;color:var(--sub);line-height:1.75;margin:10px 4px 0}.src a{color:var(--sub)}
-.facts{margin:0;line-height:1.95;font-size:15px}
 .sns a .h{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
 .sns a .h small{font-size:11px;font-weight:500;opacity:.92;letter-spacing:.02em}
 .h2row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
