@@ -1,5 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v32（2026-09-26 JST：地方ごとの出し分け・紅葉の厳選）
+// 街巡 server.js v33（2026-09-26 JST：特集の並びは街力順と明記）
+// v32 → v33：特集の並びを「最寄り駅の街力の高い順」にそろえ、ページに明記した（ともき指示）。
+//   選ぶのは厳選（名所）優先で最大30、並べる順番は街力。名所としてのおすすめ順ではない。
+// （v32）地方ごとの出し分け・紅葉の厳選
 // v31 → v32：
 //   ・見に来た人の地方（7つ）で「今日の一駅」と季節の特集を出し分ける。
 //     決め方：①画面の地方タブで選んだもの（クッキー mm_region）→②Cloudflare の位置ヘッダー
@@ -2494,7 +2497,8 @@ function featureRows(k, region) {
     if (hit) more.push([st, scoreOf(st.id) || { score: 0, rank: 'D' }, hit, null]);
   }
   more.sort((x, y) => y[1].score - x[1].score);
-  const all = region ? rows.concat(more).slice(0, 30) : rows.concat(more).sort((x, y) => (y[3] ? 1 : 0) - (x[3] ? 1 : 0) || y[1].score - x[1].score);
+  // ★v33：選ぶのは厳選優先（地方は最大30）、並べる順番は★最寄り駅の街力の高い順
+  const all = (region ? rows.concat(more).slice(0, 30) : rows.concat(more)).sort((x, y) => y[1].score - x[1].score);
   _featCache.set(ck, { rows: all, tv: stationText.version, b: scoresCache.builtAt });
   return all;
 }
@@ -2528,11 +2532,13 @@ function featurePage(req, res, k, region) {
   const hasCur = rows.some((r) => r[3]);
   const lead = hasCur
     ? `${esc(where)}の${esc(F.w)}の名所を、駅から歩いて行けるところを中心に選び、最寄り駅といっしょに並べました。見頃は例年の目安です。`
-    : `全国8,993駅の紹介コメントに${esc(F.w)}の話が出てくる駅を、${esc(where)}から街力の高い順に並べました。`;
+    : `全国8,993駅の紹介コメントに${esc(F.w)}の話が出てくる駅を、${esc(where)}から選びました。`;
+  // ★v33：並び順の断り（名所のおすすめ順ではない）
+  const orderNote = '<p class="note" style="font-weight:700">※並びは、最寄り駅の「街力」（駅の周りのお店や施設の充実度）の高い順です。名所としてのおすすめ順ではありません。</p>';
   const h1 = `${F.e} ${esc(where)}の${esc(F.t)}${R ? `${rows.length}選` : ''}`;
   const body = `<p class="crumbs"><a href="/">街巡-まちめぐ-</a> › <a href="${featureUrl(k)}">${esc(F.t)}</a>${R ? ` › ${esc(R.n)}` : ''}</p>
 <section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">${h1}</h1>${DATA_SRC_HTML}
-${tabs}<p class="note">${lead}</p>
+${tabs}<p class="note">${lead}</p>${orderNote}
 <ul class="list">${list || '<li>この地方はまだ準備中です。</li>'}</ul></section>
 <section><h2>ほかの特集</h2><p class="chips">${others}</p></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">行ってみたい駅に、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
