@@ -1,5 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v38（2026-09-26 JST：体裁の見直し）
+// 街巡 server.js v40（2026-09-26 JST：トップの季節の特集の体裁）
+// v39 → v40：トップの「季節の特集」を特集ページと同じ見せ方に（名所名が主役・見頃の札・丸いボタン）。
+//   見出しは「🍁 秋の特集」「関東の紅葉・イチョウ」のまとまりでしか改行しない。
+// （v39）「アプリで開く」の証明ファイル
+// v38 → v39：駅ページのリンクをアプリで開けるように、所有の証明ファイルを2つ置いた。
+//   /.well-known/assetlinks.json（Android）… パッケージ com.machimegu.app と署名の SHA-256（Play のアプリ署名鍵＋アップロード鍵）
+//   /.well-known/apple-app-site-association（iPhone）… 9R9AH357S3.com.machimegu.app、対象は /station/* だけ
+//   ★アプリ側（次の版）が入るまでは何も起きない。置いておくだけなら安全。
+// （v38）体裁の見直し
 // v37 → v38（ともき指摘）：
 //   ・トップの見本3駅：カードの高さをそろえる。長い駅名（5文字以上）は字を小さくして1行に。
 //   ・特集の見出し：「駅から歩ける」の札は1行目に単独、題名は「関東の／紅葉・イチョウ／30選」の
@@ -279,6 +287,22 @@ app.set('trust proxy', 1);
 // gzip圧縮（すべてのレスポンスを自動圧縮）
 // HTMLサイズを約70%削減（1MB→300KB）
 // ═══════════════════════════════════════════════════════════════
+// ★v39：アプリで開くための証明ファイル（www 転送より前に置く）
+const ASSET_LINKS = [{
+  relation: ['delegate_permission/common.handle_all_urls'],
+  target: {
+    namespace: 'android_app',
+    package_name: 'com.machimegu.app',
+    sha256_cert_fingerprints: [
+      '72:2E:FF:EF:43:04:45:5C:04:DB:A3:21:AA:74:19:C3:9B:9B:0B:DF:F1:6C:7F:5A:23:24:66:B2:F8:A7:16:26', // Play アプリ署名鍵
+      '5E:35:A3:B6:64:7D:FE:E8:E2:76:30:C5:5D:1C:DC:CB:0A:1A:27:FD:EC:F7:DC:E4:CE:11:30:E2:A0:18:10:97', // アップロード鍵
+    ],
+  },
+}];
+const AASA = { applinks: { details: [{ appIDs: ['9R9AH357S3.com.machimegu.app'], components: [{ '/': '/station/*', comment: '駅ページ' }] }] } };
+app.get('/.well-known/assetlinks.json', (req, res) => { res.set('Content-Type', 'application/json'); res.set('Cache-Control', 'public, max-age=3600'); res.send(JSON.stringify(ASSET_LINKS)); });
+app.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (req, res) => { res.set('Content-Type', 'application/json'); res.set('Cache-Control', 'public, max-age=3600'); res.send(JSON.stringify(AASA)); });
+
 // ★v30：www付きは www無しへ（同じ中身を2つの住所で見せない・503を出さない）
 app.use((req, res, next) => {
   const h = String(req.headers.host || '').toLowerCase();
@@ -2055,6 +2079,8 @@ ${FLOAT_CSS}
 const FLOAT_CSS = `
 .rtabs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}.rtabs a{font-size:13px;padding:5px 11px;border-radius:999px;background:var(--tile);color:var(--ink);text-decoration:none;border:1px solid var(--line)}.rtabs a.on{background:var(--pin);color:#fff;border-color:var(--pin);font-weight:700}
 .nb{display:inline-block}
+.fh2 .nb+.nb{margin-left:.35em}
+.fbtn.big{font-size:15px;padding:10px 18px;background:var(--pin);color:#fff;box-shadow:0 4px 12px rgba(242,107,58,.25)}
 .fh1{font-size:clamp(22px,6vw,32px);font-weight:900;line-height:1.35;margin:0 0 10px}
 .fh1 .walkpill{display:table;font-size:14px;margin:0 0 12px}
 .fh1 .ft{display:block}
@@ -2636,9 +2662,15 @@ function seasonBlock(region) {
   const r = REGION_BY_KEY[region] ? region : 'kanto';
   const rows = featureRows(k, r);
   if (!rows.length) return '';
-  const pick = rows.slice(0, 3).map(([st, , hit, e]) => `<li><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}${e && e.best ? `・見頃 ${esc(e.best)}` : ''}</small><br><small style="margin:0">${esc(hit)}</small></li>`).join('');
+  const BL = k === 'hanabi' ? '開催' : '見頃';
+  const nb = (x) => `<span class="nb">${x}</span>`;
+  // ★v40：特集ページと同じ見せ方（名所名 → 最寄り駅 → 見頃）
+  const pick = rows.slice(0, 3).map(([st, sc, hit, e]) => e
+    ? `<li class="fi"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(e.spot)}</b></a><small>${esc(st.name)}駅・${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(e.note)}</p>${e.best ? `<p class="fmeta" style="margin-left:0"><span class="best">${BL} ${esc(e.best)}</span></p>` : ''}</li>`
+    : `<li class="fi"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(st.name)}</b></a><small>${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(hit)}</p></li>`).join('');
   const others = Object.entries(FEATURES).filter(([kk]) => kk !== k).map(([kk, f]) => `<a href="${featureUrl(kk, r)}">${f.e} ${esc(f.t)}</a>`).join('');
-  return `<section><h2>${F.e} ${F.s}の特集：${esc(REGION_BY_KEY[r].n)}の${esc(F.t)}</h2><div class="card"><ul class="list" style="padding:0">${pick}</ul><p style="margin:8px 0 0"><a class="more" href="${featureUrl(k, r)}">${esc(REGION_BY_KEY[r].n)}の${esc(F.t)}をすべて見る（${rows.length}駅）</a></p></div><p class="chips" style="margin-top:12px">${others}</p></section>`;
+  const hasCur = rows.some((x) => x[3]);
+  return `<section><h2 class="fh2">${nb(`${F.e} ${F.s}の特集`)}${nb(`${esc(REGION_BY_KEY[r].n)}の${esc(hasCur ? F.w : F.t)}`)}</h2><div class="card"><ul class="list" style="padding:0">${pick}</ul><p style="margin:14px 0 0;text-align:center"><a class="fbtn big" href="${featureUrl(k, r)}">${hasCur ? `駅から歩ける${esc(F.w)}${rows.length}選を見る` : `${esc(F.t)}をすべて見る（${rows.length}駅）`} →</a></p></div><p class="chips" style="margin-top:12px">${others}</p></section>`;
 }
 // ★v32：特集ページ。/feature/◯◯ は全国（地方への入口つき）、/feature/◯◯/kanto は地方別（最大30駅）
 function featurePage(req, res, k, region) {
