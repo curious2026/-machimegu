@@ -1,5 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v29（2026-09-24 JST：トップの並びを元に戻す）
+// 街巡 server.js v30（2026-09-26 JST：検索対策の一式）
+// v29 → v30：
+//   ・www付き（www.machimegu.com）は www無しへ301転送（503になっていた）
+//   ・駅ページの説明文（検索結果の2行）を「その駅だけの一言」から始める
+//   ・駅ページに「数字で見る◯◯駅」（順位・施設数・開業・利用者を文章で）＝ページごとに固有の中身
+//   ・街力の「データ元」を、数字が出るところ（内訳・ランキング・一覧・トップ・特集）に明記
+//   ・サイトマップを索引＋県ごと（47枚）に分け、更新日（lastmod）を付けた
+//   ・路線・区・県の題名を「◯◯の駅ランキング」の形に（探す人の言葉に合わせる）
+//   ・街並みの絵（ページの約8割＝94KB）を別ファイル（/img/scene*.svg）にして、ブラウザに覚えさせる
+//   ・構造化データ：駅＝ページの住所・画像・市区町村、ランキング＝順位つき一覧（ItemList）
+//   ・特集を2本追加：花火大会がある駅・初詣に行きたい駅
+// （v29）トップの並びを元に戻す
 // v28 → v29：トップの並びは v27 までの順（アプリの画面 → … → 使い方 → 駅を調べる → 街力の高い駅 → 都道府県）に戻した。
 //   トップに来るのは「これ何のアプリ？」を知りたい人。回遊は駅ページ（8,993の入口）が担う（ともき判断）。
 //   v28 の「ランキングをすべて見る →」ボタン・4つの太字・SNSのひとことは残す。
@@ -222,6 +233,13 @@ app.set('trust proxy', 1);
 // gzip圧縮（すべてのレスポンスを自動圧縮）
 // HTMLサイズを約70%削減（1MB→300KB）
 // ═══════════════════════════════════════════════════════════════
+// ★v30：www付きは www無しへ（同じ中身を2つの住所で見せない・503を出さない）
+app.use((req, res, next) => {
+  const h = String(req.headers.host || '').toLowerCase();
+  if (h.startsWith('www.')) return res.redirect(301, `https://${h.slice(4)}${req.originalUrl}`);
+  next();
+});
+
 app.use(compression({
   level: 6,           // 圧縮レベル（1=速度優先, 9=サイズ優先, 6=デフォルト・バランス型）
   threshold: 1024,    // 1KB未満は圧縮しない（オーバーヘッド回避）
@@ -1570,8 +1588,20 @@ function makeScene({ w = 1200, h = 230, evening = false } = {}) {
   s += `</svg>`;
   return s;
 }
-const SKYLINE_SVG = makeScene();
-const EVENING_SVG = makeScene({ evening: true, h: 200 });
+// ★v30：街並みの絵は1ページ94KB（約8割）を占めていたので、別ファイル（/img/scene*.svg）にして
+//   ブラウザに覚えさせる。中身は同じ絵（動きは無い＝<img> で出しても見た目は変わらない）。
+function _svgFile(raw) {
+  return raw.includes('xmlns=') ? raw : raw.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+}
+function _svgImg(raw, src) {
+  const cls = (raw.match(/<svg[^>]*class="([^"]+)"/) || [])[1] || 'scene';
+  const vb = (raw.match(/viewBox="0 0 (\d+) (\d+)"/) || []);
+  return `<img class="${cls}" src="${src}" alt="" aria-hidden="true" decoding="async"${vb[1] ? ` width="${vb[1]}" height="${vb[2]}"` : ''}>`;
+}
+const SKYLINE_RAW = makeScene();
+const SKYLINE_SVG = _svgImg(SKYLINE_RAW, '/img/scene.svg');
+const EVENING_RAW = makeScene({ evening: true, h: 200 });
+const EVENING_SVG = _svgImg(EVENING_RAW, '/img/scene-evening.svg');
 // 区切りの線路
 const TRACK_SVG = `<svg class="track" viewBox="0 0 1200 18" preserveAspectRatio="none" aria-hidden="true"><rect y="3" width="1200" height="2.5" fill="#9BB2C2"/><rect y="12.5" width="1200" height="2.5" fill="#9BB2C2"/>${Array.from({ length: 60 }, (_, i) => `<rect x="${i * 20 + 4}" y="1" width="8" height="16" rx="1" fill="#C9D8E2"/>`).join('')}</svg>`;
 
@@ -1610,6 +1640,21 @@ function renderStationPage(st, ua) {
   const areaN0 = t.location ? (idx.areaCount[`${t.location}_${st.pref}`] || 0) : 0;
   const rRid = ridersNum(t.riders) ? idx.riders.m.get(st.id) : null;
   const rOld = year && idx.old[st.pref] ? idx.old[st.pref].m.get(st.id) : null;
+  // ★v30：数字で見る◯◯駅（順位・施設数・開業・利用者を文章にする＝駅ごとに違う中身）
+  const factsHtml = (() => {
+    const f = [];
+    const nAll = idx.all.n.toLocaleString();
+    const pN = idx.pref[st.pref] ? idx.pref[st.pref].n : 0;
+    if (rAll) f.push(`全国${nAll}駅の中で、街力は${rAll.toLocaleString()}位。${pN && rPref ? `${st.pref}の${pN}駅では${rPref}位です。` : ''}`);
+    if (areaN0 >= 2) { const ar = areaRankOf(st, t.location); if (ar) f.push(`${t.location}にある${areaN0}駅の中では${ar}番目。`); }
+    const l0 = (st.lines || []).find((l) => idx.line[l] && idx.line[l].m.get(st.id));
+    if (l0) f.push(`${l0}の${idx.line[l0].n}駅の中では${idx.line[l0].m.get(st.id)}位。`);
+    const c = (ax) => (d[ax] || {}).count || 0;
+    f.push(`駅から500m以内に、飲食店${c('飲食')}店・お店${c('商業')}店・生活施設${c('生活')}件・医療施設${c('医療')}件があります。`);
+    if (year && rOld) f.push(`開業は${year}年で、${st.pref}で${rOld}番目に古い駅です。`);
+    if (rRid && t.riders) f.push(`1日の利用者は${t.riders}で、全国${rRid.toLocaleString()}位。`);
+    return `<div class="block"><h2>数字で見る${esc(st.name)}駅</h2><div class="panel"><p class="facts">${f.map(esc).join('')}</p></div></div>`;
+  })();
 
   const same = STATIONS.filter((o) => o.name === st.name && o.id !== st.id);
   const sameHtml = same.length ? `<div class="block"><h2>全国の同じ名前の駅</h2><p class="chips">${same.map((o) => `<a href="${stationUrl(o)}">${esc(o.name)}（${esc(o.pref)}）</a>`).join('')}</p></div>` : '';
@@ -1640,9 +1685,14 @@ function renderStationPage(st, ua) {
   const topBtns = storeBadges(ua, 30);
 
   const title = `${st.name}駅（${st.pref}）はどんな街？ 街力${score}点・${rank}ランク｜街巡-まちめぐ-`;
-  const desc = `${st.name}駅${yomi ? `（${yomi}）` : ''}の街力は${score}点・${rank}ランク。${first}${first ? '。' : ''}飲食${(d['飲食'] || {}).count || 0}店・全国${rAll}位。近くの駅との比較や名所も。`;
+  // ★v30：検索結果の2行は「その駅だけの一言」から（「街力」は初めての人には通じない）
+  const foodN = (d['飲食'] || {}).count || 0;
+  const desc = first
+    ? `${first}。${st.name}駅${yomi ? `（${yomi}）` : ''}の周り500mに飲食店${foodN}店、街力${score}点・${rank}ランクで全国${rAll}位。近くの駅との比較や名所も。`
+    : `${st.name}駅${yomi ? `（${yomi}）` : ''}はどんな街？ 周り500mに飲食店${foodN}店、街力${score}点・${rank}ランクで全国${rAll}位。近くの駅との比較や名所も。`;
   const osm = `https://www.openstreetmap.org/export/embed.html?bbox=${st.lng - 0.012},${st.lat - 0.008},${st.lng + 0.012},${st.lat + 0.008}&layer=mapnik&marker=${st.lat},${st.lng}`;
-  const ld = { '@context': 'https://schema.org', '@type': 'TrainStation', name: `${st.name}駅`, address: { '@type': 'PostalAddress', addressRegion: st.pref, addressLocality: t.location || '' }, geo: { '@type': 'GeoCoordinates', latitude: st.lat, longitude: st.lng } };
+  const ld = { '@context': 'https://schema.org', '@type': 'TrainStation', name: `${st.name}駅`, url: stationUrl(st), image: ogUrl(st), address: { '@type': 'PostalAddress', addressCountry: 'JP', addressRegion: st.pref, addressLocality: t.location || '' }, geo: { '@type': 'GeoCoordinates', latitude: st.lat, longitude: st.lng } };
+  if (t.location) ld.containedInPlace = { '@type': 'City', name: t.location };
 
   // ★v27：駅名標の左右＝アプリと同じ「路線の並び順」の前後の駅。データが無い駅だけ従来の「近い2駅」
   const sn = signNeighbors(st);
@@ -1694,8 +1744,9 @@ ${FLOAT_CSS}
 <div class="block panel" style="margin-top:12px"><h1 class="q">${esc(st.name)}駅はどんな街？</h1>
 <div class="score"><span class="num">${score}</span><span class="pt">点</span><span class="rank">${esc(rank)}</span><span class="of">街力（駅から500m以内のお店や施設から計算・1,000点満点）</span></div>
 ${first ? `<p class="leadq">${esc(first)}</p>` : ''}</div>
-<div class="block"><h2>街力の内訳</h2><div class="panel">${bars}</div></div>
+<div class="block"><h2>街力の内訳</h2><div class="panel">${bars}</div>${DATA_SRC_HTML}</div>
 ${rest.length ? `<div class="block"><h2>この街のこと</h2><div class="panel"><ul class="feats">${rest.map((f) => `<li>${esc(f)}</li>`).join('')}</ul></div></div>` : ''}
+${factsHtml}
 <div class="block"><h2>順位</h2><div class="panel"><ul class="rks">
 <li>全国<b>${idx.all.n.toLocaleString()}駅中 ${rAll ? rAll.toLocaleString() : '-'}位</b></li>
 <li><a href="${prefUrl(st.pref)}">${esc(st.pref)}</a><b>${idx.pref[st.pref] ? idx.pref[st.pref].n : '-'}駅中 ${rPref || '-'}位</b></li>
@@ -1815,18 +1866,51 @@ app.get('/station/:pref/:name', (req, res) => {
 });
 
 let _sitemap = { t: 0, xml: '' };
+// ★v30：サイトマップは「索引」＋「共通ページ」＋「県ごとの駅ページ（47枚）」に分けた。
+//   Search Console で、どの県の駅ページがまだ登録されていないかが見えるようになる。
+//   更新日（lastmod）は、街力の再計算日と駅コメントの版のうち新しい方。
+function siteLastmod() {
+  const b = scoresCache.builtAt ? new Date(scoresCache.builtAt + 9 * 3600 * 1000).toISOString().slice(0, 10) : '';
+  const tv = /^\d{4}-\d{2}-\d{2}/.test(String(stationText.version || '')) ? String(stationText.version).slice(0, 10) : '';
+  return [b, tv].filter(Boolean).sort().pop() || new Date().toISOString().slice(0, 10);
+}
+function _smUrl(loc, lm) { return `<url><loc>${loc}</loc>${lm ? `<lastmod>${lm}</lastmod>` : ''}</url>`; }
+function _smSend(res, body) {
+  res.set('Content-Type', 'application/xml; charset=utf-8');
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>${body}`);
+}
 app.get('/sitemap.xml', (req, res) => {
   try {
-    if (!_sitemap.xml || Date.now() - _sitemap.t > PAGE_TTL) {
-      const urls = `<url><loc>${SITE}/</loc></url><url><loc>${SITE}/ranking</loc></url>` + Object.keys(FEATURES).map((k) => `<url><loc>${featureUrl(k)}</loc></url>`).join('') + Object.keys(RANKINGS).map((k) => `<url><loc>${rankingUrl(k)}</loc></url>`).join('') + PREFS.map((p) => `<url><loc>${prefUrl(p)}</loc></url>`).join('')
-        + [...new Set(STATIONS.flatMap((st) => st.lines || []))].map((l) => `<url><loc>${lineUrl(l)}</loc></url>`).join('')
-        + [...new Set(STATIONS.map((st) => { const c = (textOf(st.id) || {}).location; return c ? `${st.pref}	${c}` : ''; }).filter(Boolean))].map((k) => { const [p, c] = k.split('	'); return `<url><loc>${areaUrl(p, c)}</loc></url>`; }).join('')
-        + STATIONS.map((st) => `<url><loc>${stationUrl(st)}</loc></url>`).join('');
-      _sitemap = { t: Date.now(), xml: `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>` };
-    }
-    res.set('Content-Type', 'application/xml; charset=utf-8'); res.send(_sitemap.xml);
+    const lm = siteLastmod();
+    const items = [`${SITE}/sitemap-core.xml`, ...PREFS.map((p, i) => `${SITE}/sitemap-pref-${i + 1}.xml`)];
+    _smSend(res, `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${items.map((u) => `<sitemap><loc>${u}</loc><lastmod>${lm}</lastmod></sitemap>`).join('')}</sitemapindex>`);
   } catch (e) { res.status(500).end(); }
 });
+app.get('/sitemap-core.xml', (req, res) => {
+  try {
+    const lm = siteLastmod();
+    const urls = _smUrl(`${SITE}/`, lm) + _smUrl(`${SITE}/ranking`, lm)
+      + Object.keys(FEATURES).map((k) => _smUrl(featureUrl(k), lm)).join('')
+      + Object.keys(RANKINGS).map((k) => _smUrl(rankingUrl(k), lm)).join('')
+      + PREFS.map((p) => _smUrl(prefUrl(p), lm)).join('')
+      + [...new Set(STATIONS.flatMap((st) => st.lines || []))].map((l) => _smUrl(lineUrl(l), lm)).join('')
+      + [...new Set(STATIONS.map((st) => { const c = (textOf(st.id) || {}).location; return c ? `${st.pref}\t${c}` : ''; }).filter(Boolean))].map((k) => { const [p, c] = k.split('\t'); return _smUrl(areaUrl(p, c), lm); }).join('');
+    _smSend(res, `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
+  } catch (e) { res.status(500).end(); }
+});
+app.get('/sitemap-pref-:n.xml', (req, res) => {
+  try {
+    const p = PREFS[Number(req.params.n) - 1];
+    if (!p) return res.status(404).end();
+    const lm = siteLastmod();
+    const urls = STATIONS.filter((st) => st.pref === p).map((st) => _smUrl(stationUrl(st), lm)).join('');
+    _smSend(res, `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
+  } catch (e) { res.status(500).end(); }
+});
+// ★v30：街並みの絵（1日覚えさせる。絵を変えたらファイル名に版を付けて出し直す）
+app.get('/img/scene.svg', (req, res) => { res.set('Content-Type', 'image/svg+xml'); res.set('Cache-Control', 'public, max-age=86400'); res.send(_svgFile(SKYLINE_RAW)); });
+app.get('/img/scene-evening.svg', (req, res) => { res.set('Content-Type', 'image/svg+xml'); res.set('Cache-Control', 'public, max-age=86400'); res.send(_svgFile(EVENING_RAW)); });
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -1911,6 +1995,8 @@ ${FLOAT_CSS}
 //     ページ下のアプリ紹介（#app）が画面に見えている間は引っ込む（同じ案内を二重に出さない）。
 //   ・帯が出ている間は、丸いボタンを帯の上に持ち上げる。
 const FLOAT_CSS = `
+.src{font-size:12px;color:var(--sub);line-height:1.75;margin:10px 4px 0}.src a{color:var(--sub)}
+.facts{margin:0;line-height:1.95;font-size:15px}
 .sns a .h{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
 .sns a .h small{font-size:11px;font-weight:500;opacity:.92;letter-spacing:.02em}
 .h2row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
@@ -1933,6 +2019,9 @@ body.has-appbar .appbar{transform:none}
 body.appbar-room{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 @media (prefers-reduced-motion:reduce){.fab,.appbar{transition:none}}
 `;
+// ★v30：街力の「データ元」。数字が出るところに必ず添える（初めての人の「この数字どこから？」に答える）
+const DATA_SRC_HTML = '<p class="src">データ元：お店・施設の位置は <a href="https://www.openstreetmap.org/copyright" rel="nofollow">OpenStreetMap</a> と <a href="https://overturemaps.org/" rel="nofollow">Overture Maps</a>。駅から500m以内の飲食・商業・生活・医療の施設を数え、近くの名所の加点を足して「街力」（1,000点満点）にしています。</p>';
+
 function floatUi(appBarHtml) {
   return `${appBarHtml || ''}<button type="button" class="fab" id="fabBack" aria-label="前のページに戻る"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>戻る</button><button type="button" class="fab" id="fabTop" aria-label="ページの先頭へ"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg></button>
 <script>(function(){
@@ -2074,7 +2163,7 @@ ${TRACK_SVG}
 ${NEAR_BUTTON}
 <form class="find" action="/search" method="get" style="margin-top:14px"><input type="search" name="q" placeholder="駅名（例：東陽町）" aria-label="駅名"><button type="submit">調べる</button></form>
 <p class="chips" style="margin-top:12px">${picks}</p></section>
-<section><div class="h2row"><h2>街力の高い駅</h2><a class="more" href="/ranking">ランキングをすべて見る →</a></div><ul class="list">${topHtml}</ul>
+<section><div class="h2row"><h2>街力の高い駅</h2><a class="more" href="/ranking">ランキングをすべて見る →</a></div>${DATA_SRC_HTML}<ul class="list">${topHtml}</ul>
 <p class="chips strong" style="margin-top:12px"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">生活施設が多い駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a></p></section>
 <section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<details><summary>${name}<small>${b - a}都道府県</small></summary><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="${prefUrl(p)}">${p}</a>`).join('')}</p></details>`).join('')}</div></section>
 ${newsBlock()}
@@ -2111,7 +2200,7 @@ function listPage(req, res, { title, h1, lead, stations, canonical, crumbs, badg
   }).join('');
   const ua = req.get('user-agent') || '';
   const body = `<p class="crumbs">${crumbs}</p>
-<section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px;line-height:1.35">${esc(h1)}</h1><p class="note">${lead}</p>
+<section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px;line-height:1.35">${esc(h1)}</h1><p class="note">${lead}</p>${DATA_SRC_HTML}
 <ul class="list"><li>駅の数<b style="float:right">${n}駅</b></li>
 <li>街力の平均<b style="float:right">${avg}点</b></li>
 <li>ランク別<b style="float:right">S ${cnt.S}／A ${cnt.A}／B ${cnt.B}／C ${cnt.C}／D ${cnt.D}</b></li>
@@ -2132,7 +2221,7 @@ app.get('/line/:line', generalLimiter, (req, res) => {
     if (!sts.length) return res.status(404).send(pageShell('路線が見つかりません｜街巡-まちめぐ-', '', '<p>路線が見つかりませんでした。<a href="/">トップへ</a></p>'));
     const prefs = [...new Set(sts.map((st) => st.pref))];
     listPage(req, res, {
-      title: `${l}の駅 街力ランキング（全${sts.length}駅）｜街巡-まちめぐ-`,
+      title: `${l}の駅ランキング｜お店・施設の充実度（街力）順・全${sts.length}駅｜街巡-まちめぐ-`,
       h1: `${l}の駅 街力ランキング`,
       lead: `${esc(l)}の全${sts.length}駅を、駅から500m以内のお店や施設から計算した「街力」（1,000点満点）で並べました。`,
       stations: sts, canonical: lineUrl(l),
@@ -2148,7 +2237,7 @@ app.get('/area/:pref/:city', generalLimiter, (req, res) => {
     const sts = stationsOfArea(pref, city);
     if (!sts.length) return res.status(404).send(pageShell('見つかりません｜街巡-まちめぐ-', '', '<p>見つかりませんでした。<a href="/">トップへ</a></p>'));
     listPage(req, res, {
-      title: `${city}（${pref}）の駅 街力ランキング（全${sts.length}駅）｜街巡-まちめぐ-`,
+      title: `${city}（${pref}）の駅ランキング｜お店・施設の充実度（街力）順・全${sts.length}駅｜街巡-まちめぐ-`,
       h1: `${city}の駅 街力ランキング`,
       lead: `${esc(pref)}${esc(city)}にある全${sts.length}駅を、駅から500m以内のお店や施設から計算した「街力」（1,000点満点）で並べました。`,
       stations: sts, canonical: areaUrl(pref, city),
@@ -2197,7 +2286,7 @@ app.get('/ranking', generalLimiter, (req, res) => {
 }).join('')}</ul></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
-    res.send(pageShell('全国8,993駅 ランキング（街力・飲食店・利用者数・開業年）｜街巡-まちめぐ-', '飲食店が多い駅、生活施設が多い駅、名所が近い駅、開業が古い駅など、全国8,993駅のランキング。', body, `${SITE}/ranking`, '', ua));
+    res.send(pageShell('全国8,993駅 ランキング（街力・飲食店・利用者数・開業年）｜街巡-まちめぐ-', '飲食店が多い駅、生活施設が多い駅、名所が近い駅、開業が古い駅など、全国8,993駅のランキング。', body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), `${SITE}/ranking`, '', ua));
   } catch (e) { console.error('[v18] ランキング一覧失敗:', e.message); res.status(500).send('ただいま表示できません'); }
 });
 
@@ -2220,7 +2309,9 @@ app.get('/ranking/:kind', generalLimiter, (req, res) => {
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
     const top3 = rows.slice(0, 3).map(([st]) => st.name).join('・');
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
-    res.send(pageShell(`${R.t} 全国ランキングTOP100｜街巡-まちめぐ-`, `${R.d}で全国8,993駅を比べたランキング。1位〜3位は${top3}。`, body, rankingUrl(req.params.kind), '', ua));
+    // ★v30：順位つき一覧の印（上位20駅）
+    const itemLd = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name: `${R.t} 全国ランキング`, itemListElement: rows.slice(0, 20).map(([st], i) => ({ '@type': 'ListItem', position: i + 1, name: `${st.name}駅`, url: stationUrl(st) })) })}</script>`;
+    res.send(pageShell(`${R.t} 全国ランキングTOP100｜街巡-まちめぐ-`, `${R.d}で全国8,993駅を比べたランキング。1位〜3位は${top3}。`, body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), rankingUrl(req.params.kind), '', ua, itemLd));
   } catch (e) { console.error('[v18] ランキング失敗:', e.message); res.status(500).send('ただいま表示できません'); }
 });
 
@@ -2307,7 +2398,7 @@ ${oldest ? `<li>いちばん古い駅<b style="float:right">${esc(oldest[0].name
 <section><h2>路線から探す</h2><p class="chips">${lineChips}</p></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">${esc(p)}の${n}駅、どこでも5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
-    res.send(pageShell(`${p}の駅 街力ランキング（全${n}駅）｜街巡-まちめぐ-`, `${p}の全${n}駅の街力ランキング。1位は${rows[0] ? rows[0][0].name : ''}。市区町村・路線からも探せます。`, body, prefUrl(p), '', ua));
+    res.send(pageShell(`${p}の駅ランキング｜お店・施設の充実度（街力）順・全${n}駅｜街巡-まちめぐ-`, `${p}の全${n}駅の街力ランキング。1位は${rows[0] ? rows[0][0].name : ''}。市区町村・路線からも探せます。`, body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), prefUrl(p), '', ua));
   } catch (e) { console.error('[v25] 都道府県ページ失敗:', e.message); res.status(500).send('ただいま表示できません'); }
 });
 
@@ -2323,6 +2414,9 @@ const FEATURES = {
   umi:       { t: '海が近い駅', s: '夏', kw: ['海水浴', 'ビーチ', '砂浜', '海岸'], w: '海', e: '🌊' },
   castle:    { t: 'お城が近い駅', s: '', kw: ['城跡', '城址', '天守', 'お城'], w: 'お城', e: '🏯' },
   shotengai: { t: '商店街が楽しい駅', s: '', kw: ['商店街', 'アーケード', '横丁'], w: '商店街・横丁', e: '🏮' },
+  // ★v30：季節の入口を2本追加（駅コメントに書いてある駅だけ＝花火17駅・初詣143駅）
+  hanabi:    { t: '花火大会がある駅', s: '夏', kw: ['花火'], w: '花火大会', e: '🎆' },
+  hatsumode: { t: '初詣に行きたい駅', s: '冬', kw: ['初詣', '神宮', '大社', '天満宮', '稲荷', '八幡宮'], w: '神社・初詣', e: '⛩️' },
 };
 const _featCache = new Map();
 function featureRows(k) {
@@ -2366,7 +2460,7 @@ app.get('/feature/:k', generalLimiter, (req, res) => {
 <section><h2>ほかの特集</h2><p class="chips">${others}</p></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">行ってみたい駅に、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
-    res.send(pageShell(`${F.t}（全国${rows.length}駅）｜街巡-まちめぐ-`, `${F.t}を全国から${rows.length}駅。${rows.slice(0, 3).map(([st]) => st.name).join('・')}など。`, body, featureUrl(req.params.k), '', ua));
+    res.send(pageShell(`${F.t}（全国${rows.length}駅）｜街巡-まちめぐ-`, `${F.t}を全国から${rows.length}駅。${rows.slice(0, 3).map(([st]) => st.name).join('・')}など。`, body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), featureUrl(req.params.k), '', ua));
   } catch (e) { console.error('[v26] 特集失敗:', e.message); res.status(500).send('ただいま表示できません'); }
 });
 
