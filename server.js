@@ -1,5 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v40（2026-09-26 JST：トップの季節の特集の体裁）
+// 街巡 server.js v41（2026-09-27 JST：トップへの導線・アップデート履歴）
+// v40 → v41（ともき案）：
+//   ①トップ（アプリの説明）へすぐ飛べる導線：どのページもヘッダーに「アプリの紹介」、
+//     駅ページは点数のすぐ下に案内帯、ページ下の案内とスマホの下の帯に「くわしく見る」。
+//   ②アップデート履歴：リポジトリ直下の updates.json を /api/updates で配り、
+//     トップに「アップデート履歴」（最新は開く・それより前は版ごとに折りたたみ・重要な行は太字）。
+//     アプリ（2.2.0〜）の設定も同じ /api/updates を読む＝ファイルに1つ足せば両方に出る。
+// （v40）トップの季節の特集の体裁
 // v39 → v40：トップの「季節の特集」を特集ページと同じ見せ方に（名所名が主役・見頃の札・丸いボタン）。
 //   見出しは「🍁 秋の特集」「関東の紅葉・イチョウ」のまとまりでしか改行しない。
 // （v39）「アプリで開く」の証明ファイル
@@ -1793,7 +1800,7 @@ h2 .me{float:right;font-size:13px;font-weight:700;color:var(--ink);font-family:"
 .map{width:100%;height:260px;border:0;border-radius:14px;display:block}
 ${FLOAT_CSS}
 </style></head><body>
-<header class="skyhead"><div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩</span></span></a><span class="tb">${topBtns}</span></div>
+<header class="skyhead"><div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩</span></span></a><span class="tb">${ABOUT_BTN}${topBtns}</span></div>
 <div style="max-width:760px;margin:0 auto;padding:10px 18px 0">
 <div class="sign">${yomi ? `<div class="y">${esc(yomi)}</div>` : '<div class="y">&nbsp;</div>'}<div class="n">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? `　${esc(t.location)}` : ''}</div><div class="band" style="background:${rc}"></div>${lr}</div>
 </div>${SKYLINE_SVG}</header>
@@ -1802,6 +1809,7 @@ ${FLOAT_CSS}
 <div class="block panel" style="margin-top:12px"><h1 class="q">${esc(st.name)}駅はどんな街？</h1>
 <div class="score"><span class="num">${score}</span><span class="pt">点</span><span class="rank">${esc(rank)}</span><span class="of">街力（駅から500m以内のお店や施設から計算・1,000点満点）</span></div>
 ${first ? `<p class="leadq">${esc(first)}</p>` : ''}</div>
+${INTRO_BAR}
 <div class="block"><h2>街力の内訳</h2><div class="panel">${bars}</div>${DATA_SRC_HTML}</div>
 ${rest.length ? `<div class="block"><h2>この街のこと</h2><div class="panel"><ul class="feats">${rest.map((f) => `<li>${esc(f)}</li>`).join('')}</ul></div></div>` : ''}
 <div class="block"><h2>順位</h2><div class="panel"><ul class="rks">
@@ -1826,9 +1834,9 @@ ${sameHtml}
 <div class="block invite" id="app"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2>
 <p class="pitch">全国8,993駅のチェックイン型・街歩きアプリ（無料）</p>
 <ul><li>${esc(st.name)}駅から500m以内で5分立ち止まると、この駅のカードが1枚</li><li>季節と時間帯でカードの色が変わる。同じ駅でも別の1枚に</li><li>路線や街を制覇して、バッジを集める</li></ul>
-${storeBtns}${EVENING_SVG}</div>
+${storeBtns}${MORE_LINK}${EVENING_SVG}</div>
 <footer>${SNS_HTML}街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。駅名標のとなりの駅は HeartRails Express のデータを加工して作成。<br><a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><br>© 街巡-まちめぐ-</footer>
-</main>${floatUi((isIOS || isAnd) ? `<div class="appbar" id="appbar" role="complementary" aria-label="アプリの案内"><div class="t"><b>${esc(st.name)}駅のカードを、アプリで</b><span>5分立ち止まると1枚・無料</span></div>${storeBadges(ua, 40)}<button type="button" class="x" aria-label="閉じる">×</button></div>` : '')}</body></html>`;
+</main>${floatUi((isIOS || isAnd) ? `<div class="appbar" id="appbar" role="complementary" aria-label="アプリの案内"><div class="t"><b>${esc(st.name)}駅のカードを、アプリで</b><span>5分立ち止まると1枚・無料・<a href="${SITE}/">くわしく</a></span></div>${storeBadges(ua, 40)}<button type="button" class="x" aria-label="閉じる">×</button></div>` : '')}</body></html>`;
 }
 
 
@@ -1959,6 +1967,11 @@ function _smSend(res, body) {
   res.set('Cache-Control', 'public, max-age=3600');
   res.send(`<?xml version="1.0" encoding="UTF-8"?>${body}`);
 }
+// ★v41：アップデート履歴（HPとアプリの両方が読む）
+app.get('/api/updates', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=600');
+  res.json(UPDATES || { items: [] });
+});
 app.get('/sitemap.xml', (req, res) => {
   try {
     const lm = siteLastmod();
@@ -2000,7 +2013,7 @@ const PREFS = ['北海道','青森県','岩手県','宮城県','秋田県','山�
 function pageShell(title, desc, body, canonical, hero, ua, extraHead, opts) {
   // ★v27：opts.noFooterSns … 本文に X・インスタのボタンがあるページ（トップ）はフッターに出さない
   const o = opts || {};
-  const top = `<div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩</span></span></a><span class="tb">${ua != null ? storeBadges(ua, 30) : ''}</span></div>`;
+  const top = `<div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩</span></span></a><span class="tb">${canonical && canonical !== `${SITE}/` ? ABOUT_BTN : ''}${ua != null ? storeBadges(ua, 30) : ''}</span></div>`;
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
@@ -2095,6 +2108,24 @@ const FLOAT_CSS = `
 .fi .fmeta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 0 48px}
 .fi .fmeta .best{margin:0}
 .fbtn{display:inline-block;font-size:13px;font-weight:700;color:var(--blue);background:#EEF5FB;border-radius:999px;padding:5px 12px;text-decoration:none}
+@media(max-width:480px){.top:has(.aboutbtn) .brand>span>span{display:none}.top:has(.aboutbtn) .brand{min-width:0;overflow:hidden}.top:has(.aboutbtn) .brand b{font-size:13.5px!important;white-space:nowrap;letter-spacing:0!important}.top:has(.aboutbtn) .brand img{width:34px!important;height:34px!important}.aboutbtn{font-size:11.5px!important;padding:5px 8px!important;margin-right:4px!important}}
+.aboutbtn{display:inline-block;margin-right:8px;font-size:13px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.75);border:1px solid var(--line);border-radius:999px;padding:6px 12px;text-decoration:none;white-space:nowrap}
+.introbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:12px 0 0;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,#FFF3E8,#EAF4FB);text-decoration:none;color:var(--ink);box-shadow:0 6px 18px rgba(31,42,68,.08)}
+.introbar .ib-k{font-size:11px;font-weight:900;color:#fff;background:var(--pin);border-radius:999px;padding:2px 9px}
+.introbar .ib-t{font-size:14px;font-weight:700}
+.introbar .ib-go{margin-left:auto;font-size:13px;font-weight:900;color:var(--pin);white-space:nowrap}
+.morelink{margin:12px 0 0;text-align:center}.morelink a{font-size:14px;font-weight:700;color:var(--pin)}
+.updlist .upd{background:#fff;border-radius:14px;margin:0 0 8px;padding:0 16px;box-shadow:0 4px 14px rgba(31,42,68,.06)}
+.updlist summary{cursor:pointer;padding:13px 0;display:flex;align-items:center;gap:8px;list-style:none}
+.updlist summary::-webkit-details-marker{display:none}
+.updlist summary:after{content:"＋";margin-left:auto;color:var(--sub);font-weight:700}
+.updlist details[open] summary:after{content:"－"}
+.updlist summary b{font-family:"Zen Maru Gothic",sans-serif;font-size:17px}
+.updlist .new{font-size:11px;font-weight:900;color:#fff;background:var(--pin);border-radius:999px;padding:2px 8px}
+.updlist .os{font-size:11px;font-weight:700;color:#1d5f8a;background:#E3F1FA;border-radius:999px;padding:2px 8px}
+.updlist ul{margin:0;padding:0 0 14px 1.1em;line-height:1.75;font-size:14.5px}
+.updlist li{margin:2px 0}.updlist li.imp b{color:var(--ink)}
+.appbar .t a{color:inherit;text-decoration:underline}
 .stag{display:inline-block;align-self:flex-start;margin:0 0 6px 4px;font-size:12px;font-weight:700;color:#fff;background:var(--pin);border-radius:999px;padding:2px 10px}
 .walkpill{display:inline-block;vertical-align:middle;font-size:.5em;font-weight:900;color:#fff;background:var(--pin);border-radius:10px;padding:4px 10px 5px;margin:0 8px 6px 0;position:relative;box-shadow:0 3px 8px rgba(242,107,58,.3)}
 .walkpill:after{content:"";position:absolute;left:14px;bottom:-6px;border:6px solid transparent;border-top-color:var(--pin);border-bottom:0}
@@ -2125,6 +2156,23 @@ body.appbar-room{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 `;
 // ★v30：街力の「データ元」。数字が出るところに必ず添える（初めての人の「この数字どこから？」に答える）
 const DATA_SRC_HTML = '<p class="src">データ元：お店・施設の位置は <a href="https://www.openstreetmap.org/copyright" rel="nofollow">OpenStreetMap</a> と <a href="https://overturemaps.org/" rel="nofollow">Overture Maps</a>。駅から500m以内の飲食・商業・生活・医療の施設を数え、近くの名所の加点を足して「街力」（1,000点満点）にしています。</p>';
+
+// ★v41：トップ（アプリの説明）への導線
+const ABOUT_BTN = `<a class="aboutbtn" href="${SITE}/">アプリの紹介</a>`;
+const INTRO_BAR = `<a class="introbar" href="${SITE}/"><span class="ib-k">アプリ</span><span class="ib-t">この駅のカード、アプリで集められます</span><span class="ib-go">街巡ってどんなアプリ？ →</span></a>`;
+const MORE_LINK = `<p class="morelink"><a href="${SITE}/">街巡ってどんなアプリ？ くわしく見る →</a></p>`;
+
+// ★v41：アップデート履歴（updates.json）。無ければ従来の「最新版のお知らせ」
+const UPDATES = (() => {
+  try { const j = JSON.parse(fs.readFileSync(path.join(__dirname, 'updates.json'), 'utf8')); return Array.isArray(j.items) ? j : null; }
+  catch (e) { console.warn('[v41] updates.json なし（最新版のお知らせだけ）'); return null; }
+})();
+function updatesBlock() {
+  if (!UPDATES || !UPDATES.items.length) return newsBlock();
+  const li = (n) => n.b ? `<li class="imp"><b>${esc(n.t)}</b></li>` : `<li>${esc(n.t)}</li>`;
+  const one = (e, i) => `<details class="upd"${i === 0 ? ' open' : ''}><summary><b>バージョン ${esc(e.v)}</b>${i === 0 ? '<span class="new">最新</span>' : ''}${e.os ? `<span class="os">${esc(e.os)}のみ</span>` : ''}</summary><ul>${(e.notes || []).map(li).join('')}</ul></details>`;
+  return `<section><h2>アップデート履歴</h2><div class="updlist">${UPDATES.items.map(one).join('')}</div><p class="note" style="margin-top:8px">新しい順。太字は大きな変更です。</p></section>`;
+}
 
 function floatUi(appBarHtml) {
   return `${appBarHtml || ''}<button type="button" class="fab" id="fabBack" aria-label="前のページに戻る"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>戻る</button><button type="button" class="fab" id="fabTop" aria-label="ページの先頭へ"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg></button>
@@ -2284,7 +2332,7 @@ ${NEAR_BUTTON}
 <section><div class="h2row"><h2>街力の高い駅<small style="font-size:14px;color:var(--sub);margin-left:8px">${esc(REGION_BY_KEY[region].n)}</small></h2><a class="more" href="/ranking">全国ランキング →</a></div>${regionTabs(region, '/')}${DATA_SRC_HTML}<ul class="list">${topHtml}</ul>
 <p class="chips strong" style="margin-top:12px"><a href="/ranking/food">飲食店が多い駅</a><a href="/ranking/life">生活施設が多い駅</a><a href="/ranking/sights">名所が近い駅</a><a href="/ranking/oldest">開業が古い駅</a></p></section>
 <section><h2>都道府県から探す</h2><div class="regions">${[['北海道・東北', 0, 7], ['関東', 7, 14], ['中部', 14, 23], ['近畿', 23, 30], ['中国', 30, 35], ['四国', 35, 39], ['九州・沖縄', 39, 47]].map(([name, a, b]) => `<details><summary>${name}<small>${b - a}都道府県</small></summary><p class="chips">${PREFS.slice(a, b).map((p) => `<a href="${prefUrl(p)}">${p}</a>`).join('')}</p></details>`).join('')}</div></section>
-${newsBlock()}
+${updatesBlock()}
 <section><h2>よくある質問</h2><div class="faq">${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>さあ、街にでよう。</h2><p class="pitch">街巡-まちめぐ-（無料）</p>${storeBadges(ua, 46)}<p class="note" style="margin:12px 0 0">街で見つけた1枚は X とインスタでも</p>${SNS_HTML}${EVENING_SVG}</section>`;
       _topCache = { key, html: pageShell('街巡-まちめぐ- 駅で5分、カードを集める散歩｜全国8,993駅のスタンプラリー',
@@ -2329,7 +2377,7 @@ ${food ? `<li>飲食店がいちばん多い駅<b style="float:right">${esc(food
 </ul></section>
 <section><h2>街力ランキング（全${n}駅）</h2><ul class="list">${list}</ul></section>
 ${badge ? `<section><h2>制覇バッジ</h2><div class="card">${badge}</div></section>` : ''}
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">駅から500m以内で5分立ち止まると、その街のカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">駅から500m以内で5分立ち止まると、その街のカードが1枚（無料）</p>${storeBadges(ua, 46)}${MORE_LINK}${EVENING_SVG}</section>`;
   res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
   res.send(pageShell(title, `${h1}。${lead.replace(/<[^>]+>/g, '')}`, body, canonical, '', ua));
 }
@@ -2404,7 +2452,7 @@ app.get('/ranking', generalLimiter, (req, res) => {
   const top = rankingRows(k).slice(0, 3).map(([st]) => esc(st.name)).join('、');
   return `<li><a href="${rankingUrl(k)}" style="font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:17px">${esc(R.t)} TOP100</a><br><small style="margin:0">${esc(R.d)}。1位〜3位は${top}</small></li>`;
 }).join('')}</ul></section>
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${MORE_LINK}${EVENING_SVG}</section>`;
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
     res.send(pageShell('全国8,993駅 ランキング（街力・飲食店・利用者数・開業年）｜街巡-まちめぐ-', '飲食店が多い駅、生活施設が多い駅、名所が近い駅、開業が古い駅など、全国8,993駅のランキング。', body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), `${SITE}/ranking`, '', ua));
   } catch (e) { console.error('[v18] ランキング一覧失敗:', e.message); res.status(500).send('ただいま表示できません'); }
@@ -2426,7 +2474,7 @@ app.get('/ranking/:kind', generalLimiter, (req, res) => {
 <section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">${esc(R.t)} 全国TOP100</h1><p class="note">${esc(R.d)}で、全国8,993駅を並べました。</p>
 <ul class="list">${list}</ul></section>
 <section><h2>ほかのランキング</h2><p class="chips">${others}</p></section>
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${MORE_LINK}${EVENING_SVG}</section>`;
     const top3 = rows.slice(0, 3).map(([st]) => st.name).join('・');
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
     // ★v30：順位つき一覧の印（上位20駅）
@@ -2472,7 +2520,7 @@ app.get('/near', generalLimiter, (req, res) => {
       body = `<p class="crumbs"><a href="/">街巡-まちめぐ-</a> › 近くの駅</p>
 <section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">今いる場所の近くの駅</h1>${first}
 ${rows ? `<ul class="list">${rows}</ul>` : '<p class="note">近くに駅が見つかりませんでした。</p>'}</section>
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">駅から500m以内で5分立ち止まると、その街のカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">駅から500m以内で5分立ち止まると、その街のカードが1枚（無料）</p>${storeBadges(ua, 46)}${MORE_LINK}${EVENING_SVG}</section>`;
     }
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'no-store'); res.set('X-Robots-Tag', 'noindex');
     res.send(pageShell('今いる場所の近くの駅｜街巡-まちめぐ-', '今いる場所の近くの駅と、その街力。', body, null, '', ua, '<meta name="robots" content="noindex">'));
@@ -2516,7 +2564,7 @@ ${oldest ? `<li>いちばん古い駅<b style="float:right">${esc(oldest[0].name
 <section><h2>街力TOP30</h2><ul class="list">${top}</ul><p class="chips" style="margin-top:12px"><a href="/search?pref=${encodeURIComponent(p)}">${esc(p)}の全${n}駅を見る</a></p></section>
 <section><h2>市区町村から探す</h2><p class="chips">${cityChips}</p></section>
 <section><h2>路線から探す</h2><p class="chips">${lineChips}</p></section>
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">${esc(p)}の${n}駅、どこでも5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">${esc(p)}の${n}駅、どこでも5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${MORE_LINK}${EVENING_SVG}</section>`;
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
     res.send(pageShell(`${p}の駅ランキング｜お店・施設の充実度（街力）順・全${n}駅｜街巡-まちめぐ-`, `${p}の全${n}駅の街力ランキング。1位は${rows[0] ? rows[0][0].name : ''}。市区町村・路線からも探せます。`, body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), prefUrl(p), '', ua));
   } catch (e) { console.error('[v25] 都道府県ページ失敗:', e.message); res.status(500).send('ただいま表示できません'); }
@@ -2718,7 +2766,7 @@ function featurePage(req, res, k, region) {
 <ul class="list">${list || '<li>この地方はまだ準備中です。</li>'}</ul>
 <h2 style="margin-top:22px">ほかの地方を見る</h2>${tabs}</section>
 <section><h2>ほかの特集</h2><p class="chips">${others}</p></section>
-<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">行ってみたい駅に、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${EVENING_SVG}</section>`;
+<section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">行ってみたい駅に、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${MORE_LINK}${EVENING_SVG}</section>`;
   const top3 = rows.slice(0, 3).map(([st, , , e]) => e ? e.spot : st.name).join('・');
   // ★v37：題名に年（初詣は10月以降なら翌年）
   const jst = new Date(Date.now() + 9 * 3600 * 1000);
