@@ -1,5 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v41（2026-09-27 JST：トップへの導線・アップデート履歴）
+// 街巡 server.js v42（2026-09-27 JST：アップデート履歴を畳む）
+// v41 → v42（ともき指摘）：トップには最新の版だけを出し、それより前は「過去のアップデート一覧」を
+//   押したときだけ開く（興味の無い人がスクロールしても「さあ、街にでよう」に早く着くように）。
+// （v41）トップへの導線・アップデート履歴
 // v40 → v41（ともき案）：
 //   ①トップ（アプリの説明）へすぐ飛べる導線：どのページもヘッダーに「アプリの紹介」、
 //     駅ページは点数のすぐ下に案内帯、ページ下の案内とスマホの下の帯に「くわしく見る」。
@@ -2115,6 +2118,8 @@ const FLOAT_CSS = `
 .introbar .ib-t{font-size:14px;font-weight:700}
 .introbar .ib-go{margin-left:auto;font-size:13px;font-weight:900;color:var(--pin);white-space:nowrap}
 .morelink{margin:12px 0 0;text-align:center}.morelink a{font-size:14px;font-weight:700;color:var(--pin)}
+.pastupd{margin-top:4px}.pastupd>summary{cursor:pointer;display:inline-block;list-style:none;font-size:14px;font-weight:700;color:var(--pin);padding:8px 2px}
+.pastupd>summary::-webkit-details-marker{display:none}.pastupd>summary:after{content:" ＋"}.pastupd[open]>summary:after{content:" －"}
 .updlist .upd{background:#fff;border-radius:14px;margin:0 0 8px;padding:0 16px;box-shadow:0 4px 14px rgba(31,42,68,.06)}
 .updlist summary{cursor:pointer;padding:13px 0;display:flex;align-items:center;gap:8px;list-style:none}
 .updlist summary::-webkit-details-marker{display:none}
@@ -2171,7 +2176,12 @@ function updatesBlock() {
   if (!UPDATES || !UPDATES.items.length) return newsBlock();
   const li = (n) => n.b ? `<li class="imp"><b>${esc(n.t)}</b></li>` : `<li>${esc(n.t)}</li>`;
   const one = (e, i) => `<details class="upd"${i === 0 ? ' open' : ''}><summary><b>バージョン ${esc(e.v)}</b>${i === 0 ? '<span class="new">最新</span>' : ''}${e.os ? `<span class="os">${esc(e.os)}のみ</span>` : ''}</summary><ul>${(e.notes || []).map(li).join('')}</ul></details>`;
-  return `<section><h2>アップデート履歴</h2><div class="updlist">${UPDATES.items.map(one).join('')}</div><p class="note" style="margin-top:8px">新しい順。太字は大きな変更です。</p></section>`;
+  // ★v42：最新だけ開いて見せ、それより前は「過去のアップデート一覧」の中にしまう
+  const [latest, ...older] = UPDATES.items;
+  const past = older.length
+    ? `<details class="pastupd"><summary>過去のアップデート一覧（${older.length}件）</summary><div class="updlist" style="margin-top:10px">${older.map((e) => one(e, 1)).join('')}</div><p class="note" style="margin-top:6px">新しい順。太字は大きな変更です。</p></details>`
+    : '';
+  return `<section><h2>最新のアップデート</h2><div class="updlist">${one(latest, 0)}</div>${past}</section>`;
 }
 
 function floatUi(appBarHtml) {
