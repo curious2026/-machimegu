@@ -1,5 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v42（2026-09-27 JST：アップデート履歴を畳む）
+// 街巡 server.js v43（2026-09-27 JST：アップデート履歴に日付）
+// v42 → v43（ともき指摘）：アップデート履歴の各版に公開日（日本時間）を出す。
+//   updates.json の各版に d:"2026-09-27" を持たせ、見出しの右に「2026年9月27日」と表示。
+//   日付は App Store の公開日（日本時間）にそろえる。Androidのみの版は Play の公開日。
+//   d が無い版は日付を出さないだけ（壊れない）。
+// （v42）アップデート履歴を畳む
 // v41 → v42（ともき指摘）：トップには最新の版だけを出し、それより前は「過去のアップデート一覧」を
 //   押したときだけ開く（興味の無い人がスクロールしても「さあ、街にでよう」に早く着くように）。
 // （v41）トップへの導線・アップデート履歴
@@ -2121,7 +2126,9 @@ const FLOAT_CSS = `
 .pastupd{margin-top:4px}.pastupd>summary{cursor:pointer;display:inline-block;list-style:none;font-size:14px;font-weight:700;color:var(--pin);padding:8px 2px}
 .pastupd>summary::-webkit-details-marker{display:none}.pastupd>summary:after{content:" ＋"}.pastupd[open]>summary:after{content:" －"}
 .updlist .upd{background:#fff;border-radius:14px;margin:0 0 8px;padding:0 16px;box-shadow:0 4px 14px rgba(31,42,68,.06)}
-.updlist summary{cursor:pointer;padding:13px 0;display:flex;align-items:center;gap:8px;list-style:none}
+.updlist summary{cursor:pointer;padding:13px 0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;list-style:none}
+.updlist .dt{margin-left:auto;font-size:13px;color:var(--sub);white-space:nowrap}
+.updlist summary:has(.dt):after{margin-left:10px}
 .updlist summary::-webkit-details-marker{display:none}
 .updlist summary:after{content:"＋";margin-left:auto;color:var(--sub);font-weight:700}
 .updlist details[open] summary:after{content:"－"}
@@ -2175,7 +2182,9 @@ const UPDATES = (() => {
 function updatesBlock() {
   if (!UPDATES || !UPDATES.items.length) return newsBlock();
   const li = (n) => n.b ? `<li class="imp"><b>${esc(n.t)}</b></li>` : `<li>${esc(n.t)}</li>`;
-  const one = (e, i) => `<details class="upd"${i === 0 ? ' open' : ''}><summary><b>バージョン ${esc(e.v)}</b>${i === 0 ? '<span class="new">最新</span>' : ''}${e.os ? `<span class="os">${esc(e.os)}のみ</span>` : ''}</summary><ul>${(e.notes || []).map(li).join('')}</ul></details>`;
+  // ★v43：公開日（日本時間）。"2026-09-27" → 「2026年9月27日」。形が違えば出さない
+  const day = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || '')); return m ? `<span class="dt">${+m[1]}年${+m[2]}月${+m[3]}日</span>` : ''; };
+  const one = (e, i) => `<details class="upd"${i === 0 ? ' open' : ''}><summary><b>バージョン ${esc(e.v)}</b>${i === 0 ? '<span class="new">最新</span>' : ''}${e.os ? `<span class="os">${esc(e.os)}のみ</span>` : ''}${day(e.d)}</summary><ul>${(e.notes || []).map(li).join('')}</ul></details>`;
   // ★v42：最新だけ開いて見せ、それより前は「過去のアップデート一覧」の中にしまう
   const [latest, ...older] = UPDATES.items;
   const past = older.length
