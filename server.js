@@ -1,5 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v43（2026-09-27 JST：アップデート履歴に日付）
+// 街巡 server.js v44（2026-09-28 JST：特集に写真・見本の札を外す）
+// v43 → v44（ともき指摘）：
+//   ①トップの「こんな街が、1枚のカードに」の札（意外な一面／歴史の街／おしゃれな街）を外す。
+//     選定のための分類で、表に出すものではない。
+//   ②特集ページの各名所の右側（空いていた所）に写真。写真はリポジトリ直下の
+//     feature_photos.json（新規）から読む。Wikimedia Commons の自由ライセンス（CC BY／CC BY-SA／CC0／パブリックドメイン）
+//     の写真だけを使い、写真の下に撮影者・ライセンス・元ページへのリンクを必ず出す（CC BY 系の条件）。
+//     画像は Wikimedia の配信（upload／thumb.wikimedia.org）の500px版を直接読む（1枚50〜80KB・遅延読み込み）。
+//     スマホでは名所名の下に写真。ファイルが無ければ今までどおり（壊れない）。
 // v42 → v43（ともき指摘）：アップデート履歴の各版に公開日（日本時間）を出す。
 //   updates.json の各版に d:"2026-09-27" を持たせ、見出しの右に「2026年9月27日」と表示。
 //   日付は App Store の公開日（日本時間）にそろえる。Androidのみの版は Play の公開日。
@@ -2115,6 +2123,19 @@ const FLOAT_CSS = `
 .fi .fnote{margin:8px 0 0 48px;font-size:15px;line-height:1.7;color:var(--ink)}
 .fi .fmeta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 0 48px}
 .fi .fmeta .best{margin:0}
+/* ★v44：特集の写真。広い画面は右の列、スマホは名所名のすぐ下 */
+.list .fi.hasph{display:grid;grid-template-columns:minmax(0,1fr) 250px;column-gap:20px;align-items:start}
+.fi.hasph>.fh,.fi.hasph>.fnote,.fi.hasph>.fmeta{grid-column:1}
+.fi.hasph>.fph{grid-column:2;grid-row:1 / span 3}
+.fph{margin:0}
+.fph img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:#EEF2F6}
+.fph figcaption{margin-top:4px;font-size:11px;line-height:1.5;color:var(--sub);word-break:break-all}
+.fph figcaption a{color:var(--sub)}
+@media (max-width:640px){
+.list .fi.hasph{display:flex;flex-direction:column}
+.fi.hasph>.fh{order:1}.fi.hasph>.fph{order:2;margin:10px 0 0 48px}.fi.hasph>.fnote{order:3}.fi.hasph>.fmeta{order:4}
+.fph img{aspect-ratio:16/10}
+}
 .fbtn{display:inline-block;font-size:13px;font-weight:700;color:var(--blue);background:#EEF5FB;border-radius:999px;padding:5px 12px;text-decoration:none}
 @media(max-width:480px){.top:has(.aboutbtn) .brand>span>span{display:none}.top:has(.aboutbtn) .brand{min-width:0;overflow:hidden}.top:has(.aboutbtn) .brand b{font-size:13.5px!important;white-space:nowrap;letter-spacing:0!important}.top:has(.aboutbtn) .brand img{width:34px!important;height:34px!important}.aboutbtn{font-size:11.5px!important;padding:5px 8px!important;margin-right:4px!important}}
 .aboutbtn{display:inline-block;margin-right:8px;font-size:13px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.75);border:1px solid var(--line);border-radius:999px;padding:6px 12px;text-decoration:none;white-space:nowrap}
@@ -2320,7 +2341,7 @@ app.get('/', (req, res) => {
         const st = STATIONS_BY_ID.get(id); if (!st) return '';
         const sc = scoreOf(st.id) || { score: 0, rank: 'D' }; const t = textOf(st.id) || {};
         const c = RANK_COLOR[sc.rank] || '#888';
-        return `<a href="${stationUrl(st)}">${label ? `<span class="stag">${esc(label)}</span>` : ''}<div class="sign"><div class="y">${esc(STATION_YOMI[st.id] || '')}</div><div class="n${st.name.length >= 5 ? ' long' : ''}">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? '　' + esc(t.location) : ''}</div><div class="band" style="background:${c}"></div>
+        return `<a href="${stationUrl(st)}"><div class="sign"><div class="y">${esc(STATION_YOMI[st.id] || '')}</div><div class="n${st.name.length >= 5 ? ' long' : ''}">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? '　' + esc(t.location) : ''}</div><div class="band" style="background:${c}"></div>
 <div class="meta"><b style="color:${c}">${sc.score}</b><span>点</span><span class="rk" style="background:${c}">${esc(sc.rank)}</span></div><div class="c">${esc(comment || (t.features || [])[0] || '')}</div></div></a>`;
       };
       const hero = `<div style="max-width:560px;margin:0 auto;padding:10px 18px 0"><div class="sign"><div class="y">まちめぐ</div><div class="n">街巡</div><div class="p">全国8,993駅</div><div class="band" style="background:var(--pin)"></div><div class="lr"><span>← いつもの駅</span><span class="r">知らない街 →</span></div></div></div>
@@ -2652,6 +2673,19 @@ const CURATED = (() => {
   catch (e) { console.warn('[v32] features_curated.json なし（特集は駅コメントだけ）'); return {}; }
 })();
 
+// ★v44：特集の写真（feature_photos.json・キーは「駅ID|名所名」）。無ければ写真なし
+const FEATURE_PHOTOS = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'feature_photos.json'), 'utf8')).photos || {}; }
+  catch (e) { console.warn('[v44] feature_photos.json なし（特集は写真なし）'); return {}; }
+})();
+function featurePhoto(st, e) {
+  const p = FEATURE_PHOTOS[`${st.id}|${e.spot}`];
+  if (!p || !/^https:\/\/(upload|thumb)\.wikimedia\.org\//.test(p.src || '')) return '';
+  const who = p.artist ? esc(p.artist) : '撮影者不明';
+  const lic = p.licUrl ? `<a href="${esc(p.licUrl)}" target="_blank" rel="noopener nofollow">${esc(p.lic)}</a>` : esc(p.lic || '');
+  return `<figure class="fph"><img src="${esc(p.src)}" width="${+p.w || 640}" height="${+p.h || 480}" alt="${esc(e.spot)}の写真" loading="lazy" decoding="async"><figcaption>写真：<a href="${esc(p.page)}" target="_blank" rel="noopener nofollow">${who}</a>／${lic}（Wikimedia Commons）</figcaption></figure>`;
+}
+
 const FEATURES = {
   momiji:    { t: '紅葉が楽しめる駅', s: '秋', kw: ['紅葉', 'もみじ', 'イチョウ', '銀杏並木'], w: '紅葉・イチョウ', e: '🍁' },
   onsen:     { t: '温泉がある駅', s: '冬', kw: ['温泉', '湯けむり', '足湯', '共同浴場'], w: '温泉', e: '♨️' },
@@ -2757,9 +2791,10 @@ function featurePage(req, res, k, region) {
     const sub = e ? `${esc(e.note)}${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}` : esc(hit);
     if (e) {
       // ★v38：名所名 → 最寄り駅 → ひとこと → 見頃とボタン の4段
-      return `<li class="fi"><div class="fh"><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><div class="fn">${spotName}${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}<small><span class="rk" style="background:${c}">${esc(s.rank)}</span>${esc(st.name)}駅・${esc(st.pref)}</small></div></div>
+      const ph = featurePhoto(st, e);
+      return `<li class="fi${ph ? ' hasph' : ''}"><div class="fh"><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><div class="fn">${spotName}${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}<small><span class="rk" style="background:${c}">${esc(s.rank)}</span>${esc(st.name)}駅・${esc(st.pref)}</small></div></div>
 <p class="fnote">${esc(e.note)}</p>
-<p class="fmeta">${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}<a class="fbtn" href="${stationUrl(st)}">${esc(st.name)}駅（街力 ${s.score}点）</a><a class="fbtn" href="${mapUrl(e.spot, st.pref)}" target="_blank" rel="noopener nofollow">📍 地図</a></p></li>`;
+<p class="fmeta">${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}<a class="fbtn" href="${stationUrl(st)}">${esc(st.name)}駅（街力 ${s.score}点）</a><a class="fbtn" href="${mapUrl(e.spot, st.pref)}" target="_blank" rel="noopener nofollow">📍 地図</a></p>${ph}</li>`;
     }
     return `<li><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><span class="rk" style="background:${c}">${esc(s.rank)}</span>${title}<small>${esc(st.pref)}・${s.score}点</small><br><small style="margin:0">${sub}</small></li>`;
   }).join('');
