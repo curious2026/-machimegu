@@ -1,5 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v44（2026-09-28 JST：特集に写真・見本の札を外す）
+// 街巡 server.js v45（2026-09-28 JST：トップの季節の特集にも写真）
+// v44 → v45（ともき指摘）：トップの「秋の特集」の3件にも、特集ページと同じ写真を右に出す。
+//   出典の小さな一行も同じく付ける（CC BY 系は写真を出す場所ごとに表記が要るため）。
+// （v44）特集に写真・見本の札を外す
 // v43 → v44（ともき指摘）：
 //   ①トップの「こんな街が、1枚のカードに」の札（意外な一面／歴史の街／おしゃれな街）を外す。
 //     選定のための分類で、表に出すものではない。
@@ -2125,7 +2128,7 @@ const FLOAT_CSS = `
 .fi .fmeta .best{margin:0}
 /* ★v44：特集の写真。広い画面は右の列、スマホは名所名のすぐ下 */
 .list .fi.hasph{display:grid;grid-template-columns:minmax(0,1fr) 250px;column-gap:20px;align-items:start}
-.fi.hasph>.fh,.fi.hasph>.fnote,.fi.hasph>.fmeta{grid-column:1}
+.fi.hasph>.fh,.fi.hasph>.fn,.fi.hasph>.fnote,.fi.hasph>.fmeta{grid-column:1}
 .fi.hasph>.fph{grid-column:2;grid-row:1 / span 3}
 .fph{margin:0}
 .fph img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:#EEF2F6}
@@ -2133,7 +2136,7 @@ const FLOAT_CSS = `
 .fph figcaption a{color:var(--sub)}
 @media (max-width:640px){
 .list .fi.hasph{display:flex;flex-direction:column}
-.fi.hasph>.fh{order:1}.fi.hasph>.fph{order:2;margin:10px 0 0 48px}.fi.hasph>.fnote{order:3}.fi.hasph>.fmeta{order:4}
+.fi.hasph>.fh,.fi.hasph>.fn{order:1}.fi.hasph>.fph{order:2;margin:10px 0 0 48px}.fi.top.hasph>.fph{margin-left:0}.fi.hasph>.fnote{order:3}.fi.hasph>.fmeta{order:4}
 .fph img{aspect-ratio:16/10}
 }
 .fbtn{display:inline-block;font-size:13px;font-weight:700;color:var(--blue);background:#EEF5FB;border-radius:999px;padding:5px 12px;text-decoration:none}
@@ -2766,8 +2769,9 @@ function seasonBlock(region) {
   const BL = k === 'hanabi' ? '開催' : '見頃';
   const nb = (x) => `<span class="nb">${x}</span>`;
   // ★v40：特集ページと同じ見せ方（名所名 → 最寄り駅 → 見頃）
+  // ★v45：特集ページと同じ写真を右に（無ければ今までどおり）
   const pick = rows.slice(0, 3).map(([st, sc, hit, e]) => e
-    ? `<li class="fi"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(e.spot)}</b></a><small>${esc(st.name)}駅・${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(e.note)}</p>${e.best ? `<p class="fmeta" style="margin-left:0"><span class="best">${BL} ${esc(e.best)}</span></p>` : ''}</li>`
+    ? `<li class="fi top${featurePhoto(st, e) ? ' hasph' : ''}"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(e.spot)}</b></a><small>${esc(st.name)}駅・${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(e.note)}</p>${e.best ? `<p class="fmeta" style="margin-left:0"><span class="best">${BL} ${esc(e.best)}</span></p>` : ''}${featurePhoto(st, e)}</li>`
     : `<li class="fi"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(st.name)}</b></a><small>${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(hit)}</p></li>`).join('');
   const others = Object.entries(FEATURES).filter(([kk]) => kk !== k).map(([kk, f]) => `<a href="${featureUrl(kk, r)}">${f.e} ${esc(f.t)}</a>`).join('');
   const hasCur = rows.some((x) => x[3]);
