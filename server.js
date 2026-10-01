@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v47（2026-09-30 JST：運営者について・駅が1つだけの市区町村は検索に出さない・隣の駅に自分の点数）
+// 街巡 server.js v48（2026-10-01 JST：「カードを集める散歩」→「カードを集める散歩アプリ」に統一）
 // v44 → v45（ともき指摘）：トップの「秋の特集」の3件にも、特集ページと同じ写真を右に出す。
 //   出典の小さな一行も同じく付ける（CC BY 系は写真を出す場所ごとに表記が要るため）。
 // （v44）特集に写真・見本の札を外す
@@ -142,6 +142,7 @@
 //   ★必要：package.json に "@resvg/resvg-js" ／ リポジトリ直下に MPLUSRounded1c-ExtraBold.ttf
 //   ★どちらか無ければ画像を出さないだけで、ページとAPIは今までどおり動く
 // ───────────────────────────────────────────────────────────────
+// v47 → v48：HPの見出し・題名・ヘッダー・シェア画像の「駅で5分、カードを集める散歩」を「…散歩アプリ」に（ともき指摘・日本語として不自然）。
 // v46 → v47：/about（運営者について）を追加しフッターからリンク。駅が1つだけの市区町村ページは noindex・サイトマップから外す
 //   （駅ページとほぼ同じ中身の薄いページを減らす）。駅ページの「路線ごとの隣の駅」に、その駅自身の点数とランク。
 // v45 → v46（SEO）：駅ページに「路線ごとの隣の駅」「同じ市区町村で街力が近い駅」、トップに「全国の主な駅」、
@@ -1866,7 +1867,7 @@ h2 .me{float:right;font-size:13px;font-weight:700;color:var(--ink);font-family:"
 .map{width:100%;height:260px;border:0;border-radius:14px;display:block}
 ${FLOAT_CSS}
 </style></head><body>
-<header class="skyhead"><div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩</span></span></a><span class="tb">${ABOUT_BTN}${topBtns}</span></div>
+<header class="skyhead"><div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩アプリ</span></span></a><span class="tb">${ABOUT_BTN}${topBtns}</span></div>
 <div style="max-width:760px;margin:0 auto;padding:10px 18px 0">
 <div class="sign">${yomi ? `<div class="y">${esc(yomi)}</div>` : '<div class="y">&nbsp;</div>'}<div class="n">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? `　${esc(t.location)}` : ''}</div><div class="band" style="background:${rc}"></div>${lr}</div>
 </div>${SKYLINE_SVG}</header>
@@ -1945,7 +1946,7 @@ function ogSvg({ name, pref, yomi, score, rank, lead, details }) {
 <text x="780" y="220" font-size="26" fill="#FFFFFF">街力の内訳</text>
 ${bars}
 <text x="80" y="580" font-size="30" fill="#FF9D4D">街巡-まちめぐ-</text>
-<text x="310" y="580" font-size="24" fill="#9AB4D0">駅で5分、カードを集める散歩。全国8,993駅</text>
+<text x="310" y="580" font-size="24" fill="#9AB4D0">駅で5分、カードを集める散歩アプリ。全国8,993駅</text>
 </svg>`;
 }
 
@@ -2083,7 +2084,7 @@ const NB_CSS = `.nb{list-style:none;margin:0;padding:0}.nb li{padding:8px 0;bord
 function pageShell(title, desc, body, canonical, hero, ua, extraHead, opts) {
   // ★v27：opts.noFooterSns … 本文に X・インスタのボタンがあるページ（トップ）はフッターに出さない
   const o = opts || {};
-  const top = `<div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩</span></span></a><span class="tb">${canonical && canonical !== `${SITE}/` ? ABOUT_BTN : ''}${ua != null ? storeBadges(ua, 30) : ''}</span></div>`;
+  const top = `<div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩アプリ</span></span></a><span class="tb">${canonical && canonical !== `${SITE}/` ? ABOUT_BTN : ''}${ua != null ? storeBadges(ua, 30) : ''}</span></div>`;
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
@@ -2412,7 +2413,7 @@ app.get('/', (req, res) => {
 <div class="meta"><b style="color:${c}">${sc.score}</b><span>点</span><span class="rk" style="background:${c}">${esc(sc.rank)}</span></div><div class="c">${esc(comment || (t.features || [])[0] || '')}</div></div></a>`;
       };
       const hero = `<div style="max-width:560px;margin:0 auto;padding:10px 18px 0"><div class="sign"><div class="y">まちめぐ</div><div class="n">街巡</div><div class="p">全国8,993駅</div><div class="band" style="background:var(--pin)"></div><div class="lr"><span>← いつもの駅</span><span class="r">知らない街 →</span></div></div></div>
-<div class="hero-copy"><h1>駅で5分、<br>カードを集める散歩。</h1><p>駅から500m以内で5分立ち止まると、その街のカードが1枚。季節と時間で色が変わるカードを集めながら、まだ降りたことのない駅へ。</p>${storeBadges(ua, 46)}</div>`;
+<div class="hero-copy"><h1>駅で5分、<br>カードを集める散歩アプリ。</h1><p>駅から500m以内で5分立ち止まると、その街のカードが1枚。季節と時間で色が変わるカードを集めながら、まだ降りたことのない駅へ。</p>${storeBadges(ua, 46)}</div>`;
       const body = `
 ${storeInfo.shots.length ? `<section><h2>アプリの画面</h2><div class="shots" tabindex="0" aria-label="アプリの画面（横にスクロール）">${storeInfo.shots.map((u, i) => `<img src="${esc(u)}" alt="街巡-まちめぐ- のアプリ画面 ${i + 1}" loading="lazy" width="230" height="498">`).join('')}</div></section>` : ''}
 ${todayPick(region)}
@@ -2443,7 +2444,7 @@ ${majorStationsBlock()}
 ${updatesBlock()}
 <section><h2>よくある質問</h2><div class="faq">${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>さあ、街にでよう。</h2><p class="pitch">街巡-まちめぐ-（無料）</p>${storeBadges(ua, 46)}<p class="note" style="margin:12px 0 0">街で見つけた1枚は X とインスタでも</p>${SNS_HTML}${EVENING_SVG}</section>`;
-      _topCache = { key, html: pageShell('街巡-まちめぐ- 駅で5分、カードを集める散歩｜全国8,993駅のスタンプラリー',
+      _topCache = { key, html: pageShell('街巡-まちめぐ- 駅で5分、カードを集める散歩アプリ｜全国8,993駅のスタンプラリー',
         '全国8,993駅の駅から500m以内で5分立ち止まると、その街のカードが1枚。街力（1,000点満点）で駅を比べて、路線や街を制覇する街歩きアプリ。無料。', body, `${SITE}/`, hero, ua, siteJsonLd(), { noFooterSns: true }) };
     }
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'private, no-cache')  // ★v32：地方で中身が変わるので共有キャッシュさせない;
