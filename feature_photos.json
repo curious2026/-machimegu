@@ -1,6 +1,6 @@
 {
-"version": "2026-09-28",
-"note": "特集の写真（キー＝駅ID|名所名）。Wikimedia Commons の自由ライセンスの写真だけ。表示時に撮影者・ライセンス・元ページを必ず出す。",
+"version": "2026-10-05",
+"note": "特集の写真（キー＝駅ID|名所名）。Wikimedia Commons の自由ライセンスの写真だけ。表示時に撮影者・ライセンス・元ページを必ず出す。★キーの頭に「特集名:」を付けたもの（例 momiji:駅ID|名所名）は、その特集だけで使う写真（server.js v50〜）。",
 "photos": {
 "中島公園_北海道|中島公園": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ed/Nakajima_Park_Sapporo04n4272.jpg/500px-Nakajima_Park_Sapporo04n4272.jpg",
@@ -102,22 +102,22 @@
 "artist": "inook2011"
 },
 "日比谷_東京都|日比谷公園": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Hibiya_Park_summer.jpg/500px-Hibiya_Park_summer.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Ginkgo_biloba_-_Hibiya_Park_2.jpg/500px-Ginkgo_biloba_-_Hibiya_Park_2.jpg",
 "w": 500,
-"h": 328,
-"page": "https://commons.wikimedia.org/wiki/File:Hibiya_Park_summer.jpg",
+"h": 341,
+"page": "https://commons.wikimedia.org/wiki/File:Ginkgo_biloba_-_Hibiya_Park_2.jpg",
 "lic": "CC BY-SA 4.0",
 "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
 "artist": "Kakidai"
 },
 "汐留_東京都|浜離宮恩賜庭園": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/2018_Hama-riky%C5%AB_Garden_02.jpg/500px-2018_Hama-riky%C5%AB_Garden_02.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/HamaRikyuAutumn.jpg/500px-HamaRikyuAutumn.jpg",
 "w": 500,
-"h": 337,
-"page": "https://commons.wikimedia.org/wiki/File:2018_Hama-riky%C5%AB_Garden_02.jpg",
-"lic": "CC BY-SA 4.0",
-"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-"artist": "Kakidai"
+"h": 281,
+"page": "https://commons.wikimedia.org/wiki/File:HamaRikyuAutumn.jpg",
+"lic": "CC BY-SA 3.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+"artist": "JohnnyOneSpeed"
 },
 "吉祥寺_東京都|井の頭恩賜公園": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Mitaka_Inokashira_Park_In_Spring_1.JPG/500px-Mitaka_Inokashira_Park_In_Spring_1.JPG",
@@ -138,13 +138,13 @@
 "artist": "Kakidai"
 },
 "日本大通り_神奈川県|日本大通り・山下公園": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/YamashitakoenJP14Apr05.jpg/500px-YamashitakoenJP14Apr05.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Yamashita_Park_01.jpg/500px-Yamashita_Park_01.jpg",
 "w": 500,
 "h": 375,
-"page": "https://commons.wikimedia.org/wiki/File:YamashitakoenJP14Apr05.jpg",
-"lic": "CC BY-SA 3.0",
-"licUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
-"artist": ""
+"page": "https://commons.wikimedia.org/wiki/File:Yamashita_Park_01.jpg",
+"lic": "CC BY-SA 4.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+"artist": "Quercus acuta"
 },
 "飯田橋_東京都|小石川後楽園": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Koishikawa_korakuen_-_Osensui_and_Horaijima.jpg/500px-Koishikawa_korakuen_-_Osensui_and_Horaijima.jpg",
@@ -165,13 +165,13 @@
 "artist": "Kakidai"
 },
 "国分寺_東京都|殿ヶ谷戸庭園": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/Tonogayato1.jpg/500px-Tonogayato1.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/80/Tonogayato_garden_20151205_Pcs34560_img0302.jpg/500px-Tonogayato_garden_20151205_Pcs34560_img0302.jpg",
 "w": 500,
-"h": 375,
-"page": "https://commons.wikimedia.org/wiki/File:Tonogayato1.jpg",
-"lic": "CC BY-SA 3.0",
-"licUrl": "https://creativecommons.org/licenses/by-sa/3.0",
-"artist": "Irina Gelbukh"
+"h": 333,
+"page": "https://commons.wikimedia.org/wiki/File:Tonogayato_garden_20151205_Pcs34560_img0302.jpg",
+"lic": "Public domain",
+"licUrl": "",
+"artist": "Pcs34560"
 },
 "駒込_東京都|六義園": {
 "src": "https://thumb.wikimedia.org/wikipedia/ja/thumb/e/e0/Bunkyo_Rikugien_Panoramic_View_In_Late_Autumn_1.JPG/500px-Bunkyo_Rikugien_Panoramic_View_In_Late_Autumn_1.JPG",
@@ -183,13 +183,13 @@
 "artist": "京浜にけ"
 },
 "清澄白河_東京都|清澄庭園": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Kiyosumi_Teien_-_Japanese_gardern_1.JPG/500px-Kiyosumi_Teien_-_Japanese_gardern_1.JPG",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Kiyosumi_Gardens_in_Autumn_%284137680245%29.jpg/500px-Kiyosumi_Gardens_in_Autumn_%284137680245%29.jpg",
 "w": 500,
-"h": 322,
-"page": "https://commons.wikimedia.org/wiki/File:Kiyosumi_Teien_-_Japanese_gardern_1.JPG",
-"lic": "CC BY-SA 4.0",
-"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-"artist": "Kakidai"
+"h": 332,
+"page": "https://commons.wikimedia.org/wiki/File:Kiyosumi_Gardens_in_Autumn_(4137680245).jpg",
+"lic": "CC BY 2.0",
+"licUrl": "https://creativecommons.org/licenses/by/2.0",
+"artist": "Jacob Ehnmark from Tokyo"
 },
 "長谷_神奈川県|長谷寺": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Kamakura_Hasedera_Kannondou.jpg/500px-Kamakura_Hasedera_Kannondou.jpg",
@@ -219,31 +219,31 @@
 "artist": "hiyang.on.flickr"
 },
 "足利_栃木県|鑁阿寺": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8e/%E9%91%81%E9%98%BF%E5%AF%BA_%E8%B6%B3%E5%88%A9_-_panoramio_%283%29.jpg/500px-%E9%91%81%E9%98%BF%E5%AF%BA_%E8%B6%B3%E5%88%A9_-_panoramio_%283%29.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Bannaji_Tahoto.JPG/500px-Bannaji_Tahoto.JPG",
 "w": 500,
-"h": 332,
-"page": "https://commons.wikimedia.org/wiki/File:%E9%91%81%E9%98%BF%E5%AF%BA_%E8%B6%B3%E5%88%A9_-_panoramio_(3).jpg",
-"lic": "CC BY-SA 3.0",
-"licUrl": "https://creativecommons.org/licenses/by-sa/3.0",
-"artist": "Toshihiro Matsui"
+"h": 375,
+"page": "https://commons.wikimedia.org/wiki/File:Bannaji_Tahoto.JPG",
+"lic": "Public domain",
+"licUrl": "",
+"artist": "Abasaa"
 },
 "上中里_東京都|旧古河庭園": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Kyu-Furukawa_Tei_%28House%292.jpg/500px-Kyu-Furukawa_Tei_%28House%292.jpg",
-"w": 500,
-"h": 398,
-"page": "https://commons.wikimedia.org/wiki/File:Kyu-Furukawa_Tei_(House)2.jpg",
-"lic": "CC BY-SA 3.0",
-"licUrl": "https://creativecommons.org/licenses/by-sa/3.0",
-"artist": "Wiiii"
-},
-"大宮公園_埼玉県|大宮公園・氷川神社": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Hikawa-jinja_%28Saitama%29%2C_keidai.jpg/500px-Hikawa-jinja_%28Saitama%29%2C_keidai.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Kyufurukawagardens-fallfoilage-nov9-2012.jpg/500px-Kyufurukawagardens-fallfoilage-nov9-2012.jpg",
 "w": 500,
 "h": 333,
-"page": "https://commons.wikimedia.org/wiki/File:Hikawa-jinja_(Saitama),_keidai.jpg",
-"lic": "CC0",
-"licUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
-"artist": "Saigen Jiro"
+"page": "https://commons.wikimedia.org/wiki/File:Kyufurukawagardens-fallfoilage-nov9-2012.jpg",
+"lic": "CC BY-SA 4.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+"artist": "Nesnad"
+},
+"大宮公園_埼玉県|大宮公園・氷川神社": {
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8e/Omiyapark-pond2.jpg/500px-Omiyapark-pond2.jpg",
+"w": 500,
+"h": 375,
+"page": "https://commons.wikimedia.org/wiki/File:Omiyapark-pond2.jpg",
+"lic": "CC BY 2.0",
+"licUrl": "https://creativecommons.org/licenses/by/2.0",
+"artist": "TFujinami"
 },
 "西立川_東京都|国営昭和記念公園": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/2018_Showa_Memorial_Park_01.jpg/500px-2018_Showa_Memorial_Park_01.jpg",
@@ -255,13 +255,13 @@
 "artist": "Kakidai"
 },
 "鳩ノ巣_東京都|鳩ノ巣渓谷": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7e/Hatonosu_Gorge_20240518.jpg/500px-Hatonosu_Gorge_20240518.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Autumn_at_Hatonosu_Ravine_1.jpg/500px-Autumn_at_Hatonosu_Ravine_1.jpg",
 "w": 500,
-"h": 666,
-"page": "https://commons.wikimedia.org/wiki/File:Hatonosu_Gorge_20240518.jpg",
-"lic": "CC BY-SA 4.0",
-"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-"artist": "皓月旗"
+"h": 375,
+"page": "https://commons.wikimedia.org/wiki/File:Autumn_at_Hatonosu_Ravine_1.jpg",
+"lic": "CC BY-SA 3.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+"artist": "Volfgang"
 },
 "養老渓谷_千葉県|養老渓谷": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Yoro_Keikoku_04.JPG/500px-Yoro_Keikoku_04.JPG",
@@ -4107,22 +4107,22 @@
 "artist": "Tomokazu Kitjaima"
 },
 "九段下_東京都|北の丸公園": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/%E5%8C%97%E3%81%AE%E4%B8%B8%E5%85%AC%E5%9C%92.jpg/500px-%E5%8C%97%E3%81%AE%E4%B8%B8%E5%85%AC%E5%9C%92.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/%E5%8C%97%E3%81%AE%E4%B8%B8%E5%85%AC%E5%9C%92%E3%81%AE%E7%B4%85%E8%91%89.jpg/500px-%E5%8C%97%E3%81%AE%E4%B8%B8%E5%85%AC%E5%9C%92%E3%81%AE%E7%B4%85%E8%91%89.jpg",
 "w": 500,
-"h": 375,
-"page": "https://commons.wikimedia.org/wiki/File:%E5%8C%97%E3%81%AE%E4%B8%B8%E5%85%AC%E5%9C%92.jpg",
-"lic": "CC0",
-"licUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
-"artist": "Syced"
+"h": 333,
+"page": "https://commons.wikimedia.org/wiki/File:%E5%8C%97%E3%81%AE%E4%B8%B8%E5%85%AC%E5%9C%92%E3%81%AE%E7%B4%85%E8%91%89.jpg",
+"lic": "CC BY-SA 4.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+"artist": "くろふね"
 },
 "本郷三丁目_東京都|東京大学本郷キャンパス": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/31/%E6%9D%B1%E4%BA%AC%E5%A4%A7%E5%AD%A6_%E6%9C%AC%E9%83%B7%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%91%E3%82%B9_-_panoramio.jpg/500px-%E6%9D%B1%E4%BA%AC%E5%A4%A7%E5%AD%A6_%E6%9C%AC%E9%83%B7%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%91%E3%82%B9_-_panoramio.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/59/Ginkgo_leaves_on_Hongo_Campus%2C_University_of_Tokyo.jpg/500px-Ginkgo_leaves_on_Hongo_Campus%2C_University_of_Tokyo.jpg",
 "w": 500,
-"h": 666,
-"page": "https://commons.wikimedia.org/wiki/File:%E6%9D%B1%E4%BA%AC%E5%A4%A7%E5%AD%A6_%E6%9C%AC%E9%83%B7%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%91%E3%82%B9_-_panoramio.jpg",
-"lic": "CC BY 3.0",
-"licUrl": "https://creativecommons.org/licenses/by/3.0",
-"artist": "kanesue"
+"h": 376,
+"page": "https://commons.wikimedia.org/wiki/File:Ginkgo_leaves_on_Hongo_Campus,_University_of_Tokyo.jpg",
+"lic": "CC0",
+"licUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+"artist": "Tokyo538"
 },
 "青山一丁目_東京都|神宮外苑いちょう並木": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Fall_foliage_of_Jingu_Gaien_Ginkgo_%28icho%29_avenue_%E7%A5%9E%E5%AE%AE%E5%A4%96%E8%8B%91%E3%81%84%E3%81%A1%E3%82%87%E3%81%86%E4%B8%A6%E6%9C%A8_%E7%B4%85%E8%91%89_%2851699698968%29.jpg/500px-Fall_foliage_of_Jingu_Gaien_Ginkgo_%28icho%29_avenue_%E7%A5%9E%E5%AE%AE%E5%A4%96%E8%8B%91%E3%81%84%E3%81%A1%E3%82%87%E3%81%86%E4%B8%A6%E6%9C%A8_%E7%B4%85%E8%91%89_%2851699698968%29.jpg",
@@ -4134,22 +4134,22 @@
 "artist": "nakashi from Chofu, Tokyo, JAPAN"
 },
 "白山_東京都|小石川植物園": {
-"src": "https://upload.wikimedia.org/wikipedia/commons/0/07/%E5%B0%8F%E7%9F%B3%E5%B7%9D%E6%A4%8D%E7%89%A9%E5%9C%92%E3%83%84%E3%83%84%E3%82%B8%E5%9C%92_-_panoramio.jpg",
-"w": 640,
-"h": 480,
-"page": "https://commons.wikimedia.org/wiki/File:%E5%B0%8F%E7%9F%B3%E5%B7%9D%E6%A4%8D%E7%89%A9%E5%9C%92%E3%83%84%E3%83%84%E3%82%B8%E5%9C%92_-_panoramio.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Bunkyou_Koishikawa_Botanical_Acer_Palmatum_1.JPG/500px-Bunkyou_Koishikawa_Botanical_Acer_Palmatum_1.JPG",
+"w": 500,
+"h": 333,
+"page": "https://commons.wikimedia.org/wiki/File:Bunkyou_Koishikawa_Botanical_Acer_Palmatum_1.JPG",
 "lic": "CC BY 3.0",
 "licUrl": "https://creativecommons.org/licenses/by/3.0",
-"artist": "kajikawa"
+"artist": "京浜にけ"
 },
 "北鎌倉_神奈川県|円覚寺・明月院": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Engaku-ji_Temple.jpg/500px-Engaku-ji_Temple.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Engakuji-Shariden-M9239.jpg/500px-Engakuji-Shariden-M9239.jpg",
 "w": 500,
-"h": 375,
-"page": "https://commons.wikimedia.org/wiki/File:Engaku-ji_Temple.jpg",
-"lic": "CC BY-SA 4.0",
-"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-"artist": "Akonnchiroll"
+"h": 349,
+"page": "https://commons.wikimedia.org/wiki/File:Engakuji-Shariden-M9239.jpg",
+"lic": "Public domain",
+"licUrl": "",
+"artist": "Fg2"
 },
 "長瀞_埼玉県|長瀞・月の石もみじ公園": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/%E6%9C%88%E3%81%AE%E7%9F%B3%E3%82%82%E3%81%BF%E3%81%98%E5%85%AC%E5%9C%92_%E3%83%A9%E3%82%A4%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%28%E6%92%AE%E5%BD%B1%E6%97%A5%EF%BC%9A2008%E5%B9%B411%E6%9C%88%29_-_panoramio.jpg/500px-%E6%9C%88%E3%81%AE%E7%9F%B3%E3%82%82%E3%81%BF%E3%81%98%E5%85%AC%E5%9C%92_%E3%83%A9%E3%82%A4%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%28%E6%92%AE%E5%BD%B1%E6%97%A5%EF%BC%9A2008%E5%B9%B411%E6%9C%88%29_-_panoramio.jpg",
@@ -4161,13 +4161,13 @@
 "artist": "mocchan1982"
 },
 "武蔵嵐山_埼玉県|嵐山渓谷": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/Ranzan-ravine_-_%E5%B5%90%E5%B1%B1%E6%B8%93%E8%B0%B7_-_panoramio.jpg/500px-Ranzan-ravine_-_%E5%B5%90%E5%B1%B1%E6%B8%93%E8%B0%B7_-_panoramio.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Ranzan_Ranzan-Valley_2.JPG/500px-Ranzan_Ranzan-Valley_2.JPG",
 "w": 500,
-"h": 331,
-"page": "https://commons.wikimedia.org/wiki/File:Ranzan-ravine_-_%E5%B5%90%E5%B1%B1%E6%B8%93%E8%B0%B7_-_panoramio.jpg",
-"lic": "CC BY 3.0",
-"licUrl": "https://creativecommons.org/licenses/by/3.0",
-"artist": "Carbonium"
+"h": 375,
+"page": "https://commons.wikimedia.org/wiki/File:Ranzan_Ranzan-Valley_2.JPG",
+"lic": "CC BY-SA 3.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+"artist": "京浜にけ"
 },
 "御嶽_東京都|御岳渓谷": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/%E5%BE%A1%E5%B2%B3%E6%B8%93%E8%B0%B7_-_panoramio.jpg/500px-%E5%BE%A1%E5%B2%B3%E6%B8%93%E8%B0%B7_-_panoramio.jpg",
@@ -4665,13 +4665,13 @@
 "artist": "掬茶"
 },
 "高尾山口_東京都|高尾山": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Around_Takaosanguchi_%2811236%29.jpg/500px-Around_Takaosanguchi_%2811236%29.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/%E9%AB%98%E5%B0%BE%E5%B1%B1%E3%83%BC%EF%BC%92.JPG/500px-%E9%AB%98%E5%B0%BE%E5%B1%B1%E3%83%BC%EF%BC%92.JPG",
 "w": 500,
-"h": 377,
-"page": "https://commons.wikimedia.org/wiki/File:Around_Takaosanguchi_(11236).jpg",
-"lic": "CC0",
-"licUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
-"artist": "Syced"
+"h": 332,
+"page": "https://commons.wikimedia.org/wiki/File:%E9%AB%98%E5%B0%BE%E5%B1%B1%E3%83%BC%EF%BC%92.JPG",
+"lic": "CC BY-SA 3.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+"artist": "江戸村のとくぞう (Edomura no Tokuzo)"
 },
 "湯檜曽_群馬県|湯檜曽温泉": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/24/%E6%B9%AF%E6%AA%9C%E6%9B%BD%E4%BB%98%E8%BF%91%E3%81%AE%E9%A2%A8%E6%99%AF_-_panoramio.jpg/500px-%E6%B9%AF%E6%AA%9C%E6%9B%BD%E4%BB%98%E8%BF%91%E3%81%AE%E9%A2%A8%E6%99%AF_-_panoramio.jpg",
@@ -5079,13 +5079,13 @@
 "artist": "Swirliehead"
 },
 "強羅_神奈川県|箱根強羅公園": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Gora_Park_-_Hakone%2C_Kanagawa%2C_Japan_-_DSC08388.jpg/500px-Gora_Park_-_Hakone%2C_Kanagawa%2C_Japan_-_DSC08388.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/211126_Gora_Park_Hakone_Japan03s3.jpg/500px-211126_Gora_Park_Hakone_Japan03s3.jpg",
 "w": 500,
-"h": 288,
-"page": "https://commons.wikimedia.org/wiki/File:Gora_Park_-_Hakone,_Kanagawa,_Japan_-_DSC08388.jpg",
-"lic": "CC0",
-"licUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
-"artist": "Daderot"
+"h": 332,
+"page": "https://commons.wikimedia.org/wiki/File:211126_Gora_Park_Hakone_Japan03s3.jpg",
+"lic": "CC BY-SA 4.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+"artist": "663highland"
 },
 "弥彦_新潟県|弥彦公園もみじ谷": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/%E9%9B%AA%E8%88%9E%E3%81%86%E5%BC%A5%E5%BD%A6%E5%85%AC%E5%9C%92_%28Snowy_Yahiko_Park%29_07_Jan%2C_2012_-_panoramio.jpg/500px-%E9%9B%AA%E8%88%9E%E3%81%86%E5%BC%A5%E5%BD%A6%E5%85%AC%E5%9C%92_%28Snowy_Yahiko_Park%29_07_Jan%2C_2012_-_panoramio.jpg",
@@ -5493,13 +5493,13 @@
 "artist": "Houjyou-Minori"
 },
 "東武日光_栃木県|日光山内（二社一寺）": {
-"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Nikko_Toshogu_Yomeimon_Gate_2024.jpg/500px-Nikko_Toshogu_Yomeimon_Gate_2024.jpg",
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Sanbutsudo_%28Rinno-ji%29_%2811284360724%29.jpg/500px-Sanbutsudo_%28Rinno-ji%29_%2811284360724%29.jpg",
 "w": 500,
-"h": 377,
-"page": "https://commons.wikimedia.org/wiki/File:Nikko_Toshogu_Yomeimon_Gate_2024.jpg",
-"lic": "CC BY-SA 4.0",
-"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-"artist": "Jpatokal"
+"h": 333,
+"page": "https://commons.wikimedia.org/wiki/File:Sanbutsudo_(Rinno-ji)_(11284360724).jpg",
+"lic": "CC BY-SA 2.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+"artist": "KimonBerlin"
 },
 "東岡崎_愛知県|岡崎公園": {
 "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Okazakijo-3-cropped.jpg/500px-Okazakijo-3-cropped.jpg",
@@ -5590,6 +5590,24 @@
 "lic": "CC BY 2.0",
 "licUrl": "https://creativecommons.org/licenses/by/2.0",
 "artist": "Hiroshi Nishimoto"
+},
+"momiji:吉祥寺_東京都|井の頭恩賜公園": {
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Inokashira_Park_Momiji_1.jpg/500px-Inokashira_Park_Momiji_1.jpg",
+"w": 500,
+"h": 375,
+"page": "https://commons.wikimedia.org/wiki/File:Inokashira_Park_Momiji_1.jpg",
+"lic": "CC BY-SA 4.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+"artist": "Htanaungg"
+},
+"momiji:新宿御苑前_東京都|新宿御苑": {
+"src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/Autumn_leaves_-_Shinjuku_gyoen_-_nov_2016.jpg/500px-Autumn_leaves_-_Shinjuku_gyoen_-_nov_2016.jpg",
+"w": 500,
+"h": 373,
+"page": "https://commons.wikimedia.org/wiki/File:Autumn_leaves_-_Shinjuku_gyoen_-_nov_2016.jpg",
+"lic": "CC BY-SA 3.0",
+"licUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+"artist": "nesnad"
 }
 }
 }
