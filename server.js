@@ -1,5 +1,24 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v48（2026-10-01 JST：「カードを集める散歩」→「カードを集める散歩アプリ」に統一）
+// 街巡 server.js v50（2026-10-05 JST：特集の写真を「特集ごと」に持てるようにした）
+// v49 → v50（ともき指摘・2026-10-05）：紅葉の特集に、紅葉でない写真（夏・桜・ツツジ・雪）が出ていた。
+//   写真は「駅ID|名所名」で1枚だけ持っていたので、桜と紅葉の両方に出る名所（新宿御苑・井の頭公園）は
+//   同じ1枚（桜）が紅葉の特集にも出ていた。
+//   ★feature_photos.json に「特集名:駅ID|名所名」（例 momiji:吉祥寺_東京都|井の頭恩賜公園）があれば、
+//     その特集ではそちらを先に使う。無ければ今までどおり「駅ID|名所名」の1枚。
+//   ★変えたのは featurePhoto() と、その呼び出し3か所だけ。v49 の中身（下）はそのまま入っている。
+// v48 → v49（2026-10-04 JST：アップデート履歴を「App Store に出た瞬間」に自動で出す）
+// v48 → v49（ともき指摘・2026-10-04）：アプリは 2.4.1 なのに HP の履歴が 2.3.0 のままだった。
+//   今までは「公開されたら報告 → クロが updates.json を作る → GitHub に上げる」の後出しで、
+//   次の版の開発に入っていて忘れていた。
+//   ★申請と同時に updates.json を上げておけるようにした。
+//     ・新しい版は公開日 d を書かずに上げる（＝まだ公開されていない版）。
+//     ・サーバは1時間ごとに App Store の版を見ている（v13 からある仕組み）。
+//       その版が App Store に出たら、HP とアプリ内の履歴に自動で出す。
+//       公開日も App Store の日付（日本時間）を自動で入れる。出るまでは隠す。
+//     ・d が書いてある版は今までどおり、そのまま出す（過去の版・Android だけの版）。
+//     ・App Store に聞けないときは、前に分かっていた結果のまま（出したものは消さない）。
+//   ★変えたのは visibleUpdates() と、それを使う /api/updates・updatesBlock() だけ。
+// v47 → v48（2026-10-01 JST：「カードを集める散歩」→「カードを集める散歩アプリ」に統一）
 // v44 → v45（ともき指摘）：トップの「秋の特集」の3件にも、特集ページと同じ写真を右に出す。
 //   出典の小さな一行も同じく付ける（CC BY 系は写真を出す場所ごとに表記が要るため）。
 // （v44）特集に写真・見本の札を外す
@@ -2040,7 +2059,7 @@ function _smSend(res, body) {
 // ★v41：アップデート履歴（HPとアプリの両方が読む）
 app.get('/api/updates', (req, res) => {
   res.set('Cache-Control', 'public, max-age=600');
-  res.json(UPDATES || { items: [] });
+  res.json(visibleUpdates() || { items: [] });
 });
 app.get('/sitemap.xml', (req, res) => {
   try {
@@ -2268,14 +2287,56 @@ function majorStationsBlock() {
     return `<section><h2>全国の主な駅</h2>${rows}<p class="note"><a href="/ranking/machiryoku">栄えている駅・便利な駅 全国ランキングTOP100</a></p></section>`;
   } catch (e) { return ''; }
 }
+// ★v49：公開日 d が無い版は「申請と同時に上げた、まだ公開されていない版」。
+//   App Store にその版が出るまで隠し、出たら公開日（日本時間）を入れて見せる。
+//   ・版の比べ方は数字ごと（2.4.10 は 2.4.9 より新しい）。
+//   ・一度分かった公開日は、動いている間は覚えておく（次の版が出ても日付が消えない）。
+//   ・os が付いた版（Android だけ等）は App Store では確かめられないので、d が無くても出す
+//     （運用は「Android だけの版は d を書いて上げる」）。
+const _updSeenDate = {};   // 版 → 公開日（'2026-10-04'）
+const _updShown = {};      // ログを1回だけ出すための控え
+function cmpVer(a, b) {
+  const pa = String(a || '').split('.').map((x) => parseInt(x, 10) || 0);
+  const pb = String(b || '').split('.').map((x) => parseInt(x, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d !== 0) return d < 0 ? -1 : 1;
+  }
+  return 0;
+}
+// App Store の日時（UTC の ISO 形式）→ 日本時間の日付 '2026-10-04'。読めなければ ''
+function jstDateOf(iso) {
+  const t = Date.parse(String(iso || ''));
+  if (!Number.isFinite(t)) return '';
+  return new Date(t + 9 * 3600 * 1000).toISOString().slice(0, 10);
+}
+const _hasDate = (d) => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
+function visibleUpdates(store) {
+  if (!UPDATES) return null;
+  const st = store || storeInfo;
+  const sv = st.version || '';
+  const sd = jstDateOf(st.releasedAt);
+  if (sv && sd) _updSeenDate[sv] = sd;
+  const items = [];
+  for (const e of UPDATES.items) {
+    if (_hasDate(e.d)) { items.push(e); continue; }   // 日付あり＝今までどおり出す
+    if (e.os) { items.push(e); continue; }            // Android だけ等＝確かめようがないので出す
+    if (!sv || cmpVer(e.v, sv) > 0) continue;         // App Store にまだ出ていない＝隠す
+    const d = _updSeenDate[e.v] || '';
+    if (!_updShown[e.v]) { _updShown[e.v] = true; console.log(`[v49] アップデート履歴：${e.v} を公開（App Store の版 ${sv}・公開日 ${d || '不明'}）`); }
+    items.push(d ? { ...e, d } : e);
+  }
+  return { ...UPDATES, items };
+}
 function updatesBlock() {
-  if (!UPDATES || !UPDATES.items.length) return newsBlock();
+  const VIS = visibleUpdates();
+  if (!VIS || !VIS.items.length) return newsBlock();
   const li = (n) => n.b ? `<li class="imp"><b>${esc(n.t)}</b></li>` : `<li>${esc(n.t)}</li>`;
   // ★v43：公開日（日本時間）。"2026-09-27" → 「2026年9月27日」。形が違えば出さない
   const day = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || '')); return m ? `<span class="dt">${+m[1]}年${+m[2]}月${+m[3]}日</span>` : ''; };
   const one = (e, i) => `<details class="upd"${i === 0 ? ' open' : ''}><summary><b>バージョン ${esc(e.v)}</b>${i === 0 ? '<span class="new">最新</span>' : ''}${e.os ? `<span class="os">${esc(e.os)}のみ</span>` : ''}${day(e.d)}</summary><ul>${(e.notes || []).map(li).join('')}</ul></details>`;
   // ★v42：最新だけ開いて見せ、それより前は「過去のアップデート一覧」の中にしまう
-  const [latest, ...older] = UPDATES.items;
+  const [latest, ...older] = VIS.items;
   const past = older.length
     ? `<details class="pastupd"><summary>過去のアップデート一覧（${older.length}件）</summary><div class="updlist" style="margin-top:10px">${older.map((e) => one(e, 1)).join('')}</div><p class="note" style="margin-top:6px">新しい順。太字は大きな変更です。</p></details>`
     : '';
@@ -2772,8 +2833,9 @@ const FEATURE_PHOTOS = (() => {
   try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'feature_photos.json'), 'utf8')).photos || {}; }
   catch (e) { console.warn('[v44] feature_photos.json なし（特集は写真なし）'); return {}; }
 })();
-function featurePhoto(st, e) {
-  const p = FEATURE_PHOTOS[`${st.id}|${e.spot}`];
+// ★v50：k＝特集の名前（momiji / sakura …）。特集ごとの写真があれば先に使う
+function featurePhoto(st, e, k) {
+  const p = (k && FEATURE_PHOTOS[`${k}:${st.id}|${e.spot}`]) || FEATURE_PHOTOS[`${st.id}|${e.spot}`];
   if (!p || !/^https:\/\/(upload|thumb)\.wikimedia\.org\//.test(p.src || '')) return '';
   const who = p.artist ? esc(p.artist) : '撮影者不明';
   const lic = p.licUrl ? `<a href="${esc(p.licUrl)}" target="_blank" rel="noopener nofollow">${esc(p.lic)}</a>` : esc(p.lic || '');
@@ -2862,7 +2924,7 @@ function seasonBlock(region) {
   // ★v40：特集ページと同じ見せ方（名所名 → 最寄り駅 → 見頃）
   // ★v45：特集ページと同じ写真を右に（無ければ今までどおり）
   const pick = rows.slice(0, 3).map(([st, sc, hit, e]) => e
-    ? `<li class="fi top${featurePhoto(st, e) ? ' hasph' : ''}"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(e.spot)}</b></a><small>${esc(st.name)}駅・${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(e.note)}</p>${e.best ? `<p class="fmeta" style="margin-left:0"><span class="best">${BL} ${esc(e.best)}</span></p>` : ''}${featurePhoto(st, e)}</li>`
+    ? `<li class="fi top${featurePhoto(st, e, k) ? ' hasph' : ''}"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(e.spot)}</b></a><small>${esc(st.name)}駅・${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(e.note)}</p>${e.best ? `<p class="fmeta" style="margin-left:0"><span class="best">${BL} ${esc(e.best)}</span></p>` : ''}${featurePhoto(st, e, k)}</li>`
     : `<li class="fi"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(st.name)}</b></a><small>${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(hit)}</p></li>`).join('');
   const others = Object.entries(FEATURES).filter(([kk]) => kk !== k).map(([kk, f]) => `<a href="${featureUrl(kk, r)}">${f.e} ${esc(f.t)}</a>`).join('');
   const hasCur = rows.some((x) => x[3]);
@@ -2886,7 +2948,7 @@ function featurePage(req, res, k, region) {
     const sub = e ? `${esc(e.note)}${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}` : esc(hit);
     if (e) {
       // ★v38：名所名 → 最寄り駅 → ひとこと → 見頃とボタン の4段
-      const ph = featurePhoto(st, e);
+      const ph = featurePhoto(st, e, k);
       return `<li class="fi${ph ? ' hasph' : ''}"><div class="fh"><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><div class="fn">${spotName}${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}<small><span class="rk" style="background:${c}">${esc(s.rank)}</span>${esc(st.name)}駅・${esc(st.pref)}</small></div></div>
 <p class="fnote">${esc(e.note)}</p>
 <p class="fmeta">${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}<a class="fbtn" href="${stationUrl(st)}">${esc(st.name)}駅（街力 ${s.score}点）</a><a class="fbtn" href="${mapUrl(e.spot, st.pref)}" target="_blank" rel="noopener nofollow">📍 地図</a></p>${ph}</li>`;
@@ -3261,6 +3323,14 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 // ヘルスチェック
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
+  // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
+  server: 'v50',
+  updates: (() => {
+    const all = UPDATES ? UPDATES.items.length : 0;
+    const vis = visibleUpdates();
+    const shown = vis ? vis.items.length : 0;
+    return { shown, waiting: all - shown, store: storeInfo.version || '' };
+  })(),
   version: scoresCache.version,
   stations: Object.keys(scoresCache.stations || {}).length,
   builtAt: scoresCache.builtAt,
