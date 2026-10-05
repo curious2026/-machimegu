@@ -1,5 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v50（2026-10-05 JST：特集の写真を「特集ごと」に持てるようにした）
+// 街巡 server.js v51（2026-10-05 JST：駅ページに「街の紹介文」を出せるようにした）
+// v50 → v51（ともき発案・2026-10-05）：Search Console を見たら、表示の9割が「駅名だけ」の検索で、
+//   狙っている「○○駅 どんな街」ではほとんど出ていなかった。駅ページに、その街を言葉で伝える文章が
+//   20字のコメント2〜3本しか無かったため。
+//   ★station_about.json（リポジトリの一番上）に駅ごとの紹介文（成り立ち・人物・いまの街。200字前後）を
+//     置くと、駅ページの「この街のこと」のいちばん上に出す。
+//     ・形：{ "schema":1, "version":"...", "about": { "東陽町_東京都": "文章", ... } }
+//     ・文章が無い駅は、今までと1文字も変わらない（20字コメントだけ）。
+//     ・ファイルが無い／こわれている → 紹介文なしで今までどおり動く。
+//     ・1駅 600字まで。空・文字でない値は捨てる。
+//   ★紹介文がある駅は、検索結果の説明文（meta description）と構造化データにも紹介文の頭を使う。
+//   ★/api/health の server を v51 にし、about（紹介文のある駅の数と版）を足した。
+//   ★変えたのは、読み込み・駅ページの「この街のこと」・説明文・health だけ。
+// v49 → v50（2026-10-05 JST：特集の写真を「特集ごと」に持てるようにした）
 // v49 → v50（ともき指摘・2026-10-05）：紅葉の特集に、紅葉でない写真（夏・桜・ツツジ・雪）が出ていた。
 //   写真は「駅ID|名所名」で1枚だけ持っていたので、桜と紅葉の両方に出る名所（新宿御苑・井の頭公園）は
 //   同じ1枚（桜）が紅葉の特集にも出ていた。
@@ -1426,6 +1439,51 @@ function loadStationText() {
 }
 loadStationText();
 
+// ★v51：駅ごとの紹介文（station_about.json）。無ければ紹介文なしで今までどおり。
+//   ★20字コメント（station_text.json）とは別のファイルにしてある。
+//     紹介文は少しずつ書き足していくので、8,993駅そろっていなくても配れるように。
+const STATION_ABOUT_FILE = path.join(__dirname, 'station_about.json');
+const stationAbout = { map: {}, version: '', count: 0 };
+function loadStationAbout() {
+  try {
+    if (!fs.existsSync(STATION_ABOUT_FILE)) {
+      console.log('[v51] station_about.json なし（紹介文は出さない）');
+      return;
+    }
+    const d = JSON.parse(fs.readFileSync(STATION_ABOUT_FILE, 'utf8'));
+    if (!d || d.schema !== 1) throw new Error('schema が 1 ではない');
+    const src = d.about;
+    if (!src || typeof src !== 'object' || Array.isArray(src)) throw new Error('about が無い');
+    const map = {};
+    let dropped = 0;
+    for (const k of Object.keys(src)) {
+      const v = src[k];
+      const text = typeof v === 'string' ? v.trim() : '';
+      if (!text || text.length > 600) { dropped++; continue; }
+      map[k] = text;
+    }
+    stationAbout.map = map;
+    stationAbout.version = typeof d.version === 'string' ? d.version.trim() : '';
+    stationAbout.count = Object.keys(map).length;
+    console.log(`[v51] 駅の紹介文を読み込んだ: version=${stationAbout.version}／${stationAbout.count}駅${dropped ? '（捨てた ' + dropped + ' 件）' : ''}`);
+  } catch (e) {
+    console.warn('[v51] station_about.json を使えない（紹介文なしで動く）:', e.message);
+  }
+}
+loadStationAbout();
+const aboutOf = (id) => stationAbout.map[id] || '';
+// 紹介文の頭を、文の切れ目（。）で max 字以内に切る。最初の1文が長ければ、その1文だけを返す。
+function aboutLead(text, max) {
+  const parts = String(text || '').split('。').map((x) => x.trim()).filter(Boolean);
+  if (!parts.length) return '';
+  let out = parts[0] + '。';
+  for (let i = 1; i < parts.length; i++) {
+    if ((out + parts[i] + '。').length > max) break;
+    out += parts[i] + '。';
+  }
+  return out;
+}
+
 app.get('/api/station-text', (req, res) => {
   if (!stationText.raw) return res.status(404).json({ error: 'no station text' });
   res.set('Content-Type', 'application/json; charset=utf-8');
@@ -1758,6 +1816,7 @@ function renderStationPage(st, ua) {
   const feats = Array.isArray(t.features) ? t.features : [];
   const first = feats[0] || '';
   const rest = feats.slice(1);
+  const about = aboutOf(st.id);   // ★v51：街の紹介文（無ければ ''）
   const lines = st.lines || [];
   const year = yearNum(t.opened);
   const age = year ? (2026 - year) : 0;
@@ -1812,11 +1871,17 @@ function renderStationPage(st, ua) {
   const title = `${st.name}駅（${st.pref}）はどんな街？ 街力${score}点・${rank}ランク｜街巡-まちめぐ-`;
   // ★v30：検索結果の2行は「その駅だけの一言」から（「街力」は初めての人には通じない）
   const foodN = (d['飲食'] || {}).count || 0;
-  const desc = first
+  // ★v51：紹介文がある駅は、説明文の頭に紹介文の最初の1〜2文を使う（「どんな街」に言葉で答える）。
+  //   数字（飲食店の数・街力）は後ろに残す。紹介文が無い駅は今までどおり。
+  const aboutHead = about ? aboutLead(about, 72) : '';
+  const desc = aboutHead
+    ? `${st.name}駅${yomi ? `（${yomi}）` : ''}はどんな街？ ${aboutHead} 周り500mに飲食店${foodN}店、街力${score}点・${rank}ランク。`
+    : first
     ? `${first}。${st.name}駅${yomi ? `（${yomi}）` : ''}の周り500mに飲食店${foodN}店、街力${score}点・${rank}ランクで全国${rAll}位。近くの駅との比較や名所も。`
     : `${st.name}駅${yomi ? `（${yomi}）` : ''}はどんな街？ 周り500mに飲食店${foodN}店、街力${score}点・${rank}ランクで全国${rAll}位。近くの駅との比較や名所も。`;
   const osm = `https://www.openstreetmap.org/export/embed.html?bbox=${st.lng - 0.012},${st.lat - 0.008},${st.lng + 0.012},${st.lat + 0.008}&layer=mapnik&marker=${st.lat},${st.lng}`;
   const ld = { '@context': 'https://schema.org', '@type': 'TrainStation', name: `${st.name}駅`, url: stationUrl(st), image: ogUrl(st), address: { '@type': 'PostalAddress', addressCountry: 'JP', addressRegion: st.pref, addressLocality: t.location || '' }, geo: { '@type': 'GeoCoordinates', latitude: st.lat, longitude: st.lng } };
+  if (about) ld.description = about;   // ★v51
   if (t.location) ld.containedInPlace = { '@type': 'City', name: t.location };
 
   // ★v27：駅名標の左右＝アプリと同じ「路線の並び順」の前後の駅。データが無い駅だけ従来の「近い2駅」
@@ -1878,6 +1943,7 @@ h1.q{font-size:18px;font-weight:700;margin:0 0 10px;color:var(--sub)}
 .bt{background:#EAF1F5;border-radius:99px;height:12px;overflow:hidden}.bf{height:100%;border-radius:99px}
 .bv{text-align:right;font-weight:700;line-height:1.3}.bv small{color:var(--sub);font-weight:400}.cnt{display:block;color:var(--sub);font-size:12px;font-weight:400}
 .panel ul{list-style:none;margin:0;padding:0}.panel li{padding:10px 0;border-bottom:1px solid var(--line)}.panel li:last-child{border:0}
+.about{margin:0;font-size:15.5px;line-height:1.95}.about.wf{padding-bottom:14px;margin-bottom:2px;border-bottom:1px solid var(--line)}
 .feats li{padding-left:24px;position:relative}.feats li:before{content:"";position:absolute;left:2px;top:19px;width:12px;height:12px;border-radius:50%;background:var(--pin)}
 .bonus li span,.rks li b{float:right;color:var(--sub);font-weight:400;margin-left:8px}.rks li b{color:var(--ink);font-weight:700}
 .info{display:grid;grid-template-columns:1fr 1fr;gap:10px}.info div{background:var(--tile);border-radius:12px;padding:10px 12px;line-height:1.5}.info small{display:block;color:var(--sub);font-size:12px}
@@ -1897,7 +1963,7 @@ ${FLOAT_CSS}
 ${first ? `<p class="leadq">${esc(first)}</p>` : ''}</div>
 ${INTRO_BAR}
 <div class="block"><h2>街力の内訳</h2><div class="panel">${bars}</div>${DATA_SRC_HTML}</div>
-${rest.length ? `<div class="block"><h2>この街のこと</h2><div class="panel"><ul class="feats">${rest.map((f) => `<li>${esc(f)}</li>`).join('')}</ul></div></div>` : ''}
+${(about || rest.length) ? `<div class="block"><h2>この街のこと</h2><div class="panel">${about ? `<p class="about${rest.length ? ' wf' : ''}">${esc(about)}</p>` : ''}${rest.length ? `<ul class="feats">${rest.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}</div></div>` : ''}
 <div class="block"><h2>順位</h2><div class="panel"><ul class="rks">
 <li>全国<b>${idx.all.n.toLocaleString()}駅中 ${rAll ? rAll.toLocaleString() : '-'}位</b></li>
 <li><a href="${prefUrl(st.pref)}">${esc(st.pref)}</a><b>${idx.pref[st.pref] ? idx.pref[st.pref].n : '-'}駅中 ${rPref || '-'}位</b></li>
@@ -3324,7 +3390,8 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v50',
+  server: 'v51',
+  about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
     const vis = visibleUpdates();
