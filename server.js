@@ -1,5 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v51（2026-10-05 JST：駅ページに「街の紹介文」を出せるようにした）
+// 街巡 server.js v52（2026-10-05 JST：駅ページの見た目の直し5点。ともき指示）
+// v51 → v52：
+//   ①「路線ごとの隣の駅」＝路線名のあとで折り返し、駅の並び（前の駅 ← この駅 → 次の駅）を1行に。
+//      幅があれば路線名と並びが同じ行にのる（あいだに半角スペース）。
+//      ★駅ページは NB_CSS を読んでおらず、.nb{display:inline-block}（特集用）だけが効いて全部がベタ並びだった。
+//        駅ページ用のクラス nbl を作り、特集用の .nb とぶつからないようにした。
+//   ②点数の下の「街力（駅から500m以内の…1,000点満点）」の説明を消した（下の内訳に説明がある）。
+//   ③「この駅のカード、アプリで集められます」の帯（INTRO_BAR）を駅ページから外した。
+//      かわりにヘッダーの「アプリの紹介」を「HOME画面へ」に（行き先は今までと同じトップ）。
+//   ④X・インスタのボタン＝ひとこと（最新情報をGET！／街の風景をシェア中）を上、アカウント名を下に。
+//   ⑤いちばん下の行を「© 街巡-まちめぐ-製作委員会」に。
+//   ★/api/health の server を v52 に。ほかは v51 と同じ。
+// ── 以下 v51 までの記録 ──
+// v51（2026-10-05 JST：駅ページに「街の紹介文」を出せるようにした）
 // v50 → v51（ともき発案・2026-10-05）：Search Console を見たら、表示の9割が「駅名だけ」の検索で、
 //   狙っている「○○駅 どんな街」ではほとんど出ていなかった。駅ページに、その街を言葉で伝える文章が
 //   20字のコメント2〜3本しか無かったため。
@@ -1899,9 +1912,9 @@ function renderStationPage(st, ua) {
     const [pn, nn] = v.split('|');
     const pv = findNeighbor(pn, l, st), nx = findNeighbor(nn, l, st);
     if (!pv && !nx) return '';
-    return `<li><a class="nb-line" href="${lineUrl(l)}">${esc(l)}</a><span class="nb-row">${_chip(pv)}<span class="nb-arrow">←</span><b class="nb-me">${esc(st.name)}<small> ${score}点 <span class="rk" style="background:${rc}">${esc(rank)}</span></small></b><span class="nb-arrow">→</span>${_chip(nx)}</span></li>`;
+    return `<li><a class="nb-line" href="${lineUrl(l)}">${esc(l)}</a> <span class="nb-row">${_chip(pv)}<span class="nb-arrow">←</span><b class="nb-me">${esc(st.name)}<small> ${score}点 <span class="rk" style="background:${rc}">${esc(rank)}</span></small></b><span class="nb-arrow">→</span>${_chip(nx)}</span></li>`;
   }).filter(Boolean);
-  const lineNbHtml = lineNbRows.length ? `<div class="block"><h2>路線ごとの隣の駅</h2><div class="panel"><ul class="nb">${lineNbRows.join('')}</ul></div></div>` : '';
+  const lineNbHtml = lineNbRows.length ? `<div class="block"><h2>路線ごとの隣の駅</h2><div class="panel"><ul class="nbl">${lineNbRows.join('')}</ul></div></div>` : '';
   const _city = t.location || '';
   let areaNearHtml = '';
   if (_city) {
@@ -1936,7 +1949,16 @@ ${FONT_LINKS}
 .score .num{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:66px;line-height:1;color:${rc}}
 .score .pt{font-weight:700}
 .score .rank{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:22px;color:${rank === 'B' ? '#3A2C00' : '#fff'};background:${rc};border-radius:10px;padding:0 12px;align-self:center}
-.score .of{color:var(--sub);font-size:13px;width:100%}
+.nbl{list-style:none;margin:0;padding:0}
+.nbl li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.nbl li:first-child{padding-top:0}.nbl li:last-child{border-bottom:0;padding-bottom:0}
+.nbl .nb-line{font-size:13px;font-weight:700;white-space:nowrap}
+.nbl .nb-row{display:flex;flex-wrap:wrap;align-items:center;gap:3px 5px;min-width:0;font-size:15px}
+.nbl .nb-row>a,.nbl .nb-row>b{white-space:nowrap}
+.nbl .nb-row small{font-size:12px}
+.nbl .nb-row .rk{margin-right:0;min-width:20px;font-size:11px;padding:0 3px}
+.nbl .nb-arrow{opacity:.55}.nbl .nb-none{opacity:.5}
+@media(max-width:480px){.nbl .nb-row{font-size:13.5px;gap:3px}.nbl .nb-row small{font-size:11px}.nbl .nb-row .rk{min-width:17px;font-size:10px;padding:0 2px}}
 .leadq{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:20px;line-height:1.6;margin:16px 0 0;padding:2px 0 2px 14px;border-left:5px solid var(--sun)}
 h1.q{font-size:18px;font-weight:700;margin:0 0 10px;color:var(--sub)}
 .bar{display:grid;grid-template-columns:70px 1fr 104px;align-items:center;gap:10px;margin:10px 0;font-size:15px}
@@ -1959,9 +1981,8 @@ ${FLOAT_CSS}
 <main>
 <p class="crumbs" style="margin-top:14px"><a href="/">街巡-まちめぐ-</a> › <a href="${prefUrl(st.pref)}">${esc(st.pref)}</a>${areaN0 >= 2 ? ` › <a href="${areaUrl(st.pref, t.location)}">${esc(t.location)}</a>` : ''} › ${esc(st.name)}駅</p>
 <div class="block panel" style="margin-top:12px"><h1 class="q">${esc(st.name)}駅はどんな街？</h1>
-<div class="score"><span class="num">${score}</span><span class="pt">点</span><span class="rank">${esc(rank)}</span><span class="of">街力（駅から500m以内のお店や施設から計算・1,000点満点）</span></div>
+<div class="score"><span class="num">${score}</span><span class="pt">点</span><span class="rank">${esc(rank)}</span></div>
 ${first ? `<p class="leadq">${esc(first)}</p>` : ''}</div>
-${INTRO_BAR}
 <div class="block"><h2>街力の内訳</h2><div class="panel">${bars}</div>${DATA_SRC_HTML}</div>
 ${(about || rest.length) ? `<div class="block"><h2>この街のこと</h2><div class="panel">${about ? `<p class="about${rest.length ? ' wf' : ''}">${esc(about)}</p>` : ''}${rest.length ? `<ul class="feats">${rest.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}</div></div>` : ''}
 <div class="block"><h2>順位</h2><div class="panel"><ul class="rks">
@@ -1989,7 +2010,7 @@ ${sameHtml}
 <p class="pitch">全国8,993駅のチェックイン型・街歩きアプリ（無料）</p>
 <ul><li>${esc(st.name)}駅から500m以内で5分立ち止まると、この駅のカードが1枚</li><li>季節と時間帯でカードの色が変わる。同じ駅でも別の1枚に</li><li>路線や街を制覇して、バッジを集める</li></ul>
 ${storeBtns}${MORE_LINK}${EVENING_SVG}</div>
-<footer>${SNS_HTML}街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。駅名標のとなりの駅は HeartRails Express のデータを加工して作成。<br><a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><a href="/about">運営者について</a><br>© 街巡-まちめぐ-</footer>
+<footer>${SNS_HTML}街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。駅名標のとなりの駅は HeartRails Express のデータを加工して作成。<br><a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><a href="/about">運営者について</a><br>© 街巡-まちめぐ-製作委員会</footer>
 </main>${floatUi((isIOS || isAnd) ? `<div class="appbar" id="appbar" role="complementary" aria-label="アプリの案内"><div class="t"><b>${esc(st.name)}駅のカードを、アプリで</b><span>5分立ち止まると1枚・無料・<a href="${SITE}/">くわしく</a></span></div>${storeBadges(ua, 40)}<button type="button" class="x" aria-label="閉じる">×</button></div>` : '')}</body></html>`;
 }
 
@@ -2235,7 +2256,7 @@ ${FLOAT_CSS}
 </style></head><body>
 <header class="skyhead">${top}${hero || ''}${hero ? SKYLINE_SVG : ''}</header>
 <main>${body}
-<footer>${o.noFooterSns ? '' : SNS_HTML}<a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><a href="/about">運営者について</a><br>© 街巡-まちめぐ-</footer>
+<footer>${o.noFooterSns ? '' : SNS_HTML}<a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><a href="/about">運営者について</a><br>© 街巡-まちめぐ-製作委員会</footer>
 </main>${floatUi('')}</body></html>`;
 }
 
@@ -2307,6 +2328,7 @@ const FLOAT_CSS = `
 .src{font-size:12px;color:var(--sub);line-height:1.75;margin:10px 4px 0}.src a{color:var(--sub)}
 .sns a .h{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
 .sns a .h small{font-size:11px;font-weight:500;opacity:.92;letter-spacing:.02em}
+@media(max-width:480px){.sns{gap:8px!important}.sns a{font-size:12.5px;padding:8px 12px;gap:6px}.sns a .h small{font-size:10.5px}}
 .h2row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
 .h2row h2{margin:0}
 .h2row .more{flex:none;background:var(--pin);color:#fff;font-weight:700;font-size:14px;line-height:1;padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 4px 12px rgba(242,107,58,.3);white-space:nowrap}
@@ -2331,7 +2353,7 @@ body.appbar-room{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 const DATA_SRC_HTML = '<p class="src">データ元：お店・施設の位置は <a href="https://www.openstreetmap.org/copyright" rel="nofollow">OpenStreetMap</a> と <a href="https://overturemaps.org/" rel="nofollow">Overture Maps</a>。駅から500m以内の飲食・商業・生活・医療の施設を数え、近くの名所の加点を足して「街力」（1,000点満点）にしています。</p>';
 
 // ★v41：トップ（アプリの説明）への導線
-const ABOUT_BTN = `<a class="aboutbtn" href="${SITE}/">アプリの紹介</a>`;
+const ABOUT_BTN = `<a class="aboutbtn" href="${SITE}/">HOME画面へ</a>`;
 const INTRO_BAR = `<a class="introbar" href="${SITE}/"><span class="ib-k">アプリ</span><span class="ib-t">この駅のカード、アプリで集められます</span><span class="ib-go">街巡ってどんなアプリ？ →</span></a>`;
 const MORE_LINK = `<p class="morelink"><a href="${SITE}/">街巡ってどんなアプリ？ くわしく見る →</a></p>`;
 
@@ -2451,7 +2473,7 @@ function storeBadges(ua, h) {
 // ★v23：SNS（アプリの設定にあるものと同じ）
 const SNS_X = 'https://x.com/machimegux';
 const SNS_IG = 'https://www.instagram.com/machimegu2026/';
-const SNS_HTML = `<p class="sns"><a class="x" href="${SNS_X}" rel="me noopener" target="_blank" aria-label="X（旧Twitter）@machimegux"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.8-6.3L6.4 22H3.3l7.3-8.3L1 2h6.3l4.4 5.8L18.9 2Zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20Z"/></svg><span class="h">@machimegux<small>最新情報をGET！</small></span></a><a class="ig" href="${SNS_IG}" rel="me noopener" target="_blank" aria-label="Instagram @machimegu2026"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 7.3A4.7 4.7 0 1 0 12 16.7 4.7 4.7 0 0 0 12 7.3Zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm6-7.9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0ZM21.9 8c-.1-1.6-.4-3-1.6-4.2S17.6 2.2 16 2.1C14.3 2 9.7 2 8 2.1 6.4 2.2 5 2.5 3.8 3.7S2.2 6.4 2.1 8C2 9.7 2 14.3 2.1 16c.1 1.6.4 3 1.6 4.2s2.6 1.5 4.2 1.6c1.7.1 6.3.1 8 0 1.6-.1 3-.4 4.2-1.6s1.5-2.6 1.6-4.2c.1-1.7.1-6.3 0-8Zm-2.1 9.8a3.3 3.3 0 0 1-1.8 1.8c-1.3.5-4.3.4-5.7.4s-4.4.1-5.7-.4a3.3 3.3 0 0 1-1.8-1.8c-.5-1.3-.4-4.3-.4-5.7s-.1-4.4.4-5.7a3.3 3.3 0 0 1 1.8-1.8C7.9 4.1 11 4.2 12 4.2s4.4-.1 5.7.4a3.3 3.3 0 0 1 1.8 1.8c.5 1.3.4 4.3.4 5.7s.1 4.4-.4 5.7Z"/></svg><span class="h">@machimegu2026<small>街の風景をシェア中</small></span></a></p>`;
+const SNS_HTML = `<p class="sns"><a class="x" href="${SNS_X}" rel="me noopener" target="_blank" aria-label="X（旧Twitter）@machimegux"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.8-6.3L6.4 22H3.3l7.3-8.3L1 2h6.3l4.4 5.8L18.9 2Zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20Z"/></svg><span class="h">最新情報をGET！<small>@machimegux</small></span></a><a class="ig" href="${SNS_IG}" rel="me noopener" target="_blank" aria-label="Instagram @machimegu2026"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 7.3A4.7 4.7 0 1 0 12 16.7 4.7 4.7 0 0 0 12 7.3Zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm6-7.9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0ZM21.9 8c-.1-1.6-.4-3-1.6-4.2S17.6 2.2 16 2.1C14.3 2 9.7 2 8 2.1 6.4 2.2 5 2.5 3.8 3.7S2.2 6.4 2.1 8C2 9.7 2 14.3 2.1 16c.1 1.6.4 3 1.6 4.2s2.6 1.5 4.2 1.6c1.7.1 6.3.1 8 0 1.6-.1 3-.4 4.2-1.6s1.5-2.6 1.6-4.2c.1-1.7.1-6.3 0-8Zm-2.1 9.8a3.3 3.3 0 0 1-1.8 1.8c-1.3.5-4.3.4-5.7.4s-4.4.1-5.7-.4a3.3 3.3 0 0 1-1.8-1.8c-.5-1.3-.4-4.3-.4-5.7s-.1-4.4.4-5.7a3.3 3.3 0 0 1 1.8-1.8C7.9 4.1 11 4.2 12 4.2s4.4-.1 5.7.4a3.3 3.3 0 0 1 1.8 1.8c.5 1.3.4 4.3.4 5.7s.1 4.4-.4 5.7Z"/></svg><span class="h">街の風景をシェア中<small>@machimegu2026</small></span></a></p>`;
 // ★v23：サイトのアクセス解析（Railway の GA4_MEASUREMENT_ID を入れたときだけ動く）
 //   ストアのボタンを押したら store_click（ios / android）を送る
 function gaHead() {
@@ -3390,7 +3412,7 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v51',
+  server: 'v52',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
