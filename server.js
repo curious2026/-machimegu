@@ -1,5 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v52（2026-10-05 JST：駅ページの見た目の直し5点。ともき指示）
+// 街巡 server.js v53（2026-10-06 JST：App Store の版の確認が古い答えをつかむ問題の直し）
+// v52 → v53：
+//   ★2.5.0 が App Store に出て11時間たっても、サーバは 2.4.1 のままだった（/api/health の store）。
+//     Apple の窓口（iTunes Lookup）は途中で答えを覚えていて、場所によって古い版を返すことがある。
+//     → 毎回ちがう番号をURLの後ろに付けて、覚えてある古い答えを使わせない。
+//     → いちど新しい版を見たら、あとで古い版が返ってきても戻さない。
+//   ★/api/health の server を v53 に。ほかは v52 と同じ。
+// ───────────────────────────────────────────────────────────────
+// （以下は v52 のときの説明）
 // v51 → v52：
 //   ①「路線ごとの隣の駅」＝路線名のあとで折り返し、駅の並び（前の駅 ← この駅 → 次の駅）を1行に。
 //      幅があれば路線名と並びが同じ行にのる（あいだに半角スペース）。
@@ -3135,16 +3143,30 @@ function noteFromReleaseNotes(text) {
   return line;
 }
 
+// ★v53：版の大小（a が新しければ正、同じなら0、古ければ負）
+function storeVerCmp(a, b) {
+  const pa = String(a).split('.').map((n) => parseInt(n, 10) || 0);
+  const pb = String(b).split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i++) { const d = (pa[i] || 0) - (pb[i] || 0); if (d) return d; }
+  return 0;
+}
+
 async function refreshStoreVersion() {
   if ((process.env.STORE_CHECK || '').trim().toLowerCase() === 'off') return;
   try {
-    const res = await fetch(APP_STORE_LOOKUP, { signal: AbortSignal.timeout(10000) });
+    // ★v53：毎回ちがう番号を付けて、途中で覚えられた古い答えを使わせない
+    const res = await fetch(`${APP_STORE_LOOKUP}&_=${Date.now()}`, { signal: AbortSignal.timeout(10000), cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     const r = data && Array.isArray(data.results) ? data.results[0] : null;
     const v = r && typeof r.version === 'string' ? r.version.trim() : '';
     // ★形が正しい版だけ受け取る（例 1.9.0）。おかしな値で上書きしない。
     if (!/^\d+\.\d+(\.\d+)?$/.test(v)) throw new Error('版の形が不正: ' + v);
+    // ★v53：いま覚えている版より古い答えが返ってきたら、何も変えない
+    if (storeInfo.version && storeVerCmp(v, storeInfo.version) < 0) {
+      console.warn(`[v53] App Store が古い版を返した（${v}）。${storeInfo.version} のままにする`);
+      return;
+    }
     const note = noteFromReleaseNotes(r.releaseNotes);
     if (v !== storeInfo.version) {
       console.log(`[v13] App Store の版: ${storeInfo.version || '(未取得)'} → ${v}／お知らせ「${note}」`);
@@ -3412,7 +3434,7 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v52',
+  server: 'v53',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
