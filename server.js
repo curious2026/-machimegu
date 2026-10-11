@@ -1,5 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v54（2026-10-11 JST：駅ページの題名にふりがな）
+// 街巡 server.js v55（2026-10-11 JST：駅ページの見出しにもふりがな）
+// v54 → v55：
+//   ★駅ページの見出し（h1）にも読みを小さく添える（例「東陽町駅（とうようちょう）はどんな街？」）。ともき決定 2026-10-11。
+//   ★/api/health の server を v55 に。ほかは v54 と同じ。
 // v53 → v54：
 //   ★駅ページの <title> に読みを入れる（例「東陽町駅（とうようちょう・東京都）はどんな街？」）。
 //     Search Console で「○○ 読み方」の検索が多かったため（ともき決定 2026-10-11）。読みの無い駅は今までどおり。
@@ -1993,7 +1996,7 @@ ${FLOAT_CSS}
 </div>${SKYLINE_SVG}</header>
 <main>
 <p class="crumbs" style="margin-top:14px"><a href="/">街巡-まちめぐ-</a> › <a href="${prefUrl(st.pref)}">${esc(st.pref)}</a>${areaN0 >= 2 ? ` › <a href="${areaUrl(st.pref, t.location)}">${esc(t.location)}</a>` : ''} › ${esc(st.name)}駅</p>
-<div class="block panel" style="margin-top:12px"><h1 class="q">${esc(st.name)}駅はどんな街？</h1>
+<div class="block panel" style="margin-top:12px"><h1 class="q">${esc(st.name)}駅${yomi ? `<span style="font-size:.62em;font-weight:600;opacity:.75">（${esc(yomi)}）</span>` : ''}はどんな街？</h1>
 <div class="score"><span class="num">${score}</span><span class="pt">点</span><span class="rank">${esc(rank)}</span></div>
 ${first ? `<p class="leadq">${esc(first)}</p>` : ''}</div>
 <div class="block"><h2>街力の内訳</h2><div class="panel">${bars}</div>${DATA_SRC_HTML}</div>
@@ -3439,7 +3442,7 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v54',
+  server: 'v55',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
