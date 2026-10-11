@@ -1,4 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
+// 街巡 server.js v56（2026-10-11 JST：どのページにも検索窓／自分のPCをアクセス解析から外す）
+// v55 → v56：
+//   ★全ページの最上段（タイトルと「HOME画面へ」のあいだ）に検索窓。薄い字で「駅名・路線名・市区町村」。
+//     スマホの幅ではタイトルの下の行に回る。ともき指示 2026-10-11。
+//   ★/search を広げた：駅名ぴったり1つ→駅ページ／路線名ぴったり→路線ランキング／県名→県のページ／
+//     市区町村名ぴったり（1県だけ）→市区町村のページ。どれでもなければ「路線・市区町村・駅」の候補を一覧で出す。
+//   ★/ga-off を開くと、そのブラウザからのアクセスを GA4 に数えなくなる（/ga-on で元に戻す）。
+//     ブラウザごとの設定なので、Safari と Chrome を両方使うなら両方で1回ずつ開く。
+//   ★/api/health の server を v56 に。
+// （以下は v55 のときの説明）
 // 街巡 server.js v55（2026-10-11 JST：駅ページの見出しにもふりがな）
 // v54 → v55：
 //   ★駅ページの見出し（h1）にも読みを小さく添える（例「東陽町駅（とうようちょう）はどんな街？」）。ともき決定 2026-10-11。
@@ -1682,6 +1692,15 @@ main{max-width:760px;margin:0 auto;padding:0 18px 24px}
 .top .brand b{font-family:"Zen Maru Gothic",sans-serif;font-size:19px;font-weight:900;display:block;line-height:1.2;white-space:nowrap}
 .top .brand span{font-size:11px;color:var(--sub);display:block;line-height:1.35}
 .top .tb{flex:none;display:flex;align-items:center}
+.hsearch{flex:1 1 220px;max-width:300px;min-width:0;display:flex;align-items:center;background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:999px;padding:0 4px 0 14px;height:38px}
+.hsearch input{flex:1;min-width:0;border:0;background:transparent;font-size:15px;color:var(--ink);outline:none;padding:0;height:100%;-webkit-appearance:none;appearance:none}
+.hsearch input::placeholder{color:#8B97A8}
+.hsearch input::-webkit-search-cancel-button{display:none}
+.hsearch button{flex:none;border:0;background:var(--blue);color:#fff;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;cursor:pointer;padding:0}
+.top{flex-wrap:wrap}
+@media(max-width:640px){.hsearch{order:3;flex:1 1 100%;max-width:none;height:42px}.hsearch input{font-size:16px}}
+@media(min-width:641px){.hsearch{flex:1 1 160px;min-width:150px;max-width:280px}}
+@media(min-width:1000px){.top{max-width:1000px}}
 .badge{display:inline-flex;align-items:center;margin:4px;vertical-align:middle}.badge img{display:block}
 .block{margin:34px 0}
 h2{font-size:21px;font-weight:700;margin:0 0 12px;line-height:1.4}
@@ -1990,7 +2009,7 @@ h2 .me{float:right;font-size:13px;font-weight:700;color:var(--ink);font-family:"
 .map{width:100%;height:260px;border:0;border-radius:14px;display:block}
 ${FLOAT_CSS}
 </style></head><body>
-<header class="skyhead"><div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩アプリ</span></span></a><span class="tb">${ABOUT_BTN}${topBtns}</span></div>
+<header class="skyhead"><div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩アプリ</span></span></a>${HEAD_SEARCH}<span class="tb">${ABOUT_BTN}${topBtns}</span></div>
 <div style="max-width:760px;margin:0 auto;padding:10px 18px 0">
 <div class="sign">${yomi ? `<div class="y">${esc(yomi)}</div>` : '<div class="y">&nbsp;</div>'}<div class="n">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? `　${esc(t.location)}` : ''}</div><div class="band" style="background:${rc}"></div>${lr}</div>
 </div>${SKYLINE_SVG}</header>
@@ -2206,7 +2225,7 @@ const NB_CSS = `.nb{list-style:none;margin:0;padding:0}.nb li{padding:8px 0;bord
 function pageShell(title, desc, body, canonical, hero, ua, extraHead, opts) {
   // ★v27：opts.noFooterSns … 本文に X・インスタのボタンがあるページ（トップ）はフッターに出さない
   const o = opts || {};
-  const top = `<div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩アプリ</span></span></a><span class="tb">${canonical && canonical !== `${SITE}/` ? ABOUT_BTN : ''}${ua != null ? storeBadges(ua, 30) : ''}</span></div>`;
+  const top = `<div class="top"><a class="brand" href="${SITE}/"><img src="/logo192.png" alt=""><span><b>街巡-まちめぐ-</b><span>駅で5分、カードを集める散歩アプリ</span></span></a>${HEAD_SEARCH}<span class="tb">${canonical && canonical !== `${SITE}/` ? ABOUT_BTN : ''}${ua != null ? storeBadges(ua, 30) : ''}</span></div>`;
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
@@ -2370,6 +2389,8 @@ const DATA_SRC_HTML = '<p class="src">データ元：お店・施設の位置は
 
 // ★v41：トップ（アプリの説明）への導線
 const ABOUT_BTN = `<a class="aboutbtn" href="${SITE}/">HOME画面へ</a>`;
+// ★v56：どのページにも出す検索窓（タイトルと「HOME画面へ」のあいだ）
+const HEAD_SEARCH = `<form class="hsearch" action="/search" method="get" role="search"><input type="search" name="q" placeholder="駅名・路線名・市区町村" aria-label="駅名・路線名・市区町村で探す" enterkeyhint="search"><button type="submit" aria-label="探す"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button></form>`;
 const INTRO_BAR = `<a class="introbar" href="${SITE}/"><span class="ib-k">アプリ</span><span class="ib-t">この駅のカード、アプリで集められます</span><span class="ib-go">街巡ってどんなアプリ？ →</span></a>`;
 const MORE_LINK = `<p class="morelink"><a href="${SITE}/">街巡ってどんなアプリ？ くわしく見る →</a></p>`;
 
@@ -2496,7 +2517,8 @@ function gaHead() {
   const id = (process.env.GA4_MEASUREMENT_ID || '').trim();
   if (!/^G-[A-Z0-9]+$/.test(id)) return '';
   return `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${id}');
+<script>try{if(localStorage.getItem('mm_ga_off')==='1')window['ga-disable-${id}']=true;}catch(e){}
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${id}');
 function mmPlace(a){return a.closest('.appbar')?'appbar':a.closest('.invite')?'invite':a.closest('.hero-copy')?'hero':a.closest('header,.tb')?'header':'other';}
 function mmPage(){var p=location.pathname.split('/')[1]||'top';return p;}
 document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a');if(!a)return;var h=a.href||'';
@@ -3101,12 +3123,38 @@ app.get('/feature/:k/:region', generalLimiter, (req, res) => {
 });
 
 // 駅名の検索／県の一覧（同名駅が複数なら一覧、1駅ならその駅のページへ）
+// ★v56：検索に使う路線名・市区町村名の一覧（駅マスタから作る。初回だけ作って覚えておく）
+let _searchIdx = null;
+function searchIndex() {
+  if (_searchIdx && _searchIdx.n === STATIONS.length) return _searchIdx;
+  const lines = new Map();   // 路線名 → 駅数
+  const cities = new Map();  // 市区町村名 → Map(県 → 駅数)
+  for (const st of STATIONS) {
+    for (const l of (st.lines || [])) lines.set(l, (lines.get(l) || 0) + 1);
+    const c = (textOf(st.id) || {}).location;
+    if (c) { if (!cities.has(c)) cities.set(c, new Map()); const m = cities.get(c); m.set(st.pref, (m.get(st.pref) || 0) + 1); }
+  }
+  _searchIdx = { n: STATIONS.length, lines, cities };
+  return _searchIdx;
+}
+// 「県」「府」「都」を付けずに打っても県のページへ（例：静岡→静岡県）。ただし同じ名前の駅があれば駅が先。
+function prefOfQuery(q) {
+  if (PREFS.includes(q)) return q;
+  const c = PREFS.filter((p) => p.replace(/[都府県]$/, '') === q);
+  return c.length === 1 ? c[0] : null;
+}
+
+// 駅名・路線名・市区町村の検索／県の一覧
+//   1) 駅名ぴったり1駅 → 駅ページ  2) 路線名ぴったり → 路線ランキング  3) 県名 → 県のページ
+//   4) 市区町村名ぴったり（1県だけ）→ 市区町村ページ  5) それ以外は候補を一覧
 app.get('/search', generalLimiter, (req, res) => {
   try {
-    const q = String(req.query.q || '').trim().replace(/駅$/, '').slice(0, 30);
+    const q = String(req.query.q || '').trim().replace(/\s+/g, '').replace(/駅$/, '').slice(0, 30);
     const pref = String(req.query.pref || '').trim();
     let hits = [];
     let title = '';
+    let lineHits = [];
+    let cityHits = [];
     if (pref && PREFS.includes(pref)) {
       hits = STATIONS.filter((st) => st.pref === pref).map((st) => [st, scoreOf(st.id)])
         .sort((a, b) => ((b[1] && b[1].score) || 0) - ((a[1] && a[1].score) || 0));
@@ -3114,6 +3162,19 @@ app.get('/search', generalLimiter, (req, res) => {
     } else if (q) {
       const exact = STATIONS.filter((st) => st.name === q);
       if (exact.length === 1) return res.redirect(302, stationUrl(exact[0]));
+      const idx = searchIndex();
+      if (!exact.length) {
+        if (idx.lines.has(q)) return res.redirect(302, lineUrl(q));
+        if (!q.endsWith('線') && idx.lines.has(q + '線')) return res.redirect(302, lineUrl(q + '線'));
+        const pq = prefOfQuery(q);
+        if (pq) return res.redirect(302, prefUrl(pq));
+        const cm = idx.cities.get(q);
+        if (cm && cm.size === 1) return res.redirect(302, areaUrl([...cm.keys()][0], q));
+      }
+      const qn = q.replace(/線$/, '');
+      lineHits = [...idx.lines.entries()].filter(([l]) => l.includes(qn)).sort((a, b) => b[1] - a[1]).slice(0, 30);
+      for (const [c, m] of idx.cities) if (c.includes(q)) for (const [p, n] of m) cityHits.push([p, c, n]);
+      cityHits = cityHits.sort((a, b) => b[2] - a[2]).slice(0, 30);
       hits = (exact.length ? exact : STATIONS.filter((st) => st.name.includes(q) || (STATION_YOMI[st.id] || '').startsWith(q)))
         .slice(0, 100).map((st) => [st, scoreOf(st.id)]);
       title = `「${q}」の検索結果`;
@@ -3123,10 +3184,14 @@ app.get('/search', generalLimiter, (req, res) => {
       const cc = {}; hits.forEach(([st]) => { const c = (textOf(st.id) || {}).location; if (c) cc[c] = (cc[c] || 0) + 1; });
       cityLinks = `<p class="chips" style="margin:14px 0 0">${Object.entries(cc).sort((a, b) => b[1] - a[1]).map(([c, k]) => `<a href="${areaUrl(pref, c)}">${esc(c)}（${k}）</a>`).join('')}</p>`;
     }
+    const lineBlock = lineHits.length ? `<h2 style="font-size:17px;margin:18px 0 8px">路線</h2><p class="chips" style="margin:0">${lineHits.map(([l, n]) => `<a href="${lineUrl(l)}">${esc(l)}（${n}駅）</a>`).join('')}</p>` : '';
+    const cityBlock = cityHits.length ? `<h2 style="font-size:17px;margin:18px 0 8px">市区町村</h2><p class="chips" style="margin:0">${cityHits.map(([p, c, n]) => `<a href="${areaUrl(p, c)}">${esc(c)}<small>（${esc(p)}・${n}駅）</small></a>`).join('')}</p>` : '';
     const list = hits.map(([st, s]) => `<li>${s ? `<span class="rk" style="background:${RANK_COLOR[s.rank] || '#888'}">${esc(s.rank)}</span>` : ''}<a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}${s ? `・${s.score}点` : ''}</small></li>`).join('');
+    const stationBlock = list ? `${q && (lineBlock || cityBlock) ? '<h2 style="font-size:17px;margin:18px 0 8px">駅</h2>' : ''}<ul class="list" style="margin-top:${q && (lineBlock || cityBlock) ? 0 : 14}px">${list}</ul>` : '';
+    const nothing = q && !list && !lineBlock && !cityBlock ? '<p class="note" style="margin-top:12px">見つかりませんでした。ひらがなや、駅名・路線名の一部でも探せます。</p>' : '';
     const body = `<p class="crumbs"><a href="/">街巡-まちめぐ-</a> › ${esc(title || '駅を調べる')}</p><section style="margin-top:14px"><h1 style="font-size:clamp(22px,5.4vw,30px);font-weight:900;margin:0 0 12px">${esc(title || '駅を調べる')}</h1>
-${!q && !pref ? NEAR_BUTTON + '<div style="height:14px"></div>' : ''}<form class="find" action="/search" method="get"><input type="search" name="q" value="${esc(q)}" placeholder="駅名（例：東陽町）" aria-label="駅名"><button type="submit">調べる</button></form>
-${cityLinks}${list ? `<ul class="list" style="margin-top:14px">${list}</ul>` : (q ? '<p class="note" style="margin-top:12px">その名前の駅は見つかりませんでした。ひらがなや、駅名の一部でも探せます。</p>' : '')}</section>`;
+${!q && !pref ? NEAR_BUTTON + '<div style="height:14px"></div>' : ''}<form class="find" action="/search" method="get"><input type="search" name="q" value="${esc(q)}" placeholder="駅名・路線名・市区町村" aria-label="駅名・路線名・市区町村"><button type="submit">調べる</button></form>
+${cityLinks}${lineBlock}${cityBlock}${stationBlock}${nothing}</section>`;
     res.set('Content-Type', 'text/html; charset=utf-8');
     res.send(pageShell(`${title || '駅を調べる'}｜街巡-まちめぐ-`, `${title}。全国8,993駅の街力を調べられます。`, body, pref ? prefUrl(pref) : null, '', req.get('user-agent') || ''));
   } catch (e) {
@@ -3134,6 +3199,16 @@ ${cityLinks}${list ? `<ul class="list" style="margin-top:14px">${list}</ul>` : (
     res.status(500).send('ただいま表示できません');
   }
 });
+
+// ★v56：このブラウザからのアクセスを GA4 に数えない／数える（ともき自身の確認用）
+function gaSwitchPage(off) {
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>アクセス解析の設定</title>
+<style>body{font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;background:#EAF4FB;color:#1F2A44;margin:0;padding:40px 20px;text-align:center}div{max-width:460px;margin:0 auto;background:#fff;border-radius:18px;padding:26px 22px;box-shadow:0 10px 26px rgba(31,42,68,.10)}b{font-size:20px}p{line-height:1.8}a{color:#1B6FA6}</style></head><body><div id="m"><b>設定中…</b></div>
+<script>var ok=false;try{${off ? "localStorage.setItem('mm_ga_off','1')" : "localStorage.removeItem('mm_ga_off')"};ok=true;}catch(e){}
+document.getElementById('m').innerHTML=ok?'${off ? '<b>このブラウザは数えません</b><p>このブラウザからの machimegu.com へのアクセスは、Googleアナリティクスに送られなくなりました。<br>別のブラウザ（Safari・Chromeなど）でも外したいときは、そちらでもこのページを1回開いてください。<br>元に戻すときは <a href="/ga-on">/ga-on</a> を開きます。</p>' : '<b>このブラウザも数えます</b><p>アクセス解析の対象に戻しました。</p>'}<p><a href="/">トップへ</a></p>':'<b>設定できませんでした</b><p>このブラウザは保存ができない設定（プライベートモードなど）のようです。</p>';</script></body></html>`;
+}
+app.get('/ga-off', (req, res) => { res.set('Cache-Control', 'no-store'); res.set('Content-Type', 'text/html; charset=utf-8'); res.send(gaSwitchPage(true)); });
+app.get('/ga-on', (req, res) => { res.set('Cache-Control', 'no-store'); res.set('Content-Type', 'text/html; charset=utf-8'); res.send(gaSwitchPage(false)); });
 
 // ★v13：App Store の今の版を覚えておく箱（取れるまでは空＝お知らせは出ない）
 const storeInfo = { version: '', note: '', checkedAt: 0, rating: 0, ratingCount: 0, shots: [], notes: '', releasedAt: '' };
@@ -3442,7 +3517,7 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v55',
+  server: 'v56',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
