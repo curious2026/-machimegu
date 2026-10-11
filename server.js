@@ -1,5 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v53（2026-10-06 JST：App Store の版の確認が古い答えをつかむ問題の直し）
+// 街巡 server.js v54（2026-10-11 JST：駅ページの題名にふりがな）
+// v53 → v54：
+//   ★駅ページの <title> に読みを入れる（例「東陽町駅（とうようちょう・東京都）はどんな街？」）。
+//     Search Console で「○○ 読み方」の検索が多かったため（ともき決定 2026-10-11）。読みの無い駅は今までどおり。
+//   ★/api/health の server を v54 に。ほかは v53 と同じ。
 // v52 → v53：
 //   ★2.5.0 が App Store に出て11時間たっても、サーバは 2.4.1 のままだった（/api/health の store）。
 //     Apple の窓口（iTunes Lookup）は途中で答えを覚えていて、場所によって古い版を返すことがある。
@@ -1889,7 +1893,8 @@ function renderStationPage(st, ua) {
   const storeBtns = storeBadges(ua, 46);
   const topBtns = storeBadges(ua, 30);
 
-  const title = `${st.name}駅（${st.pref}）はどんな街？ 街力${score}点・${rank}ランク｜街巡-まちめぐ-`;
+  // ★v54：題名に読み（「○○ 読み方」の検索に、題名そのものが答える）
+  const title = `${st.name}駅（${yomi ? `${yomi}・` : ''}${st.pref}）はどんな街？ 街力${score}点・${rank}ランク｜街巡-まちめぐ-`;
   // ★v30：検索結果の2行は「その駅だけの一言」から（「街力」は初めての人には通じない）
   const foodN = (d['飲食'] || {}).count || 0;
   // ★v51：紹介文がある駅は、説明文の頭に紹介文の最初の1〜2文を使う（「どんな街」に言葉で答える）。
@@ -3434,7 +3439,7 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v53',
+  server: 'v54',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
