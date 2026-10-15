@@ -1,4 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
+// 街巡 server.js v57（2026-10-15 JST：駅データの整理＝廃止13駅を外す・改名2駅・大阪空港を大阪府へ／全国8,980駅）
+// v56 → v57：
+//   ★駅の数を「全国8,993駅」から「全国8,980駅」に（廃止された13駅を外した。ともき決定 2026-10-15）。
+//   ★よくある質問に「対応している駅の数は？」＝いま営業している駅だけ・乗り換え駅は1駅と数えて8,980駅（路線ごとに数えると約1万駅）。
+//   ★改名した駅（川村→相良十島・東多良木→多良木青蓮寺）と県を付け替えた駅（大阪空港 兵庫県→大阪府）は、
+//     旧URLから新しい駅ページへ301で転送（MOVED_STATIONS）。廃止した13駅は今までどおり「見つかりませんでした」の案内。
+//   ★一緒に上げるファイル：stations.json・station_text.json・station_about.json・station_yomi.json・station_neighbors.json。
+//   ★/api/health の server を v57 に。
+// （以下は v56 のときの説明）
 // 街巡 server.js v56（2026-10-11 JST：どのページにも検索窓／自分のPCをアクセス解析から外す）
 // v55 → v56：
 //   ★全ページの最上段（タイトルと「HOME画面へ」のあいだ）に検索窓。薄い字で「駅名・路線名・市区町村」。
@@ -162,7 +171,7 @@
 //   ・特集を2本追加：花火大会がある駅・初詣に行きたい駅
 // （v29）トップの並びを元に戻す
 // v28 → v29：トップの並びは v27 までの順（アプリの画面 → … → 使い方 → 駅を調べる → 街力の高い駅 → 都道府県）に戻した。
-//   トップに来るのは「これ何のアプリ？」を知りたい人。回遊は駅ページ（8,993の入口）が担う（ともき判断）。
+//   トップに来るのは「これ何のアプリ？」を知りたい人。回遊は駅ページ（8,980の入口）が担う（ともき判断）。
 //   v28 の「ランキングをすべて見る →」ボタン・4つの太字・SNSのひとことは残す。
 // （v28）トップを「調べる・比べる」から始める（並びは v29 で撤回）
 // v27 → v28：
@@ -231,7 +240,7 @@
 //   ★/privacy.html・/terms.html など public の中身は今までどおり
 // ───────────────────────────────────────────────────────────────
 // v14 → v15 の変更点（2026-09-22 スレ44）：
-//   ★全8,993駅の「この駅はどんな街？」ページ： /station/東京都/東陽町
+//   ★全8,980駅の「この駅はどんな街？」ページ： /station/東京都/東陽町
 //     街力の内訳（店の実数つき）・順位（全国/県/路線/利用者/古さ）・名所・
 //     近くの駅との比較（最大8）・同名駅・地図・この駅で進むバッジ・ストアへの入口
 //   ★/sitemap.xml（全駅のURL）
@@ -1479,7 +1488,7 @@ loadStationText();
 
 // ★v51：駅ごとの紹介文（station_about.json）。無ければ紹介文なしで今までどおり。
 //   ★20字コメント（station_text.json）とは別のファイルにしてある。
-//     紹介文は少しずつ書き足していくので、8,993駅そろっていなくても配れるように。
+//     紹介文は少しずつ書き足していくので、8,980駅そろっていなくても配れるように。
 const STATION_ABOUT_FILE = path.join(__dirname, 'station_about.json');
 const stationAbout = { map: {}, version: '', count: 0 };
 function loadStationAbout() {
@@ -1531,7 +1540,7 @@ app.get('/api/station-text', (req, res) => {
 
 // ═══════════════════════════════════════════════════════════════
 // ★v15：駅ページ（SEO）  /station/:pref/:name  と  /sitemap.xml
-//   ・全8,993駅の「この駅はどんな街？」を、アクセスが来たときに組み立てる
+//   ・全8,980駅の「この駅はどんな街？」を、アクセスが来たときに組み立てる
 //   ・★作ったページは1日（点数の再計算があれば即）捨てる
 //   ・★ここで何が起きても /api/* には影響しない（try/catch で閉じる）
 // ═══════════════════════════════════════════════════════════════
@@ -2042,7 +2051,7 @@ ${sameHtml}
 <div class="block"><h2>この駅で進むバッジ</h2><div class="panel"><ul class="rks">${badges}</ul></div></div>
 <div class="block"><h2>地図</h2><iframe class="map" loading="lazy" src="${osm}" title="${esc(st.name)}駅の地図"></iframe></div>
 <div class="block invite" id="app"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2>
-<p class="pitch">全国8,993駅のチェックイン型・街歩きアプリ（無料）</p>
+<p class="pitch">全国8,980駅のチェックイン型・街歩きアプリ（無料）</p>
 <ul><li>${esc(st.name)}駅から500m以内で5分立ち止まると、この駅のカードが1枚</li><li>季節と時間帯でカードの色が変わる。同じ駅でも別の1枚に</li><li>路線や街を制覇して、バッジを集める</li></ul>
 ${storeBtns}${MORE_LINK}${EVENING_SVG}</div>
 <footer>${SNS_HTML}街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。駅名標のとなりの駅は HeartRails Express のデータを加工して作成。<br><a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><a href="/about">運営者について</a><br>© 街巡-まちめぐ-製作委員会</footer>
@@ -2087,7 +2096,7 @@ function ogSvg({ name, pref, yomi, score, rank, lead, details }) {
 <text x="780" y="220" font-size="26" fill="#FFFFFF">街力の内訳</text>
 ${bars}
 <text x="80" y="580" font-size="30" fill="#FF9D4D">街巡-まちめぐ-</text>
-<text x="310" y="580" font-size="24" fill="#9AB4D0">駅で5分、カードを集める散歩アプリ。全国8,993駅</text>
+<text x="310" y="580" font-size="24" fill="#9AB4D0">駅で5分、カードを集める散歩アプリ。全国8,980駅</text>
 </svg>`;
 }
 
@@ -2115,6 +2124,12 @@ app.get('/og/station/:pref/:file', generalLimiter, (req, res) => {
   } catch (e) { console.error('[v19] シェア画像失敗:', e.message); res.status(500).end(); }
 });
 
+// ★v57：改名・県の付け替えをした駅（旧ID → 新ID）。旧URLを新しい駅ページへ301で転送する
+const MOVED_STATIONS = {
+  '川村_熊本県': '相良十島_熊本県',
+  '東多良木_熊本県': '多良木青蓮寺_熊本県',
+  '大阪空港_兵庫県': '大阪空港_大阪府',
+};
 app.use('/station', generalLimiter);
 app.get('/station/:pref/:name', (req, res) => {
   try {
@@ -2122,6 +2137,9 @@ app.get('/station/:pref/:name', (req, res) => {
     const st = STATIONS_BY_ID.get(id);
     if (!st) {
       // ★v37：「◯◯駅」のような駅付きは、あれば本当の駅へ転送
+      // ★v57：改名・県の付け替えをした駅は、旧URLから新しい駅ページへ転送
+      const moved = MOVED_STATIONS[id];
+      if (moved && STATIONS_BY_ID.get(moved)) return res.redirect(301, stationUrl(STATIONS_BY_ID.get(moved)));
       const nm = String(req.params.name || '').replace(/駅$/, '');
       const alt = STATIONS_BY_ID.get(`${nm}_${req.params.pref}`);
       if (alt) return res.redirect(301, stationUrl(alt));
@@ -2543,7 +2561,8 @@ const FAQ = [
   ['1日に何駅まで記録できますか？', '1日3駅までです。急いで回るのではなく、ひとつの街をゆっくり歩いてほしいからです。'],
   ['位置情報はどう使われますか？', 'チェックインの5分間だけ使い、終わると自動で止まります。位置情報を第三者に販売・提供することはありません。'],
   ['電池の減りは大丈夫ですか？', '位置情報を使うのはチェックイン中の5分間だけにして、電池の減りを小さく抑えています。'],
-  ['街力とは何ですか？', '駅から500m以内にある飲食・お店・生活・医療の施設の数をもとに、全国8,993駅を1,000点満点で採点したものです。S・A・B・C・Dの5つのランクがあります。'],
+  ['対応している駅の数は？', '全国8,980駅です。いま営業している駅だけを入れていて、廃止された駅は入れていません。乗り換え駅は1駅と数えています（路線ごとに数えると約1万駅）。'],
+  ['街力とは何ですか？', '駅から500m以内にある飲食・お店・生活・医療の施設の数をもとに、全国8,980駅を1,000点満点で採点したものです。S・A・B・C・Dの5つのランクがあります。'],
 ];
 // ★v22：今日の一駅（JSTの日付で毎日かわる。Sか Aで、ふりがなとコメントがある駅から）
 let _pickPool = { builtAt: -1, list: [] };
@@ -2564,7 +2583,7 @@ function todayPick(region) {
 }
 function siteJsonLd() {
   const app = { '@context': 'https://schema.org', '@type': 'MobileApplication', name: '街巡-まちめぐ-', operatingSystem: 'iOS, Android', applicationCategory: 'TravelApplication',
-    description: '全国8,993駅の駅から500m以内で5分立ち止まると、その街のカードが1枚もらえる街歩きアプリ。', url: `${SITE}/`,
+    description: '全国8,980駅の駅から500m以内で5分立ち止まると、その街のカードが1枚もらえる街歩きアプリ。', url: `${SITE}/`,
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' }, installUrl: APP_STORE_URL };
   if (storeInfo.ratingCount >= 5) app.aggregateRating = { '@type': 'AggregateRating', ratingValue: storeInfo.rating.toFixed(1), ratingCount: storeInfo.ratingCount };
   const faq = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) };
@@ -2599,17 +2618,17 @@ app.get('/', (req, res) => {
         return `<a href="${stationUrl(st)}"><div class="sign"><div class="y">${esc(STATION_YOMI[st.id] || '')}</div><div class="n${st.name.length >= 5 ? ' long' : ''}">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? '　' + esc(t.location) : ''}</div><div class="band" style="background:${c}"></div>
 <div class="meta"><b style="color:${c}">${sc.score}</b><span>点</span><span class="rk" style="background:${c}">${esc(sc.rank)}</span></div><div class="c">${esc(comment || (t.features || [])[0] || '')}</div></div></a>`;
       };
-      const hero = `<div style="max-width:560px;margin:0 auto;padding:10px 18px 0"><div class="sign"><div class="y">まちめぐ</div><div class="n">街巡</div><div class="p">全国8,993駅</div><div class="band" style="background:var(--pin)"></div><div class="lr"><span>← いつもの駅</span><span class="r">知らない街 →</span></div></div></div>
+      const hero = `<div style="max-width:560px;margin:0 auto;padding:10px 18px 0"><div class="sign"><div class="y">まちめぐ</div><div class="n">街巡</div><div class="p">全国8,980駅</div><div class="band" style="background:var(--pin)"></div><div class="lr"><span>← いつもの駅</span><span class="r">知らない街 →</span></div></div></div>
 <div class="hero-copy"><h1>駅で5分、<br>カードを集める散歩アプリ。</h1><p>駅から500m以内で5分立ち止まると、その街のカードが1枚。季節と時間で色が変わるカードを集めながら、まだ降りたことのない駅へ。</p>${storeBadges(ua, 46)}</div>`;
       const body = `
 ${storeInfo.shots.length ? `<section><h2>アプリの画面</h2><div class="shots" tabindex="0" aria-label="アプリの画面（横にスクロール）">${storeInfo.shots.map((u, i) => `<img src="${esc(u)}" alt="街巡-まちめぐ- のアプリ画面 ${i + 1}" loading="lazy" width="230" height="498">`).join('')}</div></section>` : ''}
 ${todayPick(region)}
 ${seasonBlock(region)}
-<section><h2>こんな街が、1枚のカードに<small style="font-size:14px;color:var(--sub);margin-left:8px">${esc(REGION_BY_KEY[region].n)}</small></h2><p class="note">全国8,993駅すべてに、街力の点数と、その街ならではのひとことがあります。</p>
+<section><h2>こんな街が、1枚のカードに<small style="font-size:14px;color:var(--sub);margin-left:8px">${esc(REGION_BY_KEY[region].n)}</small></h2><p class="note">全国8,980駅すべてに、街力の点数と、その街ならではのひとことがあります。</p>
 <div class="samples">${(SAMPLES[region] || SAMPLES.kanto).map(([id, lb, cm]) => sample(id, lb, cm)).join('')}</div></section>
 ${TRACK_SVG}
 <section><h2>できること</h2><div class="tickets">
-<div class="ticket"><div class="stub">🎴</div><div class="body"><b>街のカードを集める</b><span>駅の近くに5分いるだけ。季節・時間帯・天気でカードの色が変わり、同じ駅でも別の1枚になります。カードの裏には、その日に撮った写真も貼れます。</span><small>全国8,993駅 有効</small></div></div>
+<div class="ticket"><div class="stub">🎴</div><div class="body"><b>街のカードを集める</b><span>駅の近くに5分いるだけ。季節・時間帯・天気でカードの色が変わり、同じ駅でも別の1枚になります。カードの裏には、その日に撮った写真も貼れます。</span><small>全国8,980駅 有効</small></div></div>
 <div class="ticket"><div class="stub">📊</div><div class="body"><b>街の力を数字で見る</b><span>駅から500m以内の飲食・お店・暮らし・医療の施設を数えて、全駅を1,000点満点で採点。知らない駅も、降りる前に少しだけわかります。</span><small>S・A・B・C・D の5ランク</small></div></div>
 <div class="ticket"><div class="stub">🏅</div><div class="body"><b>路線や街を制覇する</b><span>路線・市区町村・都道府県ごとに制覇バッジ。いつもの沿線から、少しずつ地図が埋まっていきます。</span><small>銅・銀・金の3段階</small></div></div>
 </div></section>
@@ -2631,8 +2650,8 @@ ${majorStationsBlock()}
 ${updatesBlock()}
 <section><h2>よくある質問</h2><div class="faq">${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>さあ、街にでよう。</h2><p class="pitch">街巡-まちめぐ-（無料）</p>${storeBadges(ua, 46)}<p class="note" style="margin:12px 0 0">街で見つけた1枚は X とインスタでも</p>${SNS_HTML}${EVENING_SVG}</section>`;
-      _topCache = { key, html: pageShell('街巡-まちめぐ- 駅で5分、カードを集める散歩アプリ｜全国8,993駅のスタンプラリー',
-        '全国8,993駅の駅から500m以内で5分立ち止まると、その街のカードが1枚。街力（1,000点満点）で駅を比べて、路線や街を制覇する街歩きアプリ。無料。', body, `${SITE}/`, hero, ua, siteJsonLd(), { noFooterSns: true }) };
+      _topCache = { key, html: pageShell('街巡-まちめぐ- 駅で5分、カードを集める散歩アプリ｜全国8,980駅のスタンプラリー',
+        '全国8,980駅の駅から500m以内で5分立ち止まると、その街のカードが1枚。街力（1,000点満点）で駅を比べて、路線や街を制覇する街歩きアプリ。無料。', body, `${SITE}/`, hero, ua, siteJsonLd(), { noFooterSns: true }) };
     }
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'private, no-cache')  // ★v32：地方で中身が変わるので共有キャッシュさせない;
     if (_topCacheMap.size > 40) _topCacheMap.clear();
@@ -2768,14 +2787,14 @@ app.get('/ranking', generalLimiter, (req, res) => {
   try {
     const ua = req.get('user-agent') || '';
     const body = `<p class="crumbs"><a href="/">街巡-まちめぐ-</a> › ランキング</p>
-<section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">全国8,993駅 ランキング</h1><p class="note">駅のまわりのお店や施設、利用者数、開業年から、全国の駅を並べました。</p>
+<section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">全国8,980駅 ランキング</h1><p class="note">駅のまわりのお店や施設、利用者数、開業年から、全国の駅を並べました。</p>
 <ul class="list">${Object.entries(RANKINGS).map(([k, R]) => {
   const top = rankingRows(k).slice(0, 3).map(([st]) => esc(st.name)).join('、');
   return `<li><a href="${rankingUrl(k)}" style="font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:17px">${esc(R.t)} TOP100</a><br><small style="margin:0">${esc(R.d)}。1位〜3位は${top}</small></li>`;
 }).join('')}</ul></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${MORE_LINK}${EVENING_SVG}</section>`;
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
-    res.send(pageShell('全国8,993駅 ランキング（街力・飲食店・利用者数・開業年）｜街巡-まちめぐ-', '飲食店が多い駅、生活施設が多い駅、名所が近い駅、開業が古い駅など、全国8,993駅のランキング。', body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), `${SITE}/ranking`, '', ua));
+    res.send(pageShell('全国8,980駅 ランキング（街力・飲食店・利用者数・開業年）｜街巡-まちめぐ-', '飲食店が多い駅、生活施設が多い駅、名所が近い駅、開業が古い駅など、全国8,980駅のランキング。', body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), `${SITE}/ranking`, '', ua));
   } catch (e) { console.error('[v18] ランキング一覧失敗:', e.message); res.status(500).send('ただいま表示できません'); }
 });
 
@@ -2792,7 +2811,7 @@ app.get('/ranking/:kind', generalLimiter, (req, res) => {
     }).join('');
     const others = Object.entries(RANKINGS).filter(([k]) => k !== req.params.kind).map(([k, r]) => `<a href="${rankingUrl(k)}">${esc(r.t)}</a>`).join('');
     const body = `<p class="crumbs"><a href="/">街巡-まちめぐ-</a> › <a href="/ranking">ランキング</a> › ${esc(R.t)}</p>
-<section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">${esc(R.t)} 全国TOP100</h1><p class="note">${esc(R.d)}で、全国8,993駅を並べました。</p>
+<section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">${esc(R.t)} 全国TOP100</h1><p class="note">${esc(R.d)}で、全国8,980駅を並べました。</p>
 <ul class="list">${list}</ul></section>
 <section><h2>ほかのランキング</h2><p class="chips">${others}</p></section>
 <section class="invite"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2><p class="pitch">ランキングの駅にも、5分立ち止まればカードが1枚（無料）</p>${storeBadges(ua, 46)}${MORE_LINK}${EVENING_SVG}</section>`;
@@ -2800,7 +2819,7 @@ app.get('/ranking/:kind', generalLimiter, (req, res) => {
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
     // ★v30：順位つき一覧の印（上位20駅）
     const itemLd = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name: `${R.t} 全国ランキング`, itemListElement: rows.slice(0, 20).map(([st], i) => ({ '@type': 'ListItem', position: i + 1, name: `${st.name}駅`, url: stationUrl(st) })) })}</script>`;
-    res.send(pageShell(req.params.kind === 'machiryoku' ? '栄えている駅・便利な駅 全国ランキングTOP100（街力）｜街巡-まちめぐ-' : `${R.t} 全国ランキングTOP100｜街巡-まちめぐ-`, `${R.d}で全国8,993駅を比べたランキング。1位〜3位は${top3}。`, body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), rankingUrl(req.params.kind), '', ua, itemLd));
+    res.send(pageShell(req.params.kind === 'machiryoku' ? '栄えている駅・便利な駅 全国ランキングTOP100（街力）｜街巡-まちめぐ-' : `${R.t} 全国ランキングTOP100｜街巡-まちめぐ-`, `${R.d}で全国8,980駅を比べたランキング。1位〜3位は${top3}。`, body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), rankingUrl(req.params.kind), '', ua, itemLd));
   } catch (e) { console.error('[v18] ランキング失敗:', e.message); res.status(500).send('ただいま表示できません'); }
 });
 
@@ -3086,7 +3105,7 @@ function featurePage(req, res, k, region) {
   const hasCur = rows.some((r) => r[3]);
   const lead = hasCur
     ? `${esc(where)}の${esc(F.w)}の名所を、駅から歩いて行けるところを中心に選び、最寄り駅といっしょに並べました。${rows.some((r) => r[3] && r[3].best) ? `${BL}は例年の目安です。${k === 'hanabi' ? '日程はその年の公式発表をご確認ください。' : ''}` : ''}`
-    : `全国8,993駅の紹介コメントに${esc(F.w)}の話が出てくる駅を、${esc(where)}から選びました。`;
+    : `全国8,980駅の紹介コメントに${esc(F.w)}の話が出てくる駅を、${esc(where)}から選びました。`;
   // ★v33：並び順の断り（名所のおすすめ順ではない）
   const orderNote = hasCur
     ? `<p class="note" style="font-weight:700">※並びは、厳選${R ? `${rows.length}選` : 'した名所'}を最寄り駅の街力順（お店や施設の充実度）で並べたものです。</p>`
@@ -3193,7 +3212,7 @@ app.get('/search', generalLimiter, (req, res) => {
 ${!q && !pref ? NEAR_BUTTON + '<div style="height:14px"></div>' : ''}<form class="find" action="/search" method="get"><input type="search" name="q" value="${esc(q)}" placeholder="駅名・路線名・市区町村" aria-label="駅名・路線名・市区町村"><button type="submit">調べる</button></form>
 ${cityLinks}${lineBlock}${cityBlock}${stationBlock}${nothing}</section>`;
     res.set('Content-Type', 'text/html; charset=utf-8');
-    res.send(pageShell(`${title || '駅を調べる'}｜街巡-まちめぐ-`, `${title}。全国8,993駅の街力を調べられます。`, body, pref ? prefUrl(pref) : null, '', req.get('user-agent') || ''));
+    res.send(pageShell(`${title || '駅を調べる'}｜街巡-まちめぐ-`, `${title}。全国8,980駅の街力を調べられます。`, body, pref ? prefUrl(pref) : null, '', req.get('user-agent') || ''));
   } catch (e) {
     console.error('[v16] 検索失敗:', e.message);
     res.status(500).send('ただいま表示できません');
@@ -3517,7 +3536,7 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v56',
+  server: 'v57',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
