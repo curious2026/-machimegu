@@ -1,4 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
+// 街巡 server.js v62（2026-10-25 JST：お店の種類の内訳（円グラフ）／「ボーナス」→「魅力」）
+// v61 → v62：
+//   ★お店の種類の内訳（ともき発案 2026-10-25・アプリは 3.0.1）。
+//     ・Overture の細かい種類（taxonomy.primary）も数え、軸ごとに「和食・居酒屋・カフェ…」「コンビニ・美容室…」へまとめる（SUB_GROUPS）。
+//     ・点数・ランク・店の数は今までどおり（4軸の数え方は1文字も変えていない）。内訳は割合（目安）だけ見せる。
+//     ・起動3分後から、全駅×3半径（約2.7万回）の内訳を裏で数える（7時間ほど・再起動しても続きから・点数はさわらない）。
+//       進み具合は /api/health の breakdown（have／total）。四半期の再計算が始まったら止まり、再計算が内訳も数える。
+//     ・アプリ用 /api/breakdown?id=駅キー&r=半径。まだの駅は 404（アプリは「集計中」と出す）。
+//     ・HP の駅ページ「街力の内訳」：数え終えた駅は、飲食・商業・生活・医療を押すと円グラフが開く（JSなし・details）。
+//   ★5つ目の軸の名前：App Store の版が 3.0.1 以上になったら、HP でも「ボーナス」→「魅力」に自動で切り替わる（axisLabel）。
+//   ★/api/health の server を v62 に。
+// （以下は v61 のときの説明）
 // 街巡 server.js v61（2026-10-25 JST：花火の特集を秋も真ん中あたりに）
 // v60 → v61：
 //   ★「ほかの特集」の並びで、花火を 8/21〜11/30 も一番下に落とさず真ん中あたりに（秋の花火大会が増えたため・ともき指示）。
@@ -900,32 +912,122 @@ function calcScore(counts, radius, bonusObj) {
 }
 
 // ═══ 生カウント取得（DuckDBクエリ） ═══
+// ★v62：細かい種類（taxonomy.primary）も一緒に数え、「お店の種類の内訳」（円グラフ）を作れるようにした。
+//   4軸の数え方（basic_category → AXIS_MAP）は今までとまったく同じ。点数は変わらない。
 function getRawCounts(lat, lng, radius) {
+  return getRawCountsDetailed(lat, lng, radius).then((x) => x.counts);
+}
+function getRawCountsDetailed(lat, lng, radius) {
   return new Promise((resolve, reject) => {
     const con = db.connect();
     const deg    = radius / 111000;
     const degLng = deg / Math.cos(lat * Math.PI / 180);
     const sql = `
-      SELECT basic_category AS cat, COUNT(*) AS cnt
+      SELECT basic_category AS cat, taxonomy.primary AS prim, COUNT(*) AS cnt
       FROM read_parquet('${s3PlacesPath()}', hive_partitioning=false)
       WHERE bbox.xmin >= ${lng - degLng}
         AND bbox.xmax <= ${lng + degLng}
         AND bbox.ymin >= ${lat - deg}
         AND bbox.ymax <= ${lat + deg}
         AND basic_category IS NOT NULL
-      GROUP BY basic_category
+      GROUP BY basic_category, taxonomy.primary
     `;
     con.all(sql, (err, rows) => {
       con.close();
       if (err) return reject(err);
       const counts = {'飲食':0, '商業':0, '生活':0, '医療':0};
+      const sub = {};
       (rows||[]).forEach(row => {
         const axis = AXIS_MAP[row.cat||''];
-        if (axis) counts[axis] += (parseInt(row.cnt)||0);
+        if (!axis) return;
+        const n = parseInt(row.cnt) || 0;
+        counts[axis] += n;
+        const g = subGroupOf(axis, row.cat || '', row.prim || '');
+        sub[g] = (sub[g] || 0) + n;
       });
-      resolve(counts);
+      resolve({ counts, sub });
     });
   });
+}
+
+// ═══ ★v62：お店の種類の内訳（円グラフ）のまとめ方 ═══
+//   キャッシュには短い記号で持つ（全駅×3半径ぶんなので軽くするため）。表示名は SUB_GROUPS。
+const SUB_GROUPS = {
+  // 飲食
+  wa: ['飲食', '和食'], su: ['飲食', '寿司・海鮮'], ra: ['飲食', 'ラーメン'], iz: ['飲食', '居酒屋・バー'],
+  ca: ['飲食', 'カフェ・喫茶'], ya: ['飲食', '焼肉・ステーキ'], ch: ['飲食', '中華'], yo: ['飲食', '洋食・イタリアン'],
+  as: ['飲食', 'エスニック'], sw: ['飲食', 'パン・スイーツ'], ff: ['飲食', 'ファストフード'], ef: ['飲食', 'そのほか'],
+  // 生活
+  cv: ['生活', 'コンビニ'], bk: ['生活', '銀行・ATM'], dr: ['生活', 'ドラッグストア'], sp: ['生活', 'スーパー・食料品'],
+  hs: ['生活', '美容室・理容室'], bt: ['生活', 'エステ・ネイル'], po: ['生活', '郵便・宅配'], ln: ['生活', 'クリーニング'],
+  gs: ['生活', 'ガソリンスタンド'], ls: ['生活', 'そのほか'],
+  // 医療
+  ho: ['医療', '病院'], de: ['医療', '歯科'], cl: ['医療', '内科・クリニック'], sc: ['医療', '専門の診療科'],
+  ey: ['医療', '眼科'], kn: ['医療', '鍼灸・整体'], kg: ['医療', '介護施設'], mo: ['医療', 'そのほか'],
+  // 商業
+  fa: ['商業', '服・ファッション'], ht: ['商業', 'ホテル・宿'], lv: ['商業', 'ライブ・カラオケ'], mu: ['商業', '美術館・博物館'],
+  th: ['商業', '劇場・映画館'], gm: ['商業', 'ゲーム・娯楽'], dp: ['商業', '百貨店・モール'], el: ['商業', '家電・携帯'],
+  hm: ['商業', '家具・日用品'], bo: ['商業', '本・CD'], sg: ['商業', 'スポーツ・アウトドア'], cs: ['商業', '化粧品・美容用品'],
+  hb: ['商業', '趣味・雑貨'], fl: ['商業', '花・ギフト'], ub: ['商業', 'リサイクル・古着'], pt: ['商業', 'ペット用品'],
+  mk: ['商業', '市場・酒蔵'], co: ['商業', 'そのほか'],
+};
+const SUB_BY_BASIC = {
+  bar: 'iz', alcoholic_beverage_venue: 'iz', lounge: 'iz',
+  cafe: 'ca', coffee_shop: 'ca', non_alcoholic_beverage_venue: 'ca', smoothie_juice_bar: 'ca',
+  fast_food_restaurant: 'ff', food_court: 'ff', food_truck_stand: 'ff', food_service: 'ef',
+  convenience_store: 'cv', atm: 'bk', bank_or_credit_union: 'bk', pharmacy_and_drug_store: 'dr', food_and_beverage_store: 'sp',
+  gas_station: 'gs', laundry_service: 'ln', shipping_or_delivery_service: 'po',
+  hospital: 'ho', specialty_hospital: 'ho', emergency_department: 'ho', emergency_or_urgent_care_facility: 'ho', urgent_care_center: 'ho',
+  dental_clinic: 'de', outpatient_care_facility: 'cl', primary_care_or_general_clinic: 'cl', walk_in_clinic: 'cl',
+  diagnostics_imaging_or_lab_service: 'cl', medical_service: 'cl',
+  specialized_health_care: 'sc', specialized_medical_facility: 'sc', surgery: 'sc', behavioral_or_mental_health_clinic: 'sc',
+  reproductive_perinatal_and_womens_care: 'sc', pediatric_clinic: 'sc',
+  vision_or_eye_care_clinic: 'ey', complementary_and_alternative_medicine: 'kn', physical_medicine_and_rehabilitation: 'kn',
+  senior_living_facility: 'kg',
+  fashion_and_apparel_store: 'fa', hotel: 'ht', lodging: 'ht', inn: 'ht', bed_and_breakfast: 'ht', resort: 'ht',
+  music_venue: 'lv', dance_club: 'lv', comedy_club: 'lv',
+  museum: 'mu', art_gallery: 'mu', planetarium: 'mu', science_attraction: 'mu', aquarium: 'mu', zoo: 'mu', cultural_center: 'mu',
+  movie_theater: 'th', theatre_venue: 'th', performing_arts_venue: 'th', event_venue: 'th', stadium_arena: 'th',
+  arcade: 'gm', gaming_venue: 'gm', casino: 'gm', amusement_park: 'gm',
+  department_store: 'dp', shopping_mall: 'dp', superstore: 'dp', warehouse_club_store: 'dp', discount_store: 'dp',
+  electronics_store: 'el', hardware_home_and_garden_store: 'hm', books_music_and_video_store: 'bo', sporting_goods_store: 'sg',
+  personal_care_and_beauty_store: 'cs',
+  arts_crafts_and_hobby_store: 'hb', toys_and_games_store: 'hb', office_supply_store: 'hb', musical_instrument_and_pro_audio_store: 'hb', specialty_store: 'hb',
+  flowers_and_gifts_store: 'fl', second_hand_store: 'ub', animal_and_pet_store: 'pt',
+  market: 'mk', farmers_market: 'mk', brewery: 'mk', distillery: 'mk', winery: 'mk',
+};
+const SUB_FALLBACK = { '飲食': 'ef', '生活': 'ls', '医療': 'mo', '商業': 'co' };
+function subGroupOf(axis, basic, prim) {
+  const p = String(prim || '');
+  if (basic === 'restaurant' || basic === 'casual_eatery') {
+    if (/sushi|seafood|fish|kaiseki_seafood/.test(p)) return 'su';
+    if (/ramen/.test(p)) return 'ra';
+    if (/izakaya|gastropub|tapas|pub\b/.test(p)) return 'iz';
+    if (/barbecue|steak|yakiniku|korean_bbq/.test(p)) return 'ya';
+    if (/japanese|udon|soba|tempura|tonkatsu|okonomiyaki|yakitori|unagi|teppanyaki|shabu|sukiyaki|donburi|curry_house|oden|takoyaki/.test(p)) return 'wa';
+    if (/chinese|dim_sum|dumpling|taiwanese|hong_kong|cantonese|szechuan|hot_pot/.test(p)) return 'ch';
+    if (/bakery|dessert|candy|chocolat|ice_cream|gelato|donut|frozen_yogurt|patisserie|cake|bagel|creperie|waffle/.test(p)) return 'sw';
+    if (/burger|chicken|hot_dog|sandwich|fast_food/.test(p)) return 'ff';
+    if (/korean|indian|thai|vietnam|asian|nepal|sri_lanka|singapore|kebab|turkish|middle_eastern|indonesian|malaysian|filipino|halal|afghan|pakistani|bangladeshi|burmese/.test(p)) return 'as';
+    if (/italian|french|pizza|spanish|european|german|mediterranean|american|grill|hawaiian|brazilian|mexican|taco|brunch|breakfast|pancake|comfort_food|bistro|diner|steakhouse|greek|portuguese|russian|british|belgian|latin|peruvian|argentin|cajun|southern|western/.test(p)) return 'yo';
+    return 'ef';
+  }
+  if (basic === 'personal_or_beauty_service') {
+    if (/hair_salon|barber|hair_extension|hair_replacement|hair_loss|wig/.test(p)) return 'hs';
+    if (/beauty_salon|nail|hair_removal|skin_care|wax|tanning|eyelash|eyebrow|threading|makeup|teeth_whitening|foot_care|spa|massage|esthetic/.test(p)) return 'bt';
+    return 'ls';
+  }
+  return SUB_BY_BASIC[basic] || SUB_FALLBACK[axis] || 'co';
+}
+// キャッシュの記号 → 表示用（軸ごと・多い順）
+function subBreakdown(sub) {
+  const out = { '飲食': [], '商業': [], '生活': [], '医療': [] };
+  for (const [code, n] of Object.entries(sub || {})) {
+    const g = SUB_GROUPS[code]; if (!g || !n) continue;
+    out[g[0]].push({ label: g[1], n });
+  }
+  for (const ax of Object.keys(out)) out[ax].sort((a, b) => b.n - a.n);
+  return out;
 }
 
 // ═══ プリ計算進捗管理 ═══
@@ -980,15 +1082,16 @@ async function computeRawCountsForStations(stations, intoData) {
       buildState.currentStation = `${st.name}_${st.pref} (r=${r})`;
       
       // ★★ 既に計算済みならスキップ（再起動からの再開対応）
-      if (intoData[sid] && intoData[sid][`r${r}_raw`]) {
+      if (intoData[sid] && intoData[sid][`r${r}_raw`] && intoData[sid][`r${r}_sub`]) {
         buildState.done++;
         continue;
       }
       
       try {
-        const counts = await getRawCounts(st.lat, st.lng, r);
+        const det = await getRawCountsDetailed(st.lat, st.lng, r);
         if (!intoData[sid]) intoData[sid] = {};
-        intoData[sid][`r${r}_raw`] = counts;
+        intoData[sid][`r${r}_raw`] = det.counts;
+        intoData[sid][`r${r}_sub`] = det.sub;   // ★v62：お店の種類の内訳
         // 座標と名前情報を保存（ボーナス計算用）
         intoData[sid].lat = st.lat;
         intoData[sid].lng = st.lng;
@@ -1596,6 +1699,41 @@ const APP_STORE_URL = 'https://apps.apple.com/jp/app/id6804345019';
 const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.machimegu.app';
 const RANK_COLOR = { S: '#E8455A', A: '#F28C28', B: '#D9B21F', C: '#3CB371', D: '#5B8DEF' };
 const AXIS_COLOR = { '飲食': '#F0506E', '商業': '#8B6CF0', '生活': '#3B9BF0', '医療': '#F08A30', 'ボーナス': '#D4A020' };
+// ★v62：5つ目の軸の表示名。アプリ 3.0.1 が App Store に出たら「ボーナス」→「魅力」に自動で切り替わる
+//   （ともき決定 2026-10-25。データの名前は 'ボーナス' のまま、見せる名前だけ変える）
+function _verGte(a, b) {
+  const x = String(a || '').split('.').map((n) => parseInt(n) || 0), y = String(b).split('.').map((n) => parseInt(n) || 0);
+  for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); }
+  return true;
+}
+function axisLabel(ax) { return ax === 'ボーナス' && _verGte(storeInfo.version, '3.0.1') ? '魅力' : ax; }
+// ★v62：円グラフの色（軸の色を白に寄せて段階をつける）
+function _shade(hex, t) {
+  const n = parseInt(String(hex).slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const m = (c) => Math.round(c + (255 - c) * t);
+  return `rgb(${m(r)},${m(g)},${m(b)})`;
+}
+const PIE_STEPS = [0, 0.18, 0.33, 0.46, 0.57, 0.66, 0.74, 0.81];
+// 内訳の円グラフ（上位8つ＋そのほか）。2つ未満なら出さない
+function pieHtml(ax, list, radius) {
+  const tot = list.reduce((a, x) => a + x.n, 0);
+  if (!tot || list.filter((x) => x.label !== 'そのほか').length < 2) return '';
+  // 「そのほか」（分類できなかった分）は、小さい種類と一緒に最後へまとめる
+  const named = list.filter((x) => x.label !== 'そのほか');
+  let top = named.slice(0, 8);
+  const rest = named.slice(8).reduce((a, x) => a + x.n, 0) + list.filter((x) => x.label === 'そのほか').reduce((a, x) => a + x.n, 0);
+  if (rest > 0) top = top.concat([{ label: 'そのほか', n: rest }]);
+  let acc = 0;
+  const stops = [], lis = [];
+  top.forEach((x, i) => {
+    const col = _shade(AXIS_COLOR[ax], x.label === 'そのほか' ? 0.9 : (PIE_STEPS[i] ?? 0.9));
+    const a0 = acc / tot * 360; acc += x.n; const a1 = acc / tot * 360;
+    stops.push(`${col} ${a0.toFixed(1)}deg ${a1.toFixed(1)}deg`);
+    const pct = Math.round(x.n / tot * 100);
+    lis.push(`<li><i style="background:${col}"></i>${esc(x.label)}<b>${pct < 1 ? '1%未満' : pct + '%'}</b></li>`);
+  });
+  return `<div class="pie"><div class="pc" style="background:conic-gradient(${stops.join(',')})" role="img" aria-label="${esc(ax)}のお店の種類の割合"></div><ul>${lis.join('')}</ul></div><p class="pnote">${esc(ax)}のお店の種類の割合（駅から${radius}m・目安）</p>`;
+}
 const AXIS_UNIT = { '飲食': '店', '商業': '店', '生活': '件', '医療': '件' };
 
 function esc(s) {
@@ -1913,11 +2051,15 @@ function renderStationPage(st, ua) {
   const year = yearNum(t.opened);
   const age = year ? (2026 - year) : 0;
 
+  // ★v62：お店の種類の内訳（数え終えた駅だけ。押すと円グラフが開く）
+  const subAll = subBreakdown(((scoresCache.stations || {})[st.id] || {}).r500_sub);
   const bars = ['飲食', '商業', '生活', '医療', 'ボーナス'].map((ax) => {
     const v = d[ax] || {}; const max = v.max || (ax === 'ボーナス' ? 50 : 100);
     const pts = v.pts || 0; const w = Math.max(2, Math.round(pts / max * 100));
     const cnt = (ax !== 'ボーナス' && v.count != null) ? `<span class="cnt">${v.count}${AXIS_UNIT[ax]}</span>` : '';
-    return `<div class="bar"><div class="bl">${ax}</div><div class="bt"><div class="bf" style="width:${w}%;background:${AXIS_COLOR[ax]}"></div></div><div class="bv">${pts}<small>/${max}</small>${cnt}</div></div>`;
+    const pie = ax !== 'ボーナス' && v.count ? pieHtml(ax, subAll[ax] || [], 500) : '';
+    if (pie) return `<details class="axd"><summary><div class="bar"><div class="bl">${axisLabel(ax)}<small>内訳</small></div><div class="bt"><div class="bf" style="width:${w}%;background:${AXIS_COLOR[ax]}"></div></div><div class="bv">${pts}<small>/${max}</small>${cnt}</div></div></summary>${pie}</details>`;
+    return `<div class="bar"><div class="bl">${axisLabel(ax)}</div><div class="bt"><div class="bf" style="width:${w}%;background:${AXIS_COLOR[ax]}"></div></div><div class="bv">${pts}<small>/${max}</small>${cnt}</div></div>`;
   }).join('');
 
   const bonusItems = ((d['ボーナス'] || {}).items || []).slice(0, 12);
@@ -2044,6 +2186,17 @@ h1.q{font-size:18px;font-weight:700;margin:0 0 10px;color:var(--sub)}
 .bar{display:grid;grid-template-columns:70px 1fr 104px;align-items:center;gap:10px;margin:10px 0;font-size:15px}
 .bt{background:#EAF1F5;border-radius:99px;height:12px;overflow:hidden}.bf{height:100%;border-radius:99px}
 .bv{text-align:right;font-weight:700;line-height:1.3}.bv small{color:var(--sub);font-weight:400}.cnt{display:block;color:var(--sub);font-size:12px;font-weight:400}
+.axd summary{list-style:none;cursor:pointer;-webkit-tap-highlight-color:transparent}.axd summary::-webkit-details-marker{display:none}
+.axd .bl small{display:block;width:fit-content;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:0 7px;line-height:1.6}
+.axd .bl small:after{content:" ▾"}.axd[open] .bl small:after{content:" ▴"}
+.pie{display:flex;gap:16px;align-items:center;margin:2px 0 4px;padding:12px 14px;background:#F6FAFC;border-radius:16px;animation:pz .35s cubic-bezier(.2,.9,.3,1.2)}
+.pie .pc{width:118px;height:118px;border-radius:50%;flex:none;box-shadow:0 2px 8px rgba(30,60,90,.12)}
+.panel .pie ul{list-style:none;margin:0;padding:0;font-size:13.5px;flex:1;min-width:0}
+.panel .pie li{display:flex;align-items:center;gap:7px;padding:3px 0;border:0}
+.pie li i{width:10px;height:10px;border-radius:3px;flex:none}.pie li b{margin-left:auto;padding-left:6px;font-variant-numeric:tabular-nums}
+.pnote{margin:0 0 12px;font-size:11.5px;color:var(--sub);text-align:right}
+@keyframes pz{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+@media(max-width:560px){.pie{flex-direction:column;gap:12px;padding:14px 16px}.pie .pc{width:132px;height:132px}.panel .pie ul{width:100%;font-size:14px}.panel .pie li{padding:4px 0}}
 .panel ul{list-style:none;margin:0;padding:0}.panel li{padding:10px 0;border-bottom:1px solid var(--line)}.panel li:last-child{border:0}
 .about{margin:0;font-size:15.5px;line-height:1.95}.about.wf{padding-bottom:14px;margin-bottom:2px;border-bottom:1px solid var(--line)}
 .feats li{padding-left:24px;position:relative}.feats li:before{content:"";position:absolute;left:2px;top:19px;width:12px;height:12px;border-radius:50%;background:var(--pin)}
@@ -2114,7 +2267,7 @@ function ogSvg({ name, pref, yomi, score, rank, lead, details }) {
   const bars = AX.map(([ax, col, max], i) => {
     const v = (details[ax] || {}).pts || 0; const w = Math.max(4, Math.round(v / max * 300));
     const y = 250 + i * 50;
-    return `<text x="780" y="${y + 18}" font-size="24" fill="#9AB4D0">${ax}</text>
+    return `<text x="780" y="${y + 18}" font-size="24" fill="#9AB4D0">${axisLabel(ax)}</text>
 <rect x="890" y="${y}" width="250" height="20" rx="10" fill="#1B2C46"/><rect x="890" y="${y}" width="${Math.min(250, w * 250 / 300)}" height="20" rx="10" fill="${col}"/>`;
   }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
@@ -3627,10 +3780,86 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 //   開発時のスモークテストは npm test 等のローカルスクリプトに切り出す。
 
 // ヘルスチェック
+// ═══ ★v62：お店の種類の内訳（円グラフ）═══
+// ① 穴埋め：今のキャッシュの駅ごとに、内訳だけを数えて足す（点数・ランクは一切さわらない）。
+//    起動3分後に自動で始まり、全駅×3半径（約2.7万回）を数え終えるまで裏で動く。途中で再起動しても続きから。
+//    順番は HP とアプリの初期の半径500m → 800m → 1200m、それぞれ街力の高い駅から。
+//    四半期の再計算（rebuild）が始まったら止まる（rebuild 自体が内訳も数えるので、そちらに任せる）。
+let subFill = { running: false, done: 0, total: 0, errors: 0, startedAt: 0, finishedAt: 0 };
+let _subCov = { t: 0, v: null };
+function subCoverage() {
+  if (_subCov.v && Date.now() - _subCov.t < 60000) return _subCov.v;
+  let have = 0, tot = 0;
+  for (const st of STATIONS) {
+    const d = (scoresCache.stations || {})[st.id];
+    for (const r of RADII) { tot++; if (d && d[`r${r}_sub`]) have++; }
+  }
+  _subCov = { t: Date.now(), v: { have, tot } };
+  return _subCov.v;
+}
+async function fillSubBreakdowns() {
+  if (subFill.running || buildState.running || !isCacheComplete(scoresCache)) return;
+  const sc = (st) => ((scoresCache.stations[st.id] || {}).r500 || {}).score || 0;
+  const sts = STATIONS.slice().sort((a, b) => sc(b) - sc(a));
+  const jobs = [];
+  for (const r of [500, 800, 1200]) for (const st of sts) {
+    const d = scoresCache.stations[st.id];
+    if (d && !d[`r${r}_sub`]) jobs.push({ st, r });
+  }
+  if (!jobs.length) { console.log('[内訳] すべて数え済み'); return; }
+  subFill = { running: true, done: 0, total: jobs.length, errors: 0, startedAt: Date.now(), finishedAt: 0 };
+  console.log(`[内訳] 穴埋め開始: ${jobs.length}件`);
+  try {
+    await resolveLatestOvertureRelease();
+    let sinceSave = 0, streak = 0, stop = false;
+    const worker = async () => {
+      while (jobs.length && !stop) {
+        if (buildState.running) { stop = true; break; }
+        const { st, r } = jobs.shift();
+        try {
+          const det = await getRawCountsDetailed(st.lat, st.lng, r);
+          const d = scoresCache.stations[st.id];
+          if (d) d[`r${r}_sub`] = det.sub;
+          streak = 0;
+        } catch (e) {
+          subFill.errors++; streak++;
+          if (streak >= 30) {
+            stop = true;
+            console.error('[内訳] 30回続けて失敗 → 中止:', e.message);
+            notifyOps('内訳の穴埋めを中止（S3の読み込みが続けて失敗）', e.message);
+          }
+        }
+        subFill.done++;
+        if (++sinceSave >= 600) {
+          sinceSave = 0; saveScoresCache(scoresCache);
+          console.log(`[内訳] 途中保存 ${subFill.done}/${subFill.total}`);
+        }
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);
+    if (!buildState.running) saveScoresCache(scoresCache);
+    console.log(`[内訳] 終了 ${subFill.done}/${subFill.total}（失敗${subFill.errors}）`);
+  } finally {
+    subFill.running = false; subFill.finishedAt = Date.now();
+  }
+}
+setTimeout(() => { fillSubBreakdowns().catch((e) => console.error('[内訳] 失敗:', e.message)); }, +process.env.SUB_FILL_DELAY_MS || 3 * 60 * 1000);
+
+// ② アプリが読む：駅1つ・半径1つぶんの内訳（多い順）。まだ数えていなければ 404。
+app.get('/api/breakdown', generalLimiter, (req, res) => {
+  const id = String(req.query.id || '');
+  const r = [500, 800, 1200].includes(+req.query.r) ? +req.query.r : 500;
+  const d = (scoresCache.stations || {})[id];
+  const sub = d && d[`r${r}_sub`];
+  if (!sub) { res.set('Cache-Control', 'no-store'); return res.status(404).json({ error: 'not_ready' }); }
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.json({ id, r, axes: subBreakdown(sub) });
+});
+
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v61',
+  server: 'v62',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
@@ -3641,6 +3870,8 @@ app.get('/api/health', (req, res) => res.json({
   version: scoresCache.version,
   stations: Object.keys(scoresCache.stations || {}).length,
   builtAt: scoresCache.builtAt,
+  // ★v62：お店の種類の内訳を数え終えた数（駅×半径）と、穴埋めの進み具合
+  breakdown: (() => { const c = subCoverage(); return { have: c.have, total: c.tot, filling: subFill.running, done: subFill.done, todo: subFill.total }; })(),
   building: buildState.running
 }));
 
