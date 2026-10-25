@@ -1,4 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
+// 街巡 server.js v58（2026-10-25 JST：Android アプリから駅ページが開けない不具合の対策）
+// v57 → v58：
+//   ★Android のアプリで駅パネルの「さらに詳細に見る」を押しても、駅ページが開かなかった（ともき発見 2026-10-25）。
+//     原因：/station/ はアプリ自身の App Link（AndroidManifest の autoVerify）なので、アプリが開こうとすると
+//     Android がブラウザではなく「まちめぐ」に戻してしまう（同じ駅パネルが出るだけ）。iPhone は起きない。
+//   ★/app/station/:pref/:name を足した。中身は /station/ と同じ駅ページ。Android アプリ（3.0.0+73〜）はこちらを開く。
+//     ・canonical・og:url・構造化データは今までどおり /station/（検索の評価は分かれない）。X-Robots-Tag: noindex も付ける。
+//     ・このページの中の「となりの駅」などの駅リンクも /app/station/ に書き換える（タブの中で駅ページを回れるように）。
+//     ・GA4 では /app/station/〜 として数えられる＝Android アプリから来た人の数がそのまま分かる。
+//   ★/api/health の server を v58 に。
+// （以下は v57 のときの説明）
 // 街巡 server.js v57（2026-10-15 JST：駅データの整理＝廃止13駅を外す・改名2駅・大阪空港を大阪府へ／全国8,980駅）
 // v56 → v57：
 //   ★駅の数を「全国8,993駅」から「全国8,980駅」に（廃止された13駅を外した。ともき決定 2026-10-15）。
@@ -2131,7 +2142,18 @@ const MOVED_STATIONS = {
   '大阪空港_兵庫県': '大阪空港_大阪府',
 };
 app.use('/station', generalLimiter);
-app.get('/station/:pref/:name', (req, res) => {
+app.use('/app/station', generalLimiter);
+// ★v58：Android アプリ用の入口。/station/ は App Link でアプリに戻されてしまうため（上の説明）
+function appStationUrl(st) { return `${SITE}/app/station/${encodeURIComponent(st.pref)}/${encodeURIComponent(st.name)}`; }
+function toAppStationLinks(html) {
+  // <a> の駅リンクだけ書き換える（canonical・og:url・構造化データは /station/ のまま）
+  return html.replace(/(<a\b[^>]*?\shref=")https:\/\/machimegu\.com\/station\//g, '$1https://machimegu.com/app/station/');
+}
+app.get('/station/:pref/:name', (req, res) => serveStationPage(req, res, false));
+app.get('/app/station/:pref/:name', (req, res) => serveStationPage(req, res, true));
+function serveStationPage(req, res, viaApp) {
+  const urlOf = viaApp ? appStationUrl : stationUrl;
+  if (viaApp) res.set('X-Robots-Tag', 'noindex');
   try {
     const id = `${req.params.name}_${req.params.pref}`;
     const st = STATIONS_BY_ID.get(id);
@@ -2139,21 +2161,21 @@ app.get('/station/:pref/:name', (req, res) => {
       // ★v37：「◯◯駅」のような駅付きは、あれば本当の駅へ転送
       // ★v57：改名・県の付け替えをした駅は、旧URLから新しい駅ページへ転送
       const moved = MOVED_STATIONS[id];
-      if (moved && STATIONS_BY_ID.get(moved)) return res.redirect(301, stationUrl(STATIONS_BY_ID.get(moved)));
+      if (moved && STATIONS_BY_ID.get(moved)) return res.redirect(301, urlOf(STATIONS_BY_ID.get(moved)));
       const nm = String(req.params.name || '').replace(/駅$/, '');
       const alt = STATIONS_BY_ID.get(`${nm}_${req.params.pref}`);
-      if (alt) return res.redirect(301, stationUrl(alt));
+      if (alt) return res.redirect(301, urlOf(alt));
       return res.status(404).send(stationNotFound(nm, req.params.pref, req.get('user-agent') || ''));
     }
     const ua = req.get('user-agent') || '';
     const dev = /iPhone|iPad|iPod/i.test(ua) ? 'i' : /Android/i.test(ua) ? 'a' : 'p';
-    const key = `${id}|${dev}`;
+    const key = `${id}|${dev}${viaApp ? '|app' : ''}`;
     const hit = _pageCache.get(key);
     if (hit && hit.builtAt === scoresCache.builtAt && hit.tv === stationText.version && Date.now() - hit.t < PAGE_TTL) {
       res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
       return res.send(hit.html);
     }
-    const html = renderStationPage(st, ua);
+    const html = viaApp ? toAppStationLinks(renderStationPage(st, ua)) : renderStationPage(st, ua);
     if (_pageCache.size > 3000) _pageCache.clear();
     _pageCache.set(key, { html, t: Date.now(), builtAt: scoresCache.builtAt, tv: stationText.version });
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
@@ -2162,7 +2184,7 @@ app.get('/station/:pref/:name', (req, res) => {
     console.error('[v15] 駅ページ失敗:', e.message);
     res.status(500).send('<!doctype html><meta charset="utf-8"><p>ただいま表示できません。</p>');
   }
-});
+}
 
 // ★v37：駅が見つからないときの案内（似た名前の駅の候補＋検索欄）
 function stationNotFound(name, pref, ua) {
@@ -3536,7 +3558,7 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v57',
+  server: 'v58',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
