@@ -1,4 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
+// 街巡 server.js v59（2026-10-25 JST：特集「登山口まで歩ける駅」）
+// v58 → v59：
+//   ★特集に ⛰️「登山口まで歩ける駅」（/feature/yama）を足した（ともき決定 2026-10-25）。
+//     ・載せるのは「ちゃんとした山の、ちゃんとした登山口」だけ。駅から登山口まで徒歩おおむね30分以内・バスやタクシーなし。
+//     ・厳選リスト（features_curated.json の yama）だけで作る。駅コメントからの自動の拾い上げはしない（only）。
+//     ・名所名＝山の名前、access＝登山口までの徒歩、note＝登山口とコースのひとこと。📍地図は登山口（e.map）を開く。
+//   ★/api/health の server を v59 に。
+// （以下は v58 のときの説明）
 // 街巡 server.js v58（2026-10-25 JST：Android アプリから駅ページが開けない不具合の対策）
 // v57 → v58：
 //   ★Android のアプリで駅パネルの「さらに詳細に見る」を押しても、駅ページが開かなかった（ともき発見 2026-10-25）。
@@ -3002,7 +3010,9 @@ const FEATURE_PHOTOS = (() => {
 })();
 // ★v50：k＝特集の名前（momiji / sakura …）。特集ごとの写真があれば先に使う
 function featurePhoto(st, e, k) {
-  const p = (k && FEATURE_PHOTOS[`${k}:${st.id}|${e.spot}`]) || FEATURE_PHOTOS[`${st.id}|${e.spot}`];
+  // ★v59：厳選だけの特集（登山口）は、その特集専用の写真だけ使う（高尾山に紅葉特集の写真が出ないように）
+  const strict = k && FEATURES[k] && FEATURES[k].only;
+  const p = (k && FEATURE_PHOTOS[`${k}:${st.id}|${e.spot}`]) || (strict ? null : FEATURE_PHOTOS[`${st.id}|${e.spot}`]);
   if (!p || !/^https:\/\/(upload|thumb)\.wikimedia\.org\//.test(p.src || '')) return '';
   const who = p.artist ? esc(p.artist) : '撮影者不明';
   const lic = p.licUrl ? `<a href="${esc(p.licUrl)}" target="_blank" rel="noopener nofollow">${esc(p.lic)}</a>` : esc(p.lic || '');
@@ -3019,6 +3029,9 @@ const FEATURES = {
   // ★v30：季節の入口を2本追加（駅コメントに書いてある駅だけ＝花火17駅・初詣143駅）
   hanabi:    { t: '花火大会がある駅', s: '夏', kw: ['花火'], w: '花火大会', e: '🎆' },
   hatsumode: { t: '初詣に行きたい駅', s: '冬', kw: ['初詣', '神宮', '大社', '天満宮', '稲荷', '八幡宮'], w: '初詣の神社・お寺', e: '⛩️' },
+  // ★v59：登山口まで歩ける駅（厳選だけ・only）
+  yama:      { t: '登山口まで歩ける駅', s: '', kw: [], w: '登山口', e: '⛰️', only: true,
+    lead: (where) => `${where}で、駅から登山口まで歩いて行ける山を選びました。どれもバスやタクシーを使わず、駅からおおむね徒歩30分以内で登山口に着きます。歩く時間は目安です。登山道の状況は、出かける前に地元の案内でご確認ください。` },
 };
 const _featCache = new Map();
 // 返り値：[駅, 点数, ひとこと, 厳選の情報 {spot, note, best} | null]
@@ -3028,20 +3041,22 @@ function featureRows(k, region) {
   if (c && c.tv === stationText.version && c.b === scoresCache.builtAt) return c.rows;
   const F = FEATURES[k];
   const inRegion = (st) => !region || regionOfPref(st.pref) === region;
-  const rows = [], seen = new Set();
+  const rows = [], seen = new Set(), seenSpot = new Set();
   // ① 厳選（地方ごとの並び順のまま）
   const cur = CURATED[k] || {};
   for (const r of (region ? [region] : REGIONS.map((x) => x.k))) {
     for (const e of cur[r] || []) {
       const st = STATIONS_BY_ID.get(e.station);
-      if (!st || seen.has(st.id) || !inRegion(st)) continue;
-      seen.add(st.id);
+      // ★v59：同じ駅から別の名所（土合→谷川岳・白毛門など）は両方載せる。重なりは「駅＋名所名」で判定
+      const sk = `${e.station}|${e.spot}`;
+      if (!st || seenSpot.has(sk) || !inRegion(st)) continue;
+      seenSpot.add(sk); seen.add(st.id);
       rows.push([st, scoreOf(st.id) || { score: 0, rank: 'D' }, `${e.spot}：${e.note}`, e]);
     }
   }
-  // ② 駅コメントに出てくる駅（街力の高い順）
+  // ② 駅コメントに出てくる駅（街力の高い順）。★v59：厳選だけの特集（only）は拾わない
   const more = [];
-  for (const st of STATIONS) {
+  for (const st of (F.only ? [] : STATIONS)) {
     if (seen.has(st.id) || !inRegion(st)) continue;
     const t = textOf(st.id); if (!t || !Array.isArray(t.features)) continue;
     const hit = t.features.find((f) => F.kw.some((w) => f.includes(w)));
@@ -3118,14 +3133,14 @@ function featurePage(req, res, k, region) {
       const ph = featurePhoto(st, e, k);
       return `<li class="fi${ph ? ' hasph' : ''}"><div class="fh"><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><div class="fn">${spotName}${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}<small><span class="rk" style="background:${c}">${esc(s.rank)}</span>${esc(st.name)}駅・${esc(st.pref)}</small></div></div>
 <p class="fnote">${esc(e.note)}</p>
-<p class="fmeta">${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}<a class="fbtn" href="${stationUrl(st)}">${esc(st.name)}駅（街力 ${s.score}点）</a><a class="fbtn" href="${mapUrl(e.spot, st.pref)}" target="_blank" rel="noopener nofollow">📍 地図</a></p>${ph}</li>`;
+<p class="fmeta">${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}<a class="fbtn" href="${stationUrl(st)}">${esc(st.name)}駅（街力 ${s.score}点）</a><a class="fbtn" href="${mapUrl(e.map || e.spot, st.pref)}" target="_blank" rel="noopener nofollow">📍 地図</a></p>${ph}</li>`;
     }
     return `<li><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><span class="rk" style="background:${c}">${esc(s.rank)}</span>${title}<small>${esc(st.pref)}・${s.score}点</small><br><small style="margin:0">${sub}</small></li>`;
   }).join('');
   const tabs = `<p class="rtabs"><a href="${featureUrl(k)}"${!R ? ' class="on"' : ''}>全国</a>${REGIONS.map((x) => `<a href="${featureUrl(k, x.k)}"${R && R.k === x.k ? ' class="on"' : ''}>${esc(x.n)}</a>`).join('')}</p>`;
   const others = Object.entries(FEATURES).filter(([kk]) => kk !== k).map(([kk, f]) => `<a href="${featureUrl(kk, region)}">${f.e} ${esc(f.t)}</a>`).join('');
   const hasCur = rows.some((r) => r[3]);
-  const lead = hasCur
+  const lead = F.lead ? esc(F.lead(where)) : hasCur
     ? `${esc(where)}の${esc(F.w)}の名所を、駅から歩いて行けるところを中心に選び、最寄り駅といっしょに並べました。${rows.some((r) => r[3] && r[3].best) ? `${BL}は例年の目安です。${k === 'hanabi' ? '日程はその年の公式発表をご確認ください。' : ''}` : ''}`
     : `全国8,980駅の紹介コメントに${esc(F.w)}の話が出てくる駅を、${esc(where)}から選びました。`;
   // ★v33：並び順の断り（名所のおすすめ順ではない）
@@ -3151,7 +3166,7 @@ function featurePage(req, res, k, region) {
   const yr = jst.getUTCFullYear() + (k === 'hatsumode' && jst.getUTCMonth() >= 9 ? 1 : 0);
   const title = R
     ? (hasCur ? `【${yr}年】駅から歩ける${R.n}の${F.w}${rows.length}選｜最寄り駅${rows.some((r) => r[3] && r[3].best) ? `と${BL}` : 'つき'}｜街巡-まちめぐ-` : `${R.n}の${F.t}${rows.length}選｜街巡-まちめぐ-`)
-    : `${F.t}（全国${rows.length}駅）｜街巡-まちめぐ-`;
+    : `${F.t}（全国${rows.length}${F.only ? 'か所' : '駅'}）｜街巡-まちめぐ-`;
   res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
   const itemLd = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name: title.split('｜')[0], itemListElement: rows.slice(0, 30).map(([st, , , e], i) => ({ '@type': 'ListItem', position: i + 1, name: e ? e.spot : `${st.name}駅`, url: stationUrl(st) })) }).replace(/</g, '\\u003c')}</script>`;
   res.send(pageShell(title, `${where}の${F.t}。${top3}など${rows.length}か所を最寄り駅つきで。`, body, featureUrl(k, region), '', ua, itemLd));
@@ -3558,7 +3573,7 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v58',
+  server: 'v59',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
