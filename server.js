@@ -1,4 +1,21 @@
 // ═══════════════════════════════════════════════════════════════
+// 街巡 server.js v61（2026-10-25 JST：花火の特集を秋も真ん中あたりに）
+// v60 → v61：
+//   ★「ほかの特集」の並びで、花火を 8/21〜11/30 も一番下に落とさず真ん中あたりに（秋の花火大会が増えたため・ともき指示）。
+//   ★/api/health の server を v61 に。中身はほかは v60 と同じ（v60 は渡したが上げていない）。
+// （以下は v60 のときの説明）
+// 街巡 server.js v60（2026-10-25 JST：特集「公園が近い駅」）
+// v59 → v60：
+//   ★特集に 🌳「公園が近い駅」（/feature/koen）を足した（ともき決定 2026-10-25）。
+//     ・載せるのは名園・歴史公園・大きな都市公園など「わざわざ行きたい公園」だけ。駅から入口まで徒歩おおむね15分以内。
+//     ・登山口と同じく厳選リストだけ（only）。各地方5の倍数でそろえる。
+//   ★「ほかの特集」のリンクの並びを、いつも同じ順から「今どきの順」に（ともき指示 2026-10-25「よく考えて」）。
+//     ・季節の特集：いま見頃のもの（例：12月の温泉と初詣）は上、次に来る季節ほど上（何日後に始まるかで点数）。
+//     ・通年の特集：月ごとの点数（登山口は春と秋、公園は花の春と紅葉の秋、商店街は年末、お城はいつでも）。
+//     ・花火は 8/21〜11/30 も真ん中あたり（秋の花火大会が増えたため・ともき指示）。
+//     ・点数の高い順に並べる。トップの季節の特集の下と、各特集ページの「ほかの特集」が同じ並びになる。
+//   ★/api/health の server を v60 に。
+// （以下は v59 のときの説明）
 // 街巡 server.js v59（2026-10-25 JST：特集「登山口まで歩ける駅」）
 // v58 → v59：
 //   ★特集に ⛰️「登山口まで歩ける駅」（/feature/yama）を足した（ともき決定 2026-10-25）。
@@ -3032,6 +3049,9 @@ const FEATURES = {
   // ★v59：登山口まで歩ける駅（厳選だけ・only）
   yama:      { t: '登山口まで歩ける駅', s: '', kw: [], w: '登山口', e: '⛰️', only: true,
     lead: (where) => `${where}で、駅から登山口まで歩いて行ける山を選びました。どれもバスやタクシーを使わず、駅からおおむね徒歩30分以内で登山口に着きます。歩く時間は目安です。登山道の状況は、出かける前に地元の案内でご確認ください。` },
+  // ★v60：公園が近い駅（厳選だけ・only）
+  koen:      { t: '公園が近い駅', s: '', kw: [], w: '公園', e: '🌳', only: true,
+    lead: (where) => `${where}で、駅から歩いて行ける名園・歴史公園・大きな公園を選びました。どれも駅からおおむね徒歩15分以内で入口に着きます。歩く時間は目安です。開園時間や入園料は公式の案内でご確認ください。` },
 };
 const _featCache = new Map();
 // 返り値：[駅, 点数, ひとこと, 厳選の情報 {spot, note, best} | null]
@@ -3087,6 +3107,43 @@ function stationFeats(id) {
 }
 function mapUrl(spot, pref) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${spot} ${pref}`)}`; }
 
+// ★v60：特集の並び（今どきの順）。季節の特集は「いま見頃／もうすぐ始まる」ほど上、通年の特集は月ごとの点数
+function _inFeatWin(k, m, d) {
+  const hatsu = (m === 12 && d >= 20) || (m === 1 && d <= 15);
+  switch (k) {
+    case 'hatsumode': return hatsu;
+    case 'hanabi': return m === 7 || (m === 8 && d <= 20);
+    case 'momiji': return m >= 9 && m <= 11;
+    case 'onsen': return (m === 12 || m <= 2) && !hatsu;
+    case 'sakura': return m >= 3 && m <= 5;
+    case 'umi': return m === 6 || (m === 8 && d >= 21);
+    default: return null; // 通年の特集
+  }
+}
+//                        1月 2月 3月 4月 5月 6月 7月 8月 9月 10月 11月 12月
+const FEAT_MONTH_PTS = {
+  yama:      [40, 40, 60, 85, 90, 70, 75, 70, 80, 95, 90, 45], // 春と秋の山歩き・夏山
+  koen:      [45, 70, 85, 95, 90, 70, 50, 45, 65, 85, 85, 55], // 梅・桜・新緑と紅葉
+  castle:    [70, 70, 75, 80, 75, 65, 65, 65, 70, 75, 75, 70],
+  shotengai: [70, 60, 60, 60, 60, 70, 65, 65, 60, 60, 65, 85], // 年末の買い物・雨の日
+};
+function featureScore(k, now) {
+  const base = new Date((now || Date.now()) + 9 * 3600 * 1000);
+  const m0 = base.getUTCMonth() + 1, d0 = base.getUTCDate();
+  if (_inFeatWin(k, m0, d0) === null) return (FEAT_MONTH_PTS[k] || [])[m0 - 1] || 60;
+  // ★v60：花火は近ごろ秋（〜11月）も各地であるので、8/21〜11/30 は一番下に落とさず真ん中あたりに（ともき 2026-10-25）
+  if (k === 'hanabi' && ((m0 === 8 && d0 >= 21) || (m0 >= 9 && m0 <= 11))) return 65;
+  for (let i = 0; i <= 366; i++) {
+    const t = new Date(base.getTime() + i * 86400000);
+    if (_inFeatWin(k, t.getUTCMonth() + 1, t.getUTCDate())) return i === 0 ? 98 : 100 - i / 2; // 2日で1点ずつ下がる
+  }
+  return 0;
+}
+function otherFeatures(exceptKey, now) {
+  const keys = Object.keys(FEATURES).filter((k) => k !== exceptKey);
+  const sc = Object.fromEntries(keys.map((k) => [k, featureScore(k, now)]));
+  return keys.sort((a, b) => sc[b] - sc[a]).map((k) => [k, FEATURES[k]]);
+}
 function featureUrl(k, region) { return `${SITE}/feature/${k}${region ? `/${region}` : ''}`; }
 function seasonKey() {
   const d = new Date(Date.now() + 9 * 3600 * 1000), m = d.getUTCMonth() + 1, day = d.getUTCDate();
@@ -3108,7 +3165,7 @@ function seasonBlock(region) {
   const pick = rows.slice(0, 3).map(([st, sc, hit, e]) => e
     ? `<li class="fi top${featurePhoto(st, e, k) ? ' hasph' : ''}"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(e.spot)}</b></a><small>${esc(st.name)}駅・${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(e.note)}</p>${e.best ? `<p class="fmeta" style="margin-left:0"><span class="best">${BL} ${esc(e.best)}</span></p>` : ''}${featurePhoto(st, e, k)}</li>`
     : `<li class="fi"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(st.name)}</b></a><small>${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(hit)}</p></li>`).join('');
-  const others = Object.entries(FEATURES).filter(([kk]) => kk !== k).map(([kk, f]) => `<a href="${featureUrl(kk, r)}">${f.e} ${esc(f.t)}</a>`).join('');
+  const others = otherFeatures(k).map(([kk, f]) => `<a href="${featureUrl(kk, r)}">${f.e} ${esc(f.t)}</a>`).join('');
   const hasCur = rows.some((x) => x[3]);
   return `<section><h2 class="fh2">${nb(`${F.e} ${F.s}の特集`)}${nb(`${esc(REGION_BY_KEY[r].n)}の${esc(hasCur ? F.w : F.t)}`)}</h2><div class="card"><ul class="list" style="padding:0">${pick}</ul><p style="margin:14px 0 0;text-align:center"><a class="fbtn big" href="${featureUrl(k, r)}">${hasCur ? `駅から歩ける${esc(F.w)}${rows.length}選を見る` : `${esc(F.t)}をすべて見る（${rows.length}駅）`} →</a></p></div><p class="chips" style="margin-top:12px">${others}</p></section>`;
 }
@@ -3138,7 +3195,7 @@ function featurePage(req, res, k, region) {
     return `<li><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><span class="rk" style="background:${c}">${esc(s.rank)}</span>${title}<small>${esc(st.pref)}・${s.score}点</small><br><small style="margin:0">${sub}</small></li>`;
   }).join('');
   const tabs = `<p class="rtabs"><a href="${featureUrl(k)}"${!R ? ' class="on"' : ''}>全国</a>${REGIONS.map((x) => `<a href="${featureUrl(k, x.k)}"${R && R.k === x.k ? ' class="on"' : ''}>${esc(x.n)}</a>`).join('')}</p>`;
-  const others = Object.entries(FEATURES).filter(([kk]) => kk !== k).map(([kk, f]) => `<a href="${featureUrl(kk, region)}">${f.e} ${esc(f.t)}</a>`).join('');
+  const others = otherFeatures(k).map(([kk, f]) => `<a href="${featureUrl(kk, region)}">${f.e} ${esc(f.t)}</a>`).join('');
   const hasCur = rows.some((r) => r[3]);
   const lead = F.lead ? esc(F.lead(where)) : hasCur
     ? `${esc(where)}の${esc(F.w)}の名所を、駅から歩いて行けるところを中心に選び、最寄り駅といっしょに並べました。${rows.some((r) => r[3] && r[3].best) ? `${BL}は例年の目安です。${k === 'hanabi' ? '日程はその年の公式発表をご確認ください。' : ''}` : ''}`
@@ -3573,7 +3630,7 @@ app.get('/api/admin/download-cache', requireAdmin, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v59',
+  server: 'v61',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
