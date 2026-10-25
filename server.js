@@ -1,4 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
+// 街巡 server.js v63（2026-10-25 JST：公園の特集を関東・近畿50選に／登山口・公園に写真）
+// v62 → v63：
+//   ★厳選だけの特集（登山口・公園）は、地方別ページに最大50まで出す（今までは30で切っていた）。
+//     公園：関東50・近畿50・北海道東北30・中部30・九州沖縄30・中国15・四国5（features_curated.json 2026-10-25p）。
+//   ★登山口・公園の写真（feature_photos.json の yama:／koen: ・Wikimedia Commons の自由ライセンスだけ）。
+//   ★/api/health の server を v63 に。
+// （以下は v62 のときの説明）
 // 街巡 server.js v62（2026-10-25 JST：お店の種類の内訳（円グラフ）／「ボーナス」→「魅力」）
 // v61 → v62：
 //   ★お店の種類の内訳（ともき発案 2026-10-25・アプリは 3.0.1）。
@@ -3237,7 +3244,8 @@ function featureRows(k, region) {
   }
   more.sort((x, y) => y[1].score - x[1].score);
   // ★v33：選ぶのは厳選優先（地方は最大30）、並べる順番は★最寄り駅の街力の高い順
-  const all = (region ? rows.concat(more).slice(0, 30) : rows.concat(more)).sort((x, y) => y[1].score - x[1].score);
+  // ★v63：厳選だけの特集（登山口・公園）は地方50まで（関東・近畿の公園50選）。ほかは今までどおり30
+  const all = (region ? rows.concat(more).slice(0, F.only ? 50 : 30) : rows.concat(more)).sort((x, y) => y[1].score - x[1].score);
   _featCache.set(ck, { rows: all, tv: stationText.version, b: scoresCache.builtAt });
   return all;
 }
@@ -3859,7 +3867,7 @@ app.get('/api/breakdown', generalLimiter, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v62',
+  server: 'v63',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
