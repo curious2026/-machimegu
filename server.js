@@ -1,5 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v63（2026-10-25 JST：公園の特集を関東・近畿50選に／登山口・公園に写真）
+// 街巡 server.js v64（2026-10-28 JST：トップの「アプリの画面」を10枚まで）
+// v63 → v64（ともき指摘）：ストアの写真は9枚あるのに、トップには8枚までしか出していなかった（Duo の2枚目が漏れ）。
+//   App Store の写真は1つの版で最大10枚なので、10枚まで出す。★/api/health の server を v64 に。
+// （以下 v63）街巡 server.js v63（2026-10-25 JST：公園の特集を関東・近畿50選に／登山口・公園に写真）
 // v62 → v63：
 //   ★厳選だけの特集（登山口・公園）は、地方別ページに最大50まで出す（今までは30で切っていた）。
 //     公園：関東50・近畿50・北海道東北30・中部30・九州沖縄30・中国15・四国5（features_curated.json 2026-10-25p）。
@@ -3537,7 +3540,7 @@ async function refreshStoreVersion() {
     storeInfo.ratingCount = Number(r.userRatingCount) || 0;
     // ★v23：App Store のスクショ（サイトのトップに並べる。460px幅に取り直す）
     if (Array.isArray(r.screenshotUrls) && r.screenshotUrls.length) {
-      storeInfo.shots = r.screenshotUrls.slice(0, 8).map((u) => String(u).replace(/\/[0-9x]+bb\.(jpg|png)$/, '/460x0w.jpg'));
+      storeInfo.shots = r.screenshotUrls.slice(0, 10).map((u) => String(u).replace(/\/[0-9x]+bb\.(jpg|png)$/, '/460x0w.jpg'));
     }
     storeInfo.checkedAt = Date.now();
   } catch (e) {
@@ -3867,7 +3870,7 @@ app.get('/api/breakdown', generalLimiter, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v63',
+  server: 'v64',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
