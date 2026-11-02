@@ -1,5 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v64（2026-10-28 JST：トップの「アプリの画面」を10枚まで）
+// 街巡 server.js v65（2026-11-02 JST：アプリを友だちに教えるリンク machimegu.com/app）
+// v64 → v65（ともき・2026-11-02）：/app を足した。iPhone は App Store、Android は Google Play へそのまま移る。
+//   パソコンとリンクの下見（bot）には、アイコンとストアのバッジのページ（noindex）。★/api/health の server を v65 に。
+// （以下 v64）街巡 server.js v64（2026-10-28 JST：トップの「アプリの画面」を10枚まで）
 // v63 → v64（ともき指摘）：ストアの写真は9枚あるのに、トップには8枚までしか出していなかった（Duo の2枚目が漏れ）。
 //   App Store の写真は1つの版で最大10枚なので、10枚まで出す。★/api/health の server を v64 に。
 // （以下 v63）街巡 server.js v63（2026-10-25 JST：公園の特集を関東・近畿50選に／登山口・公園に写真）
@@ -2735,6 +2738,37 @@ function storeBadges(ua, h) {
 
 
 
+// ★v65（ともき・2026-11-02「友だちに教えたい」）：machimegu.com/app ＝ アプリを教える1本のリンク
+//   アプリの設定「まちめぐを友だちに教える」からシェアする。
+//   ・iPhone → App Store／Android → Google Play へそのまま移る（302）。
+//   ・パソコンや、リンクの下見をする仕組み（X・LINE・Slack などの bot）には、アイコンとストアのバッジのページを出す
+//     （下見用の og を読ませるため。bot をストアへ飛ばすと、下見がストアの画面になってしまう）。
+//   ・駅ページのユニバーサルリンク（/station/*）とは別の道なので、アプリが入っていてもアプリは開かない。
+const APP_SHARE_BOT = /bot|crawl|spider|facebookexternalhit|line-poker|slack|discord|whatsapp|telegram|skype|embed|preview|bingpreview/i;
+app.get('/app', generalLimiter, (req, res) => {
+  try {
+    const ua = req.get('user-agent') || '';
+    res.set('Vary', 'User-Agent');
+    res.set('Cache-Control', 'no-store');
+    if (!APP_SHARE_BOT.test(ua)) {
+      const pt = (process.env.APPSTORE_PT || '').trim();
+      if (/iPhone|iPad|iPod/i.test(ua)) {
+        const to = /^\d+$/.test(pt) ? `${APP_STORE_URL}?pt=${pt}&ct=share&mt=8` : APP_STORE_URL;
+        console.log('[app] → App Store');
+        return res.redirect(302, to);
+      }
+      if (/Android/i.test(ua)) {
+        console.log('[app] → Google Play');
+        return res.redirect(302, `${PLAY_URL}&referrer=${encodeURIComponent('utm_source=share&utm_medium=app')}`);
+      }
+    }
+    const nSt = STATIONS.length.toLocaleString('ja-JP');
+    const body = `<section class="invite" style="margin-top:24px"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:8px 0">街巡-まちめぐ-</h1><p class="pitch">駅から500m以内で5分立ち止まると、その街のカードが1枚。全国${nSt}駅の散歩アプリ（無料）</p>${storeBadges('', 46)}<p class="note" style="margin-top:14px"><a href="/">まちめぐのホームページへ</a></p></section>`;
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.send(pageShell('街巡-まちめぐ-｜駅で5分、カードを集める散歩アプリ', `駅で5分立ち止まると、その街のカードが1枚。季節と時間で色が変わるカードを集める、全国${nSt}駅の散歩アプリ（無料）。`, body, '', '', null, '<meta name="robots" content="noindex">'));
+  } catch (e) { console.error('[v65] app失敗:', e.message); res.redirect(302, '/'); }
+});
+
 // ★v23：SNS（アプリの設定にあるものと同じ）
 const SNS_X = 'https://x.com/machimegux';
 const SNS_IG = 'https://www.instagram.com/machimegu2026/';
@@ -3870,7 +3904,7 @@ app.get('/api/breakdown', generalLimiter, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v64',
+  server: 'v65',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
