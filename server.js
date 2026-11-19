@@ -1,5 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// 街巡 server.js v65（2026-11-02 JST：アプリを友だちに教えるリンク machimegu.com/app）
+// 街巡 server.js v66（2026-11-18 JST：「福井駅駅」→「福井駅電停」）
+// v65 → v66（ともき・2026-11-18）：正式な名前が「○○駅」の路面電車の電停（福井駅・富山駅・高岡駅・広島駅・横川駅・松山市駅）に
+//   「駅」を足して「福井駅駅」になっていた。ekiName() で「福井駅電停」に。湖遊館新駅はそのまま。★/api/health の server を v66 に。
+// （以下 v65）街巡 server.js v65（2026-11-02 JST：アプリを友だちに教えるリンク machimegu.com/app）
 // v64 → v65（ともき・2026-11-02）：/app を足した。iPhone は App Store、Android は Google Play へそのまま移る。
 //   パソコンとリンクの下見（bot）には、アイコンとストアのバッジのページ（noindex）。★/api/health の server を v65 に。
 // （以下 v64）街巡 server.js v64（2026-10-28 JST：トップの「アプリの画面」を10枚まで）
@@ -1749,12 +1752,21 @@ function pieHtml(ax, list, radius) {
 }
 const AXIS_UNIT = { '飲食': '店', '商業': '店', '生活': '件', '医療': '件' };
 
+// ★v66：駅名の出し方（アプリの stationLabel と同じ決まり）
+const TRAM_STOPS_NAMED_EKI = new Set(['富山駅', '高岡駅', '広島駅', '横川駅', '松山市駅', '福井駅']);
+function ekiName(name) {
+  const n = String(name || '');
+  if (TRAM_STOPS_NAMED_EKI.has(n)) return n + '電停';
+  if (n.endsWith('駅')) return n;
+  return n + '駅';
+}
+
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 // ★v46：順位つき一覧の構造化データ（県・路線・市区町村・ランキング）
 function itemListLd(name, sts) {
-  const items = (sts || []).filter((x) => x && x.name && x.pref).map((st, i) => ({ '@type': 'ListItem', position: i + 1, name: `${st.name}駅`, url: stationUrl(st) }));
+  const items = (sts || []).filter((x) => x && x.name && x.pref).map((st, i) => ({ '@type': 'ListItem', position: i + 1, name: `${ekiName(st.name)}`, url: stationUrl(st) }));
   if (!items.length) return '';
   return `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name, itemListElement: items })}</script>`;
 }
@@ -2116,19 +2128,19 @@ function renderStationPage(st, ua) {
   const topBtns = storeBadges(ua, 30);
 
   // ★v54：題名に読み（「○○ 読み方」の検索に、題名そのものが答える）
-  const title = `${st.name}駅（${yomi ? `${yomi}・` : ''}${st.pref}）はどんな街？ 街力${score}点・${rank}ランク｜街巡-まちめぐ-`;
+  const title = `${ekiName(st.name)}（${yomi ? `${yomi}・` : ''}${st.pref}）はどんな街？ 街力${score}点・${rank}ランク｜街巡-まちめぐ-`;
   // ★v30：検索結果の2行は「その駅だけの一言」から（「街力」は初めての人には通じない）
   const foodN = (d['飲食'] || {}).count || 0;
   // ★v51：紹介文がある駅は、説明文の頭に紹介文の最初の1〜2文を使う（「どんな街」に言葉で答える）。
   //   数字（飲食店の数・街力）は後ろに残す。紹介文が無い駅は今までどおり。
   const aboutHead = about ? aboutLead(about, 72) : '';
   const desc = aboutHead
-    ? `${st.name}駅${yomi ? `（${yomi}）` : ''}はどんな街？ ${aboutHead} 周り500mに飲食店${foodN}店、街力${score}点・${rank}ランク。`
+    ? `${ekiName(st.name)}${yomi ? `（${yomi}）` : ''}はどんな街？ ${aboutHead} 周り500mに飲食店${foodN}店、街力${score}点・${rank}ランク。`
     : first
-    ? `${first}。${st.name}駅${yomi ? `（${yomi}）` : ''}の周り500mに飲食店${foodN}店、街力${score}点・${rank}ランクで全国${rAll}位。近くの駅との比較や名所も。`
-    : `${st.name}駅${yomi ? `（${yomi}）` : ''}はどんな街？ 周り500mに飲食店${foodN}店、街力${score}点・${rank}ランクで全国${rAll}位。近くの駅との比較や名所も。`;
+    ? `${first}。${ekiName(st.name)}${yomi ? `（${yomi}）` : ''}の周り500mに飲食店${foodN}店、街力${score}点・${rank}ランクで全国${rAll}位。近くの駅との比較や名所も。`
+    : `${ekiName(st.name)}${yomi ? `（${yomi}）` : ''}はどんな街？ 周り500mに飲食店${foodN}店、街力${score}点・${rank}ランクで全国${rAll}位。近くの駅との比較や名所も。`;
   const osm = `https://www.openstreetmap.org/export/embed.html?bbox=${st.lng - 0.012},${st.lat - 0.008},${st.lng + 0.012},${st.lat + 0.008}&layer=mapnik&marker=${st.lat},${st.lng}`;
-  const ld = { '@context': 'https://schema.org', '@type': 'TrainStation', name: `${st.name}駅`, url: stationUrl(st), image: ogUrl(st), address: { '@type': 'PostalAddress', addressCountry: 'JP', addressRegion: st.pref, addressLocality: t.location || '' }, geo: { '@type': 'GeoCoordinates', latitude: st.lat, longitude: st.lng } };
+  const ld = { '@context': 'https://schema.org', '@type': 'TrainStation', name: `${ekiName(st.name)}`, url: stationUrl(st), image: ogUrl(st), address: { '@type': 'PostalAddress', addressCountry: 'JP', addressRegion: st.pref, addressLocality: t.location || '' }, geo: { '@type': 'GeoCoordinates', latitude: st.lat, longitude: st.lng } };
   if (about) ld.description = about;   // ★v51
   if (t.location) ld.containedInPlace = { '@type': 'City', name: t.location };
 
@@ -2176,7 +2188,7 @@ ${Resvg ? `<meta property="og:image" content="${ogUrl(st)}"><meta property="og:i
   { '@type': 'ListItem', position: 1, name: '街巡-まちめぐ-', item: `${SITE}/` },
   { '@type': 'ListItem', position: 2, name: st.pref, item: prefUrl(st.pref) },
   ...(areaN0 >= 2 ? [{ '@type': 'ListItem', position: 3, name: t.location, item: areaUrl(st.pref, t.location) }] : []),
-  { '@type': 'ListItem', position: areaN0 >= 2 ? 4 : 3, name: `${st.name}駅`, item: stationUrl(st) }] })}</script>
+  { '@type': 'ListItem', position: areaN0 >= 2 ? 4 : 3, name: `${ekiName(st.name)}`, item: stationUrl(st) }] })}</script>
 ${FONT_LINKS}
 <style>${SITE_CSS}
 .panel{background:var(--paper);border-radius:18px;padding:16px 18px}
@@ -2225,8 +2237,8 @@ ${FLOAT_CSS}
 <div class="sign">${yomi ? `<div class="y">${esc(yomi)}</div>` : '<div class="y">&nbsp;</div>'}<div class="n">${esc(st.name)}</div><div class="p">${esc(st.pref)}${t.location ? `　${esc(t.location)}` : ''}</div><div class="band" style="background:${rc}"></div>${lr}</div>
 </div>${SKYLINE_SVG}</header>
 <main>
-<p class="crumbs" style="margin-top:14px"><a href="/">街巡-まちめぐ-</a> › <a href="${prefUrl(st.pref)}">${esc(st.pref)}</a>${areaN0 >= 2 ? ` › <a href="${areaUrl(st.pref, t.location)}">${esc(t.location)}</a>` : ''} › ${esc(st.name)}駅</p>
-<div class="block panel" style="margin-top:12px"><h1 class="q">${esc(st.name)}駅${yomi ? `<span style="font-size:.62em;font-weight:600;opacity:.75">（${esc(yomi)}）</span>` : ''}はどんな街？</h1>
+<p class="crumbs" style="margin-top:14px"><a href="/">街巡-まちめぐ-</a> › <a href="${prefUrl(st.pref)}">${esc(st.pref)}</a>${areaN0 >= 2 ? ` › <a href="${areaUrl(st.pref, t.location)}">${esc(t.location)}</a>` : ''} › ${esc(ekiName(st.name))}</p>
+<div class="block panel" style="margin-top:12px"><h1 class="q">${esc(ekiName(st.name))}${yomi ? `<span style="font-size:.62em;font-weight:600;opacity:.75">（${esc(yomi)}）</span>` : ''}はどんな街？</h1>
 <div class="score"><span class="num">${score}</span><span class="pt">点</span><span class="rank">${esc(rank)}</span></div>
 ${first ? `<p class="leadq">${esc(first)}</p>` : ''}</div>
 <div class="block"><h2>街力の内訳</h2><div class="panel">${bars}</div>${DATA_SRC_HTML}</div>
@@ -2251,13 +2263,13 @@ ${areaNearHtml}
 <div class="block"><h2>近くの駅と比べる<span class="me">${esc(st.name)} ${score}点 <span class="rk" style="background:${rc}">${esc(rank)}</span></span></h2><div class="panel"><table>${nearHtml}</table></div></div>
 ${sameHtml}
 <div class="block"><h2>この駅で進むバッジ</h2><div class="panel"><ul class="rks">${badges}</ul></div></div>
-<div class="block"><h2>地図</h2><iframe class="map" loading="lazy" src="${osm}" title="${esc(st.name)}駅の地図"></iframe></div>
+<div class="block"><h2>地図</h2><iframe class="map" loading="lazy" src="${osm}" title="${esc(ekiName(st.name))}の地図"></iframe></div>
 <div class="block invite" id="app"><img class="icon" src="/logo192.png" alt="街巡-まちめぐ- のアイコン"><h2>街巡-まちめぐ-</h2>
 <p class="pitch">全国8,980駅のチェックイン型・街歩きアプリ（無料）</p>
-<ul><li>${esc(st.name)}駅から500m以内で5分立ち止まると、この駅のカードが1枚</li><li>季節と時間帯でカードの色が変わる。同じ駅でも別の1枚に</li><li>路線や街を制覇して、バッジを集める</li></ul>
+<ul><li>${esc(ekiName(st.name))}から500m以内で5分立ち止まると、この駅のカードが1枚</li><li>季節と時間帯でカードの色が変わる。同じ駅でも別の1枚に</li><li>路線や街を制覇して、バッジを集める</li></ul>
 ${storeBtns}${MORE_LINK}${EVENING_SVG}</div>
 <footer>${SNS_HTML}街力は OpenStreetMap／Overture Maps のデータから計算しています（${esc(scoresCache.version || '')}）。駅名標のとなりの駅は HeartRails Express のデータを加工して作成。<br><a href="/">トップ</a><a href="/ranking">ランキング</a><a href="/feature/${seasonKey()}">季節の特集</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><a href="/about">運営者について</a><br>© 街巡-まちめぐ-製作委員会</footer>
-</main>${floatUi((isIOS || isAnd) ? `<div class="appbar" id="appbar" role="complementary" aria-label="アプリの案内"><div class="t"><b>${esc(st.name)}駅のカードを、アプリで</b><span>5分立ち止まると1枚・無料・<a href="${SITE}/">くわしく</a></span></div>${storeBadges(ua, 40)}<button type="button" class="x" aria-label="閉じる">×</button></div>` : '')}</body></html>`;
+</main>${floatUi((isIOS || isAnd) ? `<div class="appbar" id="appbar" role="complementary" aria-label="アプリの案内"><div class="t"><b>${esc(ekiName(st.name))}のカードを、アプリで</b><span>5分立ち止まると1枚・無料・<a href="${SITE}/">くわしく</a></span></div>${storeBadges(ua, 40)}<button type="button" class="x" aria-label="閉じる">×</button></div>` : '')}</body></html>`;
 }
 
 
@@ -3062,7 +3074,7 @@ app.get('/ranking/:kind', generalLimiter, (req, res) => {
     const top3 = rows.slice(0, 3).map(([st]) => st.name).join('・');
     res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
     // ★v30：順位つき一覧の印（上位20駅）
-    const itemLd = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name: `${R.t} 全国ランキング`, itemListElement: rows.slice(0, 20).map(([st], i) => ({ '@type': 'ListItem', position: i + 1, name: `${st.name}駅`, url: stationUrl(st) })) })}</script>`;
+    const itemLd = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name: `${R.t} 全国ランキング`, itemListElement: rows.slice(0, 20).map(([st], i) => ({ '@type': 'ListItem', position: i + 1, name: `${ekiName(st.name)}`, url: stationUrl(st) })) })}</script>`;
     res.send(pageShell(req.params.kind === 'machiryoku' ? '栄えている駅・便利な駅 全国ランキングTOP100（街力）｜街巡-まちめぐ-' : `${R.t} 全国ランキングTOP100｜街巡-まちめぐ-`, `${R.d}で全国8,980駅を比べたランキング。1位〜3位は${top3}。`, body.replace('</h1>', `</h1>${DATA_SRC_HTML}`), rankingUrl(req.params.kind), '', ua, itemLd));
   } catch (e) { console.error('[v18] ランキング失敗:', e.message); res.status(500).send('ただいま表示できません'); }
 });
@@ -3100,7 +3112,7 @@ app.get('/near', generalLimiter, (req, res) => {
         return `<li><span class="no${i === 0 ? ' hi' : ''}">${i + 1}</span><span class="rk" style="background:${c}">${esc(s.rank)}</span><a href="${stationUrl(st)}">${esc(st.name)}</a><small>${esc(st.pref)}・${s.score}点</small><b style="float:right">${dist}</b>${f}</li>`;
       }).join('');
       const first = list[0] && list[0][1] <= 500
-        ? `<p class="note">${esc(list[0][0].name)}駅から${Math.round(list[0][1] / 10) * 10}m。アプリなら、あと5分ここにいれば${esc(list[0][0].name)}のカードが1枚もらえる距離です。</p>` : '';
+        ? `<p class="note">${esc(ekiName(list[0][0].name))}から${Math.round(list[0][1] / 10) * 10}m。アプリなら、あと5分ここにいれば${esc(list[0][0].name)}のカードが1枚もらえる距離です。</p>` : '';
       body = `<p class="crumbs"><a href="/">街巡-まちめぐ-</a> › 近くの駅</p>
 <section style="margin-top:14px"><h1 style="font-size:clamp(24px,5.6vw,32px);font-weight:900;margin:0 0 8px">今いる場所の近くの駅</h1>${first}
 ${rows ? `<ul class="list">${rows}</ul>` : '<p class="note">近くに駅が見つかりませんでした。</p>'}</section>
@@ -3361,7 +3373,7 @@ function seasonBlock(region) {
   // ★v40：特集ページと同じ見せ方（名所名 → 最寄り駅 → 見頃）
   // ★v45：特集ページと同じ写真を右に（無ければ今までどおり）
   const pick = rows.slice(0, 3).map(([st, sc, hit, e]) => e
-    ? `<li class="fi top${featurePhoto(st, e, k) ? ' hasph' : ''}"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(e.spot)}</b></a><small>${esc(st.name)}駅・${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(e.note)}</p>${e.best ? `<p class="fmeta" style="margin-left:0"><span class="best">${BL} ${esc(e.best)}</span></p>` : ''}${featurePhoto(st, e, k)}</li>`
+    ? `<li class="fi top${featurePhoto(st, e, k) ? ' hasph' : ''}"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(e.spot)}</b></a><small>${esc(ekiName(st.name))}・${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(e.note)}</p>${e.best ? `<p class="fmeta" style="margin-left:0"><span class="best">${BL} ${esc(e.best)}</span></p>` : ''}${featurePhoto(st, e, k)}</li>`
     : `<li class="fi"><div class="fn"><a href="${stationUrl(st)}"><b>${esc(st.name)}</b></a><small>${esc(st.pref)}</small></div><p class="fnote" style="margin-left:0">${esc(hit)}</p></li>`).join('');
   const others = otherFeatures(k).map(([kk, f]) => `<a href="${featureUrl(kk, r)}">${f.e} ${esc(f.t)}</a>`).join('');
   const hasCur = rows.some((x) => x[3]);
@@ -3381,14 +3393,14 @@ function featurePage(req, res, k, region) {
     const c = RANK_COLOR[s.rank] || '#888';
     // ★v34：公式サイトがあれば名所の名前をリンクに（別タブ・nofollow）
     const spotName = e && e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener nofollow"><b>${esc(e.spot)}</b></a>` : e ? `<b>${esc(e.spot)}</b>` : '';
-    const title = e ? `${spotName}（${esc(st.name)}駅）${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}` : `<a href="${stationUrl(st)}">${esc(st.name)}</a>`;
+    const title = e ? `${spotName}（${esc(ekiName(st.name))}）${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}` : `<a href="${stationUrl(st)}">${esc(st.name)}</a>`;
     const sub = e ? `${esc(e.note)}${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}` : esc(hit);
     if (e) {
       // ★v38：名所名 → 最寄り駅 → ひとこと → 見頃とボタン の4段
       const ph = featurePhoto(st, e, k);
-      return `<li class="fi${ph ? ' hasph' : ''}"><div class="fh"><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><div class="fn">${spotName}${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}<small><span class="rk" style="background:${c}">${esc(s.rank)}</span>${esc(st.name)}駅・${esc(st.pref)}</small></div></div>
+      return `<li class="fi${ph ? ' hasph' : ''}"><div class="fh"><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><div class="fn">${spotName}${e.access ? `<span class="acc">${esc(e.access)}</span>` : ''}<small><span class="rk" style="background:${c}">${esc(s.rank)}</span>${esc(ekiName(st.name))}・${esc(st.pref)}</small></div></div>
 <p class="fnote">${esc(e.note)}</p>
-<p class="fmeta">${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}<a class="fbtn" href="${stationUrl(st)}">${esc(st.name)}駅（街力 ${s.score}点）</a><a class="fbtn" href="${mapUrl(e.map || e.spot, st.pref)}" target="_blank" rel="noopener nofollow">📍 地図</a></p>${ph}</li>`;
+<p class="fmeta">${e.best ? `<span class="best">${BL} ${esc(e.best)}</span>` : ''}<a class="fbtn" href="${stationUrl(st)}">${esc(ekiName(st.name))}（街力 ${s.score}点）</a><a class="fbtn" href="${mapUrl(e.map || e.spot, st.pref)}" target="_blank" rel="noopener nofollow">📍 地図</a></p>${ph}</li>`;
     }
     return `<li><span class="no${i < 3 ? ' hi' : ''}">${i + 1}</span><span class="rk" style="background:${c}">${esc(s.rank)}</span>${title}<small>${esc(st.pref)}・${s.score}点</small><br><small style="margin:0">${sub}</small></li>`;
   }).join('');
@@ -3423,7 +3435,7 @@ function featurePage(req, res, k, region) {
     ? (hasCur ? `【${yr}年】駅から歩ける${R.n}の${F.w}${rows.length}選｜最寄り駅${rows.some((r) => r[3] && r[3].best) ? `と${BL}` : 'つき'}｜街巡-まちめぐ-` : `${R.n}の${F.t}${rows.length}選｜街巡-まちめぐ-`)
     : `${F.t}（全国${rows.length}${F.only ? 'か所' : '駅'}）｜街巡-まちめぐ-`;
   res.set('Content-Type', 'text/html; charset=utf-8'); res.set('Cache-Control', 'public, max-age=3600');
-  const itemLd = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name: title.split('｜')[0], itemListElement: rows.slice(0, 30).map(([st, , , e], i) => ({ '@type': 'ListItem', position: i + 1, name: e ? e.spot : `${st.name}駅`, url: stationUrl(st) })) }).replace(/</g, '\\u003c')}</script>`;
+  const itemLd = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', name: title.split('｜')[0], itemListElement: rows.slice(0, 30).map(([st, , , e], i) => ({ '@type': 'ListItem', position: i + 1, name: e ? e.spot : `${ekiName(st.name)}`, url: stationUrl(st) })) }).replace(/</g, '\\u003c')}</script>`;
   res.send(pageShell(title, `${where}の${F.t}。${top3}など${rows.length}か所を最寄り駅つきで。`, body, featureUrl(k, region), '', ua, itemLd));
 }
 app.get('/feature/:k', generalLimiter, (req, res) => {
@@ -3904,7 +3916,7 @@ app.get('/api/breakdown', generalLimiter, (req, res) => {
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   // ★v49：いま動いているサーバの版と、アップデート履歴の状態（出している数／App Store 待ちの数）
-  server: 'v65',
+  server: 'v66',
   about: { count: stationAbout.count, version: stationAbout.version },   // ★v51：紹介文のある駅の数
   updates: (() => {
     const all = UPDATES ? UPDATES.items.length : 0;
